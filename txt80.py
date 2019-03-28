@@ -3,6 +3,8 @@ import os
 import zipfile
 import sqlite3
 import http
+import gzip
+import io
 
 
 def download(conn, book):
@@ -13,8 +15,8 @@ def download(conn, book):
     urlB = urllib.parse.quote(book.name)
     url  = urlA + urlB + ".zip"
     # get the zip file
-    res = urllib.request.urlopen(url)
     try:
+        res = urllib.request.urlopen(url)
         content = res.read()
         path = os.getcwd() + "\\download\\" + book.name + "-" + book.writer + ".zip"
         print("get zip file", end="\t")
@@ -43,9 +45,13 @@ def download(conn, book):
         conn.commit()
         print("database update")
     except http.client.IncompleteRead:
+        print("Incomplete read")
+        return
+    except urllib.error.URLError:
+        print("URL Error --- skip")
         return
 
-def bookEnd(book):
+def bookUpdate(conn, book):
     # get book id
     
     # go to the website
@@ -56,21 +62,89 @@ def bookEnd(book):
     # chapter
 
     # state
+
+    #save back to database
     print("developing")
 
 def anyNew(conn):
     errorPage = 0
     # get largest 80txt book id from database
-
+    bookId=0
+    c = conn.cursor()
+    for row in c.execute("select website from books where website like '%80txt%'"):
+        tranId = row[0]
+        tranId = tranId[:tranId.rfind("/")]
+        tranId = tranId[tranId.rfind("/")+1:]
+        tranId = int(tranId)
+        if(tranId>bookId):
+            bookId = tranId
     # loop to check any new books suit the type after the id
-    '''
-        # if have, update the book into database
+    bookId += 1
+    while(errorPage<100):
+        try:
+            # try to get the page
+            url = 'https://www.80txt.com/txtxz/'+str(bookId)+'/down.html'
+            print(url, end="\t")
+            res = urllib.request.urlopen(url)
+            content = res.read()
+            errorPage = 0
+
+            # decode the content
+            if (res.info().get('Content-Encoding') == 'gzip'):
+                gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                content = gzipFile.read()
+            content = content.decode("utf-8")
+
+            # check type (bookType)
+            start = content.find('分类：')
+            bookType = content[start+3:]
+            end = bookType.find('</span>')
+            bookType = bookType[:end]
+            allowTypes = {"奇幻修真","奇幻魔法","异术超能","东方传奇","江湖武侠","未来幻想"}
+            if(not(bookType in allowTypes)):
+                print("wrong type:"+str(bookType))
+                print()
+                bookId += 1
+                continue
+            print(bookType)
+            
+            # get writer (writer)
+            start = content.find("作者：")
+            writer = content[start+3:]
+            end = writer.find("</a>")
+            writer = writer[:end]
+            print(writer, end="\t")
+            
+            # get download link (link)
+            start = content.find('https://dz.80txt.com')
+            link = content[start:]
+            end = link.find('.zip')
+            link = link[:end+4]
+            print(link)
+            print()
+            missing = 0
+
+            # get name
+            name = link[link.rfind("/")+1:]
+            name = name[:name.rfind(".")]
+
+            #save to database
+            sql = ('insert into books (name, writer, website, type, download, read)'
+            ' values '
+            "('"+name+"', '"+writer+"', '"+link+"', '"+bookType+"', 'false', 'Null')"
+            )
+            c.execute(sql)
+            conn.commit()
 
         # if it is decode error, record the book page to error table
+        except UnicodeDecodeError:
+            c.execute("insert into error (website) values ('"+link+"')")
+            conn.commit()
 
         # if the book page is not exist, add error by 1
-
-        except:
+        except urllib.error.HTTPError:
+            print("error")
             errorPage += 1
-        '''
+            print(str(errorPage)+"/100")
+        bookId += 1
     print("developing")
