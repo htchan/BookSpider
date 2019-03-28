@@ -23,29 +23,55 @@ def disconnect():
     conn.commit()
     conn.close()
 
+def downloadAll(sql):
+    i = 0
+    for row in c.execute(sql):
+        book = Book(row[0],row[1],row[2],row[3],row[4])
+        print(time.ctime()[11:-8],end="\t")
+        print(str(i)+":", end="\t")
+        if("80txt" in book.website):
+            txt80.download(conn,book)
+        i += 1
+        time.sleep(5)
+
+def checkNew():
+    txt80.anyNew(conn)
+
+def updateAll(sql):
+    for row in c.execute(sql):
+        book = Book(row[0],row[1],row[2],row[3],row[4])
+        print(book.name)
+        if("80txt" in book.website):
+            txt80.bookUpdate(conn, book)
+
+
 def mainLoop():
-    while(true):
+    while(True):
         print("Book download"+"-"*20)
         print("D : download books")
-        print("C : check book end")
+        print("U : check book update")
         print("N : check new books")
         print("E : exit")
-        ans = input(">>>")
+        ans = input(">>> ")
         if(ans.upper()=="E"):
+            disconnect()
             break
-        if(ans.upper()=="D"):
-            i=0
-            for row in c.execute("select * from books where end = 'true' and download = 'false' and read = 'Null'"):
-                book=Book(row[0],row[1],row[2],row[3],row[4])
-                print(str(i)+":", end="\t")
-                txt80.download(conn,book)
-                i+=1
+        elif(ans.upper()=="D"):
+            downloadAll("select * from books where end = 'true' and download = 'false' and read = 'Null' order by date")
+        elif(ans.upper()=="N"):
+            checkNew()
+        elif(ans.upper()=="U"):
+            updateAll("select * from books where end is null")
+
 
 connect(os.getcwd()+"\\bookDownload.db")
+mainLoop()
+'''
 i=0
 for row in c.execute("select * from books where end = 'true' and download = 'false' and read = 'Null'"):
-    book=Book(row[0],row[1],row[2],row[3],row[4])
+    book = Book(row[0],row[1],row[2],row[3],row[4])
     print(time.ctime()[11:-8],end="\t")
     print(str(i)+":", end="\t")
     txt80.download(conn,book)
-    i+=1
+    i += 1
+'''
