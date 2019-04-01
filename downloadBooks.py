@@ -67,11 +67,11 @@ def mainLoop():
             disconnect()
             break
         elif(ans.upper()=="D"):
-            downloadAll("select * from books where end = 'true' and download = 'false' and read = 'Null' order by date desc")
+            downloadAll("select * from books where end = 'true' and download = 'false' and read = 'false' order by date desc")
         elif(ans.upper()=="N"):
             checkNew()
         elif(ans.upper()=="U"):
-            updateAll("select * from books where end is null order by date desc")
+            updateAll("select * from books where end='false' order by date desc")
         elif(ans.upper()=="I"):
             showInfo()
             input()

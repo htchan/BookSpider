@@ -18,13 +18,31 @@ def download(conn, book):
     # get the zip file
     try:
         res = urllib.request.urlopen(url)
-        content = res.read()
+
+        contentLen = int(res.getheader("content-length"))
+        if(contentLen):
+            blockSize = int(contentLen)//100
+            blockSize = max(4096, blockSize)
+        else:
+            blockSize = 4096
+        
+        buf = io.BytesIO()
+        size = 0
+        while (True):
+            content = res.read(blockSize)
+            if(not(content)):
+                break
+            buf.write(content)
+            size+=len(content)
+            print("\r"+str(size*100//contentLen)+'%',end="")
+        print()
+
         path = os.getcwd() + "\\download\\" + book.name + "-" + book.writer + ".zip"
         print("get zip file", end="\t")
 
         # save the zip file
         f = open(path, 'wb')
-        f.write(content)
+        f.write(buf.getvalue())
         f.close()
 
         # unzip the file
@@ -49,7 +67,7 @@ def download(conn, book):
         print("Incomplete read")
         return
     except urllib.error.URLError as e:
-        print(e.reason()+" --- skip")
+        print(e.reason().strerror+" --- skip")
         return
 
 def bookUpdate(conn, book):
@@ -160,9 +178,9 @@ def anyNew(conn):
             name = name[:name.rfind(".")]
 
             #save to database
-            sql = ('insert into books (name, writer, website, type, download, read)'
+            sql = ('insert into books (name, writer, website, type, end, download, read)'
             ' values '
-            "('"+name+"', '"+writer+"', '"+link+"', '"+bookType+"', 'false', 'Null')"
+            "('"+name+"', '"+writer+"', '"+link+"', '"+bookType+"', 'false, 'false', 'false')"
             )
             c.execute(sql)
             conn.commit()
