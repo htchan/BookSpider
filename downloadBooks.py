@@ -2,16 +2,7 @@ import sqlite3
 import os
 import txt80
 import time
-
-class Book():
-    def __init__(self, name='', writer='', date='', chapter='', website='', bookType=''):
-        self.name = name
-        self.writer = writer
-        self.date = date
-        self.chapter = chapter
-        self.website = website
-        self.bookType = bookType
-
+import ClassDefinition
 
 def connect(path):
     global conn, c
@@ -26,7 +17,7 @@ def disconnect():
 def downloadAll(sql):
     i = 0
     for row in c.execute(sql):
-        book = Book(row[0],row[1],row[2],row[3],row[4])
+        book = ClassDefinition.Book(row[0],row[1],row[2],row[3],row[4])
         print(time.ctime()[11:-8],end="\t")
         print(str(i)+":", end="\t")
         if("80txt" in book.website):
@@ -39,7 +30,7 @@ def checkNew():
 
 def updateAll(sql):
     for row in c.execute(sql):
-        book = Book(row[0],row[1],row[2],row[3],row[4])
+        book = ClassDefinition.Book(row[0],row[1],row[2],row[3],row[4])
         print(book.name, end="\t")
         if("80txt" in book.website):
             txt80.bookUpdate(conn, book)
@@ -80,7 +71,7 @@ def mainLoop():
         elif(ans.upper()=="N"):
             checkNew()
         elif(ans.upper()=="U"):
-            updateAll("select * from books where end is null")
+            updateAll("select * from books where end is null order by date desc")
         elif(ans.upper()=="I"):
             showInfo()
             input()

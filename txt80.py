@@ -5,6 +5,7 @@ import sqlite3
 import http
 import gzip
 import io
+import ClassDefinition
 
 
 def download(conn, book):
@@ -67,7 +68,7 @@ def bookUpdate(conn, book):
 
     # extract the data from the website:
     # last update date
-    update = content[content.find("更新时间："):]
+    update = content[content.find("更新时间：</b>"):]
     update = update[update.find('</b>')+4:]
     update = update[:update.find('</li>')]
     print(update, end="\t")
@@ -179,3 +180,5 @@ def anyNew(conn):
         bookId += 1
     print("developing")
     # have to update the date and last chapter also
+    book = ClassDefinition.Book(name=name, writer=writer, website=link)
+    bookUpdate(conn, book)
