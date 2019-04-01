@@ -47,24 +47,54 @@ def download(conn, book):
     except http.client.IncompleteRead:
         print("Incomplete read")
         return
-    except urllib.error.URLError:
-        print("URL Error --- skip")
+    except urllib.error.URLError as e:
+        print(e.reason()+" --- skip")
         return
 
 def bookUpdate(conn, book):
     # get book id
-    
+    bookID = book.website[:book.website.rfind("/")]
+    bookID = bookID[bookID.rfind("/")+1:]
+    url = "https://www.80txt.com/txtxz/"+bookID+".html"
+    print(url)
     # go to the website
-    
+    res = urllib.request.urlopen(url)
+    content = res.read()
+    if res.info().get('Content-Encoding') == 'gzip':
+        gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+        content=gzipFile.read()
+    content = content.decode("utf-8")
+
     # extract the data from the website:
     # last update date
+    update = content[content.find("更新时间："):]
+    update = update[update.find('</b>')+4:]
+    update = update[:update.find('</li>')]
+    print(update, end="\t")
     
-    # chapter
+    if(update!=book.date):
+        c = conn.cursor()
+        book.date = update
 
-    # state
+        # chapter
+        chapter = content[content.find("最新章节："):]
+        chapter = chapter[chapter.find('</b>')+4:]
+        chapter = chapter[:chapter.find('</li>')]
+        book.chapter = chapter
+        print(chapter, end="\t")
+        
+        # state
+        state = content[content.find("写作进度："):]
+        state = state[:state.find("</li>")]
+        if("已完成" in state):
+            c.execute("update books set end='true' where website='"+book.website+"'")
+            
 
-    #save back to database
-    print("developing")
+        #save back to database
+        sql = ("update books set date='"+book.date+"', chapter='"+book.chapter+"' where website='"+book.website+"'")
+        c.execute(sql)
+        conn.commit()
+    print("\n")
 
 def anyNew(conn):
     errorPage = 0
@@ -148,3 +178,4 @@ def anyNew(conn):
             print(str(errorPage)+"/100")
         bookId += 1
     print("developing")
+    # have to update the date and last chapter also
