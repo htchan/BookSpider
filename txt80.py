@@ -9,7 +9,7 @@ import ClassDefinition
 
 
 def download(conn, book):
-    print(book.name)
+    print(book.name+"\t"+book.date[:4])
     # make a url for download books
     cut = book.website.rfind("/") + 1
     urlA = book.website[:cut]
@@ -17,7 +17,7 @@ def download(conn, book):
     url  = urlA + urlB + ".zip"
     # get the zip file
     try:
-        res = urllib.request.urlopen(url)
+        res = urllib.request.urlopen(url,timeout=60)
 
         contentLen = int(res.getheader("content-length"))
         if(contentLen):
@@ -28,6 +28,7 @@ def download(conn, book):
         
         buf = io.BytesIO()
         size = 0
+        print("0%",end="")
         while (True):
             content = res.read(blockSize)
             if(not(content)):
@@ -35,10 +36,11 @@ def download(conn, book):
             buf.write(content)
             size+=len(content)
             print("\r"+str(size*100//contentLen)+'%',end="")
-        print()
-
+        print(end="\t")
+        if(size < contentLen):
+            print("Incomplete read")
+            return
         path = os.getcwd() + "\\download\\" + book.name + "-" + book.writer + ".zip"
-        print("get zip file", end="\t")
 
         # save the zip file
         f = open(path, 'wb')
@@ -67,53 +69,59 @@ def download(conn, book):
         print("Incomplete read")
         return
     except urllib.error.URLError as e:
-        print(e.reason().strerror+" --- skip")
+        print(str(e)+" --- skip")
+        return
+    except urllib.request.socket.timeout:
+        print("\ttime out, skip")
         return
 
 def bookUpdate(conn, book):
-    # get book id
-    bookID = book.website[:book.website.rfind("/")]
-    bookID = bookID[bookID.rfind("/")+1:]
-    url = "https://www.80txt.com/txtxz/"+bookID+".html"
-    print(url)
-    # go to the website
-    res = urllib.request.urlopen(url)
-    content = res.read()
-    if res.info().get('Content-Encoding') == 'gzip':
-        gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
-        content=gzipFile.read()
-    content = content.decode("utf-8")
+    try:
+        # get book id
+        bookID = book.website[:book.website.rfind("/")]
+        bookID = bookID[bookID.rfind("/")+1:]
+        url = "https://www.80txt.com/txtxz/"+bookID+".html"
+        print(url)
+        # go to the website
+        res = urllib.request.urlopen(url,timeout=60)
+        content = res.read()
+        if res.info().get('Content-Encoding') == 'gzip':
+            gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+            content=gzipFile.read()
+        content = content.decode("utf-8")
 
-    # extract the data from the website:
-    # last update date
-    update = content[content.find("更新时间：</b>"):]
-    update = update[update.find('</b>')+4:]
-    update = update[:update.find('</li>')]
-    print(update, end="\t")
-    
-    if(update!=book.date):
-        c = conn.cursor()
-        book.date = update
-
-        # chapter
-        chapter = content[content.find("最新章节："):]
-        chapter = chapter[chapter.find('</b>')+4:]
-        chapter = chapter[:chapter.find('</li>')]
-        book.chapter = chapter
-        print(chapter, end="\t")
+        # extract the data from the website:
+        # last update date
+        update = content[content.find("更新时间：</b>"):]
+        update = update[update.find('</b>')+4:]
+        update = update[:update.find('</li>')]
+        print(update, end="\t")
         
-        # state
-        state = content[content.find("写作进度："):]
-        state = state[:state.find("</li>")]
-        if("已完成" in state):
-            c.execute("update books set end='true' where website='"+book.website+"'")
-            
+        if(update!=book.date):
+            c = conn.cursor()
+            book.date = update
 
-        #save back to database
-        sql = ("update books set date='"+book.date+"', chapter='"+book.chapter+"' where website='"+book.website+"'")
-        c.execute(sql)
-        conn.commit()
-    print("\n")
+            # chapter
+            chapter = content[content.find("最新章节："):]
+            chapter = chapter[chapter.find('</b>')+4:]
+            chapter = chapter[:chapter.find('</li>')]
+            book.chapter = chapter
+            print(chapter, end="\t")
+            
+            # state
+            state = content[content.find("写作进度："):]
+            state = state[:state.find("</li>")]
+            if("已完成" in state):
+                c.execute("update books set end='true' where website='"+book.website+"'")
+                
+
+            #save back to database
+            sql = ("update books set date='"+book.date+"', chapter='"+book.chapter+"' where website='"+book.website+"'")
+            c.execute(sql)
+            conn.commit()
+        print("\n")
+    except Exception as e:
+        print(e)
 
 def anyNew(conn):
     errorPage = 0
@@ -129,7 +137,7 @@ def anyNew(conn):
             bookId = tranId
     # loop to check any new books suit the type after the id
     bookId += 1
-    while(errorPage<100):
+    while(errorPage<10):
         try:
             # try to get the page
             url = 'https://www.80txt.com/txtxz/'+str(bookId)+'/down.html'
@@ -180,7 +188,7 @@ def anyNew(conn):
             #save to database
             sql = ('insert into books (name, writer, website, type, end, download, read)'
             ' values '
-            "('"+name+"', '"+writer+"', '"+link+"', '"+bookType+"', 'false, 'false', 'false')"
+            "('"+name+"', '"+writer+"', '"+link+"', '"+bookType+"', 'false', 'false', 'false')"
             )
             c.execute(sql)
             conn.commit()
@@ -196,7 +204,7 @@ def anyNew(conn):
             errorPage += 1
             print(str(errorPage)+"/100")
         bookId += 1
-    print("developing")
     # have to update the date and last chapter also
-    book = ClassDefinition.Book(name=name, writer=writer, website=link)
-    bookUpdate(conn, book)
+    for row in c.execute("select name,writer,website,date from books where date is null"):
+        book = ClassDefinition.Book(name=row[0], writer=row[1], website=row[2])
+        bookUpdate(conn, book)

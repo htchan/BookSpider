@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
 import sqlite3
 import os
 import txt80
 import time
 import ClassDefinition
+import sys
+
+conn = None
+c = None
 
 def connect(path):
     global conn, c
@@ -10,6 +15,7 @@ def connect(path):
     c = conn.cursor()
 
 def disconnect():
+    global conn, c
     c.close()
     conn.commit()
     conn.close()
@@ -55,6 +61,8 @@ def showInfo():
 
 
 def mainLoop():
+    os.popen("chcp 936")
+    print(sys.getdefaultencoding())
     while(True):
         print("Book download"+"-"*20)
         print("D : download books")
@@ -67,7 +75,7 @@ def mainLoop():
             disconnect()
             break
         elif(ans.upper()=="D"):
-            downloadAll("select * from books where end = 'true' and download = 'false' and read = 'false' order by date desc")
+            downloadAll("select * from books where end = 'true' and download = 'false' and read = 'false' order by date")
         elif(ans.upper()=="N"):
             checkNew()
         elif(ans.upper()=="U"):
