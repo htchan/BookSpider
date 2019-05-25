@@ -9,13 +9,13 @@ class Book():
 
 
 class BaseBook():
-    def __init__(self, web):
+    def __init__(self, web, name="", writer="", date="", chapter="", bookType=""):
         self._website = web
-        self._name = ""
-        self._writer = ""
-        self._date = ""     # last update date
-        self._chapter = ""  # last chapter
-        self._bookType = ""
+        self._name = name
+        self._writer = writer
+        self._date = date           # last update date
+        self._chapter = chapter     # last chapter
+        self._bookType = bookType
         self._chapterSet = []
         self._downloadAddr = ""
         self._text = ""
@@ -23,6 +23,8 @@ class BaseBook():
     def _getBasicInfo():
         pass
     def DownloadBook():
+        # download and save the book
         pass
-    def Save():
+    def Update():
+        # check any info can be update (date, chapter)
         pass

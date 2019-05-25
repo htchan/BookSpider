@@ -208,3 +208,33 @@ def anyNew(conn):
     for row in c.execute("select name,writer,website,date from books where date is null"):
         book = ClassDefinition.Book(name=row[0], writer=row[1], website=row[2])
         bookUpdate(conn, book)
+
+class TXT80():
+    def __init__(self, dbConn, path):
+        self._webpage = ""
+        self._bookNum = 0
+        self.books = []
+        self._conn = dbConn
+        self._cursor = self._conn.cursor()
+        self._path = path
+    class Book(ClassDefinition.BaseBook):
+        def _getBasicInfo():
+            # fill back the info by the website
+            pass
+        def DownloadBook():
+            # download book by chapter list or download Addr
+            pass
+    def Download():
+        # put [end] book in db to books
+        for book in books:
+            book.DownloadBook()
+        pass
+    def Update():
+        # get all books from db to books
+        # check any update
+        # if it update, but ended, add a '-' at first of the file name
+        pass
+    def Explore():
+        # get the max book num from the db
+        # check any new book by the book num
+        pass
