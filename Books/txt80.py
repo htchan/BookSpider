@@ -218,23 +218,128 @@ class TXT80():
         self._cursor = self._conn.cursor()
         self._path = path
     class Book(ClassDefinition.BaseBook):
-        def _getBasicInfo():
+        def _getBasicInfo(self):
+            if(not self._name):
+                # fill back the info by the website
+                res = urllib.request.urlopen(self._website)
+                content = res.read()
+
+                # decode the content
+                if (res.info().get('Content-Encoding') == 'gzip'):
+                    gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                    content = gzipFile.read()
+                content = content.decode("utf-8")
+
+                # get name
+                start = content.find("titlename")
+                self._name = content[start+9]
+                start = self._name.find("<h1>")
+                self._name = self._name[start+4]
+                end = self._name.find("</h1>")
+                self._name = self._name[:end]
+
+                # get writer (writer)
+                start = content.find("作者：")
+                self._writer = content[start+3:]
+                start = self._writer.find('>')
+                self._writer = self._writer[start+1:]
+                end = self._writer.find('</a>')
+                self._writer = self._writer[:end]
+
+                # get date
+                start = content.find('更新时间：')
+                self._date = content[start+5:]
+                end = self._date.find('</span>')
+                self._date = self._date[:end]
+
+                # get chapter
+                start = content.rfind("<li>")
+                self._chapter = content[start+4:]
+                start = self._chapter.find('">')
+                self.chapter = self._chapter[start+2:]
+                end = self._chapter.find('</a>')
+                self._chapter = self._chapter[:end]
+
+                # check type (bookType)
+                start = content.find('分类：')
+                self._bookType = content[start+3:]
+                start = self.bookType.find('>')
+                self._bookType = self._bookType[start+1:]
+                end = self._bookType.find('</a>')
+
+                self._bookType = self._bookType[:end]
+        def DownloadBook(self,path):
             # fill back the info by the website
-            pass
-        def DownloadBook():
-            # download book by chapter list or download Addr
-            pass
-    def Download():
+            res = urllib.request.urlopen(self._website)
+            content = res.read()
+            # decode the content
+            if (res.info().get('Content-Encoding') == 'gzip'):
+                gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                content = gzipFile.read()
+            content = content.decode("utf-8")
+
+            # get chapter set
+            start = content.find("yulan")
+            chapters = content[start:]
+            end = chapters.find("</div>")
+            chpapters = chapters[:end]
+            self._chapterSet = chapters.split("href=")
+
+            # download chapters one by one
+            for chapter in self._chapterSet:
+                if("<B>" in chapter):
+                    self._text += chapter[chapter.find("<B>")+3:chapter.find("<a")]+"\n"
+                elif("</B>" not in chapter)and("https" in chapter):
+                    # go to the website and download
+                    chapter = chapter[chapter.find('"')+1:]
+                    chapter = chapter[:chapter.find('"')]
+                    self._DownloadChapter(chapter)
+                    # log for progress
+                    print("\r"+self._chapter,end=" "*20)
+            # save it into file
+            try:
+                os.mkdir(path)
+            except: pass
+            f = open(path+"\\"+self._name+"-"+self._writer+".txt","w",encoding='utf8')
+            f.write(self._text)
+            # TODO: update the sql record
+        def _DownloadChapter(self,url):
+            # open chapter url
+            chRes = urllib.request.urlopen(url)
+            content = chRes.read()
+            # decode the content
+            if (chRes.info().get('Content-Encoding') == 'gzip'):
+                gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                content = gzipFile.read()
+            content = content.decode("utf-8")
+            # get the title
+            self._text += "\n"
+            start = content.find("<h1>")
+            title = content[start+4:]
+            end = title.find("</h1>")
+            title = title[:end]
+            self._chapter = title
+            self._text += title + "\n"
+            # get the content
+            start = content.find('id="content">')
+            c = content[start+13:]
+            end = c.find("<div")
+            c = c[:end]
+            c = c.replace("&nbsp;"," ")
+            c = c.replace("<br />    ","\n")
+            self._text += c
+    def Download(self):
         # put [end] book in db to books
-        for book in books:
-            book.DownloadBook()
-        pass
-    def Update():
+        for row in self._cursor.execute("select * from books where end='true' and download='false'"):
+            self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
+        for book in self.books:
+            book.DownloadBook(self._path)
+    def Update():#TODO
         # get all books from db to books
         # check any update
         # if it update, but ended, add a '-' at first of the file name
         pass
-    def Explore():
+    def Explore():#TODO
         # get the max book num from the db
         # check any new book by the book num
         pass

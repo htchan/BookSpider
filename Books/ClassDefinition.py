@@ -14,17 +14,19 @@ class BaseBook():
         self._name = name
         self._writer = writer
         self._date = date           # last update date
-        self._chapter = chapter     # last chapter
+        self._chapter = chapter     # last update chapter
         self._bookType = bookType
         self._chapterSet = []
-        self._downloadAddr = ""
         self._text = ""
         self._getBasicInfo()
-    def _getBasicInfo():
+    def _getBasicInfo(self):
         pass
-    def DownloadBook():
+    def DownloadBook(self,path):
         # download and save the book
         pass
-    def Update():
+    def _DownloadChapter(self,url):
+        # download and return the chapter
+        pass
+    def Update(self):
         # check any info can be update (date, chapter)
         pass
