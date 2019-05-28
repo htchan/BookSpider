@@ -18,6 +18,7 @@ class BaseBook():
         self._bookType = bookType
         self._chapterSet = []
         self._text = ""
+        self._updated = False
         self._getBasicInfo()
     def _getBasicInfo(self):
         pass
