@@ -219,17 +219,22 @@ class TXT80():
         self._path = path
     class Book(ClassDefinition.BaseBook):
         def _getBasicInfo(self):
+            # fill back the info by the website
+            res = urllib.request.urlopen(self._website)
+            content = res.read()
+
+            # decode the content
+            if (res.info().get('Content-Encoding') == 'gzip'):
+                gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                content = gzipFile.read()
+            content = content.decode("utf-8")
+
+            updated = False
+            # return false if the webpage is not exist or not avaliable
+            if("is404" in content):
+                return updated
+
             if(not self._name):
-                # fill back the info by the website
-                res = urllib.request.urlopen(self._website)
-                content = res.read()
-
-                # decode the content
-                if (res.info().get('Content-Encoding') == 'gzip'):
-                    gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
-                    content = gzipFile.read()
-                content = content.decode("utf-8")
-
                 # get name
                 start = content.find("titlename")
                 self._name = content[start+9]
@@ -237,7 +242,8 @@ class TXT80():
                 self._name = self._name[start+4]
                 end = self._name.find("</h1>")
                 self._name = self._name[:end]
-
+                updated = True
+            if(not self._writer):
                 # get writer (writer)
                 start = content.find("作者：")
                 self._writer = content[start+3:]
@@ -245,29 +251,38 @@ class TXT80():
                 self._writer = self._writer[start+1:]
                 end = self._writer.find('</a>')
                 self._writer = self._writer[:end]
+                updated = True
 
-                # get date
-                start = content.find('更新时间：')
-                self._date = content[start+5:]
-                end = self._date.find('</span>')
-                self._date = self._date[:end]
+            # get date (always get)
+            start = content.find('更新时间：')
+            date = content[start+5:]
+            end = date.find('</span>')
+            date = date[:end]
+            if(self._date != date):
+                self._date = date
+                updated = True
 
-                # get chapter
-                start = content.rfind("<li>")
-                self._chapter = content[start+4:]
-                start = self._chapter.find('">')
-                self.chapter = self._chapter[start+2:]
-                end = self._chapter.find('</a>')
-                self._chapter = self._chapter[:end]
-
+            # get chapter (always get)
+            start = content.rfind("<li>")
+            chapter = content[start+4:]
+            start = chapter.find('">')
+            chapter = chapter[start+2:]
+            end = chapter.find('</a>')
+            chapter = chapter[:end]
+            if(self._chapter != chapter):
+                self._chapter = chapter
+                updated = True
+            if(not self._bookType):
                 # check type (bookType)
                 start = content.find('分类：')
                 self._bookType = content[start+3:]
                 start = self.bookType.find('>')
                 self._bookType = self._bookType[start+1:]
                 end = self._bookType.find('</a>')
+                updated = True
 
                 self._bookType = self._bookType[:end]
+            return updaetd
         def DownloadBook(self,path):
             # fill back the info by the website
             res = urllib.request.urlopen(self._website)
@@ -297,10 +312,11 @@ class TXT80():
                     # log for progress
                     print("\r"+self._chapter,end=" "*20)
             # save it into file
-            try:
-                os.mkdir(path)
+            try: os.mkdir(path)
             except: pass
-            f = open(path+"\\"+self._name+"-"+self._writer+".txt","w",encoding='utf8')
+            try: os.mkdir(path+"\\"+self._bookType)
+            except: pass
+            f = open(path+"\\"+self._bookType+"\\"+self._name+"-"+self._writer+".txt","w",encoding='utf8')
             f.write(self._text)
             # TODO: update the sql record
         def _DownloadChapter(self,url):
@@ -330,16 +346,52 @@ class TXT80():
             self._text += c
     def Download(self):
         # put [end] book in db to books
+        self.books.clear()
         for row in self._cursor.execute("select * from books where end='true' and download='false'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
         for book in self.books:
             book.DownloadBook(self._path)
-    def Update():#TODO
-        # get all books from db to books
+    def Update():
+        # get all books from db to boo
+        self.books.clear()
+        for row in self._cursor.execute("select * from books where website like '%80txt%'"):
+            self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
         # check any update
-        # if it update, but ended, add a '-' at first of the file name
-        pass
-    def Explore():#TODO
+        for book in self.books:
+            # if the book info had been updated
+            if(book._getBasicInfo()):
+                sql = "update books set date='"+book._date+"', chapter='"+book._chapter+"' where website='"+book._website+"'"
+                self._cursor.execute(sql)
+                self._conn.commit()
+                # if it update, but ended, add a '-' at first of the file name
+                flag = self._cursor.execute("select end, download where website='"+book._website+"'").fetchone()
+                for f in flag:
+                    if(f==False):break
+                if(f):
+                    os.rename(self._path+"\\"+book._bookType+"\\"+book._name+"-"+book._writer,self._path+"\\"+book._bookType+"\\-"+book._name+"-"+book._writer)
+                    book._name = '-'+book._name
+                    self._cursor.execute("update books set name='"+book._name+"' where website='"+book._website+"'")
+    def Explore(n):#TODO
         # get the max book num from the db
+        self.books.clear()
+        self._bookNum = 0
+        for row in self._cursor.execute("select website from books where website like '%80txt%' order by website desc"):
+            i = row[0]
+            i = int(i[i.find("_")+1:i.rfind(".")])
+            if(i > self._bookNum):
+                self._bookNum = i
+        errorPage = 0
         # check any new book by the book num
-        pass
+        while(errorPage<n):
+            b = Book("https://www.80txt.com/txtml_"+str(self._bookNum)+".html")
+            if(b._name):
+                self.books.append(b)
+                errorPage = 0
+            else: errorPage += 1
+        # save the book num
+        for book in books:
+            sql = (
+                "insert into books (name,writer,date,chapter,website,type,download)"
+                "('"+book._name+"','"+book._writer+"','"+book._date+"','"+book._chapter+"','"+book._website+"','"+book._bookType+"','false')"
+            )
+            self._cursor.execute(sql)

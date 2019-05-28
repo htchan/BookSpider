@@ -18,3 +18,9 @@ include below functions
   ----- set download path
   ----- set download type
   ----- process bar
+
+#==========TODO==========#
+-test the function in class txt80
+  - download
+  - update
+  - explore
