@@ -6,11 +6,13 @@ import time
 import ClassDefinition
 import sys
 
+directory = None
 conn = None
 c = None
+websites = []
 
 def connect(path):
-    global conn, c
+    global directory, conn, c
     conn = sqlite3.connect(path)
     c = conn.cursor()
 
@@ -87,3 +89,45 @@ def mainLoop():
 
 connect(os.getcwd()+"\\bookDownload.db")
 mainLoop()
+
+### new (with oop)
+class BookCollection:
+    def __init__(self,conn):
+        # connect to database
+        global directory, conn, c
+        directory = path
+        conn = sqlite3.connect(directory+"\\spider.db")
+        c = conn.cursor()
+        # init all book website
+        websites.append(txt80.TXT80(conn,directory))
+
+    def close(self):
+        global conn
+        conn.commit()
+        conn.close()
+
+    def Download(self):
+        # for all website, download books
+        for website in website:
+            website.Download()
+
+    def Update(self):
+        for website in websites:
+            website.Update()
+
+    def Explore(self):
+        for website in websites:
+            website.Explore()
+
+
+'''
+    # update books end by their last chapter content
+    sql = (
+        "update books set end='true' where "
+        "chapter like '%后记%' or chapter like '%新书%' or "
+        "chapter like '%结局%' or chapter like '%感言%' or "
+        "chapter like '%完本%' or chapter like '%尾声%' or "
+        "chapter like '%终章%' or chapter like '%结束%' or "
+        "chapter like '%外传%'"
+    )
+'''
