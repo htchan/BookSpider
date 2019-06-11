@@ -32,58 +32,53 @@ class HJWXW():
             except urllib.error.HTTPError:
                 return False
 
-            # TODO #
             if(not self._name):
                 # get name
-                start = content.find("titlename")
-                self._name = content[start+9:]
-                start = self._name.find("<h1>")
-                self._name = self._name[start+4:]
-                end = self._name.find("</h1>")
+                start = content.find("<title>")
+                self._name = content[start+7:]
+                end = self._name.find("/")
                 self._name = self._name[:end]
-                self._name = self._name.replace("全文阅读","")
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
-                start = content.find("作者：")
-                self._writer = content[start+3:]
-                start = self._writer.find('>')
+                start = content.find("作者標簽:")
+                self._writer = content[start+4:]
+                start = self._writer.find('</a>')
                 self._writer = self._writer[start+1:]
                 end = self._writer.find('</a>')
                 self._writer = self._writer[:end]
                 self._updated = True
 
             # get date (always get)
-            start = content.find('更新时间：')
-            date = content[start+5:]
-            end = date.find('</span>')
+            start = content.find('更新时间: ')
+            date = content[start+6:]
+            end = date.find('">')
             date = date[:end]
             if(self._date != date):
                 self._date = date
                 self._updated = True
 
             # get chapter (always get)
-            start = content.rfind("<li>")
+            start = content.find("章節名:")
             chapter = content[start+4:]
-            start = chapter.find('">')
-            chapter = chapter[start+2:]
-            end = chapter.find('</a>')
+            end = chapter.find('更新时间')
             chapter = chapter[:end]
             if(self._chapter != chapter):
                 self._chapter = chapter
                 self._updated = True
             if(not self._bookType):
                 # check type (bookType)
-                start = content.find('分类：')
-                self._bookType = content[start+3:]
-                start = self._bookType.find('>')
-                self._bookType = self._bookType[start+1:]
-                end = self._bookType.find('</a>')
-                self._bookType = self._bookType[:end]
+                bookType = ""
+                c = content
+                start = c.find('小說分類標簽: ')
+                if(start>0):
+                    c = content[start+8:]
+                    end = c.find('  ')
+                    bookType += c[:end]
+                    c = c[end:]
+                    start = c.find('小說分類標簽: ')                    
                 self._updated = True
-
-                self._bookType = self._bookType[:end]
-            # TODO end #
+                self._bookType = bookType
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
