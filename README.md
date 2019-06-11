@@ -25,7 +25,7 @@
 #=====test=====#
   test different module work as expected
   <folder>-<file>".py" will be the program for testing
-  <folder>-<file>-".txt" will be the expected output
+  <folder>-<file>".txt" will be the expected output
 
 #==========main==========#
 manage the behavior of all type of spider

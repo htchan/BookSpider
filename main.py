@@ -35,6 +35,6 @@ while True:
         music()
     if(key==3):
         baidu()
-    else
+    else:
         os.system("cls")
         print("wrong input")
