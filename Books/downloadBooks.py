@@ -92,31 +92,30 @@ mainLoop()
 
 ### new (with oop)
 class BookCollection:
-    def __init__(self,conn):
+    def __init__(self,path):
         # connect to database
-        global directory, conn, c
-        directory = path
-        conn = sqlite3.connect(directory+"\\spider.db")
-        c = conn.cursor()
+        self.directory = path
+        self.conn = sqlite3.connect(directory+"\\spider.db")
+        self.c = conn.cursor()
+        self.websites = []
         # init all book website
-        websites.append(txt80.TXT80(conn,directory))
+        self.websites.append(txt80.TXT80(self.conn,self.directory))
 
     def close(self):
-        global conn
-        conn.commit()
-        conn.close()
+        self.conn.commit()
+        self.conn.close()
 
     def Download(self):
         # for all website, download books
-        for website in website:
+        for website in self.website:
             website.Download()
 
     def Update(self):
-        for website in websites:
+        for website in self.websites:
             website.Update()
 
     def Explore(self):
-        for website in websites:
+        for website in self.websites:
             website.Explore()
 
 
