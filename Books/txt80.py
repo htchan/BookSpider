@@ -12,7 +12,7 @@ class TXT80():
         def _getBasicInfo(self):
             # fill back the info by the website
             try:
-                res = urllib.request.urlopen(self._website)
+                res = urllib.request.urlopen(self._website,timeout=60)
                 content = res.read()
 
                 # decode the content
@@ -78,7 +78,7 @@ class TXT80():
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website)
+            res = urllib.request.urlopen(self._website,timeout=60)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
@@ -112,10 +112,10 @@ class TXT80():
             f = open(path+"\\"+self._bookType+"\\"+self._name+"-"+self._writer+".txt","w",encoding='utf8')
             f.write(self._text)
             f.close()
-            self._cursor.execute("update books set download='true' where website='"+book._website+"'")
+            return True
         def _DownloadChapter(self,url):
             # open chapter url
-            chRes = urllib.request.urlopen(url)
+            chRes = urllib.request.urlopen(url,timeout=60)
             content = chRes.read()
             # decode the content
             if (chRes.info().get('Content-Encoding') == 'gzip'):
@@ -152,7 +152,8 @@ class TXT80():
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
         out("downloading")
         for book in self.books:
-            book.DownloadBook(self._path)
+            if(book.DownloadBook(self._path)):
+                self._cursor.execute("update books set download='true' where website='"+book._website+"'")
         out("finish download")
     def Update(self,out=print):
         # get all books from db to boo
@@ -182,7 +183,7 @@ class TXT80():
     def Explore(self,n,out=print):
         # get the max book num from the db
         self.books.clear()
-        self._bookNum = 12343
+        self._bookNum = 0
         for row in self._cursor.execute("select website from books where website like '%80txt%' order by website desc"):
             i = row[0]
             i = int(i[i.find("_")+1:i.rfind(".")])
@@ -190,22 +191,19 @@ class TXT80():
                 self._bookNum = i
         self._bookNum += 1
         errorPage = 0
-        # check any new book by the book num
+        # check any new book by the book num and try to save it
         while(errorPage<n):
             b = self.Book("https://www.80txt.com/txtml_"+str(self._bookNum)+".html")
             if(b._name):
                 self.books.append(b)
-                out("r"+b._name+"\t"+b._bookType,end=" "*10)
+                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and writer='"+b._writer+"'").fetchone())
+                if(not(flag)):
+                    sql = (
+                        "insert into books (name,writer,date,chapter,website,type,download) values"
+                        "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
+                    )
+                    self._cursor.execute(sql)
+                    self._conn.commit()
                 errorPage = 0
             else: errorPage += 1
             self._bookNum += 1
-        # save the book num
-        for book in self.books:
-            flag = bool(self._cursor.execute("select * from books where name='"+book._name+"' and writer='"+book._writer+"'").fetchone())
-            if(not(flag)):
-                sql = (
-                    "insert into books (name,writer,date,chapter,website,type,download) values"
-                    "('"+book._name+"','"+book._writer+"','"+book._date+"','"+book._chapter+"','"+book._website+"','"+book._bookType+"','false')"
-                )
-                self._cursor.execute(sql)
-                self._conn.commit()
