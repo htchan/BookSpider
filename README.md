@@ -6,6 +6,12 @@
     - add new book
     - check update for book
     - download book
+  
+  #==========hjwxw==========#
+  library for operation on 80txt
+    - add new book
+    - check update for book
+    - download book
 
   #==========download books==========#
   program to manage the behavior on different website
