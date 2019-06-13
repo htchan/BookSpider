@@ -22,7 +22,7 @@ class TXT80():
                 content = content.decode("utf-8")
 
             # return false if the webpage is not exist or not avaliable
-            except urllib.error.HTTPError:
+            except (urllib.error.HTTPError, urllib.request.socket.timeout):
                 return False
 
             if(not self._name):
