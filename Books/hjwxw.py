@@ -46,16 +46,14 @@ class HJWXW():
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
-                start = content.find("作者標簽:")
-                self._writer = content[start+4:]
-                start = self._writer.find('</a>')
-                self._writer = self._writer[start+1:]
-                end = self._writer.find('</a>')
-                self._writer = self._writer[:end]
+                start = content.rfind("作者標簽:")
+                self._writer = content[start+5:]
+                end = self._writer.find('">')
+                self._writer = self._writer[:end].strip()
                 self._updated = True
 
             # get date (always get)
-            start = content.find('更新时间: ')
+            start = content.find('更新時間: ')
             date = content[start+6:]
             end = date.find('">')
             date = date[:end]
@@ -66,7 +64,7 @@ class HJWXW():
             # get chapter (always get)
             start = content.find("章節名:")
             chapter = content[start+4:]
-            end = chapter.find('更新时间')
+            end = chapter.find('更新時間')
             chapter = chapter[:end]
             if(self._chapter != chapter):
                 self._chapter = chapter
@@ -75,19 +73,21 @@ class HJWXW():
                 # check type (bookType)
                 bookType = ""
                 c = content
-                start = c.find('小說分類標簽: ')
-                if(start>0):
-                    c = content[start+8:]
+                start = c.find('小說分類標簽:')
+                while(start>0):
+                    if(bookType != ""):
+                        bookType += ","
+                    c = c[start+8:]
                     end = c.find('  ')
-                    bookType += c[:end]
+                    bookType += c[:end].strip()
                     c = c[end:]
-                    start = c.find('小說分類標簽: ')                    
+                    start = c.find('小說分類標簽:')                    
                 self._updated = True
                 self._bookType = bookType
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website,timeout=60)
+            res = urllib.request.urlopen(self._website.replace("Book","Book/Chapter"),timeout=60)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
@@ -119,7 +119,7 @@ class HJWXW():
             f = open(path+"\\"+self._bookType+"\\"+self._name+"-"+self._writer+".txt","w",encoding='utf8')
             f.write(self._text)
             f.close()
-            self._cursor.execute("update books set download='true' where website='"+book._website+"'")
+            return True
         def _DownloadChapter(self,url):
             # open chapter url
             chRes = urllib.request.urlopen(url,timeout=60)
@@ -134,9 +134,9 @@ class HJWXW():
             start = content.find("<h1>")
             title = content[start+4:]
             end = title.find("</h1>")
-            title = title[:end]
-            self._chapter = title.strip()
-            self._text += title + "\n"
+            title = title[:end].strip()
+            self._chapter = title
+            self._text += title + "\n\n"
             # get the content
             start = content.find('<p/>')
             con = content[start+4:]
@@ -144,20 +144,21 @@ class HJWXW():
             con = con[:end]
             con = con.split("<p/>")
             for c in con:
-                self._text += c + "\n"
+                if(c!=""): self._text += c.strip() + "\n\n"
     def Download(self,out=print):
         # put [end] book in db to books
         self.books.clear()
-        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%hjwxw%'"):
+        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%hjwzw%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
         out("downloading")
         for book in self.books:
-            book.DownloadBook(self._path)
+            if(book.DownloadBook(self._path)):
+                self._cursor.execute("update books set download='true' where website='"+book._website+"'")
         out("finish download")
     def Update(self,out=print):
         # get all books from db to boo
         self.books.clear()
-        for row in self._cursor.execute("select * from books where website like '%hjwxw%'"):
+        for row in self._cursor.execute("select * from books where website like '%hjwzw%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
         # check any update
         out("updating")
@@ -182,8 +183,8 @@ class HJWXW():
     def Explore(self,n,out=print):
         # get the max book num from the db
         self.books.clear()
-        self._bookNum = 140
-        for row in self._cursor.execute("select website from books where website like '%hjwxw%' order by website desc"):
+        self._bookNum = 1635
+        for row in self._cursor.execute("select website from books where website like '%hjwzw%' order by website desc"):
             i = row[0]
             i = int(i[i.rfind("/")+1:])
             if(i > self._bookNum):
