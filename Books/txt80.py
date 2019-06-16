@@ -20,6 +20,7 @@ class TXT80():
                     gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                     content = gzipFile.read()
                 content = content.decode("utf-8")
+                res.close()
 
             # return false if the webpage is not exist or not avaliable
             except (urllib.error.HTTPError, urllib.request.socket.timeout):
@@ -85,6 +86,7 @@ class TXT80():
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                 content = gzipFile.read()
             content = content.decode("utf-8")
+            res.close()
 
             # get chapter set
             start = content.find("yulan")
@@ -122,6 +124,7 @@ class TXT80():
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                 content = gzipFile.read()
             content = content.decode("utf-8")
+            chRes.close()
             # get the title
             self._text += "\n"
             start = content.find("<h1>")

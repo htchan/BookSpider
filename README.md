@@ -8,7 +8,13 @@
     - download book
   
   #==========hjwxw==========#
-  library for operation on 80txt
+  library for operation on hjwzw
+    - add new book
+    - check update for book
+    - download book
+
+  #==========novel101==========#
+  library for operation on novel101
     - add new book
     - check update for book
     - download book
@@ -24,10 +30,6 @@
     ----- set download type
     ----- process bar
 
-#=====Music=====#
-
-#=====Baidu=====#
-
 #=====test=====#
   test different module work as expected
   <folder>-<file>".py" will be the program for testing
@@ -39,9 +41,3 @@ include below function
   - run behavior of book websites
   - run behavior of music websites
   - run behavior of baidu activity
-
-#==========TODO==========#
--test the function in class txt80
-  - download
-  - update
-  - explore

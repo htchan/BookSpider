@@ -8,14 +8,7 @@ import io
 import ClassDefinition
 import time
 
-class HJWXW():
-    def __init__(self, dbConn, path):
-        self._webpage = ""
-        self._bookNum = 0
-        self.books = []
-        self._conn = dbConn
-        self._cursor = self._conn.cursor()
-        self._path = path
+class Novel101():
     class Book(ClassDefinition.BaseBook):
         def _getBasicInfo(self):
             # fill back the info by the website
@@ -27,91 +20,87 @@ class HJWXW():
                 if (res.info().get('Content-Encoding') == 'gzip'):
                     gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                     content = gzipFile.read()
-                content = content.decode("utf-8")
+                content = content.decode("big5","ignore")
                 res.close()
 
-                if("未找到該頁,1秒后為您跳轉" in content):
-                    return False
-
             # return false if the webpage is not exist or not avaliable
-            except (urllib.error.HTTPError, urllib.request.socket.timeout):
+            except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
                 return False
 
             if(not self._name):
                 # get name
-                start = content.find("<title>")
-                self._name = content[start+7:]
-                end = self._name.find("/")
-                self._name = self._name[:end]
+                start = content.find("f20h")
+                self._name = content[start+6:]
+                end = self._name.find("<em>")
+                self._name = self._name[:end].strip()
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
-                start = content.rfind("作者標簽:")
-                self._writer = content[start+5:]
-                end = self._writer.find('">')
-                self._writer = self._writer[:end].strip()
+                start = content.find("作者")
+                self._writer = content[start+3:]
+                end = self._writer.find('/em>')
+                self._writer = self._writer[:end-1].strip()
+                if(self._writer.replace("\x00","") == ""):
+                    self._writer = "EMPTY"
                 self._updated = True
 
             # get date (always get)
-            start = content.find('更新時間: ')
-            date = content[start+6:]
-            end = date.find('">')
+            start = content.find('更新時間')
+            date = content[start+5:]
+            start = date.find('</b>')
+            date = date[start+4:]
+            end = date.find('</')
             date = date[:end]
             if(self._date != date):
-                self._date = date
+                self._date = date.strip()
                 self._updated = True
 
             # get chapter (always get)
-            start = content.find("章節名:")
-            chapter = content[start+4:]
-            end = chapter.find('更新時間')
-            chapter = chapter[:end]
-            if(self._chapter != chapter):
-                self._chapter = chapter
+            if(self._chapter == ""):
+                self._chapter = "EMPTY"
                 self._updated = True
             if(not self._bookType):
                 # check type (bookType)
-                bookType = ""
-                c = content
-                start = c.find('小說分類標簽:')
-                while(start>0):
-                    if(bookType != ""):
-                        bookType += ","
-                    c = c[start+8:]
-                    end = c.find('  ')
-                    bookType += c[:end].strip()
-                    c = c[end:]
-                    start = c.find('小說分類標簽:')                    
+                start = content.find('小說分類')
+                self._bookType = content[start+3:]
+                start = self._bookType.find('</b>')
+                self._bookType = self._bookType[start+4:]
+                end = self._bookType.find('</td>')
+                self._bookType = self._bookType[:end].strip()
+                if(self._bookType == ''):
+                    self._bookType = "EMPTY"
                 self._updated = True
-                self._bookType = bookType
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website.replace("Book","Book/Chapter"),timeout=60)
+            res = urllib.request.urlopen(self._website.replace("txt","ck101")[:-5]+"/",timeout=60)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                 content = gzipFile.read()
-            content = content.decode("utf-8")
+            content = content.decode("big5","ignore")
             res.close()
 
             # get chapter set
-            start = content.find("tbchapterlist")
-            chapters = content[start+6:]
-            end = chapters.find("</table>")
+            start = content.find("defaulthtml4")
+            chapters = content[start:]
+            start = chapters.find("<TBODY>")
+            chapters = chapters[start:]
+            end = chapters.find("</TBODY>")
             chapters = chapters[:end]
-            self._chapterSet = chapters.split("</a>")
+            self._chapterSet = chapters.split("href=")
             out(self._name)
             # download chapters one by one
             for chapter in self._chapterSet:
-                if("href" in chapter):
+                if("html" in chapter):
                     # go to the website and download
-                    chapter = chapter[chapter.find('href="')+6:]
+                    chapter = chapter[chapter.find('"')+1:]
                     chapter = chapter[:chapter.find('"')]
-                    self._DownloadChapter("https://tw.hjwzw.com"+chapter)
+                    self._DownloadChapter("https://www.101novel.net"+chapter)
                     # log for progress
                     out("\r"+self._chapter,end=" "*20)
+                    time.sleep(5)
             # save it into file
             try: os.mkdir(path)
             except: pass
@@ -129,29 +118,39 @@ class HJWXW():
             if (chRes.info().get('Content-Encoding') == 'gzip'):
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                 content = gzipFile.read()
-            content = content.decode("utf-8")
+            content = content.decode("big5","ignore")
             chRes.close()
             # get the title
             self._text += "\n"
-            start = content.find("<h1>")
+            start = content.find("<H1>")
             title = content[start+4:]
-            end = title.find("</h1>")
-            title = title[:end].strip()
+            end = title.find("</H1>")
+            title = title[:end]
             self._chapter = title
-            self._text += title + "\n\n"
+            self._text += title + "\n"
             # get the content
-            start = content.find('<p/>')
-            con = content[start+4:]
-            end = con.find("<p />")
-            con = con[:end]
-            con = con.split("<p/>")
-            for c in con:
-                if(c!=""): self._text += c.strip() + "\n\n"
+            start = content.find('<P>')
+            c = content[start+5:]
+            end = c.find("</P>")
+            c = c[:end]
+            c = c.replace("&nbsp;"," ")
+            c = c.replace("<br />","\n").replace("\r\n","\n")
+            for i in range(3):
+                c = c.replace("\n\n\n","\n\n")
+            self._text += c
+    def __init__(self, dbConn, path):
+        self._webpage = ""
+        self._bookNum = 0
+        self.books = []
+        self._conn = dbConn
+        self._cursor = self._conn.cursor()
+        self._path = path
     def Download(self,out=print):
         # put [end] book in db to books
         self.books.clear()
-        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%hjwzw%'"):
+        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%101novel%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
+            time.sleep(5)
         out("downloading")
         for book in self.books:
             if(book.DownloadBook(self._path)):
@@ -160,8 +159,9 @@ class HJWXW():
     def Update(self,out=print):
         # get all books from db to boo
         self.books.clear()
-        for row in self._cursor.execute("select * from books where website like '%hjwzw%'"):
+        for row in self._cursor.execute("select * from books where website like '%101novel%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
+            time.sleep(5)
         # check any update
         out("updating")
         for book in self.books:
@@ -185,17 +185,18 @@ class HJWXW():
     def Explore(self,n,out=print):
         # get the max book num from the db
         self.books.clear()
-        self._bookNum = 1635
-        for row in self._cursor.execute("select website from books where website like '%hjwzw%' order by website desc"):
+        self._bookNum = 0
+        for row in self._cursor.execute("select website from books where website like '%101novel%' order by website desc"):
             i = row[0]
-            i = int(i[i.rfind("/")+1:])
+            i = int(i[i.rfind("/")+1:i.rfind(".")])
             if(i > self._bookNum):
                 self._bookNum = i
         self._bookNum += 1
         errorPage = 0
-        # check any new book by the book num
+        # check any new book by the book num and try to save it
         while(errorPage<n):
-            b = self.Book("https://tw.hjwzw.com/Book/"+str(self._bookNum))
+            time.sleep(5)
+            b = self.Book("https://www.101novel.net/txt/"+str(self._bookNum)+".html")
             if(b._name):
                 self.books.append(b)
                 flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and writer='"+b._writer+"'").fetchone())
@@ -207,8 +208,5 @@ class HJWXW():
                     self._cursor.execute(sql)
                     self._conn.commit()
                 errorPage = 0
-            else: 
-                time.sleep(5)
-                errorPage += 1
-                out("error"+str(self._bookNum))
+            else: errorPage += 1
             self._bookNum += 1
