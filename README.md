@@ -13,8 +13,8 @@
     - check update for book
     - download book
 
-  #==========novel101==========#
-  library for operation on novel101
+  #==========ck101==========#
+  library for operation on ck101
     - add new book
     - check update for book
     - download book
