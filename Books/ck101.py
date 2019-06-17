@@ -6,9 +6,8 @@ import http
 import gzip
 import io
 import ClassDefinition
-import time
 
-class Novel101():
+class CK101():
     class Book(ClassDefinition.BaseBook):
         def _getBasicInfo(self):
             # fill back the info by the website
@@ -20,60 +19,69 @@ class Novel101():
                 if (res.info().get('Content-Encoding') == 'gzip'):
                     gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                     content = gzipFile.read()
-                content = content.decode("big5","ignore")
+                content = content.decode("big5","ignore").replace("\x00","")
                 res.close()
 
+                if("出現錯誤！" in content): return False
+
             # return false if the webpage is not exist or not avaliable
-            except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
+            except (urllib.error.HTTPError, urllib.request.socket.timeout):
                 return False
 
             if(not self._name):
                 # get name
-                start = content.find("f20h")
-                self._name = content[start+6:]
-                end = self._name.find("<em>")
-                self._name = self._name[:end].strip()
+                start = content.find("<h1>")
+                self._name = content[start+4:]
+                start = self._name.find('">')
+                self._name = self._name[start+2:]
+                end = self._name.find("</a>")
+                self._name = self._name[:end]
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
-                start = content.find("作者")
+                start = content.find("作者︰")
                 self._writer = content[start+3:]
-                end = self._writer.find('/em>')
-                self._writer = self._writer[:end-1].strip()
-                if(self._writer.replace("\x00","") == ""):
-                    self._writer = "EMPTY"
+                start = self._writer.find('">')
+                self._writer = self._writer[start+2:]
+                end = self._writer.find('</a>')
+                self._writer = self._writer[:end]
                 self._updated = True
 
             # get date (always get)
-            start = content.find('更新時間')
-            date = content[start+5:]
-            start = date.find('</b>')
-            date = date[start+4:]
-            end = date.find('</')
+            start = content.rfind('最新章節')
+            date = content[start+4:]
+            start = date.find("(")
+            date = date[start+1:]
+            end = date.find(')')
             date = date[:end]
             if(self._date != date):
-                self._date = date.strip()
+                self._date = date
                 self._updated = True
 
             # get chapter (always get)
-            if(self._chapter == ""):
-                self._chapter = "EMPTY"
+            start = content.find("<strong>")
+            chapter = content[start+8:]
+            start = chapter.find(">")
+            chapter = chapter[start+1:]
+            end = chapter.find('</a>')
+            chapter = chapter[:end]
+            if(self._chapter != chapter):
+                self._chapter = chapter
                 self._updated = True
             if(not self._bookType):
                 # check type (bookType)
-                start = content.find('小說分類')
-                self._bookType = content[start+3:]
-                start = self._bookType.find('</b>')
+                start = content.find('您的位置︰')
+                self._bookType = content[start+5:]
+                start = self._bookType.find('&gt;')
                 self._bookType = self._bookType[start+4:]
-                end = self._bookType.find('</td>')
+                end = self._bookType.find('&gt;')
                 self._bookType = self._bookType[:end].strip()
-                if(self._bookType == ''):
-                    self._bookType = "EMPTY"
+                if(self._bookType.strip() == ""): self._bookType = "EMPTY"
                 self._updated = True
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website.replace("txt","ck101")[:-5]+"/",timeout=60)
+            res = urllib.request.urlopen(self._website.replace("book","0").replace(".html","/"),timeout=60)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
@@ -83,26 +91,21 @@ class Novel101():
             res.close()
 
             # get chapter set
-            start = content.find("defaulthtml4")
+            start = content.find("<dl")
             chapters = content[start:]
-            start = chapters.find("<TBODY>")
-            chapters = chapters[start:]
-            end = chapters.find("</TBODY>")
+            end = chapters.find("</div>")
             chapters = chapters[:end]
             self._chapterSet = chapters.split("href=")
             out(self._name)
             # download chapters one by one
             for chapter in self._chapterSet:
-                if("<B>" in chapter):
-                    self._text += chapter[chapter.find("<B>")+3:chapter.find("</B>")] + "\n"
-                elif("html" in chapter):
+                if("html" in chapter):
                     # go to the website and download
                     chapter = chapter[chapter.find('"')+1:]
                     chapter = chapter[:chapter.find('"')]
-                    self._DownloadChapter("https://www.101novel.net"+chapter)
+                    self._DownloadChapter("https://www.ck101.org"+chapter)
                     # log for progress
                     out("\r"+self._chapter,end=" "*20)
-                    time.sleep(5)
             # save it into file
             try: os.mkdir(path)
             except: pass
@@ -124,21 +127,21 @@ class Novel101():
             chRes.close()
             # get the title
             self._text += "\n"
-            start = content.find("<H1>")
+            start = content.find("<h1>")
             title = content[start+4:]
-            end = title.find("</H1>")
+            end = title.find("</h1>")
             title = title[:end]
             self._chapter = title
             self._text += title + "\n"
             # get the content
-            start = content.find('<P>')
-            c = content[start+5:]
-            end = c.find("</P>")
+            start = content.find('yuedu_zhengwen')
+            c = content[start+14:]
+            start = c.find(">")
+            c = c[start+1:]
+            end = c.find("</div")
             c = c[:end]
             c = c.replace("&nbsp;"," ")
-            c = c.replace("<br />","\n").replace("\r\n","\n")
-            for i in range(3):
-                c = c.replace("\n\n\n","\n\n")
+            c = c.replace("<br />","")
             self._text += c
     def __init__(self, dbConn, path):
         self._webpage = ""
@@ -150,9 +153,8 @@ class Novel101():
     def Download(self,out=print):
         # put [end] book in db to books
         self.books.clear()
-        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%101novel%'"):
+        for row in self._cursor.execute("select * from books where end='true' and download='false' and website like '%ck101%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
-            time.sleep(5)
         out("downloading")
         for book in self.books:
             if(book.DownloadBook(self._path)):
@@ -161,9 +163,8 @@ class Novel101():
     def Update(self,out=print):
         # get all books from db to boo
         self.books.clear()
-        for row in self._cursor.execute("select * from books where website like '%101novel%'"):
+        for row in self._cursor.execute("select * from books where website like '%ck101%'"):
             self.books.append(self.Book(row[4],name=row[0],writer=row[1],date=row[2],chapter=row[3],bookType=row[5]))
-            time.sleep(5)
         # check any update
         out("updating")
         for book in self.books:
@@ -188,7 +189,7 @@ class Novel101():
         # get the max book num from the db
         self.books.clear()
         self._bookNum = 0
-        for row in self._cursor.execute("select website from books where website like '%101novel%' order by website desc"):
+        for row in self._cursor.execute("select website from books where website like '%ck101%' order by website desc"):
             i = row[0]
             i = int(i[i.rfind("/")+1:i.rfind(".")])
             if(i > self._bookNum):
@@ -197,8 +198,7 @@ class Novel101():
         errorPage = 0
         # check any new book by the book num and try to save it
         while(errorPage<n):
-            time.sleep(5)
-            b = self.Book("https://www.101novel.net/txt/"+str(self._bookNum)+".html")
+            b = self.Book("https://www.ck101.org/book/"+str(self._bookNum)+".html")
             if(b._name):
                 self.books.append(b)
                 flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and writer='"+b._writer+"'").fetchone())

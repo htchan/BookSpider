@@ -3,6 +3,7 @@ import sqlite3
 import os
 import txt80
 import hjwxw
+import ck101
 import time
 import ClassDefinition
 import sys
@@ -102,6 +103,7 @@ class BookCollection:
         # init all book website
         self.websites.append(txt80.TXT80(self.conn,self.directory))
         self.websites.append(hjwxw.HJWXW(self.conn,self.directory))
+        self.websites.append(ck101.CK101(self.conn,self.directory))
 
     def close(self):
         self.conn.commit()
