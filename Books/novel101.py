@@ -210,5 +210,8 @@ class Novel101():
                     self._cursor.execute(sql)
                     self._conn.commit()
                 errorPage = 0
-            else: errorPage += 1
+            else:
+                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                self._conn.commit()
+                errorPage += 1
             self._bookNum += 1

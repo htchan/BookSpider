@@ -198,7 +198,7 @@ class HJWXW():
             b = self.Book("https://tw.hjwzw.com/Book/"+str(self._bookNum))
             if(b._name):
                 self.books.append(b)
-                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and writer='"+b._writer+"'").fetchone())
+                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
                 if(not(flag)):
                     sql = (
                         "insert into books (name,writer,date,chapter,website,type,download) values"
@@ -209,6 +209,40 @@ class HJWXW():
                 errorPage = 0
             else: 
                 time.sleep(5)
+                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                self._conn.commit()
                 errorPage += 1
-                out("error"+str(self._bookNum))
             self._bookNum += 1
+        self.ErrorUpdate()
+    def ErrorUpdate(self,out=print,checkAll=False):
+        # get all books from db to boo
+        self.books.clear()
+        condition = ""
+        if(not checkAll): condition = " and type is null or type=''"
+        for row in self._cursor.execute("select * from error where website like '%hjwzw%'"+condition):
+            web = row[0]
+            errType = ''
+            try:
+                res = urllib.request.urlopen(web, timeout=60)
+                content = res.read()
+
+                # decode the content
+                if (res.info().get('Content-Encoding') == 'gzip'):
+                    gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
+                    content = gzipFile.read()
+                content = content.decode("utf-8")
+                res.close()
+                if("未找到該頁,1秒后為您跳轉" in content): errType = '404'
+            except (urllib.error.HTTPError): errType = '404'
+            except (urllib.request.socket.timeout): errType = 'timeout'
+            self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
+            if(errType == ''):
+                self._conn.execute("delete from error where website='"+web+"'")
+                b = self.Book(web)
+                sql = (
+                    "insert into books (name,writer,date,chapter,website,type,download) values"
+                    "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
+                )
+                self._cursor.execute(sql)
+            self._conn.commit()
+        out("error update finish")

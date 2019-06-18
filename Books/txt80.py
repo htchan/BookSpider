@@ -199,7 +199,7 @@ class TXT80():
             b = self.Book("https://www.80txt.com/txtml_"+str(self._bookNum)+".html")
             if(b._name):
                 self.books.append(b)
-                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and writer='"+b._writer+"'").fetchone())
+                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
                 if(not(flag)):
                     sql = (
                         "insert into books (name,writer,date,chapter,website,type,download) values"
@@ -208,5 +208,32 @@ class TXT80():
                     self._cursor.execute(sql)
                     self._conn.commit()
                 errorPage = 0
-            else: errorPage += 1
+            else:
+                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                self._conn.commit()
+                errorPage += 1
             self._bookNum += 1
+        self.ErrorUpdate()
+    def ErrorUpdate(self,out=print,checkAll=False):
+        # get all books from db to boo
+        self.books.clear()
+        condition = ""
+        if(not checkAll): condition = " and type is null or type=''"
+        for row in self._cursor.execute("select * from error where website like '%80txt%'"+condition):
+            web = row[0]
+            errType = ''
+            try:
+                res = urllib.request.urlopen(web, timeout=60)
+            except (urllib.error.HTTPError): errType = '404'
+            except (urllib.request.socket.timeout): errType = 'timeout'
+            self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
+            if(errType == ''):
+                self._conn.execute("delete from error where website='"+web+"'")
+                b = self.Book(web)
+                sql = (
+                    "insert into books (name,writer,date,chapter,website,type,download) values"
+                    "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
+                )
+                self._cursor.execute(sql)
+            self._conn.commit()
+        out("error update finish")
