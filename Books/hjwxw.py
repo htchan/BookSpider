@@ -5,7 +5,8 @@ import sqlite3
 import http
 import gzip
 import io
-import ClassDefinition
+try: import ClassDefinition
+except: import Books.ClassDefinition as ClassDefinition
 import time
 
 class HJWXW():
