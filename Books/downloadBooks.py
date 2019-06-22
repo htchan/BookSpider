@@ -27,17 +27,21 @@ class BookCollection:
 
     def Download(self):
         # for all website, download books
-        for website in self.website:
+        for website in self.websites:
             website.Download()
 
     def Update(self):
         for website in self.websites:
             website.Update()
 
-    def Explore(self):
+    def Explore(self,n):
         for website in self.websites:
-            website.Explore()
+            print(type(website))
+            website.Explore(n)
 
+    def ErrorUpdate(self):
+        for website in self.websites:
+            website.ErrorUpdate()
 
 '''
     # update books end by their last chapter content

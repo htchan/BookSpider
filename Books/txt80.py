@@ -117,9 +117,14 @@ class TXT80():
             f.close()
             return True
         def _DownloadChapter(self,url):
-            # open chapter url
-            chRes = urllib.request.urlopen(url,timeout=60)
-            content = chRes.read()
+            try:
+                # open chapter url
+                chRes = urllib.request.urlopen(url,timeout=60)
+                content = chRes.read()
+            except:
+                time.sleep(10)
+                self._DownloadChapter(url)
+                return
             # decode the content
             if (chRes.info().get('Content-Encoding') == 'gzip'):
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
@@ -179,6 +184,7 @@ class TXT80():
                         f = False
                         break
                 if(f):
+                    out("\rupdate "+book._name,end="")
                     os.rename(self._path+"\\"+book._bookType+"\\"+book._name+"-"+book._writer+".txt",self._path+"\\"+book._bookType+"\\-"+book._name+"-"+book._writer+".txt")
                     book._name = '-'+book._name
                     self._cursor.execute("update books set name='"+book._name+"' where website='"+book._website+"'")
@@ -199,6 +205,7 @@ class TXT80():
         while(errorPage<n):
             b = self.Book("https://www.80txt.com/txtml_"+str(self._bookNum)+".html")
             if(b._name):
+                out("\r"+b._name,end="")
                 self.books.append(b)
                 flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
                 if(not(flag)):
@@ -210,14 +217,18 @@ class TXT80():
                     self._conn.commit()
                 errorPage = 0
             else:
-                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
-                self._conn.commit()
+                out("\rerror "+str(self._bookNum),end="")
+                f = self._cursor.execute("select * from error where website='"+b._website+"'").fetchone()
+                if(not f):
+                    self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                    self._conn.commit()
                 errorPage += 1
             self._bookNum += 1
         self.ErrorUpdate()
     def ErrorUpdate(self,out=print,checkAll=False):
         # get all books from db to boo
         self.books.clear()
+        out("error update")
         condition = ""
         if(not checkAll): condition = " and type is null or type=''"
         for row in self._cursor.execute("select * from error where website like '%80txt%'"+condition):
@@ -231,10 +242,11 @@ class TXT80():
             if(errType == ''):
                 self._conn.execute("delete from error where website='"+web+"'")
                 b = self.Book(web)
+                out("\rerror update "+b._name,end="")
                 sql = (
                     "insert into books (name,writer,date,chapter,website,type,download) values"
                     "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
                 )
                 self._cursor.execute(sql)
             self._conn.commit()
-        out("error update finish")
+        out("\nerror update finish")

@@ -123,9 +123,14 @@ class HJWXW():
             f.close()
             return True
         def _DownloadChapter(self,url):
-            # open chapter url
-            chRes = urllib.request.urlopen(url,timeout=60)
-            content = chRes.read()
+            try:
+                # open chapter url
+                chRes = urllib.request.urlopen(url,timeout=60)
+                content = chRes.read()
+            except:
+                time.sleep(5)
+                self._DownloadChapter(url)
+                return
             # decode the content
             if (chRes.info().get('Content-Encoding') == 'gzip'):
                 gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
@@ -178,6 +183,7 @@ class HJWXW():
                         f = False
                         break
                 if(f):
+                    out("\rupdate "+book._name,end="")
                     os.rename(self._path+"\\"+book._bookType+"\\"+book._name+"-"+book._writer+".txt",self._path+"\\"+book._bookType+"\\-"+book._name+"-"+book._writer+".txt")
                     book._name = '-'+book._name
                     self._cursor.execute("update books set name='"+book._name+"' where website='"+book._website+"'")
@@ -186,7 +192,7 @@ class HJWXW():
     def Explore(self,n,out=print):
         # get the max book num from the db
         self.books.clear()
-        self._bookNum = 1635
+        self._bookNum = 0
         for row in self._cursor.execute("select website from books where website like '%hjwzw%' order by website desc"):
             i = row[0]
             i = int(i[i.rfind("/")+1:])
@@ -198,6 +204,7 @@ class HJWXW():
         while(errorPage<n):
             b = self.Book("https://tw.hjwzw.com/Book/"+str(self._bookNum))
             if(b._name):
+                out("\r"+b._name,end="")
                 self.books.append(b)
                 flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
                 if(not(flag)):
@@ -206,12 +213,16 @@ class HJWXW():
                         "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
                     )
                     self._cursor.execute(sql)
+                    self._cursor.execute("delete from error where website='"+b._website+"'")
                     self._conn.commit()
                 errorPage = 0
-            else: 
+            else:
+                out("\rerror "+str(self._bookNum),end="")
                 time.sleep(5)
-                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
-                self._conn.commit()
+                f = self._cursor.execute("select * from error where website='"+b._website+"'").fetchone()
+                if(not f):
+                    self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                    self._conn.commit()
                 errorPage += 1
             self._bookNum += 1
         self.ErrorUpdate()
@@ -220,7 +231,8 @@ class HJWXW():
         self.books.clear()
         condition = ""
         if(not checkAll): condition = " and type is null or type=''"
-        for row in self._cursor.execute("select * from error where website like '%hjwzw%'"+condition):
+        rows = self._cursor.execute("select * from error where website like '%hjwzw%'"+condition).fetchall()
+        for row in rows:
             web = row[0]
             errType = ''
             try:
@@ -238,12 +250,14 @@ class HJWXW():
             except (urllib.request.socket.timeout): errType = 'timeout'
             self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
             if(errType == ''):
-                self._conn.execute("delete from error where website='"+web+"'")
                 b = self.Book(web)
-                sql = (
-                    "insert into books (name,writer,date,chapter,website,type,download) values"
-                    "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
-                )
-                self._cursor.execute(sql)
+                if(b._name):
+                    self._conn.execute("delete from error where website='"+web+"'")
+                    out("\rupdate "+b._name,end="")
+                    sql = (
+                        "insert into books (name,writer,date,chapter,website,type,download) values"
+                        "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
+                    )
+                    self._cursor.execute(sql)
             self._conn.commit()
         out("error update finish")

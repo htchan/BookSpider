@@ -11,6 +11,7 @@ def book():
     bookDownload = Books.downloadBooks.BookCollection(os.getcwd())
     looping = True
     while(looping):
+        os.system("cls")
         print("Book Download"+'='*20)
         print("D:\tDownload books")
         print("C:\tCheck new books")
@@ -21,11 +22,12 @@ def book():
         if(res == "D"): bookDownload.Download()
         elif(res == "C"): bookDownload.Explore(100)
         elif(res == "U"): bookDownload.Update()
-        elif(res == "A"): print("developing")
+        elif(res == "A"): bookDownload.ErrorUpdate()
         elif(res == "E"): looping = False
-        os.system("cls")
-        
-    pass
+        else:
+            os.system("cls")
+            print("wrong input")
+    bookDownload.close()
 
 def music():
     pass
