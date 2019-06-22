@@ -13,7 +13,7 @@ class TXT80():
         def _getBasicInfo(self):
             # fill back the info by the website
             try:
-                res = urllib.request.urlopen(self._website,timeout=60)
+                res = urllib.request.urlopen(self._website,timeout=30)
                 content = res.read()
 
                 # decode the content
@@ -25,6 +25,7 @@ class TXT80():
 
             # return false if the webpage is not exist or not avaliable
             except (urllib.error.HTTPError, urllib.request.socket.timeout):
+                res.close()
                 return False
 
             if(not self._name):
@@ -80,7 +81,7 @@ class TXT80():
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website,timeout=60)
+            res = urllib.request.urlopen(self._website,timeout=30)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
@@ -119,10 +120,11 @@ class TXT80():
         def _DownloadChapter(self,url):
             try:
                 # open chapter url
-                chRes = urllib.request.urlopen(url,timeout=60)
+                chRes = urllib.request.urlopen(url,timeout=30)
                 content = chRes.read()
             except:
-                time.sleep(10)
+                chRes.close()
+                time.sleep(5)
                 self._DownloadChapter(url)
                 return
             # decode the content
@@ -235,9 +237,10 @@ class TXT80():
             web = row[0]
             errType = ''
             try:
-                res = urllib.request.urlopen(web, timeout=60)
+                res = urllib.request.urlopen(web, timeout=30)
             except (urllib.error.HTTPError): errType = '404'
             except (urllib.request.socket.timeout): errType = 'timeout'
+            res.close()
             self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
             if(errType == ''):
                 self._conn.execute("delete from error where website='"+web+"'")

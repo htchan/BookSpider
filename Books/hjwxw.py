@@ -21,7 +21,7 @@ class HJWXW():
         def _getBasicInfo(self):
             # fill back the info by the website
             try:
-                res = urllib.request.urlopen(self._website,timeout=60)
+                res = urllib.request.urlopen(self._website,timeout=30)
                 content = res.read()
 
                 # decode the content
@@ -36,6 +36,7 @@ class HJWXW():
 
             # return false if the webpage is not exist or not avaliable
             except (urllib.error.HTTPError, urllib.request.socket.timeout):
+                res.close()
                 return False
 
             if(not self._name):
@@ -88,7 +89,7 @@ class HJWXW():
             return self._updated
         def DownloadBook(self,path,out=print):
             # fill back the info by the website
-            res = urllib.request.urlopen(self._website.replace("Book","Book/Chapter"),timeout=60)
+            res = urllib.request.urlopen(self._website.replace("Book","Book/Chapter"),timeout=30)
             content = res.read()
             # decode the content
             if (res.info().get('Content-Encoding') == 'gzip'):
@@ -125,9 +126,10 @@ class HJWXW():
         def _DownloadChapter(self,url):
             try:
                 # open chapter url
-                chRes = urllib.request.urlopen(url,timeout=60)
+                chRes = urllib.request.urlopen(url,timeout=30)
                 content = chRes.read()
             except:
+                chRes.close()
                 time.sleep(5)
                 self._DownloadChapter(url)
                 return
@@ -236,7 +238,7 @@ class HJWXW():
             web = row[0]
             errType = ''
             try:
-                res = urllib.request.urlopen(web, timeout=60)
+                res = urllib.request.urlopen(web, timeout=30)
                 content = res.read()
 
                 # decode the content
@@ -244,10 +246,10 @@ class HJWXW():
                     gzipFile = gzip.GzipFile('','rb',9,io.BytesIO(content))
                     content = gzipFile.read()
                 content = content.decode("utf-8")
-                res.close()
                 if("未找到該頁,1秒后為您跳轉" in content): errType = '404'
             except (urllib.error.HTTPError): errType = '404'
             except (urllib.request.socket.timeout): errType = 'timeout'
+            res.close()
             self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
             if(errType == ''):
                 b = self.Book(web)
