@@ -5,6 +5,7 @@ import sqlite3
 import http
 import gzip
 import io
+import time
 try: import ClassDefinition
 except: import Books.ClassDefinition as ClassDefinition
 
@@ -24,8 +25,7 @@ class TXT80():
                 res.close()
 
             # return false if the webpage is not exist or not avaliable
-            except (urllib.error.HTTPError, urllib.request.socket.timeout):
-                res.close()
+            except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
                 return False
 
             if(not self._name):
@@ -123,7 +123,6 @@ class TXT80():
                 chRes = urllib.request.urlopen(url,timeout=30)
                 content = chRes.read()
             except:
-                chRes.close()
                 time.sleep(5)
                 self._DownloadChapter(url)
                 return
@@ -165,6 +164,7 @@ class TXT80():
         for book in self.books:
             if(book.DownloadBook(self._path)):
                 self._cursor.execute("update books set download='true' where website='"+book._website+"'")
+                self._conn.commit()
         out("finish download")
     def Update(self,out=print):
         # get all books from db to boo
@@ -233,14 +233,15 @@ class TXT80():
         out("error update")
         condition = ""
         if(not checkAll): condition = " and type is null or type=''"
-        for row in self._cursor.execute("select * from error where website like '%80txt%'"+condition):
+        rows = self._cursor.execute("select * from error where website like '%80txt%'"+condition).fetchall()
+        for row in rows:
             web = row[0]
             errType = ''
             try:
                 res = urllib.request.urlopen(web, timeout=30)
+                res.close()
             except (urllib.error.HTTPError): errType = '404'
-            except (urllib.request.socket.timeout): errType = 'timeout'
-            res.close()
+            except (urllib.request.socket.timeout, urllib.error.URLError): errType = 'timeout'
             self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
             if(errType == ''):
                 self._conn.execute("delete from error where website='"+web+"'")

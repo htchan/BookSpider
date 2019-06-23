@@ -5,6 +5,7 @@ import sqlite3
 import http
 import gzip
 import io
+import time
 try: import ClassDefinition
 except: import Books.ClassDefinition as ClassDefinition
 
@@ -26,8 +27,7 @@ class CK101():
                 if("出現錯誤！" in content): return False
 
             # return false if the webpage is not exist or not avaliable
-            except (urllib.error.HTTPError, urllib.request.socket.timeout):
-                res.close()
+            except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
                 return False
 
             if(not self._name):
@@ -123,7 +123,6 @@ class CK101():
                 chRes = urllib.request.urlopen(url,timeout=30)
                 content = chRes.read()
             except:
-                chRes.close()
                 time.sleep(5)
                 self._DownloadChapter(url)
                 return
@@ -167,6 +166,7 @@ class CK101():
         for book in self.books:
             if(book.DownloadBook(self._path)):
                 self._cursor.execute("update books set download='true' where website='"+book._website+"'")
+                self._conn.commit()
         out("finish download")
     def Update(self,out=print):
         # get all books from db to boo
@@ -249,9 +249,9 @@ class CK101():
                     content = gzipFile.read()
                 content = content.decode("big5","ignore").replace("\x00","")
                 if("出現錯誤！" in content): errType = '404'
+                res.close()
             except (urllib.error.HTTPError): errType = '404'
-            except (urllib.request.socket.timeout): errType = 'timeout'
-            res.close()
+            except (urllib.request.socket.timeout, urllib.error.URLError): errType = 'timeout'
             self._cursor.execute("update error set type='"+errType+"' where website='"+web+"'")
             if(errType == ''):
                 b = self.Book(web)
