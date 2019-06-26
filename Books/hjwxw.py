@@ -44,14 +44,14 @@ class HJWXW():
                 start = content.find("<title>")
                 self._name = content[start+7:]
                 end = self._name.find("/")
-                self._name = self._name[:end]
+                self._name = self._name[:end].replace("'","")
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
                 start = content.rfind("作者標簽:")
                 self._writer = content[start+5:]
                 end = self._writer.find('">')
-                self._writer = self._writer[:end].strip()
+                self._writer = self._writer[:end].strip().replace("'","")
                 self._updated = True
 
             # get date (always get)
@@ -67,7 +67,7 @@ class HJWXW():
             start = content.find("章節名:")
             chapter = content[start+4:]
             end = chapter.find('更新時間')
-            chapter = chapter[:end]
+            chapter = chapter[:end].replace("'","")
             if(self._chapter != chapter):
                 self._chapter = chapter
                 self._updated = True

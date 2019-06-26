@@ -37,7 +37,7 @@ class CK101():
                 start = self._name.find('">')
                 self._name = self._name[start+2:]
                 end = self._name.find("</a>")
-                self._name = self._name[:end]
+                self._name = self._name[:end].replace("'","")
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
@@ -46,7 +46,7 @@ class CK101():
                 start = self._writer.find('">')
                 self._writer = self._writer[start+2:]
                 end = self._writer.find('</a>')
-                self._writer = self._writer[:end]
+                self._writer = self._writer[:end].replcce("'","")
                 self._updated = True
 
             # get date (always get)
@@ -66,7 +66,7 @@ class CK101():
             start = chapter.find(">")
             chapter = chapter[start+1:]
             end = chapter.find('</a>')
-            chapter = chapter[:end]
+            chapter = chapter[:end].replace("'","")
             if(self._chapter != chapter):
                 self._chapter = chapter
                 self._updated = True

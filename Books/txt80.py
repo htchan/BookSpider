@@ -36,7 +36,7 @@ class TXT80():
                 self._name = self._name[start+4:]
                 end = self._name.find("</h1>")
                 self._name = self._name[:end]
-                self._name = self._name.replace("全文阅读","")
+                self._name = self._name.replace("全文阅读","").replace("'","")
                 self._updated = True
             if(not self._writer):
                 # get writer (writer)
@@ -45,7 +45,7 @@ class TXT80():
                 start = self._writer.find('>')
                 self._writer = self._writer[start+1:]
                 end = self._writer.find('</a>')
-                self._writer = self._writer[:end]
+                self._writer = self._writer[:end].replace("'","")
                 self._updated = True
 
             # get date (always get)
@@ -63,7 +63,7 @@ class TXT80():
             start = chapter.find('">')
             chapter = chapter[start+2:]
             end = chapter.find('</a>')
-            chapter = chapter[:end]
+            chapter = chapter[:end].replace("'","")
             if(self._chapter != chapter):
                 self._chapter = chapter
                 self._updated = True
