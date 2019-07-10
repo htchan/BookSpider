@@ -8,6 +8,9 @@ import io
 import time
 try: import ClassDefinition
 except: import Books.ClassDefinition as ClassDefinition
+import threading
+
+MAX_THREAD = 10
 
 class TXT80():
     class Book(ClassDefinition.BaseBook):
@@ -155,6 +158,7 @@ class TXT80():
         self._conn = dbConn
         self._cursor = self._conn.cursor()
         self._path = path
+        self.runningThread = 0
     def Download(self,out=print):
         # put [end] book in db to books
         self.books.clear()
@@ -192,6 +196,7 @@ class TXT80():
                     self._cursor.execute("update books set name='"+book._name+"' where website='"+book._website+"'")
                     self._conn.commit()
         out("update finish")
+    errorPage = 0
     def Explore(self,n,out=print):
         # get the max book num from the db
         self.books.clear()
@@ -204,29 +209,45 @@ class TXT80():
         self._bookNum += 1
         errorPage = 0
         # check any new book by the book num and try to save it
+        lock = threading.Lock()
+        t = []
+        self.runningThread = 0
         while(errorPage<n):
-            b = self.Book("https://www.80txt.com/txtml_"+str(self._bookNum)+".html")
-            if(b._name):
-                out("\r"+b._name,end="")
-                self.books.append(b)
-                flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
-                if(not(flag)):
-                    sql = (
-                        "insert into books (name,writer,date,chapter,website,type,download) values"
-                        "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
-                    )
-                    self._cursor.execute(sql)
-                    self._conn.commit()
-                errorPage = 0
-            else:
-                out("\rerror "+str(self._bookNum),end="")
-                f = self._cursor.execute("select * from error where website='"+b._website+"'").fetchone()
-                if(not f):
-                    self._cursor.execute("insert into error (website) values ('"+b._website+"')")
-                    self._conn.commit()
-                errorPage += 1
-            self._bookNum += 1
+            if(self.runningThread < MAX_THREAD):
+                th = threading.Thread(target=self.threadExplore,args=(out,lock,))
+                th.daemon = True
+                th.start()
+        for th in t:th.join()
         self.ErrorUpdate()
+    def threadExplore(self,out,lock):
+        lock.acquire()
+        self.runningThread += 1
+        bookNum = self._bookNum
+        self._bookNum += 1
+        lock.release()
+        b = self.Book("https://www.80txt.com/txtml_"+str(bookNum)+".html")
+        lock.acquire()
+        if(b._name):
+            out("\r"+b._name,end="")
+            self.books.append(b)
+            flag = bool(self._cursor.execute("select * from books where name='"+b._name+"' and website='"+b._website+"'").fetchone())
+            if(not(flag)):
+                sql = (
+                    "insert into books (name,writer,date,chapter,website,type,download) values"
+                    "('"+b._name+"','"+b._writer+"','"+b._date+"','"+b._chapter+"','"+b._website+"','"+b._bookType+"','false')"
+                )
+                self._cursor.execute(sql)
+                self._conn.commit()
+            errorPage = 0
+        else:
+            out("\rerror "+str(bookNum),end="")
+            f = self._cursor.execute("select * from error where website='"+b._website+"'").fetchone()
+            if(not f):
+                self._cursor.execute("insert into error (website) values ('"+b._website+"')")
+                self._conn.commit()
+            errorPage += 1
+        self.runningThread -= 1
+        lock.release()
     def ErrorUpdate(self,out=print,checkAll=False):
         # get all books from db to boo
         self.books.clear()

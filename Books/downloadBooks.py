@@ -13,7 +13,7 @@ class BookCollection:
     def __init__(self,path):
         # connect to database
         self.directory = path
-        self.conn = sqlite3.connect(self.directory+"\\spider.db")
+        self.conn = sqlite3.connect(self.directory+"\\spider.db",check_same_thread=False)
         self.c = self.conn.cursor()
         self.websites = []
         # init all book website
