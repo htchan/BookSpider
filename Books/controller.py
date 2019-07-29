@@ -143,7 +143,7 @@ sites = []
 sites.append(Ck101Site)
 sites.append(Txt80Site)
 
-def print_help(out):
+def __print_help(out):
     out("--help"+" "*14+"show the functin list avaliable")
     out("--download"+" "*10+"download books")
     out("--update"+" "*12+"update books information")
@@ -186,7 +186,7 @@ if(__name__=="__main__"):
     import sys
     args = sys.argv[1:]
     funct = {
-        "--help":print_help,
+        "--help":__print_help,
         "--download":download,
         "--update":update,
         "--explore":explore,

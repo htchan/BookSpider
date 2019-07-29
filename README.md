@@ -1,43 +1,23 @@
 # python spider
 
-#=====Books=====#
-  #==========txt80==========#
-  library for operation on 80txt
-    - add new book
-    - check update for book
-    - download book
-  
-  #==========hjwxw==========#
-  library for operation on hjwzw
-    - add new book
-    - check update for book
-    - download book
-
-  #==========ck101==========#
-  library for operation on ck101
-    - add new book
-    - check update for book
-    - download book
-
-  #==========download books==========#
-  program to manage the behavior on different website
-  include below functions
-    - add new books to database
-    - check any new update for books
-    - download books
-    - build the basic database (to-do)
-    ----- set download path
-    ----- set download type
-    ----- process bar
-
-#=====test=====#
-  test different module work as expected
-  <folder>-<file>".py" will be the program for testing
-  <folder>-<file>".txt" will be the expected output
-
-#==========main==========#
-manage the behavior of all type of spider
-include below function
-  - run behavior of book websites
-  - run behavior of music websites
-  - run behavior of baidu activity
+#=====class=====#
+  #===Book===#
+    - init     : with most basic info (to declear which website it belongs to)(similar to a book factory)
+    - new      : get a specific book of that website
+    - download : download the online book to local storage
+  #===Book Site===#
+    - init         : with local database information and specify the type of book website it is
+    - download     : download valid books
+    - update       : update all books in the data base (except the books had been read)
+    - explore      : check any new books posted on the website
+    - error update : check any update for the book website which has error before
+#=====controller=====#
+  * sites          : the collection of book sites
+  - download     : download valid books
+  - update       : update all books in the data base (except the books had been read)
+  - explore      : check any new books posted on the website
+  - check_end    : check books' last chapter and last update time to define it is end or not
+  - error update : check any update for the book website which has error before
+  * if the controller is called in cmd, it work as a program (details check "py controller.py --help")
+#==========main-cmd==========#
+  commend line interface of the program.
