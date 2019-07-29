@@ -1,6 +1,6 @@
 import urllib.request, gzip
 import re
-import io, os, time
+import io, os, time, copy
 import threading
 
 MAX_THREAD = 10
@@ -8,24 +8,25 @@ MAX_THREAD = 10
 ### new functional class
 class Book():
     def __init__(self,**kwargs):
-        book_num = str(kwargs["book_num"])
-        self.base_web = self.base_web.format(book_num)
-        self.__download_web = self.__download_web.format(book_num)
-        self.name = kwargs["name"] if("name" in kwargs) else ""
-        self.writer = kwargs["writer"] if("writer" in kwargs) else ""
-        self.date = kwargs["date"] if("date" in kwargs) else ""
-        self.last_chapter = kwargs["last_chapter"] if("last_chapter" in kwargs) else ""
-        self.book_type = kwargs["book_type"] if("book_type" in kwargs) else ""
+        self.base_web = kwargs["base_web"]
+        self.__download_web = kwargs["download_web"]
+        self.__chapter_web = kwargs["chapter_web"]
         self.__decode = kwargs["decode"] if("decode" in kwargs) else "utf8"
         self.__timeout = kwargs["timeout"] if("timeout" in kwargs) else 30
-        self.updated = True
-        self.__get_basic_info()
-    @classmethod
-    def define(cls,**kwargs):
-        cls.base_web = kwargs["base_web"]
-        cls.__download_web = kwargs["download_web"]
-        cls.__chapter_web = kwargs["chapter_web"]
-        return cls
+    def new(self,**kwargs):
+        book = copy.copy(self)
+        book_num = str(kwargs["book_num"])
+        book.base_web = self.base_web.format(book_num)
+        book.__download_web = self.__download_web.format(book_num)
+        book.name = kwargs["name"] if("name" in kwargs) else ""
+        book.writer = kwargs["writer"] if("writer" in kwargs) else ""
+        book.date = kwargs["date"] if("date" in kwargs) else ""
+        book.last_chapter = kwargs["last_chapter"] if("last_chapter" in kwargs) else ""
+        book.book_type = kwargs["book_type"] if("book_type" in kwargs) else ""
+        book.updated = True
+        try:book.__get_basic_info()
+        except:pass
+        return book
     ### custom define function
     def _cut_name(self,c):
         raise NotImplementedError()
@@ -50,7 +51,7 @@ class Book():
         content = res.read()
         if (res.info().get('Content-Encoding') == 'gzip'):
             content = gzip.GzipFile('','rb',9,io.BytesIO(content)).read()
-        content = content.decode(self.__decode)
+        content = content.decode(self.__decode,"ignore")
         res.close()
         return content
     ### basic function
@@ -84,7 +85,7 @@ class Book():
             self.book_type = self._cut_book_type(content)
             self.updated = False
         return self.updated
-    def download(self,path):
+    def download(self,path,out):
         # open chapters page
         try:
             content = self.open_website(self.__download_web)
@@ -96,8 +97,8 @@ class Book():
         text = ""
         # read actual content
         for i in range(min(len(titles),len(chapters))):
-            text += self.__download_chapter(titles[i],chapters[i])
-            print(titles[i])
+            text += self.__download_chapter(titles[i],chapters[i],out)
+            out(titles[i])
         # save actual content
         try: os.mkdir(path)
         except: pass
@@ -107,7 +108,7 @@ class Book():
         f.write(text)
         f.close()
         return True
-    def __download_chapter(self,chapter_title,chapter_url):
+    def __download_chapter(self,chapter_title,chapter_url,out):
         # check valid url pattern or not
         m = re.match(self.__chapter_web,chapter_url)
         if(not m): return '\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'
@@ -119,7 +120,7 @@ class Book():
             except :
                 # wait for a while and try again
                 time.sleep(self.__timeout//10)
-                print("Reload")
+                out("Reload")
         # read title
         t =  self._cut_chapter_title(content)
         # read content
@@ -128,16 +129,15 @@ class Book():
 
 class BookSite():
     def __init__(self,**kwargs):
+        self.__Book = kwargs["book"](**kwargs["web"],**kwargs["setting"])
         self.conn = kwargs["conn"]
         self.path = kwargs["path"]
+        self.identify = kwargs["identify"]
         self.running_thread = 0
         self.error_page = 0
-    @classmethod
-    def define(cls,**kwargs):
-        cls.__Book = kwargs["book"].define(**kwargs["web"])
-        return cls
-    def download(self):
-        for result in self.conn.execute("select * from books where end='true' and download='false'").fetchall():
+    def download(self,out):
+        out(self.identify+"="*15)
+        for result in self.conn.execute("select * from books where website like '%"+self.identify+"%' and end='true' and download='false'").fetchall():
             info = {
                 "name":result[0],
                 "writer":result[1],
@@ -146,21 +146,53 @@ class BookSite():
                 "book_num":re.findall("\\d+",result[4])[-1],
                 "book_type":result[5]
             }
-            b = self.__Book(**info)
+            b = self.__Book.new(**info)
             if(b.updated):
                 b.download(self.path)
                 self.conn.execute("update books set download='true' where website='"+b.base_web+"'")
                 self.conn.commit()
-        pass
-    def update(self):
-        pass
-    def update_thread(self):
-        pass
-    def explore(self,n):
+    def update(self,out):
+        out(self.identify+"="*15)
+        cursor = self.conn.cursor()
+        self.running_thread = 0
+        lock = threading.Lock()
+        threads = []
+        for result in cursor.execute("select * from books where website like '%"+self.identify+"%' order by date desc"):
+            while(self.running_thread >= MAX_THREAD):pass
+            info = {
+                "name":result[0],
+                "writer":result[1],
+                "date":result[2],
+                "last_chapter":result[3],
+                "book_num":re.findall("\d+",result[4])[-1],
+                "book_type":result[5]
+            }
+            th = threading.Thread(target=self.update_thread,args=(info,lock,out))
+            th.daemon = True
+            self.running_thread += 1
+            th.start()
+            threads.append(th)
+        for thread in threads:thread.join()
+    def update_thread(self,info,lock,out):
+        b = self.__Book.new(**info)
+        lock.acquire()
+        try:
+            if(not b.updated):
+                out(b.name)
+                cursor = self.conn.cursor()
+                sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"' where website='"+b.base_web+"'"
+                cursor.execute(sql)
+                self.conn.commit()
+            else:out("skip\t"+b.name)
+        finally:
+            lock.release()
+            self.running_thread -= 1
+    def explore(self,n,out):
+        out(self.identify+"="*15)
         book_num = 0
         # get largest book num
-        for row in self.conn.cursor().execute("select website from books where website like '%80txt%' order by website desc"):
-            i = re.findall("\\d+",row[0])[-1]
+        for row in self.conn.cursor().execute("select website from books where website like '%"+self.identify+"%' order by website desc"):
+            i = int(re.findall("\\d+",row[0])[-1])
             if(i > book_num):
                 book_num = i
         book_num += 1
@@ -172,22 +204,23 @@ class BookSite():
         # explore in threads
         while(self.error_page<n):
             if(self.running_thread < MAX_THREAD):
-                th = threading.Thread(target=self.explore_thread,args=(book_num,lock))
+                th = threading.Thread(target=self.explore_thread,args=(book_num,lock,out))
                 th.daemon = True
                 book_num += 1
                 self.running_thread += 1
                 th.start()
+                threads.append(th)
         # confirm all thread are finish
         for thread in threads:thread.join()
-    def explore_thread(self,num,lock):
+    def explore_thread(self,num,lock,out):
         # get book info
-        b = self.__Book(book_num=num)
+        b = self.__Book.new(book_num=num)
         # try to update it
         lock.acquire()
         try:
+            cursor = self.conn.cursor()
             if(not b.updated):
-                print(b.name)
-                cursor = self.conn.cursor()
+                out(b.name)
                 flag = bool(cursor.execute("select * from books where name='"+b.name+"' and website='"+b.base_web+"'").fetchone())
                 if(not(flag)):
                     # add record to books table
@@ -205,33 +238,31 @@ class BookSite():
                 self.error_page = 0
             else:
                 # update if the record does not exist in database
-                print("error "+str(num))
-                f_books = bool(self._cursor.execute("select * from books where website='"+b.base_web+"'").fetchone())
-                f_error = bool(self._cursor.execute("select * from error where website='"+b.base_web+"'").fetchone())
+                out("error "+str(num)+"\t"+b.name)
+                f_books = bool(cursor.execute("select * from books where website='"+b.base_web+"'").fetchone())
+                f_error = bool(cursor.execute("select * from error where website='"+b.base_web+"'").fetchone())
                 if((not f_books)and(not f_error)):
-                    self._cursor.execute("insert into error (website) values ('"+b.base_web+"')")
-                    self._conn.commit()
-                errorPage += 1
+                    cursor.execute("insert into error (website) values ('"+b.base_web+"')")
+                    self.conn.commit()
+                self.error_page += 1
         finally:
             lock.release()
             self.running_thread -= 1        
-    def error_update(self):
+    def error_update(self,out):
+        out(self.identify+"="*15)
+        cursor = self.conn.cursor()
+        self.running_thread = 0
+        lock = threading.Lock()
+        threads = []
+        for result in cursor.execute("select * from error where website like '%"+self.identify+"%'"):
+            while(self.running_thread >= MAX_THREAD):pass
+            num = re.findall("\d+",result[0])[-1]
+            th = threading.Thread(target=self.explore_thread,args=(num,lock,out))
+            th.daemon = True
+            self.running_thread += 1
+            th.start()
+            threads.append(th)
+        for thread in threads:thread.join()
         pass
     def __del__(self):
         self.conn.close()
-
-class BaseBook():
-    def __init__(self, web, name="", writer="", date="", chapter="", bookType=""):
-        self._website = web
-        self._name = name
-        self._writer = writer
-        self._date = date           # last update date
-        self._chapter = chapter     # last update chapter
-        self._bookType = bookType
-        self._chapterSet = []
-        self._text = ""
-        self._updated = False
-        self._getBasicInfo()
-    def Update(self):
-        # check any info can be update (date, chapter)
-        pass
