@@ -157,7 +157,7 @@ class BookSite():
         self.running_thread = 0
         lock = threading.Lock()
         threads = []
-        for result in cursor.execute("select * from books where website like '%"+self.identify+"%' and read<>'true' order by date desc"):
+        for result in cursor.execute("select * from books where website like '%"+self.identify+"%' and (read='false' or read is null) order by date desc"):
             while(self.running_thread >= MAX_THREAD):pass
             info = {
                 "name":result[0],
