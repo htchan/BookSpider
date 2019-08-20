@@ -100,13 +100,13 @@ class Ck101Book(ClassDefinition.Book):
         c = c[re.search("<dl",c).end():]
         c = c[:re.search("</div>",c).start()]
         c = re.sub("\x00","",c)
-        c = re.sub("(/0/.*?html)","https://www.ck101.org\\1",c)
-        c = re.findall("(https://www.ck101.org/0/.*?html)",c)
+        c = re.sub("\"(/.*?html)","\"https://www.ck101.org\\1",c)
+        c = re.findall("(https://www.ck101.org/.*?html)",c)
         return c
     def _cut_title(self,c):
         c = c[re.search("<dl",c).end():]
         c = c[:re.search("</div>",c).start()]
-        c = c.sub("\x00","",c)
+        c = re.sub("\x00","",c)
         c = re.findall("html\">(.*?)<",c)
         return c
     def _cut_chapter_title(self,c):
@@ -127,7 +127,7 @@ ck101 = {
     "web":{
         "base_web":"https://www.ck101.org/book/{}.html",
         "download_web":"https://www.ck101.org/0/{}/",
-        "chapter_web":"https://www.ck101.org/0/"
+        "chapter_web":"https://www.ck101.org/"
     },
     "setting":{
         "decode":"big5",
