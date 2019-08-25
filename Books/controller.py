@@ -180,6 +180,17 @@ def error_update(out):
     for site in sites:
         site.error_update(out)
     print("Error update finished")
+def find(out,*args):
+    # return basic info of the books
+    query = {}
+    for element in args:
+        element = element[2:].split('=')
+        query[element[0]] = element[1]
+    for site in sites:
+        result = site.query(**query)
+        print(str(site)+'-'*30)
+        for r in result:
+            print(re.search("(\\d*?)\\.html",r[4])[1]+'\t'+r[1]+'\t'+r[0])
 
 if(__name__=="__main__"):
     # cmd interface
@@ -191,20 +202,20 @@ if(__name__=="__main__"):
         "--update":update,
         "--explore":explore,
         "--check":check_end,
-        "--error":error_update
+        "--error":error_update,
+        "--find":find
     }
     try:
         funct = funct.get(args[0])
         if(funct):
-            if((funct==print_help)and(len(args)==1)):funct(print)
-            elif((funct==download)and(len(args)==1)):funct(print)
-            elif((funct==update)and(len(args)==1)):funct(print)
-            elif(funct==explore):
+            if(funct==explore):
                 if(len(args)==1):funct(print)
                 elif((len(args)==2)and(args[1].isdigit())):funct(print,int(args[1]))
                 else:exit("Invalid arguement")
-            elif((funct==check_end)and(len(args)==1)):funct(print)
-            elif((funct==error_update)and(len(args)==1)):funct(print)
+            elif(funct==find):
+                funct(print,*args[1:])
+            elif(len(args)==1):
+                funct(print)
             else:exit("Invalid arguement")
     except IndexError:exit("No arguement")
     except KeyboardInterrupt:exit("Sudden Exit")

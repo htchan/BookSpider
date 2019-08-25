@@ -27,6 +27,8 @@ class Book():
         try:book.__get_basic_info()
         except:pass
         return book
+    def __str__(self):
+        return "Name:\t"+self.name+"\nWriter:\t"+self.writer+"\nType:\t"+self.book_type
     ### custom define function
     def _cut_name(self,c):
         raise NotImplementedError()
@@ -135,6 +137,8 @@ class BookSite():
         self.identify = kwargs["identify"]
         self.running_thread = 0
         self.error_page = 0
+    def __str__(self):
+        return type(self.__Book).__name__+' Site'
     def download(self,out):
         out(self.identify+"="*15)
         for result in self.conn.execute("select * from books where website like '%"+self.identify+"%' and end='true' and download='false'").fetchall():
@@ -151,6 +155,18 @@ class BookSite():
                 b.download(self.path)
                 self.conn.execute("update books set download='true' where website='"+b.base_web+"'")
                 self.conn.commit()
+    def book(self,bookId):
+        return self.__Book.new(book_num=str(bookId))
+    def query(self,**kwargs):
+        query = "(website like '%"+self.__Book.base_web[12:17]+"%')"
+        if("name" in kwargs):
+            query += " and (name='"+kwargs["name"]+"')"
+        if("writer" in kwargs):
+            query += " and (writer='"+kwargs["writer"]+"')"
+        if("book_type" in kwargs):
+            query += " and (type='"+kwargs["type"]+"')"
+        sql = "select * from books where "+query
+        return self.conn.cursor().execute(sql).fetchall()
     def update(self,out):
         out(self.identify+"="*15)
         cursor = self.conn.cursor()
