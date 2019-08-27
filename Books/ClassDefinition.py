@@ -15,9 +15,9 @@ class Book():
         self.__timeout = kwargs["timeout"] if("timeout" in kwargs) else 30
     def new(self,**kwargs):
         book = copy.copy(self)
-        book_num = str(kwargs["book_num"])
-        book.base_web = self.base_web.format(book_num)
-        book.__download_web = self.__download_web.format(book_num)
+        book.book_num = str(kwargs["book_num"])
+        book.base_web = self.base_web.format(book.book_num)
+        book.__download_web = self.__download_web.format(book.book_num)
         book.name = kwargs["name"] if("name" in kwargs) else ""
         book.writer = kwargs["writer"] if("writer" in kwargs) else ""
         book.date = kwargs["date"] if("date" in kwargs) else ""
@@ -141,46 +141,64 @@ class BookSite():
         return type(self.__Book).__name__+' Site'
     def download(self,out):
         out(self.identify+"="*15)
-        for result in self.conn.execute("select * from books where website like '%"+self.identify+"%' and end='true' and download='false'").fetchall():
+        for result in self.conn.execute("select name,writer,date,chapter,num,type from books where site = '"+self.identify+"' and end='true' and download='false'").fetchall():
             info = {
                 "name":result[0],
                 "writer":result[1],
                 "date":result[2],
                 "last_chapter":result[3],
-                "book_num":re.findall("\\d+",result[4])[-1],
+                "book_num":result[4],
                 "book_type":result[5]
             }
             b = self.__Book.new(**info)
             if(b.updated):
                 b.download(self.path)
-                self.conn.execute("update books set download='true' where website='"+b.base_web+"'")
+                self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
                 self.conn.commit()
+    def download_thread(self,info,lock,out):
+        b = self.__Book.new(**info)
+        if(b.updated):
+            b.download(self.path)
+            if(lock): lock.acquire()
+            try:
+                self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
+                self.conn.commit()
+            finally:
+                if(lock): lock.release()
     def book(self,bookId):
         return self.__Book.new(book_num=str(bookId))
     def query(self,**kwargs):
-        query = "(website like '%"+self.__Book.base_web[12:17]+"%')"
+        query = "(site='"+self.identify+"')"
         if("name" in kwargs):
             query += " and (name='"+kwargs["name"]+"')"
         if("writer" in kwargs):
             query += " and (writer='"+kwargs["writer"]+"')"
         if("book_type" in kwargs):
             query += " and (type='"+kwargs["type"]+"')"
-        sql = "select * from books where "+query
-        return self.conn.cursor().execute(sql).fetchall()
+        sql = "select num,name,writer,type from books where "+query
+        result = self.conn.cursor().execute(sql).fetchall()
+        for i in range(len(result)):
+            result[i] = {
+                "num":result[i][0],
+                "name":result[i][1],
+                "writer":result[i][2],
+                "type":result[i][3]
+            }
+        return result
     def update(self,out):
         out(self.identify+"="*15)
         cursor = self.conn.cursor()
         self.running_thread = 0
         lock = threading.Lock()
         threads = []
-        for result in cursor.execute("select * from books where website like '%"+self.identify+"%' and (read='false' or read is null) order by date desc"):
+        for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
             while(self.running_thread >= MAX_THREAD):pass
             info = {
                 "name":result[0],
                 "writer":result[1],
                 "date":result[2],
                 "last_chapter":result[3],
-                "book_num":re.findall("\d+",result[4])[-1],
+                "book_num":result[4],
                 "book_type":result[5]
             }
             th = threading.Thread(target=self.update_thread,args=(info,lock,out))
@@ -196,7 +214,7 @@ class BookSite():
             if(not b.updated):
                 out(b.name)
                 cursor = self.conn.cursor()
-                sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"' where website='"+b.base_web+"'"
+                sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"' where site='"+self.identify+"' and num="+b.book_num
                 cursor.execute(sql)
                 self.conn.commit()
             else:out("skip\t"+b.name)
@@ -207,10 +225,8 @@ class BookSite():
         out(self.identify+"="*15)
         book_num = 0
         # get largest book num
-        for row in self.conn.cursor().execute("select website from books where website like '%"+self.identify+"%' order by website desc"):
-            i = int(re.findall("\\d+",row[0])[-1])
-            if(i > book_num):
-                book_num = i
+        tran = self.conn.cursor().execute("select num from books where site ='"+self.identify+"' order by num desc").fetchone()
+        if(tran): book_num = tran[0]
         book_num += 1
         # init data for the explore thread
         self.error_page = 0
@@ -237,17 +253,17 @@ class BookSite():
             cursor = self.conn.cursor()
             if(not b.updated):
                 out(b.name)
-                flag = bool(cursor.execute("select * from books where name='"+b.name+"' and website='"+b.base_web+"'").fetchone())
+                flag = bool(cursor.execute("select * from books where name='"+b.name+"' and site='"+self.identify+"' and num="+b.book_num).fetchone())
                 if(not(flag)):
                     # add record to books table
                     sql = (
-                        "insert into books (name,writer,date,chapter,website,type,download) values"
-                        "('"+b.name+"','"+b.writer+"','"+b.date+"','"+b.last_chapter+"','"+b.base_web+"','"+b.book_type+"','false')"
+                        "insert into books (site,num,name,writer,date,chapter,type,download) values"
+                        "('"+self.identify+"',"+b.book_num+",'"+b.name+"','"+b.writer+"','"+b.date+"','"+b.last_chapter+"','"+b.book_type+"','false')"
                     )
                     # delete record from error
                     cursor.execute(sql)
                     sql = (
-                        "delete from error where website='"+b.base_web+"'"
+                        "delete from error where site='"+self.identify+"' and num="+b.book_num
                     )
                     cursor.execute(sql)
                     self.conn.commit()
@@ -255,10 +271,10 @@ class BookSite():
             else:
                 # update if the record does not exist in database
                 out("error "+str(num)+"\t"+b.name)
-                f_books = bool(cursor.execute("select * from books where website='"+b.base_web+"'").fetchone())
-                f_error = bool(cursor.execute("select * from error where website='"+b.base_web+"'").fetchone())
+                f_books = bool(cursor.execute("select * from books where site='"+self.identify+"' and num="+b.book_num).fetchone())
+                f_error = bool(cursor.execute("select * from error where site='"+self.identify+"' and num="+b.book_num).fetchone())
                 if((not f_books)and(not f_error)):
-                    cursor.execute("insert into error (website) values ('"+b.base_web+"')")
+                    cursor.execute("insert into error (site,num) values ('"+self.identify+"','"+b.book_num+"')")
                     self.conn.commit()
                 self.error_page += 1
         finally:
@@ -270,9 +286,9 @@ class BookSite():
         self.running_thread = 0
         lock = threading.Lock()
         threads = []
-        for result in cursor.execute("select * from error where website like '%"+self.identify+"%'"):
+        for result in cursor.execute("select site,num from error where site='"+self.identify+"'"):
             while(self.running_thread >= MAX_THREAD):pass
-            num = re.findall("\d+",result[0])[-1]
+            num = result[1]
             th = threading.Thread(target=self.explore_thread,args=(num,lock,out))
             th.daemon = True
             self.running_thread += 1

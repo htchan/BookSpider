@@ -139,9 +139,9 @@ Txt80Site = ClassDefinition.BookSite(**txt80)
 Ck101Site = ClassDefinition.BookSite(**ck101)
 
 ### variable init
-sites = []
-sites.append(Ck101Site)
-sites.append(Txt80Site)
+sites = {}
+sites["ck101"] = Ck101Site
+sites["80txt"] = Txt80Site
 
 def __print_help(out):
     out("--help"+" "*14+"show the functin list avaliable")
@@ -151,16 +151,16 @@ def __print_help(out):
     out("--check"+" "*13+"check recorded books finished")
     out("--error"+" "*13+"update all website may have error")
 def download(out):
-    for site in sites:
-        site.download(out)
+    for x in sites:
+        sites[x].download(out)
     out("Download finish")
 def update(out):
-    for site in sites:
-        site.update(out)
+    for x in sites:
+        sites[x].update(out)
     out("Update finish")
 def explore(out,n=MAX_EXPLORE_NUM):
-    for site in sites:
-        site.explore(n,out)
+    for x in sites:
+        sites[x].explore(n,out)
     out("Explore finish")
 def check_end(out):
     # update books end by their last chapter content
@@ -171,14 +171,14 @@ def check_end(out):
     sql = "update books set end='true' where ("
     for c in criteria:
         sql += "chapter like '%"+c+"%' or "
-    sql += "date < '"+str(datetime.datetime.now().year-2)+"') and end <> 'true'"
+    sql += "date < '"+str(datetime.datetime.now().year-2)+"') and (end <> 'true' or end is null)"
     c = conn.cursor()
     c.execute(sql)
     conn.commit()
     out(str(c.rowcount)+" row affected")
 def error_update(out):
-    for site in sites:
-        site.error_update(out)
+    for x in sites:
+        sites[x].error_update(out)
     print("Error update finished")
 def find(out,*args):
     # return basic info of the books
@@ -186,11 +186,17 @@ def find(out,*args):
     for element in args:
         element = element[2:].split('=')
         query[element[0]] = element[1]
-    for site in sites:
-        result = site.query(**query)
-        print(str(site)+'-'*30)
+    if("site" in query):
+        result = sites[query["site"]].query(**query)
+        print(str(sites[query["site"]])+'-'*30)
         for r in result:
-            print(re.search("(\\d*?)\\.html",r[4])[1]+'\t'+r[1]+'\t'+r[0])
+            print(str(r["num"])+'\t'+r["writer"]+'\t'+r["name"])
+        return
+    for x in sites:
+        result = sites[x].query(**query)
+        print(str(sites[x])+'-'*30)
+        for r in result:
+            print(str(r["num"])+'\t'+r["writer"]+'\t'+r["name"])
 
 if(__name__=="__main__"):
     # cmd interface
