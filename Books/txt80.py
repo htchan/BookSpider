@@ -1,5 +1,6 @@
-import ClassDefinition
 import re
+try:import ClassDefinition
+except:import Books.ClassDefinition as ClassDefinition
 
 class Txt80Book(ClassDefinition.Book):
     def _cut_name(self,c):

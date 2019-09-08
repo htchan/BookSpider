@@ -1,5 +1,6 @@
 import re
-import ClassDefinition
+try:import ClassDefinition
+except:import Books.ClassDefinition as ClassDefinition
 
 
 class Ck101Book(ClassDefinition.Book):

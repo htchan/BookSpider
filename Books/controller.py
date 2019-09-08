@@ -3,12 +3,14 @@ except:import Books.ClassDefinition as ClassDefinition
 import os, re, datetime
 import sqlite3
 
-import ck101, txt80
+try:import ck101, txt80
+except:from Books import ck101, txt80
 
 ### const init
 MAX_EXPLORE_NUM = 100
-conn = sqlite3.connect("spider.db",check_same_thread=False)
-path = os.getcwd()
+dbPath = os.getcwd()
+conn = sqlite3.connect(dbPath+"\\spider.db",check_same_thread=False)
+path = 'download books'
 
 txt80.txt80['conn'] = conn
 txt80.txt80['path'] = path
