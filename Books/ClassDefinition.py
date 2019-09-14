@@ -104,9 +104,9 @@ class Book():
         # save actual content
         try: os.mkdir(path)
         except: pass
-        try: os.mkdir(path+"\\"+self.book_type)
+        try: os.mkdir(path+'/'+self.book_type)
         except: pass
-        f = open(path+"\\"+self.book_type+"\\"+self.name+"-"+self.writer+".txt","w",encoding="utf8")
+        f = open(path+'/'+self.book_num+".txt","w",encoding="utf8")
         f.write(text)
         f.close()
         return True

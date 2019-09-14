@@ -9,7 +9,7 @@ except:from Books import ck101, txt80
 ### const init
 MAX_EXPLORE_NUM = 100
 dbPath = os.getcwd()
-conn = sqlite3.connect(dbPath+"\\spider.db",check_same_thread=False)
+conn = sqlite3.connect(dbPath+"/spider.db",check_same_thread=False)
 path = 'download books'
 
 txt80.txt80['conn'] = conn
@@ -77,7 +77,7 @@ def find(out,*args):
         print(str(sites[x])+'-'*30)
         for r in result:
             print(str(r["num"])+'\t'+r["writer"]+'\t'+r["name"])
-
+'''
 if(__name__=="__main__"):
     # cmd interface
     import sys
@@ -105,3 +105,5 @@ if(__name__=="__main__"):
             else:exit("Invalid arguement")
     except IndexError:exit("No arguement")
     except KeyboardInterrupt:exit("Sudden Exit")
+'''
+find(print,"--writer=zhttty")
