@@ -77,7 +77,7 @@ def find(out,*args):
         print(str(sites[x])+'-'*30)
         for r in result:
             print(str(r["num"])+'\t'+r["writer"]+'\t'+r["name"])
-'''
+
 if(__name__=="__main__"):
     # cmd interface
     import sys
@@ -105,5 +105,3 @@ if(__name__=="__main__"):
             else:exit("Invalid arguement")
     except IndexError:exit("No arguement")
     except KeyboardInterrupt:exit("Sudden Exit")
-'''
-find(print,"--writer=zhttty")
