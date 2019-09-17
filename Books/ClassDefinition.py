@@ -150,7 +150,7 @@ class BookSite():
             }
             b = self.__Book.new(**info)
             if(b.updated):
-                b.download(self.path)
+                b.download(self.path,out)
                 self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
                 self.conn.commit()
     def download_thread(self,info,lock,out):
