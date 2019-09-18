@@ -97,20 +97,24 @@ class Book():
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
         text = ""
-        '''
+        # single thread
         # read actual content
+        '''
         for i in range(min(len(titles),len(chapters))):
             text += self.__download_chapter(titles[i],chapters[i],out)
             out(titles[i])
         '''
-        # for thread 
+        # multi thread 
         arr = []
         lock = threading.Lock()
         threads = []
+        self.running_thread = 0
         # read all chapter
         for i in range(min(len(titles),len(chapters))):
+            while(self.running_thread > 10):pass
             t = threading.Thread(target=self.__download_chapter_thread,args=(titles[i],chapters[i],out,arr,lock))
             t.daemon = True
+            self.running_thread += 1
             t.start()
             threads.append(t)
         for t in threads:
@@ -155,6 +159,7 @@ class Book():
             lock.acquire()
             arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'))
             lock.release()
+            self.running_thread -= 1
             return
         # open chapter url
         while(True):
@@ -173,6 +178,7 @@ class Book():
         # put the result into common array
         arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'))
         lock.release()
+        self.running_thread -= 1
         return
 
 class BookSite():

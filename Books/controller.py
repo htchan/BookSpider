@@ -23,6 +23,9 @@ sites = {}
 sites["ck101"] = ck101.site()
 sites["80txt"] = txt80.site()
 
+b = sites["80txt"].book(1)
+b.download(os.getcwd(),print)
+
 def __print_help(out):
     out("--help"+" "*14+"show the functin list avaliable")
     out("--download"+" "*10+"download books")
