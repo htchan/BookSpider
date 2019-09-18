@@ -97,10 +97,32 @@ class Book():
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
         text = ""
+        '''
         # read actual content
         for i in range(min(len(titles),len(chapters))):
             text += self.__download_chapter(titles[i],chapters[i],out)
             out(titles[i])
+        '''
+        # for thread 
+        arr = []
+        lock = threading.Lock()
+        threads = []
+        # read all chapter
+        for i in range(min(len(titles),len(chapters))):
+            t = threading.Thread(target=self.__download_chapter_thread,args=(titles[i],chapters[i],out,arr,lock))
+            t.daemon = True
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+        # order the chapter by its url
+        text = ""
+        for i in range(min(len(titles),len(chapters))):
+            for j in range(len(arr)):
+                if(chapters[i] == arr[j][0]):
+                    print(arr[j][1][20:40])
+                    text += arr[j][1]
+                    break
         # save actual content
         try: os.mkdir(path)
         except: pass
@@ -126,6 +148,32 @@ class Book():
         # read content
         c = self._cut_chapter_content(content)
         return  '\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'
+    def __download_chapter_thread(self,chapter_title,chapter_url,out,arr,lock):
+        # check url pattern
+        m = re.match(self.__chapter_web,chapter_url)
+        if(not m):
+            lock.acquire()
+            arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'))
+            lock.release()
+            return
+        # open chapter url
+        while(True):
+            try:
+                content = self.open_website(chapter_url)
+                break
+            except :
+                # wait for a while and try again
+                time.sleep(self.__timeout//10)
+                out("Reload")
+        # read title
+        t = self._cut_chapter_title(content)
+        # read content
+        c = self._cut_chapter_content(content)
+        lock.acquire()
+        # put the result into common array
+        arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'))
+        lock.release()
+        return
 
 class BookSite():
     def __init__(self,**kwargs):
