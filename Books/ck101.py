@@ -30,18 +30,24 @@ class Ck101Book(ClassDefinition.Book):
         c = re.findall(" &gt; (\w{4}) &gt; ",c)[0]
         return c
     def _cut_chapter(self,c):
-        c = c[re.search("<dl",c).end():]
-        c = c[:re.search("</div>",c).start()]
-        c = re.sub("\x00","",c)
-        c = re.sub("\"(/.*?html)","\"https://www.ck101.org\\1",c)
-        c = re.findall("(https://www.ck101.org/.*?html)",c)
-        return c
+        try:
+            c = c[re.search("<dl",c).end():]
+            c = c[:re.search("</div>",c).start()]
+            c = re.sub("\x00","",c)
+            c = re.sub("\"(/.*?html)","\"https://www.ck101.org\\1",c)
+            c = re.findall("(https://www.ck101.org/.*?html)",c)
+            return c
+        except:
+            return []
     def _cut_title(self,c):
-        c = c[re.search("<dl",c).end():]
-        c = c[:re.search("</div>",c).start()]
-        c = re.sub("\x00","",c)
-        c = re.findall("html\">(.*?)<",c)
-        return c
+        try:
+            c = c[re.search("<dl",c).end():]
+            c = c[:re.search("</div>",c).start()]
+            c = re.sub("\x00","",c)
+            c = re.findall("html\">(.*?)<",c)
+            return c
+        except:
+            return []
     def _cut_chapter_title(self,c):
         return ""
     def _cut_chapter_content(self,c):

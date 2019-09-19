@@ -111,7 +111,7 @@ class Book():
         self.running_thread = 0
         # read all chapter
         for i in range(min(len(titles),len(chapters))):
-            while(self.running_thread > 10):pass
+            while(self.running_thread > MAX_THREAD):pass
             t = threading.Thread(target=self.__download_chapter_thread,args=(titles[i],chapters[i],out,arr,lock))
             t.daemon = True
             self.running_thread += 1
