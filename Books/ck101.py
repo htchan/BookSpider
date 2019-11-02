@@ -56,7 +56,7 @@ class Ck101Book(ClassDefinition.Book):
         c = c[:re.search("</div",c).start()]
         c = re.sub("&nbsp;"," ",c)
         c = re.sub("(<br />|<.+?</.+?>|\x00)","",c)
-        if(len(c)<100):print("this chapter is too short!!!")
+        if(len(c)<10):print("this chapter is too short!!!")
         return c
 ck101 = {
     "book":Ck101Book,
@@ -64,7 +64,7 @@ ck101 = {
     "web":{
         "base_web":"https://www.ck101.org/book/{}.html",
         "download_web":"https://www.ck101.org/0/{}/",
-        "chapter_web":"https://www.ck101.org/"
+        "chapter_web":"https://www.ck101.org/\\d"
     },
     "setting":{
         "decode":"big5",

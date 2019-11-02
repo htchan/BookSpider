@@ -3,7 +3,7 @@ import re
 import io, os, time, copy
 import threading
 
-MAX_THREAD = 10
+MAX_THREAD =300
 
 ### new functional class
 class Book():
