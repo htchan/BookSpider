@@ -1,0 +1,4 @@
+*.db
+Books/__pycache__/
+*.txt
+.setting

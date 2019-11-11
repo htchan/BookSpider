@@ -6,11 +6,20 @@ import sqlite3
 try:import ck101, txt80
 except:from Books import ck101, txt80
 
+### load setting
+dbPath = os.getcwd()
+path = 'download books'
+dbName = '/spider.db'
+f = open(".setting")
+setting = f.readlines()
+f.close()
+for s in setting:
+    exec(s)
+
+
 ### const init
 MAX_EXPLORE_NUM = 100
-dbPath = os.getcwd()
-conn = sqlite3.connect(dbPath+"/spider.db",check_same_thread=False)
-path = 'download books'
+conn = sqlite3.connect(dbPath+dbName,check_same_thread=False)
 
 txt80.txt80['conn'] = conn
 txt80.txt80['path'] = path
