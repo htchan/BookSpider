@@ -87,12 +87,17 @@ class Book():
             self.book_type = self._cut_book_type(content)
             self.updated = False
         return self.updated
-    def download(self,path,out):
+    def download(self,path,out,i=0):
         # open chapters page
         try:
             content = self.open_website(self.__download_web)
         except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
-            raise RuntimeError("Unable to open the website for chapter lists")
+            if(i < 10):
+                out("retru ",i)
+                self.download(path, out, i+1)
+                return
+            elif(i == 10):
+                raise RuntimeError("Unable to open the website for chapter lists")
         # read all chapters url
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
@@ -120,6 +125,10 @@ class Book():
         for t in threads:
             t.join()
         # order the chapter by its url
+        for i in range(lan(arr)):
+            if(arr[i][1] == ''):
+                out("download error")
+                return False
         text = ""
         for i in range(min(len(titles),len(chapters))):
             for j in range(len(arr)):
@@ -147,6 +156,8 @@ class Book():
                 # wait for a while and try again
                 time.sleep(self.__timeout//10)
                 out("Reload")
+        if(not content):
+            raise RuntimeError("cannot download chapter")
         # read title
         t =  self._cut_chapter_title(content)
         # read content
@@ -170,6 +181,11 @@ class Book():
                 # wait for a while and try again
                 time.sleep(self.__timeout//10)
                 out("Reload")
+        if(not content):
+            lock.acquire()
+            arr.append((chapter_url, ""))
+            lock.release()
+            return
         # read title
         t = self._cut_chapter_title(content)
         # read content
@@ -204,8 +220,14 @@ class BookSite():
             }
             b = self.__Book.new(**info)
             if(b.updated):
-                b.download(self.path,out)
-                self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
+                if(b.download(self.path,out)):
+                    self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
+                    self.conn.commit()
+                else:
+                    self.conn.execute("update books set download='error' where site='"+self.identify+"' and num="+b.book_num)
+                    self.conn.commit()
+            else:
+                self.conn.execute("update books set end='false' where site='"+self.identify+"' and num="+b.book_num)
                 self.conn.commit()
     def download_thread(self,info,lock,out):
         b = self.__Book.new(**info)
