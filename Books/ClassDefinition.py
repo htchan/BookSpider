@@ -93,11 +93,14 @@ class Book():
             content = self.open_website(self.__download_web)
         except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             if(i < 10):
-                out("retru ",i)
-                self.download(path, out, i+1)
-                return
+                time.sleep(self.__timeout//10)
+                out("reload chapter list",i)
+                return self.download(path, out, i+1)
             elif(i == 10):
-                raise RuntimeError("Unable to open the website for chapter lists")
+                out("unable to open the webite forchapter list")
+                return False
+                #raise RuntimeError("Unable to open the website for chapter lists")
+        out(self.name, '-'*20)
         # read all chapters url
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
@@ -125,7 +128,7 @@ class Book():
         for t in threads:
             t.join()
         # order the chapter by its url
-        for i in range(lan(arr)):
+        for i in range(len(arr)):
             if(arr[i][1] == ''):
                 out("download error")
                 return False
@@ -155,7 +158,7 @@ class Book():
             except :
                 # wait for a while and try again
                 time.sleep(self.__timeout//10)
-                out("Reload")
+                out("Reload chapter content")
         if(not content):
             raise RuntimeError("cannot download chapter")
         # read title
@@ -173,14 +176,15 @@ class Book():
             self.running_thread -= 1
             return
         # open chapter url
-        while(True):
+        for i in range(10):
             try:
                 content = self.open_website(chapter_url)
                 break
-            except :
+            except:
                 # wait for a while and try again
+                content = ""
                 time.sleep(self.__timeout//10)
-                out("Reload")
+                out("Reload chapter_url "+chapter_url)
         if(not content):
             lock.acquire()
             arr.append((chapter_url, ""))
@@ -219,8 +223,9 @@ class BookSite():
                 "book_type":result[5]
             }
             b = self.__Book.new(**info)
+            out(self.identify+"\t"+b.book_num+"\t"+b.name)
             if(b.updated):
-                if(b.download(self.path,out)):
+                if(b.download(self.path+self.identify,out)):
                     self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
                     self.conn.commit()
                 else:

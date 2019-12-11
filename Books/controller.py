@@ -10,7 +10,7 @@ except:from Books import ck101, txt80
 dbPath = os.getcwd()
 path = 'download books'
 dbName = '/spider.db'
-f = open(".setting")
+f = open("../.setting")
 setting = f.readlines()
 f.close()
 for s in setting:
