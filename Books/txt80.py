@@ -37,7 +37,8 @@ class Txt80Book(ClassDefinition.Book):
         c = c[re.search("yulan..",c).end():]
         c = c[:re.search("</div>",c).start()]
         c = re.sub("<strong>.*?</strong>","",c)
-        c = re.findall(".*>(\w.+?)<.*",c)
+        c = re.sub(".*>(.+?)<(a|\/a).*","\\1", c).split("\n")
+        c = c[1:len(c)-1]
         return c
     def _cut_chapter_title(self,c):
         return ""
