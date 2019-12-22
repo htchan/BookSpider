@@ -1,4 +1,5 @@
 *.db
-Books/__pycache__/
+Books/__pycache__/*
 *.txt
 .setting
+*.pyc
