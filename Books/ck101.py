@@ -16,9 +16,8 @@ class Ck101Book(ClassDefinition.Book):
         c = re.sub("('|\x00)","",c)
         return c
     def _cut_date(self,c):
-        c = re.sub("\x00","",c)
-        m = re.search("\\d{4}-\\d{2}-\\d{2}",c)
-        c = c[m.start():m.end()]
+        m = re.search("最新章節\\((\\d{4}-\\d{2}-\\d{2})\\)",c)
+        c = m.group(1) if(m) else ""
         return c
     def _cut_last_chapter(self,c):
         c = c[re.search("<strong>",c).end():]
