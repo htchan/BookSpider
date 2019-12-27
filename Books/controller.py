@@ -57,7 +57,7 @@ def check_end(out):
                 "尾声", "尾聲", "终章", "終章", "外传", "外傳", "完本",
                 "结束", "結束", "完結", "完结", "终结", "終結", "番外"
                 "结尾", "結尾", "全书完", "全書完"]
-    sql = "update books set end='true' where ("
+    sql = "update books set end='true', download='false' where ("
     for c in criteria:
         sql += "chapter like '%"+c+"%' or "
     sql += "date < '"+str(datetime.datetime.now().year-2)+"') and (end <> 'true' or end is null)"

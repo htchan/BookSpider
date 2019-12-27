@@ -291,9 +291,9 @@ class BookSite():
         lock.acquire()
         try:
             if(not b.updated):
-                out(b.name)
+                out(b.book_num, "\t", b.name)
                 cursor = self.conn.cursor()
-                sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"' where site='"+self.identify+"' and num="+b.book_num
+                sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"', end='false' where site='"+self.identify+"' and num="+b.book_num
                 cursor.execute(sql)
                 self.conn.commit()
             else:out("skip\t"+b.name)

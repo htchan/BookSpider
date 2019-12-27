@@ -33,8 +33,8 @@ class Ck101Book(ClassDefinition.Book):
             c = c[re.search("<dl",c).end():]
             c = c[:re.search("</div>",c).start()]
             c = re.sub("\x00","",c)
-            c = re.sub("\"(/.*?html)","\"https://www.ck101.org\\1",c)
-            c = re.findall("(https://www.ck101.org/.*?html)",c)
+            c = re.sub("\"(/.*?html)","\"https://w.ck101.org\\1",c)
+            c = re.findall("(https://w.ck101.org/.*?html)",c)
             return c
         except:
             return []
@@ -61,9 +61,9 @@ ck101 = {
     "book":Ck101Book,
     "identify":"ck101",
     "web":{
-        "base_web":"https://www.ck101.org/book/{}.html",
-        "download_web":"https://www.ck101.org/0/{}/",
-        "chapter_web":"https://www.ck101.org/\\d"
+        "base_web":"https://w.ck101.org/book/{}.html",
+        "download_web":"https://w.ck101.org/0/{}/",
+        "chapter_web":"https://w.ck101.org/\\d"
     },
     "setting":{
         "decode":"big5",
