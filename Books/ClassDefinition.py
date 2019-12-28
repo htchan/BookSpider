@@ -24,8 +24,10 @@ class Book():
         book.last_chapter = kwargs["last_chapter"] if("last_chapter" in kwargs) else ""
         book.book_type = kwargs["book_type"] if("book_type" in kwargs) else ""
         book.updated = True
-        try:book.__get_basic_info()
-        except:pass
+        try:
+            book.__get_basic_info()
+        except:
+            pass
         return book
     def __str__(self):
         return "Name:\t"+self.name+"\nWriter:\t"+self.writer+"\nType:\t"+self.book_type
@@ -119,7 +121,8 @@ class Book():
         self.running_thread = 0
         # read all chapter
         for i in range(min(len(titles),len(chapters))):
-            while(self.running_thread > MAX_THREAD):pass
+            while(self.running_thread > MAX_THREAD):
+                time.sleep(1)
             t = threading.Thread(target=self.__download_chapter_thread,args=(titles[i],chapters[i],out,arr,lock))
             t.daemon = True
             self.running_thread += 1
@@ -270,8 +273,10 @@ class BookSite():
         self.running_thread = 0
         lock = threading.Lock()
         threads = []
-        for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
-            while(self.running_thread >= MAX_THREAD):pass
+        #for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
+        for result in cursor.execute("select name, writer, date, chapter, num, type from books where site='"+self.identify+"' and date like '2014-06-13'"):
+            while(self.running_thread >= MAX_THREAD):
+                time.sleep(1)
             info = {
                 "name":result[0],
                 "writer":result[1],
@@ -285,7 +290,8 @@ class BookSite():
             self.running_thread += 1
             th.start()
             threads.append(th)
-        for thread in threads:thread.join()
+        for thread in threads:
+            thread.join()
     def update_thread(self,info,lock,out):
         b = self.__Book.new(**info)
         lock.acquire()
@@ -296,7 +302,8 @@ class BookSite():
                 sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"', end='false' where site='"+self.identify+"' and num="+b.book_num
                 cursor.execute(sql)
                 self.conn.commit()
-            else:out("skip\t"+b.name)
+            else:
+                out("skip\t"+b.name)
         finally:
             lock.release()
             self.running_thread -= 1
@@ -322,7 +329,8 @@ class BookSite():
                 th.start()
                 threads.append(th)
         # confirm all thread are finish
-        for thread in threads:thread.join()
+        for thread in threads:
+            thread.join()
     def explore_thread(self,num,lock,out):
         # get book info
         b = self.__Book.new(book_num=num)
@@ -366,14 +374,15 @@ class BookSite():
         lock = threading.Lock()
         threads = []
         for result in cursor.execute("select site,num from error where site='"+self.identify+"'"):
-            while(self.running_thread >= MAX_THREAD):pass
+            while(self.running_thread >= MAX_THREAD):
+                time.sleep(1)
             num = result[1]
             th = threading.Thread(target=self.explore_thread,args=(num,lock,out))
             th.daemon = True
             self.running_thread += 1
             th.start()
             threads.append(th)
-        for thread in threads:thread.join()
-        pass
+        for thread in threads:
+            thread.join()
     def __del__(self):
         self.conn.close()
