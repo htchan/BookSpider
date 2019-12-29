@@ -118,14 +118,12 @@ class Book():
         arr = []
         lock = threading.Lock()
         threads = []
-        self.running_thread = 0
+        self.threads_control = threading.Semaphore(MAX_THREAD)
         # read all chapter
         for i in range(min(len(titles),len(chapters))):
-            while(self.running_thread > MAX_THREAD):
-                time.sleep(1)
+            self.threads_control.acquire()
             t = threading.Thread(target=self.__download_chapter_thread,args=(titles[i],chapters[i],out,arr,lock))
             t.daemon = True
-            self.running_thread += 1
             t.start()
             threads.append(t)
         for t in threads:
@@ -176,7 +174,7 @@ class Book():
             lock.acquire()
             arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'))
             lock.release()
-            self.running_thread -= 1
+            self.threads_control.release()
             return
         # open chapter url
         for i in range(10):
@@ -192,6 +190,7 @@ class Book():
             lock.acquire()
             arr.append((chapter_url, ""))
             lock.release()
+            self.threads_control.release()
             return
         # read title
         t = self._cut_chapter_title(content)
@@ -201,7 +200,7 @@ class Book():
         # put the result into common array
         arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'))
         lock.release()
-        self.running_thread -= 1
+        self.threads_control.release()
         return
 
 class BookSite():
@@ -270,13 +269,11 @@ class BookSite():
     def update(self,out):
         out(self.identify+"="*15)
         cursor = self.conn.cursor()
-        self.running_thread = 0
+        self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
         #for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
         for result in cursor.execute("select name, writer, date, chapter, num, type from books where site='"+self.identify+"' and date like '2014-06-13'"):
-            while(self.running_thread >= MAX_THREAD):
-                time.sleep(1)
             info = {
                 "name":result[0],
                 "writer":result[1],
@@ -285,9 +282,9 @@ class BookSite():
                 "book_num":result[4],
                 "book_type":result[5]
             }
+            self.threads_controller.acquire()
             th = threading.Thread(target=self.update_thread,args=(info,lock,out))
             th.daemon = True
-            self.running_thread += 1
             th.start()
             threads.append(th)
         for thread in threads:
@@ -306,7 +303,7 @@ class BookSite():
                 out("skip\t"+b.name)
         finally:
             lock.release()
-            self.running_thread -= 1
+            self.threads_controller.release()
     def explore(self,n,out):
         out(self.identify+"="*15)
         book_num = 0
@@ -316,16 +313,15 @@ class BookSite():
         book_num += 1
         # init data for the explore thread
         self.error_page = 0
-        self.running_thread = 0
+        self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
         # explore in threads
         while(self.error_page<n):
-            if(self.running_thread < MAX_THREAD):
+            if(self.threads_controller.acquire()):
                 th = threading.Thread(target=self.explore_thread,args=(book_num,lock,out))
                 th.daemon = True
                 book_num += 1
-                self.running_thread += 1
                 th.start()
                 threads.append(th)
         # confirm all thread are finish
@@ -366,20 +362,18 @@ class BookSite():
                 self.error_page += 1
         finally:
             lock.release()
-            self.running_thread -= 1        
+            self.threads_controller.release()       
     def error_update(self,out):
         out(self.identify+"="*15)
         cursor = self.conn.cursor()
-        self.running_thread = 0
+        self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
         for result in cursor.execute("select site,num from error where site='"+self.identify+"'"):
-            while(self.running_thread >= MAX_THREAD):
-                time.sleep(1)
+            self.threads_controller.acquire()
             num = result[1]
             th = threading.Thread(target=self.explore_thread,args=(num,lock,out))
             th.daemon = True
-            self.running_thread += 1
             th.start()
             threads.append(th)
         for thread in threads:
