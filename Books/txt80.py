@@ -31,7 +31,7 @@ class Txt80Book(ClassDefinition.Book):
     def _cut_chapter(self,c):
         c = c[re.search("yulan..",c).end():]
         c = c[:re.search("</div>",c).start()]
-        c = re.findall("(https.*?html)",c)
+        c = re.findall("(http.*?html)",c)
         return c
     def _cut_title(self,c):
         c = c[re.search("yulan..",c).end():]
@@ -52,9 +52,9 @@ txt80 = {
     "book":Txt80Book,
     "identify":"80txt",
     "web":{
-        "base_web":"https://www.80txt.la/txtml_{}.html",
-        "download_web":"https://www.80txt.la/txtml_{}.html",
-        "chapter_web":"https://www.qiushuzw.com"
+        "base_web":"https://www.balingtxt.com/txtml_{}.html",
+        "download_web":"http://www.balingtxt.com/txtml_{}.html",
+        "chapter_web":"http://www.xqiushu.com"
     },
     "setting":{
         "decode":"utf8",
