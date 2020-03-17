@@ -1,3 +1,4 @@
+import requests
 import urllib.request, gzip
 import re
 import io, os, time, copy
@@ -51,6 +52,9 @@ class Book():
     def _cut_chapter_content(self,c):
         raise NotImplementedError()
     def open_website(self,url):
+		res = requests.get(url, timeout=self.__timeout)
+		res.decode = self.__decode
+		return res.text
         res = urllib.request.urlopen(url,timeout=self.__timeout)
         content = res.read()
         if (res.info().get('Content-Encoding') == 'gzip'):
@@ -65,6 +69,8 @@ class Book():
             content = self.open_website(self.base_web)
         except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             raise RuntimeError("Unable to open the website for basic information")
+		except (Requests.RequestException, Requests.Timeout):
+			raise RuntimeError("Unable to open the website for basic info")
         # check the website book information
         if(not self.name):
             # get name
@@ -93,7 +99,7 @@ class Book():
         # open chapters page
         try:
             content = self.open_website(self.__download_web)
-        except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
+        except (requests.Timeout, requests.RequestException, urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             if(i < 10):
                 time.sleep(self.__timeout//10)
                 out("reload chapter list",i)
@@ -163,7 +169,7 @@ class Book():
         if(not content):
             raise RuntimeError("cannot download chapter")
         # read title
-        t =  self._cut_chapter_title(content)
+        t = self._cut_chapter_title(content)
         # read content
         c = self._cut_chapter_content(content)
         return  '\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'
