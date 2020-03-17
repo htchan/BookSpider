@@ -272,8 +272,8 @@ class BookSite():
         self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
-        #for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
-        for result in cursor.execute("select name, writer, date, chapter, num, type from books where site='"+self.identify+"' and date like '2014-06-13'"):
+        for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
+        #for result in cursor.execute("select name, writer, date, chapter, num, type from books where site='"+self.identify+"' and date like '2014-06-13'"):
             info = {
                 "name":result[0],
                 "writer":result[1],
