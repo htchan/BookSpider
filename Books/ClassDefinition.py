@@ -53,8 +53,7 @@ class Book():
         raise NotImplementedError()
     def open_website(self,url):
         res = requests.get(url, timeout=self.__timeout)
-        res.decode = self.__decode
-        return res.text
+        return res.content.decode(self.__decode)
         res = urllib.request.urlopen(url,timeout=self.__timeout)
         content = res.read()
         if (res.info().get('Content-Encoding') == 'gzip'):
