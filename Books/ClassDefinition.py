@@ -52,9 +52,9 @@ class Book():
     def _cut_chapter_content(self,c):
         raise NotImplementedError()
     def open_website(self,url):
-		res = requests.get(url, timeout=self.__timeout)
-		res.decode = self.__decode
-		return res.text
+        res = requests.get(url, timeout=self.__timeout)
+        res.decode = self.__decode
+        return res.text
         res = urllib.request.urlopen(url,timeout=self.__timeout)
         content = res.read()
         if (res.info().get('Content-Encoding') == 'gzip'):
@@ -69,8 +69,8 @@ class Book():
             content = self.open_website(self.base_web)
         except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             raise RuntimeError("Unable to open the website for basic information")
-		except (Requests.RequestException, Requests.Timeout):
-			raise RuntimeError("Unable to open the website for basic info")
+        except (Requests.RequestException, Requests.Timeout):
+            raise RuntimeError("Unable to open the website for basic info")
         # check the website book information
         if(not self.name):
             # get name
@@ -105,7 +105,7 @@ class Book():
                 out("reload chapter list",i)
                 return self.download(path, out, i+1)
             elif(i == 10):
-                out("unable to open the webite forchapter list")
+                out("unable to open the webite for chapter list")
                 return False
                 #raise RuntimeError("Unable to open the website for chapter lists")
         out(self.name, '-'*20)
@@ -234,12 +234,15 @@ class BookSite():
             out(self.identify+"\t"+b.book_num+"\t"+b.name)
             if(b.updated):
                 if(b.download(self.path+self.identify,out)):
+                    out("Download Successfully")
                     self.conn.execute("update books set download='true' where site='"+self.identify+"' and num="+b.book_num)
                     self.conn.commit()
                 else:
+                    out("Download Error")
                     self.conn.execute("update books set download='error' where site='"+self.identify+"' and num="+b.book_num)
                     self.conn.commit()
             else:
+                out("Not Updated")
                 self.conn.execute("update books set end='false' where site='"+self.identify+"' and num="+b.book_num)
                 self.conn.commit()
     def download_thread(self,info,lock,out):

@@ -68,29 +68,29 @@ def update(out,*args):
         for x in sites:
             sites[x].update(out)
         out("Update Finish")
-		return
-	flags = __get_flags(*args)
-	if ("SITE" in flags):
-		try:
-			sites[flags["SITE"]].update(out)
-			out("Update Finish")
-		except IndexError:
-			out("Site " + flags["SITE"] + " not found")
+        return
+    flags = __get_flags(*args)
+    if ("SITE" in flags):
+        try:
+            sites[flags["SITE"]].update(out)
+            out("Update Finish")
+        except IndexError:
+            out("Site " + flags["SITE"] + " not found")
 def explore(out,*args):
     if (len(args) == 0):
-		n = MAX_EXPLORE_NUM
-	    for x in sites:
-    	    sites[x].explore(n,out)
-    	out("Explore finish")
-		return
-	flags = __get_flags(*args)
-	if ("SITE" in flags):
-		site = flags["SITE"]
-		n = int(flags["NUM"]) if (("NUM" in flags) and (flags["NUM"].isdigit())) else MAX_EXPLORE_NUM
-		try:
-			sites[site].explore(n, out)
-		except IndexError:
-			out("Site " + flags["SITE"] + " not found")
+        n = MAX_EXPLORE_NUM
+        for x in sites:
+            sites[x].explore(n,out)
+        out("Explore finish")
+        return
+    flags = __get_flags(*args)
+    if ("SITE" in flags):
+        site = flags["SITE"]
+        n = int(flags["NUM"]) if (("NUM" in flags) and (flags["NUM"].isdigit())) else MAX_EXPLORE_NUM
+        try:
+            sites[site].explore(n, out)
+        except IndexError:
+            out("Site " + flags["SITE"] + " not found")
 
 def check_end(out,*args):
     # update books end by their last chapter content
@@ -108,17 +108,17 @@ def check_end(out,*args):
     conn.commit()
     out(str(c.rowcount)+" row affected")
 def error_update(out,*args):
-	if (len(args)) == 0):
-	    for x in sites:
-    	    sites[x].error_update(out)
-    	out("Error update finished")
-		return
-	flags = __get_flags(*args)
-	if ("SITE" in flags):
-		try:
-			sites[flags["SITE"]].error_update(out)
-		except IndexError:
-			out("Site " + flags["SITE"] + "not found")
+    if (len(args) == 0):
+        for x in sites:
+            sites[x].error_update(out)
+        out("Error update finished")
+        return
+    flags = __get_flags(*args)
+    if ("SITE" in flags):
+        try:
+            sites[flags["SITE"]].error_update(out)
+        except IndexError:
+            out("Site " + flags["SITE"] + "not found")
 '''
 def find(out,*args):
     # return basic info of the books
@@ -137,6 +137,8 @@ def find(out,*args):
 '''
 def backup(out,*args):
     original_database = open(dbPath + dbName, "rb").read()
+    flags = __get_flags(*args)
+    destination = flags["DEST"] if ("DEST" in flags) else "./backup/"
     open(destination+str(datetime.datetime.now())+"_backup.db", "wb").write(original_database)
 
 if(__name__=="__main__"):
@@ -157,5 +159,9 @@ if(__name__=="__main__"):
         funct = funct.get(args[0])
         if(funct):
             funct(print, *args[1:])
-    except IndexError:exit("No arguement")
-    except KeyboardInterrupt:exit("Sudden Exit")
+    except IndexError:
+        print("No arguement")
+        __print_help(print)
+        exit()
+    except KeyboardInterrupt:
+        exit("Sudden Exit")

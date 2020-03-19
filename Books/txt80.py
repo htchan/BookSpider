@@ -64,3 +64,4 @@ txt80 = {
 
 def site():
     return ClassDefinition.BookSite(**txt80)
+
