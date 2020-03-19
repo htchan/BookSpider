@@ -276,7 +276,6 @@ class BookSite():
             }
         return result
     def update(self,out):
-        out(self.identify+"="*15)
         cursor = self.conn.cursor()
         self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
@@ -302,19 +301,20 @@ class BookSite():
         b = self.__Book.new(**info)
         lock.acquire()
         try:
+            out("Update", "-"*14)
+            out(self.identify, "\t", b.book_num, "\t", b.name)
             if(not b.updated):
-                out(b.book_num, "\t", b.name)
                 cursor = self.conn.cursor()
                 sql = "update books set date='"+b.date+"', chapter='"+b.last_chapter+"', end='false' where site='"+self.identify+"' and num="+b.book_num
                 cursor.execute(sql)
                 self.conn.commit()
+                out("updated")
             else:
-                out("skip\t"+b.name)
+                out("skip")
         finally:
             lock.release()
             self.threads_controller.release()
     def explore(self,n,out):
-        out(self.identify+"="*15)
         book_num = 0
         # get largest book num
         tran = self.conn.cursor().execute("select num from books where site ='"+self.identify+"' order by num desc").fetchone()
@@ -343,8 +343,9 @@ class BookSite():
         lock.acquire()
         try:
             cursor = self.conn.cursor()
+            out("explore", "-"*13)
+            out(self.identify, "\t", b.book_num, "\t", b.name)
             if(not b.updated):
-                out(b.name)
                 flag = bool(cursor.execute("select * from books where name='"+b.name+"' and site='"+self.identify+"' and num="+b.book_num).fetchone())
                 if(not(flag)):
                     # add record to books table
@@ -360,9 +361,10 @@ class BookSite():
                     cursor.execute(sql)
                     self.conn.commit()
                 self.error_page = 0
+                out("find")
             else:
                 # update if the record does not exist in database
-                out("error "+str(num)+"\t"+b.name)
+                out("error")
                 f_books = bool(cursor.execute("select * from books where site='"+self.identify+"' and num="+b.book_num).fetchone())
                 f_error = bool(cursor.execute("select * from error where site='"+self.identify+"' and num="+b.book_num).fetchone())
                 if((not f_books)and(not f_error)):

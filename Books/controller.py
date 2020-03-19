@@ -47,7 +47,9 @@ def __print_help(out,*args):
     out("explore" + " "*11 + "explore new books in internet")
     out("check" + " "*13 + "check recorded books finished")
     out("error" + " "*13 + "update all website may have error")
-    out("backup" + " "*12 + "backup the current database by the current date and time" + "\n")
+    out("backup" + " "*12 + "backup the current database by the current date and time")
+    out("regular" + " "*11 + "do the default operation (explore->update->download->check)")
+    out("\n")
     out("Flags: ")
     out("--site=site" + " "*7 + "set specific site for download")
 def download(out,*args):
@@ -140,6 +142,17 @@ def backup(out,*args):
     flags = __get_flags(*args)
     destination = flags["DEST"] if ("DEST" in flags) else "./backup/"
     open(destination+str(datetime.datetime.now())+"_backup.db", "wb").write(original_database)
+def regular(out,*args):
+    out("explore" + "*"*30)
+    explore(out, *args)
+    out("update" + "*"*30)
+    update(out, *args)
+    out("error update" + "*"*30)
+    error_update(out, *args)
+    out("download" + "*"*30)
+    download(out, *args)
+    out("check end" + "*"*30)
+    check(out, *args)
 
 if(__name__=="__main__"):
     # cmd interface
@@ -152,8 +165,9 @@ if(__name__=="__main__"):
         "explore":     explore,
         "check":       check_end,
         "error":       error_update,
+        "regular":     regular,
         #"find":        find,
-        "backup":      backup
+        "backup":      backup,
     }
     try:
         funct = funct.get(args[0])
