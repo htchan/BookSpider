@@ -4,6 +4,7 @@ try:import ClassDefinition
 except:import Books.ClassDefinition as ClassDefinition
 import os, re, datetime
 import sqlite3
+import gc
 
 try:import ck101, txt80
 except:from Books import ck101, txt80
@@ -68,13 +69,16 @@ def download(out,*args):
 def update(out,*args):
     if (len(args) == 0):
         for x in sites:
-            sites[x].update(out)
+            sites[x].update(False, out)
         out("Update Finish")
         return
     flags = __get_flags(*args)
+    update_all = False
+    if ("ALL" in flags):
+        update_all = True
     if ("SITE" in flags):
         try:
-            sites[flags["SITE"]].update(out)
+            sites[flags["SITE"]].update(update_all, out)
             out("Update Finish")
         except IndexError:
             out("Site " + flags["SITE"] + " not found")
@@ -143,16 +147,22 @@ def backup(out,*args):
     destination = flags["DEST"] if ("DEST" in flags) else "./backup/"
     open(destination+str(datetime.datetime.now())+"_backup.db", "wb").write(original_database)
 def regular(out,*args):
+    out("backup badtabase")
+    backup(out, *args)
     out("explore" + "*"*30)
     explore(out, *args)
+    gc.collect()
     out("update" + "*"*30)
     update(out, *args)
+    gc.collect()
     out("error update" + "*"*30)
     error_update(out, *args)
+    gc.collect()
     out("download" + "*"*30)
     download(out, *args)
+    gc.collect()
     out("check end" + "*"*30)
-    check(out, *args)
+    check_end(out, *args)
 
 if(__name__=="__main__"):
     # cmd interface

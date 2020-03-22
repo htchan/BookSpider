@@ -1,4 +1,3 @@
-import requests
 import urllib.request, gzip
 import re
 import io, os, time, copy
@@ -52,8 +51,6 @@ class Book():
     def _cut_chapter_content(self,c):
         raise NotImplementedError()
     def open_website(self,url):
-        res = requests.get(url, timeout=self.__timeout)
-        return res.content.decode(self.__decode)
         res = urllib.request.urlopen(url,timeout=self.__timeout)
         content = res.read()
         if (res.info().get('Content-Encoding') == 'gzip'):
@@ -68,8 +65,6 @@ class Book():
             content = self.open_website(self.base_web)
         except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             raise RuntimeError("Unable to open the website for basic information")
-        except (Requests.RequestException, Requests.Timeout):
-            raise RuntimeError("Unable to open the website for basic info")
         # check the website book information
         if(not self.name):
             # get name
@@ -95,10 +90,11 @@ class Book():
             self.updated = False
         return self.updated
     def download(self,path,out,i=0):
+        out("download")
         # open chapters page
         try:
             content = self.open_website(self.__download_web)
-        except (requests.Timeout, requests.RequestException, urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
+        except (urllib.error.HTTPError, urllib.error.URLError, urllib.request.socket.timeout):
             if(i < 10):
                 time.sleep(self.__timeout//10)
                 out("reload chapter list",i)
@@ -107,7 +103,7 @@ class Book():
                 out("unable to open the webite for chapter list")
                 return False
                 #raise RuntimeError("Unable to open the website for chapter lists")
-        out(self.name, '-'*20)
+        out(self.book_num, self.name)
         # read all chapters url
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
@@ -151,6 +147,7 @@ class Book():
         f = open(path+'/'+self.book_num+".txt","w",encoding="utf8")
         f.write(text)
         f.close()
+        out("download success")
         return True
     def __download_chapter(self,chapter_title,chapter_url,out):
         # check valid url pattern or not
@@ -229,8 +226,9 @@ class BookSite():
                 "book_num":result[4],
                 "book_type":result[5]
             }
+            out('preparing book')
             b = self.__Book.new(**info)
-            out(self.identify+"\t"+b.book_num+"\t"+b.name)
+            out(self.identify+"\t"+b.book_num+"\t"+b.name+"\t"+"-"*15)
             if(b.updated):
                 if(b.download(self.path+self.identify,out)):
                     out("Download Successfully")
@@ -274,13 +272,15 @@ class BookSite():
                 "type":result[i][3]
             }
         return result
-    def update(self,out):
+    def update(self,update_all,out):
         cursor = self.conn.cursor()
         self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
-        for result in cursor.execute("select name,writer,date,chapter,num,type from books where site='"+self.identify+"' and (read='false' or read is null) order by date desc"):
-        #for result in cursor.execute("select name, writer, date, chapter, num, type from books where site='"+self.identify+"' and date like '2014-06-13'"):
+        sql = "select name,writer,date,chapter,num,type from books where site='"+self.identify+"'"
+        if (not update_all):
+            sql += " and (read='false' or read is null)"
+        for result in cursor.execute(sql + " order by date desc"):
             info = {
                 "name":result[0],
                 "writer":result[1],
