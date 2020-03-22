@@ -29,15 +29,12 @@ class Ck101Book(ClassDefinition.Book):
         c = re.findall(" &gt; (\w{4}) &gt; ",c)[0]
         return c
     def _cut_chapter(self,c):
-        try:
             c = c[re.search("<dl",c).end():]
             c = c[:re.search("</div>",c).start()]
             c = re.sub("\x00","",c)
-            c = re.sub("\"(/.*?html)","\"https://w.ck101.org\\1",c)
-            c = re.findall("(https://w.ck101.org/.*?html)",c)
+            c = re.sub("\"(/.*?html)", "\"" + self._Book__chapter_web.replace("/\\d", "") + "\\1",c)
+            c = re.findall("(https://w+.ck101.org/.*?html)",c)
             return c
-        except:
-            return []
     def _cut_title(self,c):
         try:
             c = c[re.search("<dl",c).end():]
@@ -57,14 +54,22 @@ class Ck101Book(ClassDefinition.Book):
         c = re.sub("(<br />|<.+?</.+?>|\x00)","",c)
         if(len(c)<10):print("this chapter is too short!!!")
         return c
+
+desktop_web = {
+    "base_web":"https://www.ck101.org/book/{}.html",
+    "download_web":"https://www.ck101.org/0/{}/",
+    "chapter_web":"https://www.ck101.org/\\d"
+}
+tablet_web = {
+    "base_web":"https://w.ck101.org/book/{}.html",
+    "download_web":"https://w.ck101.org/0/{}/",
+    "chapter_web":"https://w.ck101.org/\\d"
+}
+
 ck101 = {
     "book":Ck101Book,
     "identify":"ck101",
-    "web":{
-        "base_web":"https://w.ck101.org/book/{}.html",
-        "download_web":"https://w.ck101.org/0/{}/",
-        "chapter_web":"https://w.ck101.org/\\d"
-    },
+    'web':desktop_web,
     "setting":{
         "decode":"big5",
         "timeout":30
