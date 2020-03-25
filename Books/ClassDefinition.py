@@ -103,7 +103,6 @@ class Book():
                 out("unable to open the webite for chapter list")
                 return False
                 #raise RuntimeError("Unable to open the website for chapter lists")
-        out(self.book_num, self.name)
         # read all chapters url
         chapters = self._cut_chapter(content)
         titles = self._cut_title(content)
@@ -138,7 +137,6 @@ class Book():
         for i in range(min(len(titles),len(chapters))):
             for j in range(len(arr)):
                 if(chapters[i] == arr[j][0]):
-                    print(arr[j][1][20:40])
                     text += arr[j][1]
                     break
         # save actual content
@@ -226,7 +224,6 @@ class BookSite():
                 "book_num":result[4],
                 "book_type":result[5]
             }
-            out('preparing book')
             b = self.__Book.new(**info)
             out(self.identify+"\t"+b.book_num+"\t"+b.name+"\t"+"-"*15)
             if(b.updated):
