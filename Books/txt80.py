@@ -47,6 +47,7 @@ class Txt80Book(ClassDefinition.Book):
         c = c[:re.search("<div",c).start()]
         c = re.sub("&nbsp;"," ",c)
         c = re.sub("<br />    ","\n",c)
+        c = c.replace("\r\n\r\n", "\r\n")
         return c
 txt80 = {
     "book":Txt80Book,
