@@ -54,6 +54,7 @@ def __print_help(out,*args):
     out("error" + " "*13 + "update all website may have error")
     out("backup" + " "*12 + "backup the current database by the current date and time")
     out("regular" + " "*11 + "do the default operation (explore->update->download->check)")
+    out("moveLog" + " "*11 + "move the logging.log to another suitable filename")
     out("\n")
     out("Flags: ")
     out("--site=site" + " "*7 + "set specific site for download")
@@ -167,6 +168,14 @@ def regular(out,*args):
     gc.collect()
     out("check end" + "*"*30)
     check_end(out, *args)
+def moveLog(out,*args):
+    if (os.path.exists("./log/logging.log")):
+        logs_file = filter(lambda filename: int(filename.replace("logging", "").replace(".txt", "")), os.listdir("./log"))
+        log_number = max(log_files) + 1
+        os.rename("./log/logging.txt", "./log/logging{}.txt".format(log_number))
+        print("log file moved")
+    else:
+        print("no current log file found")
 
 if(__name__=="__main__"):
     # cmd interface
@@ -182,6 +191,7 @@ if(__name__=="__main__"):
         "regular":     regular,
         #"find":        find,
         "backup":      backup,
+        "moveLog":     moveLog,
     }
     try:
         funct = funct.get(args[0])
