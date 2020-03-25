@@ -69,7 +69,7 @@ tablet_web = {
 ck101 = {
     "book":Ck101Book,
     "identify":"ck101",
-    'web':desktop_web,
+    'web':tablet_web,
     "setting":{
         "decode":"big5",
         "timeout":30

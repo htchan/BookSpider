@@ -6,8 +6,8 @@ import os, re, datetime
 import sqlite3
 import gc
 
-try:import ck101, txt80
-except:from Books import ck101, txt80
+try:import ck101, txt80, bestory
+except:from Books import ck101, txt80, bestory
 
 ### load setting
 dbPath = os.getcwd()
@@ -30,10 +30,14 @@ txt80.txt80['path'] = path
 ck101.ck101['conn'] = conn
 ck101.ck101['path'] = path
 
+bestory.bestory['conn'] = conn
+bestory.bestory['path'] = path
+
 ### variable init
 sites = {}
 sites["CK101"] = ck101.site()
 sites["80TXT"] = txt80.site()
+sites['BESTORY'] = bestory.site()
 def __get_flags(*args):
     output = {}
     for arg in args:
