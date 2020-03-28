@@ -3,7 +3,7 @@ import re
 import io, os, time, copy
 import threading
 
-MAX_THREAD =300
+MAX_THREAD = 300
 
 ### new functional class
 class Book():
@@ -225,7 +225,7 @@ class BookSite():
         return type(self.__Book).__name__+' Site'
     def download(self,out):
         out(self.identify+"="*15)
-        for result in self.conn.execute("select name,writer,date,chapter,num,type from books where site = '"+self.identify+"' and end='true' and download='false'").fetchall():
+        for result in self.conn.execute("select name,writer,date,chapter,num,type,end, download from books where site = '"+self.identify+"' and end='true' and download='false' order by date").fetchall():
             info = {
                 "name":result[0],
                 "writer":result[1],
@@ -327,7 +327,8 @@ class BookSite():
         if(tran): book_num = tran[0]
         book_num += 1
         # init data for the explore thread
-        self.error_page = 0
+        self.error_page = -1 if ((self.identify == 'bestory') and (book_num < 99999)) else 0
+        print(self.error_page)
         self.threads_controller = threading.Semaphore(MAX_THREAD)
         lock = threading.Lock()
         threads = []
@@ -366,7 +367,8 @@ class BookSite():
                     )
                     cursor.execute(sql)
                     self.conn.commit()
-                self.error_page = 0
+                if ((self.identify != 'bestory') or (num > 99999)):
+                    self.error_page = 0
                 out("find")
             else:
                 # update if the record does not exist in database
@@ -376,7 +378,8 @@ class BookSite():
                 if((not f_books)and(not f_error)):
                     cursor.execute("insert into error (site,num) values ('"+self.identify+"','"+b.book_num+"')")
                     self.conn.commit()
-                self.error_page += 1
+                if ((self.error_page >= 0) or not((num < 99999) and (self.identify == 'bestory'))):
+                    self.error_page += 1
         finally:
             lock.release()
             self.threads_controller.release()       

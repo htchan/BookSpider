@@ -174,7 +174,7 @@ def regular(out,*args):
     check_end(out, *args)
 def moveLog(out,*args):
     if (os.path.exists("./log/logging.log")):
-        logs_file = filter(lambda filename: int(filename.replace("logging", "").replace(".txt", "")), os.listdir("./log"))
+        log_files = filter(lambda filename: int('0' + filename.replace("logging", "").replace(".txt", "").replace(".log", "")), os.listdir("./log"))
         log_number = max(log_files) + 1
         os.rename("./log/logging.txt", "./log/logging{}.txt".format(log_number))
         print("log file moved")
