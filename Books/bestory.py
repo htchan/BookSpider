@@ -37,14 +37,17 @@ class BestoryBook(ClassDefinition.Book):
     def _cut_chapter_title(self,c):
         return ""
     def _cut_chapter_content(self,c):
-        c = c[re.search("<p class=content>", c).end():]
-        c = c[:re.search("</p>", c).start()]
-        if ("<br>\r\n" in c[:-10]):
-            c = re.sub("<br>\r\n", "\n", c)
-        else:
-            c = re.sub(" ", "\n", c)
-        if(len(c)<10):print("this chapter is too short!!!")
-        return c
+        try:
+            c = c[re.search("<p class=content>", c).end():]
+            c = c[:re.search("</p>", c).start()]
+            if ("<br>\r\n" in c[:-10]):
+                c = re.sub("<br>\r\n", "\n", c)
+            else:
+                c = re.sub(" ", "\n", c)
+            if(len(c)<10):print("this chapter is too short!!!")
+            return c
+        except:
+            return "error"
 
 desktop_web = {
     "base_web":"https://www.book100.com/book/book{}.html",

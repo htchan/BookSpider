@@ -111,7 +111,11 @@ class Book():
         # read actual content
         '''
         for i in range(min(len(titles),len(chapters))):
-            text += self.__download_chapter(titles[i],chapters[i],out)
+            chapter_text = self.__download_chapter(titles[i],chapters[i],out)
+            if (chapter_text == 'error'):
+                return False
+            else:
+                text += chapter_text
             out(titles[i])
         '''
         # multi thread 
@@ -139,6 +143,7 @@ class Book():
                 if(chapters[i] == arr[j][0]):
                     text += arr[j][1]
                     break
+        
         # save actual content
         try: os.mkdir(path)
         except: pass
@@ -166,6 +171,8 @@ class Book():
         t = self._cut_chapter_title(content)
         # read content
         c = self._cut_chapter_content(content)
+        if (c == 'error'):
+            return c
         return  '\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'
     def __download_chapter_thread(self,chapter_title,chapter_url,out,arr,lock):
         # check url pattern
@@ -197,8 +204,11 @@ class Book():
         # read content
         c = self._cut_chapter_content(content)
         lock.acquire()
-        # put the result into common array
-        arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'))
+        if (c != 'error'):
+            # put the result into common array
+            arr.append((chapter_url,'\n'+'-'*20+'\n'+chapter_title+'\n'+'-'*20+'\n'+t+c+'\n'))
+        else:
+            arr.append((chapter_url, ''))
         lock.release()
         self.threads_control.release()
         return
