@@ -3,7 +3,7 @@ import re
 import io, os, time, copy
 import threading
 
-MAX_THREAD = 500
+MAX_THREAD = 300
 
 ### new functional class
 class Book():
@@ -215,7 +215,7 @@ class BookSite():
         return type(self.__Book).__name__+' Site'
     def download(self,out):
         out(self.identify+"="*15)
-        for result in self.conn.execute("select name,writer,date,chapter,num,type from books where site = '"+self.identify+"' and end='true' and download='false'").fetchall():
+        for result in self.conn.execute("select name,writer,date,chapter,num,type,end, download from books where site = '"+self.identify+"' and end='true' and download='false' order by date").fetchall():
             info = {
                 "name":result[0],
                 "writer":result[1],
