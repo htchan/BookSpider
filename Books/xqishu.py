@@ -30,6 +30,8 @@ class XqishuBook(ClassDefinition.Book):
         c = re.sub("</(.*?)>", "</\\1>\n", c).split("\n")
         for i in range(len(c)):
             if (c[i].find("<a") == 0):
+                if (c[i].find("<a href") < 0):
+                    continue
                 c[i] = self._Book__download_web + re.search("<a href=\"(.*?)\"", c[i]).group(1)
             else:
                 c[i] = ""
