@@ -60,6 +60,19 @@ tablet_web = {
     "chapter_web":"https://www.book100.com/novel/\d"
 }
 
+import ClassDefinition2
+book_factory_info = {
+    **desktop_web,
+    "book_product":BestoryBook,
+    "decode":"big5",
+    "timeout":30
+}
+
+bestory = {
+    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "identify":"bestory",
+}
+
 bestory = {
     "book":BestoryBook,
     "identify":"bestory",

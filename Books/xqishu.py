@@ -32,6 +32,7 @@ class XqishuBook(ClassDefinition.Book):
             if (c[i].find("<a") == 0):
                 if (c[i].find("<a href") < 0):
                     continue
+                c[i] = c[i].replace('”', '"')
                 c[i] = self._Book__download_web + re.search("<a href=\"(.*?)\"", c[i]).group(1)
             else:
                 c[i] = ""
@@ -51,6 +52,21 @@ class XqishuBook(ClassDefinition.Book):
         c = re.sub("<br />    ","\n",c)
         c = c.replace("\r\n\r\n", "\r\n")
         return c
+
+import ClassDefinition2
+book_factory_info = {
+    "base_web":"http://www.xqiushu.com/txt{}/",
+    "download_web":"http://www.xqiushu.com/t/{}/",
+    "chapter_web":"http://www.xqiushu.com/t/\d",
+    "book_product":XqishuBook,
+    "decode":"utf8",
+    "timeout":30
+}
+
+xqishu = {
+    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "identify":"xqishu",
+}
 
 xqishu = {
     "book":XqishuBook,

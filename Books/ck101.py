@@ -69,10 +69,23 @@ tablet_web = {
     "chapter_web":"https://w.ck101.org/\\d"
 }
 
+import ClassDefinition2
+book_factory_info = {
+    **desktop_web,
+    "book_product":Ck101Book,
+    "decode":"big5",
+    "timeout":30
+}
+
+ck101 = {
+    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "identify":"ck101",
+}
+
 ck101 = {
     "book":Ck101Book,
     "identify":"ck101",
-    'web':tablet_web,
+    'web':desktop_web,
     "setting":{
         "decode":"big5",
         "timeout":30
