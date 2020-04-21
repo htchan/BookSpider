@@ -110,7 +110,7 @@ class Book():
         text = ""
         # single thread
         # read actual content
-
+        '''
         for i in range(min(len(titles),len(chapters))):
             chapter_text = self.__download_chapter(titles[i],chapters[i],out)
             if (chapter_text == 'error'):
@@ -144,7 +144,7 @@ class Book():
                 if (chapters[i] == arr[j][0]):
                     text += arr[j][1]
                     break
-        '''
+
         # save actual content
         try: os.mkdir(path)
         except: pass
