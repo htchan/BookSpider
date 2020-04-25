@@ -69,7 +69,6 @@ tablet_web = {
     "chapter_web":"https://w.ck101.org/\\d"
 }
 
-import ClassDefinition2
 book_factory_info = {
     **desktop_web,
     "book_product":Ck101Book,
@@ -78,10 +77,10 @@ book_factory_info = {
 }
 
 ck101 = {
-    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "book_factory":ClassDefinition.BookFactory(**book_factory_info),
     "identify":"ck101",
 }
-
+'''
 ck101 = {
     "book":Ck101Book,
     "identify":"ck101",
@@ -91,6 +90,6 @@ ck101 = {
         "timeout":30
     }
 }
-
+'''
 def site():
     return ClassDefinition.BookSite(**ck101)

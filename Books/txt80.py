@@ -50,7 +50,6 @@ class Txt80Book(ClassDefinition.Book):
         c = c.replace("\r\n\r\n", "\r\n")
         return c
 
-import ClassDefinition2
 book_factory_info = {
     "base_web":"https://www.balingtxt.com/txtml_{}.html",
     "download_web":"http://www.balingtxt.com/txtml_{}.html",
@@ -61,10 +60,10 @@ book_factory_info = {
 }
 
 txt80 = {
-    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "book_factory":ClassDefinition.BookFactory(**book_factory_info),
     "identify":"80txt",
 }
-
+'''
 txt80 = {
     "book":Txt80Book,
     "identify":"80txt",
@@ -78,7 +77,7 @@ txt80 = {
         "timeout":30
     }
 }
-
+'''
 def site():
     return ClassDefinition.BookSite(**txt80)
 

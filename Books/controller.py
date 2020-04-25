@@ -21,23 +21,29 @@ for s in setting:
 
 
 ### const init
-MAX_EXPLORE_NUM = 100
+MAX_EXPLORE_NUM = 1000
 conn = sqlite3.connect(dbPath+dbName,check_same_thread=False)
+db = ClassDefinition.Database(conn)
 
 txt80.txt80['conn'] = conn
 txt80.txt80['path'] = path
+txt80.txt80['db'] = db
 
 ck101.ck101['conn'] = conn
 ck101.ck101['path'] = path
+ck101.ck101['db'] = db
 
 bestory.bestory['conn'] = conn
 bestory.bestory['path'] = path
+bestory.bestory['db'] = db
 
 xqishu.xqishu['conn'] = conn
 xqishu.xqishu['path'] = path
+xqishu.xqishu['db'] = db
 
 hjwzw.hjwzw['conn'] = conn
 hjwzw.hjwzw['path'] = path
+hjwzw.hjwzw['db'] = db
 
 ### variable init
 sites = {}

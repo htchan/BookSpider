@@ -36,7 +36,6 @@ class HjwzwBook(ClassDefinition.Book):
         c = c.replace("\r\n", "\r\n\r\n").strip()
         return c
 
-import ClassDefinition2
 book_factory_info = {
     "base_web":"https://tw.hjwzw.com/Book/{}/",
     "download_web":"https://tw.hjwzw.com/Book/Chapter/{}/",
@@ -47,10 +46,10 @@ book_factory_info = {
 }
 
 hjwzw = {
-    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
-    "identify":"xqishu",
+    "book_factory":ClassDefinition.BookFactory(**book_factory_info),
+    "identify":"hjwzw",
 }
-
+'''
 hjwzw = {
     "book":HjwzwBook,
     "identify":"hjwzw",
@@ -64,6 +63,6 @@ hjwzw = {
         "timeout":30
     }
 }
-
+'''
 def site():
     return ClassDefinition.BookSite(**hjwzw)

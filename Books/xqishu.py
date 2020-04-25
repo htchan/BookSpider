@@ -53,7 +53,6 @@ class XqishuBook(ClassDefinition.Book):
         c = c.replace("\r\n\r\n", "\r\n")
         return c
 
-import ClassDefinition2
 book_factory_info = {
     "base_web":"http://www.xqiushu.com/txt{}/",
     "download_web":"http://www.xqiushu.com/t/{}/",
@@ -64,10 +63,10 @@ book_factory_info = {
 }
 
 xqishu = {
-    "book_factory":ClassDefinition2.BookFactory(**book_factory_info),
+    "book_factory":ClassDefinition.BookFactory(**book_factory_info),
     "identify":"xqishu",
 }
-
+'''
 xqishu = {
     "book":XqishuBook,
     "identify":"xqishu",
@@ -81,6 +80,6 @@ xqishu = {
         "timeout":30
     }
 }
-
+'''
 def site():
     return ClassDefinition.BookSite(**xqishu)
