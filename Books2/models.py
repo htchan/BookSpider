@@ -2,7 +2,7 @@ import os, sqlite3, urllib.request, collections, datetime, json
 import threading, concurrent.futures
 import gc
 
-MAX_THREAD = 300
+MAX_THREAD = 20
 
 class Database:
     def __init__(self, db_path):
@@ -20,7 +20,9 @@ class Database:
         result = self.db_conn.execute('select * from ' + table +' where site=? and num=?', [record.site, record.num]).fetchone()
         return (result != None)
     def get_record(self, table, condition):
-        return self.db_conn.execute('select * from ' + table + ' ' + condition)
+        #db_conn = sqlite3.connect(self.db_path)
+        result = self.db_conn.cursor().execute('select * from ' + table + ' ' + condition)
+        return result
     def add_record(self, table, record):
         if (self.exist(table, record)):
             self.update_record(table, record)
@@ -84,7 +86,7 @@ class Logger:
         self.db_conn.execute("insert into log (time, raw) values (?, ?)", (time, raw))
         self.db_conn.commit()
 class Book:
-    def __init__(self, db=None, base_url='', download_url='', chapter_url='', site='', num=0, decode='utf8', max_thread = MAX_THREAD, timeout=30, logger=None):
+    def __init__(self, db=None, base_url='', download_url='', chapter_url='', site='', num=0, decode='utf8', max_thread = MAX_THREAD, timeout=30):
         self.base_url = base_url
         self.download_url = download_url
         self.chapter_url = chapter_url
@@ -93,9 +95,10 @@ class Book:
         self.decode = decode
         self.max_thread = max_thread
         self.timeout = timeout
-        self.logger = logger
         if ((db != None) and (db.exist('books', self))):
-            record = db.get_record('books', 'where site="'+self.site+'" and num='+str(self.num)+' order by version desc').fetchone()
+            row = db.get_record('books', 'where site="'+self.site+'" and num='+str(self.num)+' order by version desc limit 2')
+            record = row.fetchone()
+            row.close()
             self.title = record[0]
             self.writer = record[1]
             self.last_update = record[2]
@@ -128,8 +131,8 @@ class Book:
         pass
     def update(self):
         try:
-            res = urllib.request.urlopen(self.base_url, timeout=self.timeout)
-            html = res.read().decode(self.decode)
+            with urllib.request.urlopen(self.base_url, timeout=self.timeout) as res:
+                html = res.read().decode(self.decode)
         except:
             return False
         try:
@@ -140,17 +143,21 @@ class Book:
             if (self.last_update != last_update):
                 self.last_update = last_update
             else:
+                '''
                 if (self.logger != None):
                     self.logger.log(site=self.site, num=self.num,
                             version=self.version, operation="update", result="fail")
+                '''
                 return False
             self.last_chapter = self._get_last_chapter(html)
             if (self.end_flag == True):
                 self.version += 1
                 self.end_flag = False
+            '''
             if (self.logger != None):
                 self.logger.log(site=self.site, num=self.num,
                         version=self.version, operation="update", result="success")
+            '''
             return True
         except (AttributeError, IndexError):
             return False
@@ -160,11 +167,11 @@ class Book:
         pass
     def _get_content(self, html):
         pass
-    def _download_chapter(self, url, semaphore, lock):
+    def _download_chapter(self, url, title, semaphore, lock):
         if (self.chapter_url.replace('\\d', '') not in url):
-            lock.acquire() if (lock != None) else None
-            self.content_list.append((url, None))
-            lock.release() if lock != None else None
+            #lock.acquire() if (lock != None) else None
+            self.content_list.append((self.chapters_url.index(url), title, None))
+            #lock.release() if lock != None else None
             semaphore.release() if semaphore != None else None
             return
         for i in range(10):
@@ -174,18 +181,16 @@ class Book:
                 break
             except:
                 if (i == 10):
-                    lock.acquire() if lock != None else None
-                    self.content_list.append((url, None))
-                    lock.release() if lock != None else None
+                    #lock.acquire() if lock != None else None
+                    self.content_list.append((self.chapters_url.index(url), title, None))
+                    #lock.release() if lock != None else None
                     semaphore.release() if semaphore != None else None
                     return
                 print('reload', url)
         content = self._get_content(html)
-        '''
-        lock.acquire() if lock != None else None
-        self.content_list.append((url, content))
-        lock.release() if lock != None else None
-        '''
+        #lock.acquire() if lock != None else None
+        self.content_list.append((self.chapters_url.index(url), title, content))
+        #lock.release() if lock != None else None
         semaphore.release() if semaphore != None else None
         return content
     def download(self, path):
@@ -193,9 +198,11 @@ class Book:
             res = urllib.request.urlopen(self.download_url, timeout=self.timeout)
             html = res.read().decode(self.decode)
         except:
+            '''
             if (self.logger != None):
                 self.logger.log(site=self.site, num=self.num,
                             version=self.version, operation="download", result="fail")
+            '''
             return False
         self.chapters_url = self._get_chapters_url(html)
         self.chapters_title = self._get_chapters_title(html)
@@ -203,9 +210,9 @@ class Book:
         threads = []
         lock = threading.Lock()
         semaphore = threading.Semaphore(self.max_thread)
-        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD//5)
+        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD)
         print('different') if len(self.chapters_title) != len(self.chapters_url) else None
-        '''
+        #'''
         for (url, title) in zip(self.chapters_url, self.chapters_title):
             ### thread version ###
             threads.append(threading.Thread(target=self._download_chapter, args=(url, semaphore, lock)))
@@ -214,21 +221,19 @@ class Book:
             threads[-1].start()
 
             ### linear version ###
-            ''
+            ''''
             self._download_chapter(url, None, None)
-            ''
+            '''
             print(title)
         for thread in threads:
             thread.join()
+        self.content_list.sort(key=lambda item: item[0])
         result = self.title + '\n' + self.writer + '\n' + '-'*20 + '\n'*2
-        for (url, title) in zip(self.chapters_url, self.chapters_title):
+        for (_, chapter_title, chapter_content) in self.content_list:
             ### sort the url list ###
-            result += title + '\n' + '-'*20 + '\n'
-            for (check_url, content) in self.content_list:
-                if (url == check_url):
-                    result += content + '\n'*2
-                    self.content_list.remove((url, content))
-                    break
+            result += chapter_title + '\n' + '-'*20 + '\n'
+            result += chapter_content + '\n'*2
+
         '''
         for (url, title) in zip(self.chapters_url, self.chapters_title):
             semaphore.acquire()
@@ -243,9 +248,11 @@ class Book:
         f = open(path, 'w', encoding='utf8')
         f.write(result)
         f.close()
+
         if (self.logger != None):
             self.logger.log(site=self.site, num=self.num,
                     version=self.version, operation="download", result="success")
+        '''
         return True
     def to_record(self, table):
         if (table == 'books'):
@@ -294,12 +301,30 @@ class Site:
         self.error_count = 0
         lock = threading.Lock()
         semaphore = threading.Semaphore(MAX_THREAD)
-        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD//10)
+        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD)
+        threads = []
         while (self.error_count < max_error_count):
+            '''
             semaphore.acquire()
             pool.submit(self._explore_thread, last_num, semaphore, lock)
             last_num += 1
+            '''
+            semaphore.acquire()
+            thread = threading.Thread(target=self._explore_thread, args=(last_num, semaphore, lock))
+            thread.daemon = True
+            threads.append(thread)
+            thread.start()
+            if (len(threads) >= 1000):
+                for thread in threads:
+                    if (not thread.is_alive()):
+                        thread.join()
+                        threads.remove(thread)
+                gc.collect()
+        '''
         pool.shutdown()
+        '''
+        for thread in threads:
+            thread.join()
         gc.collect()
 
     def _explore_thread(self, num, semaphore, lock):
@@ -318,52 +343,56 @@ class Site:
             lock.release() if (lock != None) else None
         semaphore.release() if (semaphore != None) else None
     def update(self):
-        rows = self.db.get_record('books', 'where site="' + self.site.lower() + '" order by date desc').fetchall()
+        rows = self.db.get_record('books', 'where site="' + self.site.lower() + '" order by date desc')
         lock = threading.BoundedSemaphore(1)
         semaphore = threading.BoundedSemaphore(MAX_THREAD)
-        log = Logger('./logger.db')
-        log._create_table()
         threads = []
-        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD//5)
+        '''
+        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD)
+        '''
         for i, row in enumerate(rows):
-            semaphore.acquire()
-            pool.submit(self._update_thread, row[9], semaphore, lock)
-            if (i % 1000 == 0):
-                gc.collect()
             '''
             semaphore.acquire()
-            threads.append(threading.Thread(target=self._update_thread, args=(row[9], semaphore, lock, log)))
-            threads[-1].daemon = True
-            threads[-1].start()
-            if (len(threads) >= 3000):
+            pool.submit(self._update_thread, row[9], semaphore, lock)
+            '''
+            semaphore.acquire()
+            thread = threading.Thread(target=self._update_thread, args=(row[9], semaphore, lock))
+            thread.daemon = True
+            threads.append(thread)
+            thread.start()
+            if (len(threads) >= 1000):
                 for thread in threads:
                     if (not thread.is_alive()):
                         thread.join()
+                        threads.remove(thread)
                 gc.collect()
         for thread in threads:
             thread.join()
-            '''
+        '''
         pool.shutdown()
+        '''
         gc.collect()
     def _update_thread(self, num, semaphore, lock):
         b = self.get_book(num)
         v = b.version
         if (b.update()):
-            lock.acquire() if (lock != None) else None
             if (v == b.version):
+                lock.acquire() if (lock != None) else None
                 self.db.update_record('books', b)
+                lock.release() if (lock != None) else None
                 #log.log(site=self.site, num=num, message='updated')
                 print(self.site, num, 'updated')
             else:
+                lock.acquire() if (lock != None) else None
                 self.db.add_record('books', b)
+                lock.release() if (lock != None) else None
                 #log.log(site=self.site, num=num, version=b.version, message='added')
                 print(self.site, num, b.version, 'added')
-            lock.release() if (lock != None) else None
         else:
-            lock.acquire() if (lock != None) else None
+            #lock.acquire() if (lock != None) else None
             #log.log(site=self.site, num=num, message='unchanged')
             print(self.site, num, 'unchanged')
-            lock.release() if (lock != None) else None
+            #lock.release() if (lock != None) else None
         semaphore.release() if (semaphore != None) else None
     def download(self):
         if (not os.path.exists(self.download_path)):
@@ -378,10 +407,28 @@ class Site:
         rows = self.db.get_record('error', 'where site="' + self.site + '"').fetchall()
         lock = threading.Lock()
         semaphore = threading.Semaphore(MAX_THREAD)
-        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD//10)
+        threads = []
+        '''
+        pool = concurrent.futures.ThreadPoolExecutor(MAX_THREAD)
+        '''
         for row in rows:
+            '''
             semaphore.acquire()
-            pool.submit(self._update_thread, row[9], semaphore, lock)
+            pool.submit(self._update_thread, row[2], semaphore, lock)
+            '''
+            semaphore.acquire()
+            thread = threading.Thread(target=self._update_thread, args=(row[2], semaphore, lock))
+            thread.daemon = True
+            threads.append(thread)
+            thread.start()
+            if (len(threads) >= 1000):
+                for thread in threads:
+                    if (not thread.is_alive()):
+                        thread.join()
+                        threads.remove(thread)
+                gc.collect()
+        for thread in threads:
+            thread.join()
         pool.shutdown()
         gc.collect()
     def _update_error_thread(self, num, semaphore, lock):

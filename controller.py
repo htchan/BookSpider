@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, gc
+import sys, gc, threading
 
 from Books2.subBook import ck101, bestory, hjwzw, txt80, xqishu
 
@@ -36,13 +36,25 @@ def print_help():
     print("--site=site" + " "*7 + "set specific site for download")
 
 def explore():
+    site_threads = []
     for (key, site) in sites.items():
         print(key, 'explore')
-        site.explore(MAX_ERROR_COUNT)
+        thread = threading.Thread(target=site.explore, args=(MAX_ERROR_COUNT))
+        site_threads.append(thread)
+        thread.daemon = True
+        thread.start()
+    for thread in site_threads:
+        thread.join()
 def update():
+    site_threads = []
     for (key, site) in sites.items():
         print(key, 'update')
-        site.update()
+        thread = threading.Thread(target=site.update, args=())
+        site_threads.append(thread)
+        thread.daemon = True
+        thread.start()
+    for thread in site_threads:
+        thread.join()
 def download():
     for (key, site) in sites.items():
         print(key, 'download')
