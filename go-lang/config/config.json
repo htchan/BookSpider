@@ -1,0 +1,30 @@
+[
+    {
+        "name" : "ck101",
+        "decode": "big5",
+        "configLocation" : "./config/ck101-desktop.json",
+        "databaseLocation" : "./database/ck101.db",
+        "downloadLocation" : "/mnt/addition/download/Book/ck101"
+    }, 
+    {
+        "name" : "80txt",
+        "decode" : "utf8",
+        "configLocation" : "./config/80txt-desktop.json",
+        "databaseLocation" : "./database/txt80.db",
+        "downloadLocation" : "/mnt/addition/download/Book/80tct"
+    },
+    {
+        "name" : "xqishu",
+        "decode" : "utf8",
+        "configLocation" : "./config/xqishu-desktop.json",
+        "databaseLocation" : "./database/xqishu.db",
+        "downloadLocation" : "/mnt/addition/download/Book/xqishu"
+    },
+    {
+        "name" : "hjwzw",
+        "decode" : "utf8",
+        "configLocation" : "./config/hjwzw-desktop.json",
+        "databaseLocation" : "./database/hjwzw.db",
+        "downloadLocation" : "/mnt/addition/download/Book/hjwzw"
+    }
+]

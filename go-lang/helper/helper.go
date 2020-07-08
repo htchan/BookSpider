@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"regexp"
+	"time"
 )
 
 func CheckError(e error) {
@@ -13,7 +14,8 @@ func CheckError(e error) {
 }
 
 func GetWeb(url string) (string) {
-	resp, err := http.Get(url);
+	client := http.Client{Timeout: 30*time.Second}
+	resp, err := client.Get(url);
 	if err != nil {
 		return "";
 	}
@@ -23,6 +25,10 @@ func GetWeb(url string) (string) {
 	}
 	resp.Body.Close();
 	return string(body);
+}
+
+func Match(str, regex string) (bool) {
+	return false;
 }
 
 func Search(str, regex string) (string) {

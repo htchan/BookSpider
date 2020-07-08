@@ -12,23 +12,29 @@ import (
 	"sync"
 	"strconv"
 	"../helper"
+	//"time"
 	//"runtime"
 )
+
+var SITE_MAX_THREAD int = 1000;
 
 type Site struct {
 	SiteName string
 	database *sql.DB
-	MetaBaseUrl, metaDownloadUrl, metaChapterUrl string
+	MetaBaseUrl, metaDownloadUrl, metaChapterUrl, chapterPattern string
 	decoder *encoding.Decoder
 	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
 	chapterUrlRegex, chapterTitleRegex string
 	chapterContentRegex string
-	downloadPath string
+	downloadLocation string
+	bookTx *sql.Tx
 }
 
-func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation string, databasePath string, downloadPath string) (Site) {
-	database, err := sql.Open("sqlite3", databasePath)
+func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation string, databaseLocation string, downloadLocation string) (Site) {
+	database, err := sql.Open("sqlite3", databaseLocation)
 	helper.CheckError(err);
+	database.SetMaxIdleConns(10);
+	database.SetMaxOpenConns(99999);
 	data, err := ioutil.ReadFile(configFileLocation)
 	helper.CheckError(err);
 	var info map[string]interface{};
@@ -41,6 +47,7 @@ func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation stri
 		MetaBaseUrl: info["metaBaseUrl"].(string),
 		metaDownloadUrl: info["metaDownloadUrl"].(string),
 		metaChapterUrl: info["metaChapterUrl"].(string),
+		chapterPattern: info["chapterPattern"].(string),
 		decoder: decoder,
 		titleRegex: info["titleRegex"].(string),
 		writerRegex: info["writerRegex"].(string),
@@ -50,24 +57,13 @@ func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation stri
 		chapterUrlRegex: info["chapterUrlRegex"].(string),
 		chapterTitleRegex: info["chapterTitleRegex"].(string),
 		chapterContentRegex: info["chapterContentRegex"].(string),
-		downloadPath: downloadPath};
+		downloadLocation: downloadLocation};
 	return site;
 }
 
 func (site *Site) Book(id int) (Book) {
 	baseUrl := fmt.Sprintf(site.MetaBaseUrl, id);
 	downloadUrl := fmt.Sprintf(site.metaDownloadUrl, id);
-	var rows *sql.Rows
-	var err error
-	for true {
-		rows, err = site.database.Query("select site, num, version, name, writer, "+
-					"type, date, chapter, end, download, read from books where "+
-					"site=\""+site.SiteName+"\" and num="+strconv.Itoa(id) +
-					"order by version desc");
-		if (err == nil) {
-			break
-		}
-	}
 	var siteName string;
 	var temp int;
 	version := -1;
@@ -79,11 +75,29 @@ func (site *Site) Book(id int) (Book) {
 	end := false;
 	download := false;
 	read := false;
-	if (rows.Next()) {
-		rows.Scan(&siteName, &temp, &version, &title, &writer, &typeName,
-					&lastUpdate, &lastChapter, &end, &download, &read);
+	for i := 0; i < 10; i++ {
+		rows, err := site.bookTx.Query("select site, num, version, name, writer, "+
+						"type, date, chapter, end, download, read from books where "+
+						"num="+strconv.Itoa(id) +
+						" order by version desc");
+		if (err != nil) {
+			fmt.Println(id)
+			fmt.Println(err)
+			//time.Sleep(1000)
+			continue
+		}
+		if (rows.Next()) {
+			rows.Scan(&siteName, &temp, &version, &title, &writer, &typeName,
+						&lastUpdate, &lastChapter, &end, &download, &read);
+		} else {
+			fmt.Println("retry (" + strconv.Itoa(i) + ") Cannot load " + strconv.Itoa(id) + " from database")
+			//time.Sleep(1000)
+			continue
+		}
+		rows.Close()
+		break
+		//panic(err)
 	}
-	rows.Close()
 	book := Book{
 		SiteName: site.SiteName,
 		Id: id,
@@ -100,6 +114,7 @@ func (site *Site) Book(id int) (Book) {
 		baseUrl: baseUrl,
 		downloadUrl: downloadUrl,
 		chapterUrl: site.metaChapterUrl,
+		chapterPattern: site.chapterPattern,
 		titleRegex: site.titleRegex,
 		writerRegex: site.writerRegex,
 		typeRegex: site.typeRegex,
@@ -114,12 +129,14 @@ func (site *Site) Book(id int) (Book) {
 func (site *Site) Update() () {
 	// init concurrent variable
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(300))
+	site.bookTx, _ = site.database.Begin()
+	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
 	// prepare transaction and statements
-	tx, _ := site.database.Begin()
+	tx, err := site.database.Begin()
+	helper.CheckError(err)
 	save, err := site.database.Prepare("insert into books "+
 					"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
 					" values "+
@@ -132,19 +149,26 @@ func (site *Site) Update() () {
 	defer update.Close()
 	// update all normal books
 	rows, _ := site.database.Query("SELECT site, num FROM books order by date desc");
+	i := 0;
 	for rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		rows.Scan(&siteName, &id);
+		//book := site.Book(id)
 		go site.updateThread(id, s, &wg, tx, save, update);
+		if (i % 100 == 0) {
+			helper.CheckError(err);
+		}
+		i++;
 	}
 	rows.Close()
 	wg.Wait()
+	tx.Commit()
 }
 func (site *Site) updateThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save *sql.Stmt, update *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
-	book := site.Book(id);
+	book := site.Book(id)
 	checkVersion := book.Version;
 	// try to update book
 	updated := book.Update();
@@ -155,17 +179,16 @@ func (site *Site) updateThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup
 						book.Title, book.Writer, book.Type,
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag);
-			fmt.Println("new version update - - - - - - - - - - - -\n"+book.String());
+			fmt.Println("new version update " + strconv.Itoa(checkVersion) + " -> " + strconv.Itoa(book.Version) + " - - - - - - - -\n"+book.String());
 			fmt.Println();
 		} else { // update old record
 			tx.Stmt(update).Exec(book.Version, book.Title, book.Writer, book.Type,
-						book.LastUpdate, book.LastUpdate,
+						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag,
 						book.SiteName, book.Id);
 			fmt.Println("regular version update - - - - - - - - - -\n"+book.String());
 			fmt.Println();
 		}
-		tx.Commit()
 	} else {
 		// tell others nothing updated
 		fmt.Println("Not updated - - - - - - - - - - - - - - -\n" + book.String())
@@ -176,7 +199,8 @@ func (site *Site) updateThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup
 func (site *Site) Explore(maxError int) () {
 	// init concurrent variable
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(300))
+	site.bookTx, _ = site.database.Begin()
+	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
 	var wg sync.WaitGroup
 	// prepare transaction and statement
 	tx, _ := site.database.Begin();
@@ -186,44 +210,61 @@ func (site *Site) Explore(maxError int) () {
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
 	defer save.Close();
+	saveError, err := site.database.Prepare("insert into error "+
+					"(site, num)"+
+					" values "+
+					"(?, ?)");
+	helper.CheckError(err);
+	defer saveError.Close();
+	deleteError, err := site.database.Prepare("delete from books "+
+					"where site=? and num=?");
+	helper.CheckError(err);
+	defer deleteError.Close();
 	// find max id
-	rows, _ := site.database.Query("select site, num from books order by num desc limit 1");
-	maxId := 1;
+	rows, err := site.database.Query("select site, num from books order by num desc");
+	helper.CheckError(err)
+	var siteName string
+	var maxId int;
 	if (rows.Next()) {
-		rows.Scan(&maxId);
+		rows.Scan(&siteName, &maxId);
 		maxId++;
+	} else {
+		maxId = 1;
 	}
+	fmt.Println(maxId);
 	// keep explore until reach max error count
 	errorCount := 0
 	for (errorCount < maxError) {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
-		go site.exploreThread(maxId, &errorCount, s, &wg, tx, save);
+		//book := site.Book(maxId);
+		go site.exploreThread(maxId, &errorCount, s, &wg, tx, save, saveError, deleteError);
+		maxId++;
 	}
+	tx.Commit()
 	rows.Close();
 	wg.Wait()
 }
-func (site *Site) exploreThread(id, errorCount int, s *semaphore.Weighted, wg *sync.WaitGroup, tx sql.*Tx, save sql.Stmt) () {
+func (site *Site) exploreThread(id int, errorCount *int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save, saveError, deleteError *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
-	transaction, err := site.database.Begin()
-	defer transaction.Commit();
-	helper.CheckError(err);
-	book := site.Book(id);
+	book := site.Book(id)
 	updated := book.Update();
 	// if updated, save in books table, else, save in error table and **reset error count**
 	if (updated) {
-		transaction.Stmt(save).Exec(book.SiteName, book.Id, book.Version,
+		tx.Stmt(save).Exec(book.SiteName, book.Id, book.Version,
 					book.Title, book.Writer, book.Type,
 					book.LastUpdate, book.LastChapter,
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
-					fmt.Println("Explore - - - - - - - - - - - -\n" + book.String())
-					fmt.Println();
-		errorCount = 0;
+		tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
+		fmt.Println("Explore - - - - - - - - - - - -\n" + book.String())
+		fmt.Println();
+		*errorCount = 0;
 	} else { // increase error Count
+		tx.Stmt(saveError).Exec(book.SiteName, book.Id)
 		fmt.Println("Unreachable - - - - - - - - - - -\n" + book.String());
 		fmt.Println();
-		errorCount++;
+		*errorCount++;
 	}
 }
 
@@ -233,7 +274,7 @@ func (site *Site) Download() () {
 	if (rows.Next()) {
 		rows.Scan(&id);
 		book := site.Book(id);
-		check := book.Download(site.downloadPath)
+		check := book.Download(site.downloadLocation)
 		if (! check) {
 			fmt.Println("download failure\t" + strconv.Itoa(book.Id) + "\t" + book.Title)
 		}
@@ -243,7 +284,7 @@ func (site *Site) Download() () {
 func (site *Site) UpdateError() () {
 	// init concurrent variable
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(300))
+	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
@@ -264,21 +305,21 @@ func (site *Site) UpdateError() () {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		rows.Scan(&siteName, &id);
+		//book := site.Book(id)
 		go site.updateErrorThread(id, s, &wg, tx, delete, save);
 	}
 	rows.Close()
 	wg.Wait()
 }
-func (site *Site) updateErrorThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup, tx sql.*Tx, delete, save sql.Stmt) () {
+func (site *Site) updateErrorThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, delete, save *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
-	book := site.Book(id);
-	checkVersion := book.Version;
 	// try to update book
+	book := site.Book(id)
 	updated := book.Update();
 	if (updated) {
 		// if update successfully
-		tx.Stmt(delete).Exec(site.SiteName, site.Id);
+		tx.Stmt(delete).Exec(site.SiteName, book.Id);
 		tx.Stmt(save).Exec(site.SiteName, book.Id, book.Version,
 					book.Title, book.Writer, book.Type,
 					book.LastUpdate, book.LastChapter,

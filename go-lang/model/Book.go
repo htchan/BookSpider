@@ -18,6 +18,7 @@ import (
 	// self define helper package
 	"../helper"
 )
+var BOOK_MAX_THREAD int = 1000;
 
 type Book struct {
 	SiteName string
@@ -27,7 +28,7 @@ type Book struct {
 	LastUpdate, LastChapter string
 	EndFlag, DownloadFlag, ReadFlag bool
 	decoder *encoding.Decoder
-	baseUrl, downloadUrl, chapterUrl string
+	baseUrl, downloadUrl, chapterUrl, chapterPattern string
 	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
 	chapterUrlRegex, chapterTitleRegex string
 	chapterContentRegex string
@@ -39,7 +40,7 @@ func (book *Book) Update() (bool) {
 	var html string
 	for i := 0; i < 10; i++ {
 		html = helper.GetWeb(book.baseUrl);
-		if (len(html) == 0) {
+		if (len(html) == 0) || (helper.Search(html, book.titleRegex) == "error") {
 			fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + book.baseUrl);
 			time.Sleep(1000)
 			continue
@@ -61,23 +62,35 @@ func (book *Book) Update() (bool) {
 	lastChapter := helper.Search(html, book.lastChapterRegex);
 	// check difference
 	if (title != book.Title || writer != book.Writer || typeName != book.Type || 
-		lastUpdate != book.LastUpdate || lastChapter != book.LastChapter) {
+		lastUpdate != book.LastUpdate || lastChapter != book.LastChapter) && 
+		(title != "error" && writer != "error" && typeName != "error" &&
+		lastUpdate!= "error" && lastChapter != "error") {
 			update = true;
 			if (book.DownloadFlag ||
 				title != book.Title || writer != book.Writer || typeName != book.Type ||
 				book.Version < 0) {
+				if (book.DownloadFlag) {
+					fmt.Println(book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t is already downloaded")
+				}
 				book.Version++;
 				book.EndFlag = false;
 				book.DownloadFlag = false;
 				book.ReadFlag = false;
 			}
 	}
-	// sync with online info
-	book.Title = title;
-	book.Writer = writer;
-	book.Type = typeName;
-	book.LastUpdate = lastUpdate;
-	book.LastChapter = lastChapter;
+	if (title == "error" || writer == "error" || typeName == "error" ||
+		lastUpdate== "error" || lastChapter == "error") {
+			fmt.Println(title+"\t"+writer+"\t"+typeName)
+			fmt.Println(lastUpdate+"\t"+lastChapter)
+		}
+	if (update) {
+		// sync with online info
+		book.Title = title;
+		book.Writer = writer;
+		book.Type = typeName;
+		book.LastUpdate = lastUpdate;
+		book.LastChapter = lastChapter;
+	}
 	return update;
 }
 
@@ -88,10 +101,22 @@ type chapter struct {
 func (book *Book) Download(savePath string) (bool) {
 	// set up semaphore and routine pool
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(300))
+	var s = semaphore.NewWeighted(int64(BOOK_MAX_THREAD))
 	var wg sync.WaitGroup
 	// get basic info (all chapter url and title)
-	html := helper.GetWeb(book.downloadUrl);
+	var html string;
+	for i := 0; i < 10; i++ {
+		html = helper.GetWeb(book.downloadUrl);
+		if (len(html) == 0) {
+			fmt.Println("retry download info (" + strconv.Itoa(i) + ")\t" + book.downloadUrl);
+			continue
+		}
+		if (book.decoder != nil) {
+			html, _, _ = transform.String(book.decoder, html);
+			break;
+		}
+	}
+
 	urls := helper.SearchAll(html, book.chapterUrlRegex);
 	titles := helper.SearchAll(html, book.chapterTitleRegex);
 	// if length are difference, return error
@@ -100,19 +125,29 @@ func (book *Book) Download(savePath string) (bool) {
 		return false
 	}
 	// use go routine to load chapter content
+	// put result of chapter into results
 	ch := make(chan chapter)
-	for i, url := range urls {
+	results := make([]chapter, len(urls))
+	var i int
+	for i = range urls {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		go book.downloadChapter(url, titles[i], s, &wg, ch)
+		urls[i] = fmt.Sprintf(book.chapterUrl, urls[i]);
+		go book.downloadChapter(urls[i], titles[i], s, &wg, ch)
+		if ((i % 100 == 0) && (i > 0)) {
+			for j := 0; j < 100; j++ {
+				results[i - 100 + j] = <-ch
+			}
+
+		}
 	}
-	// put result of chapter into results
-	results := make([]chapter, len(urls))
-	for i := range results {
-		wg.Add(1)
-		results[i] = <-ch
+	fmt.Println(i)
+	offset := i % 100;
+	for j := -1; j < offset; j++ {
+		results[i - offset + j] = <-ch
 	}
 	wg.Wait()
+	fmt.Println("finish")
 	content := book.Title + "\n" + book.Writer + "\n" + strings.Repeat("-", 20) + strings.Repeat("\n", 2)
 	// put chapters content into content with order
 	for _, url := range urls {
@@ -141,15 +176,35 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	html := helper.GetWeb(url)
+	var html string;
+	for i := 0; i < 10; i++ {
+		html = helper.GetWeb(url);
+		if (len(html) == 0) {
+			fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + url + "\t" + title);
+			continue
+		}
+		if (book.decoder != nil) {
+			html, _, _ = transform.String(book.decoder, html);
+			break;
+		}
+	}
+	fmt.Println(url + "\t" + title);
 	// extract chapter
 	content := helper.Search(html, book.chapterContentRegex)
+	content = strings.Replace(content, "<br />", "", -1);
+	content = strings.Replace(content, "&nbsp;", "", -1);
+	content = strings.Replace(content, "<b>", "", -1);
+	content = strings.Replace(content, "</b>", "", -1);
+	content = strings.Replace(content, "<p>", "", -1);
+	content = strings.Replace(content, "</p>", "", -1);
 	// put the chapter info to channel
 	ch <- chapter{Url:url, Title:title, Content: content}
+	return
 }
 
 // to string function
 func (book Book) String() (string) {
 	return book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\n" +
-			book.Title + "\t" + book.Writer;
+			book.Title + "\t" + book.Writer + "\n"+
+			book.LastUpdate + "\t" + book.LastChapter;
 }

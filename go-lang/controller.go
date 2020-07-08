@@ -2,13 +2,41 @@ package main
 
 import (
 	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/encoding"
 	//"bufio"
 	"os"
+	"encoding/json"
 	"strings"
+	"io/ioutil"
 	"fmt"
 	"./model"
+	"./helper"
+	"runtime"
 )
 
+func LoadSites(configLocation string) (map[string]model.Site) {
+	sites := make(map[string]model.Site);
+	data, err := ioutil.ReadFile(configLocation);
+	helper.CheckError(err);
+	var info []map[string]interface{};
+	if err = json.Unmarshal(data, &info); err != nil {
+        panic(err);
+	}
+	for _, config := range info {
+		var decoder *encoding.Decoder;
+		if (config["decode"] == "big5") {
+			decoder = traditionalchinese.Big5.NewDecoder();
+		} else {
+			decoder = nil;
+		}
+		sites[config["name"].(string)] =
+			model.NewSite(config["name"].(string), decoder,
+							config["configLocation"].(string),
+							config["databaseLocation"].(string),
+							config["downloadLocation"].(string));
+	}
+	return sites;
+}
 
 func help() {
 	fmt.Println("Command: ")
@@ -25,31 +53,35 @@ func help() {
 
 func download(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\tdownload");
 		site.Download();
+		runtime.GC()
 	}
 }
 func update(sites map[string]model.Site) {
 	for name, site := range sites {
 		fmt.Println(name + "\tupdate");
 		site.Update();
+		runtime.GC()
 	}
 }
 func explore(sites map[string]model.Site, maxError int) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\texplore");
 		site.Explore(maxError);
+		runtime.GC()
 	}
 }
 func updateError(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\tupdate error");
 		site.UpdateError();
+		runtime.GC()
 	}
 }
 func info(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\tinfo");
 		fmt.Println(strings.Repeat("- ", 20));
 		site.Info();
 		fmt.Println(strings.Repeat("- ", 20));
@@ -57,15 +89,25 @@ func info(sites map[string]model.Site) {
 }
 func check(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\tcheck");
 		site.Check();
+		runtime.GC()
 	}
 }
 func backup(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
+		fmt.Println(name + "\tbackup");
 		site.Backup();
+		runtime.GC()
 	}
+}
+func test(sites map[string]model.Site) {
+	site := sites["ck101"]
+	book := site.Book(409111)
+	fmt.Println(book.String())
+	book.Update()
+	fmt.Println(book.String())
+	fmt.Println()
 }
 
 func main() {
@@ -75,12 +117,15 @@ func main() {
 		fmt.Println("No arguements");
 		return;
 	}
-
+	/*
 	big5Decoder := traditionalchinese.Big5.NewDecoder()
 
 	sites := make(map[string]model.Site);
 	sites["ck101"] = model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./");
-	
+	*/
+
+	sites := LoadSites("./config/config.json");
+
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
 		update(sites);
@@ -96,6 +141,8 @@ func main() {
 		check(sites);
 	case "BACKUP":
 		backup(sites);
+	case "TEST":
+		test(sites);
 	default:
 		help();
 	}
