@@ -10,7 +10,7 @@
         "name" : "80txt",
         "decode" : "utf8",
         "configLocation" : "./config/80txt-desktop.json",
-        "databaseLocation" : "./database/txt80.db",
+        "databaseLocation" : "./database/80txt.db",
         "downloadLocation" : "/mnt/addition/download/Book/80tct"
     },
     {

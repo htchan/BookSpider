@@ -18,7 +18,7 @@ import (
 	// self define helper package
 	"../helper"
 )
-var BOOK_MAX_THREAD int = 1000;
+const BOOK_MAX_THREAD = 1000;
 
 type Book struct {
 	SiteName string

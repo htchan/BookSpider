@@ -11,12 +11,14 @@ import (
 	"golang.org/x/sync/semaphore"
 	"sync"
 	"strconv"
+	"strings"
 	"../helper"
-	//"time"
+	"os"
+	"time"
 	//"runtime"
 )
 
-var SITE_MAX_THREAD int = 1000;
+const SITE_MAX_THREAD = 1000;
 
 type Site struct {
 	SiteName string
@@ -26,7 +28,7 @@ type Site struct {
 	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
 	chapterUrlRegex, chapterTitleRegex string
 	chapterContentRegex string
-	downloadLocation string
+	databaseLocation, downloadLocation string
 	bookTx *sql.Tx
 }
 
@@ -57,6 +59,7 @@ func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation stri
 		chapterUrlRegex: info["chapterUrlRegex"].(string),
 		chapterTitleRegex: info["chapterTitleRegex"].(string),
 		chapterContentRegex: info["chapterContentRegex"].(string),
+		databaseLocation: databaseLocation,
 		downloadLocation: downloadLocation};
 	return site;
 }
@@ -75,7 +78,7 @@ func (site *Site) Book(id int) (Book) {
 	end := false;
 	download := false;
 	read := false;
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		rows, err := site.bookTx.Query("select site, num, version, name, writer, "+
 						"type, date, chapter, end, download, read from books where "+
 						"num="+strconv.Itoa(id) +
@@ -142,33 +145,37 @@ func (site *Site) Update() () {
 					" values "+
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	defer save.Close()
 	update, err := site.database.Prepare("update books set version=?, name=?, writer=?, type=?,"+
 					"date=?, chapter=?, end=?, download=?, read=? where site=? and num=?");
 	helper.CheckError(err);
-	defer update.Close()
 	// update all normal books
-	rows, _ := site.database.Query("SELECT site, num FROM books order by date desc");
-	i := 0;
+	rows, err := site.database.Query("SELECT site, num FROM books order by date desc");
+	helper.CheckError(err)
 	for rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		rows.Scan(&siteName, &id);
-		//book := site.Book(id)
-		go site.updateThread(id, s, &wg, tx, save, update);
-		if (i % 100 == 0) {
-			helper.CheckError(err);
+		book := site.Book(id)
+		if (book.Version == -1) {
+			panic(strconv.Itoa(book.Version) + " cannot cache from database")
 		}
-		i++;
+		go site.updateThread(book, s, &wg, tx, save, update);
 	}
 	rows.Close()
 	wg.Wait()
-	tx.Commit()
+	err = save.Close()
+	helper.CheckError(err)
+	err = update.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	helper.CheckError(err)
+	err = tx.Commit()
+	helper.CheckError(err)
 }
-func (site *Site) updateThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save *sql.Stmt, update *sql.Stmt) () {
+func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save *sql.Stmt, update *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
-	book := site.Book(id)
+	//book := site.Book(id)
 	checkVersion := book.Version;
 	// try to update book
 	updated := book.Update();
@@ -199,27 +206,27 @@ func (site *Site) updateThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup
 func (site *Site) Explore(maxError int) () {
 	// init concurrent variable
 	ctx := context.Background()
-	site.bookTx, _ = site.database.Begin()
+	var err error
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
 	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
 	var wg sync.WaitGroup
 	// prepare transaction and statement
-	tx, _ := site.database.Begin();
+	tx, err := site.database.Begin();
+	helper.CheckError(err)
 	save, err := site.database.Prepare("insert into books "+
 					"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
 					" values "+
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	defer save.Close();
 	saveError, err := site.database.Prepare("insert into error "+
 					"(site, num)"+
 					" values "+
 					"(?, ?)");
 	helper.CheckError(err);
-	defer saveError.Close();
 	deleteError, err := site.database.Prepare("delete from books "+
 					"where site=? and num=?");
 	helper.CheckError(err);
-	defer deleteError.Close();
 	// find max id
 	rows, err := site.database.Query("select site, num from books order by num desc");
 	helper.CheckError(err)
@@ -231,45 +238,65 @@ func (site *Site) Explore(maxError int) () {
 	} else {
 		maxId = 1;
 	}
+	rows.Close();
 	fmt.Println(maxId);
 	// keep explore until reach max error count
 	errorCount := 0
 	for (errorCount < maxError) {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
-		//book := site.Book(maxId);
-		go site.exploreThread(maxId, &errorCount, s, &wg, tx, save, saveError, deleteError);
+		book := site.Book(maxId);
+		go site.exploreThread(book, &errorCount, s, &wg, tx, save, saveError, deleteError);
 		maxId++;
 	}
-	tx.Commit()
-	rows.Close();
 	wg.Wait()
+	err = deleteError.Close()
+	helper.CheckError(err)
+	err = saveError.Close()
+	helper.CheckError(err)
+	err = save.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	helper.CheckError(err)
+	err = tx.Commit()
+	helper.CheckError(err)
 }
-func (site *Site) exploreThread(id int, errorCount *int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save, saveError, deleteError *sql.Stmt) () {
+func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save, saveError, deleteError *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
-	book := site.Book(id)
+	//book := site.Book(id)
 	updated := book.Update();
 	// if updated, save in books table, else, save in error table and **reset error count**
 	if (updated) {
-		tx.Stmt(save).Exec(book.SiteName, book.Id, book.Version,
+		_, err := tx.Stmt(save).Exec(book.SiteName, book.Id, book.Version,
 					book.Title, book.Writer, book.Type,
 					book.LastUpdate, book.LastChapter,
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
-		tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
+		helper.CheckError(err)
+		_, err = tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
+		helper.CheckError(err)
 		fmt.Println("Explore - - - - - - - - - - - -\n" + book.String())
 		fmt.Println();
 		*errorCount = 0;
 	} else { // increase error Count
 		tx.Stmt(saveError).Exec(book.SiteName, book.Id)
-		fmt.Println("Unreachable - - - - - - - - - - -\n" + book.String());
+		_, err := fmt.Println("Unreachable - - - - - - - - - - -\n" + book.String());
+		helper.CheckError(err)
 		fmt.Println();
 		*errorCount++;
 	}
 }
 
 func (site *Site) Download() () {
-	rows, _ := site.database.Query("select num from books where end=true and download=false")
+	var err error
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
+	rows, err := site.database.Query("select num from books where end=true and download=false")
+	helper.CheckError(err)
+	update, err := site.database.Prepare("update books set download=true where num=?")
+	helper.CheckError(err)
+	tx, err := site.database.Begin()
+	helper.CheckError(err)
 	var id int;
 	if (rows.Next()) {
 		rows.Scan(&id);
@@ -277,45 +304,63 @@ func (site *Site) Download() () {
 		check := book.Download(site.downloadLocation)
 		if (! check) {
 			fmt.Println("download failure\t" + strconv.Itoa(book.Id) + "\t" + book.Title)
+		} else {
+			tx.Stmt(update).Exec(id)
 		}
 	}
+	err = rows.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	helper.CheckError(err)
+	err = tx.Commit()
+	helper.CheckError(err)
 }
 
 func (site *Site) UpdateError() () {
 	// init concurrent variable
+	var err error
 	ctx := context.Background()
+	site.bookTx, err = site.database.Begin()
 	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
 	// prepare transaction and statements
-	tx, _ := site.database.Begin()
-	delete, err := site.database.Prepare("delete error where site=? and num=?");
+	tx, err := site.database.Begin()
+	helper.CheckError(err)
+	delete, err := site.database.Prepare("delete from error where site=? and num=?");
 	helper.CheckError(err);
-	defer delete.Close()
-	save, err := site.database.Prepare("insert into error "+
+	save, err := site.database.Prepare("insert into books "+
 					"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
 					" values "+
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	defer save.Close()
 	// try update all error books
-	rows, _ := site.database.Query("SELECT site, num FROM error order by date desc");
+	rows, err := site.database.Query("SELECT site, num FROM error order by num desc")
+	helper.CheckError(err)
 	for rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		rows.Scan(&siteName, &id);
-		//book := site.Book(id)
-		go site.updateErrorThread(id, s, &wg, tx, delete, save);
+		book := site.Book(id)
+		go site.updateErrorThread(book, s, &wg, tx, delete, save);
 	}
 	rows.Close()
 	wg.Wait()
+	err = save.Close()
+	helper.CheckError(err)
+	err = delete.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	helper.CheckError(err)
+	err = tx.Commit()
+	helper.CheckError(err)
 }
-func (site *Site) updateErrorThread(id int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, delete, save *sql.Stmt) () {
+func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, delete, save *sql.Stmt) () {
 	defer wg.Done()
 	defer s.Release(1)
 	// try to update book
-	book := site.Book(id)
+	//book := site.Book(id)
 	updated := book.Update();
 	if (updated) {
 		// if update successfully
@@ -326,7 +371,6 @@ func (site *Site) updateErrorThread(id int, s *semaphore.Weighted, wg *sync.Wait
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
 		fmt.Println("Error update - - - - - - - - - -\n"+book.String());
 		fmt.Println();
-		tx.Commit()
 	} else {
 		// tell others nothing updated
 		fmt.Println("Not updated - - - - - - - - - - -\n" + book.String())
@@ -370,18 +414,309 @@ func (site Site) Info() () {
 	fmt.Println("Max Book Number :\t" + strconv.Itoa(max));
 }
 
-func (site *Site) FixStroageError() () {
+func (site *Site) fixStroageError() () {
 
 }
 
-func (site *Site) FixDatabaseError() () {
+func (site *Site) fixDatabaseDuplicateError() () {
+	// init variable
+	tx, err := site.database.Begin()
+	// check any duplicate record in books table and show them
+	rows, err := tx.Query("select num, version, count(*) as c from books group by num, version order by c desc")
+	helper.CheckError(err)
+	booksDuplicate := make([]Book, 0)
+	for rows.Next() {
+		var book Book
+		var count int
+		rows.Scan(&book.Id, &book.Version, &count)
+		if (count > 1) {
+			booksDuplicate = append(booksDuplicate, book)
+		}  
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	// TODO delete duplicate record
+	stmt, err := tx.Prepare("delete from books where num=? and version=?")
+	helper.CheckError(err)
+	fmt.Println("duplicate book count : " + strconv.Itoa(len(booksDuplicate)))
+	for _, book := range booksDuplicate {
+		fmt.Println("duplicate book - - - - - - - - - -\n"+book.String())
+		_, err := tx.Stmt(stmt).Exec(book.Id, book.Version)
+		helper.CheckError(err)
+	}
+	err = stmt.Close()
+	helper.CheckError(err)
+	// check any duplicate record in books table and show them
+	rows, err = tx.Query("select num, count(*) as c from error group by num order by c desc")
+	helper.CheckError(err)
+	errorDuplicate := make([]Book, 0)
+	for rows.Next() {
+		var book Book
+		var count int
+		rows.Scan(&book.Id, &count)
+		if (count > 1) {
+			errorDuplicate = append(errorDuplicate, book)
+		}
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	// TODO delete duplicate record
+	stmt, err = tx.Prepare("delete from error where num=?")
+	helper.CheckError(err)
+	fmt.Println("duplicate error count : " + strconv.Itoa(len(errorDuplicate)))
+	for _, book := range errorDuplicate {
+		fmt.Println("duplicate error - - - - - - - - - -\n"+book.String())
+		tx.Stmt(stmt).Exec(book.Id)
+	}
+	err = stmt.Close()
+	helper.CheckError(err)
+	// TODO check if any record in book table duplicate in error table
+	rows, err = tx.Query("select books.num from books, error where books.num=error.num")
+	helper.CheckError(err)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		fmt.Println(id)
+	}
+	err = tx.Commit()
+	helper.CheckError(err)
+}
 
+func (site *Site) fixDatabaseMissingError() () {
+	// init variable
+	tx, err := site.database.Begin()
+	// check any id missing in the database
+	rows, err := tx.Query("select num from books group by num")
+	helper.CheckError(err)
+	nums := make([]int, 0)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		nums = append(nums, id)
+	}
+	rows.Close()
+	rows, err = tx.Query("select num from error group by num")
+	helper.CheckError(err)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		if !(helper.Contains(nums, id)) {
+			nums = append(nums, id)
+		}
+	}
+	rows.Close()
+	max := -1
+	rows, err = tx.Query("select num from books order by num desc")
+	helper.CheckError(err)
+	if rows.Next() {
+		var num int
+		rows.Scan(&num)
+		if (num > max) {
+			max = num
+		}
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	rows, err = tx.Query("select num from error order by num desc")
+	helper.CheckError(err)
+	if rows.Next() {
+		var num int
+		rows.Scan(&num)
+		if (num > max) {
+			max = num
+		}
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	missingNum := make([]int, 0)
+	for i := 1; i < max; i += 1 {
+		if !(helper.Contains(nums, i)) {
+			missingNum = append(missingNum, i)
+		}
+	}
+	// insert missing record
+	// init concurrent variable
+	ctx := context.Background()
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
+	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var wg sync.WaitGroup
+	var errorCount int
+	save, err := site.database.Prepare("insert into books "+
+		"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
+		" values "+
+		"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	helper.CheckError(err);
+	saveError, err := site.database.Prepare("insert into error (site, num) values (?,?)");
+	helper.CheckError(err);
+	deleteError, err := site.database.Prepare("delete from error "+
+		"where site=? and num=?");
+	helper.CheckError(err);
+	fmt.Println("start add missing count " + strconv.Itoa(len(missingNum)))
+	for _, num := range missingNum {
+		fmt.Println(num)
+		wg.Add(1)
+		s.Acquire(ctx, 1);
+		book := site.Book(num)
+		go site.exploreThread(book, &errorCount, s, &wg, tx, save, saveError, deleteError);
+	}
+	wg.Wait()
+	err = deleteError.Close()
+	helper.CheckError(err)
+	err = saveError.Close()
+	helper.CheckError(err)
+	err = save.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	helper.CheckError(err)
+	err = tx.Commit()
+	helper.CheckError(err)
+	// print missing record count
+	fmt.Println("finish add missing count "+strconv.Itoa(len(missingNum)))
+
+}
+
+func (site *Site) Fix() () {
+	fmt.Println("Add Missing Record")
+	site.fixDatabaseMissingError()
+	fmt.Println("fix duplicate record")
+	site.fixDatabaseDuplicateError()
+	fmt.Println()
 }
 
 func (site *Site) Check() () {
-
+	// init variable
+	tx, err := site.database.Begin()
+	// check duplicate record
+	// check missing record
+	rows, err := tx.Query("select num from books group by num")
+	helper.CheckError(err)
+	nums := make([]int, 0)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		nums = append(nums, id)
+	}
+	rows.Close()
+	rows, err = tx.Query("select num from error group by num")
+	helper.CheckError(err)
+	for rows.Next() {
+		var id int
+		rows.Scan(&id)
+		if !(helper.Contains(nums, id)) {
+			nums = append(nums, id)
+		}
+	}
+	rows.Close()
+	// get max num from database
+	max := -1
+	rows, err = tx.Query("select num from books order by num desc")
+	helper.CheckError(err)
+	if rows.Next() {
+		var num int
+		rows.Scan(&num)
+		if (num > max) {
+			max = num
+		}
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	rows, err = tx.Query("select num from error order by num desc")
+	helper.CheckError(err)
+	if rows.Next() {
+		var num int
+		rows.Scan(&num)
+		if (num > max) {
+			max = num
+		}
+	}
+	err = rows.Close()
+	helper.CheckError(err)
+	missingNum := make([]int, 0)
+	for i := 1; i < max; i += 1 {
+		if !(helper.Contains(nums, i)) {
+			missingNum = append(missingNum, i)
+		}
+	}
+	err = tx.Commit()
+	helper.CheckError(err)
+	fmt.Println("missing count :\t" + strconv.Itoa(len(missingNum)))
+	fmt.Print("missing num :\t")
+	fmt.Println(missingNum)
 }
 
-func (site *Site) Backup() () {
+func (site *Site) Backup() (bool) {
+	y, m, d := time.Now().Date()
+	folderName := fmt.Sprintf("%d-%d-%d/", y, m, d)
+	path := strings.Replace(site.databaseLocation, "database/", "backup/"+folderName, -1)
+	// create folder of today if not exist
+	if _, err := os.Stat(strings.Replace(path, site.SiteName+".db", "", -1)); os.IsNotExist(err) {
+		err := os.Mkdir(strings.Replace(path, site.SiteName+".db", "", -1), os.ModeDir+0755)
+		helper.CheckError(err)
+		fmt.Println(strings.Replace(path, site.SiteName+".db", "", -1)+" created")
+	}
+	// save as day-time-site.db for backup
+	data, err := ioutil.ReadFile(site.databaseLocation)
+	helper.CheckError(err)
+	err = ioutil.WriteFile(path, data, 0644)
+	helper.CheckError(err)
+	return true
+}
 
+func (site Site) Test() () {
+	maxError := 5
+	ctx := context.Background()
+	var err error
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
+	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var wg sync.WaitGroup
+	// prepare transaction and statement
+	tx, err := site.database.Begin();
+	helper.CheckError(err)
+	save, err := site.database.Prepare("insert into books "+
+					"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
+					" values "+
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	helper.CheckError(err);
+	saveError, err := site.database.Prepare("insert into error "+
+					"(site, num)"+
+					" values "+
+					"(?, ?)");
+	helper.CheckError(err);
+	deleteError, err := site.database.Prepare("delete from books "+
+					"where site=? and num=?");
+	helper.CheckError(err);
+	// find max id
+	rows, err := site.database.Query("select site, num from books order by num desc");
+	helper.CheckError(err)
+	var siteName string
+	var maxId int;
+	if (rows.Next()) {
+		rows.Scan(&siteName, &maxId);
+		maxId++;
+	} else {
+		maxId = 1;
+	}
+	rows.Close();
+	fmt.Println(maxId);
+	// keep explore until reach max error count
+	errorCount := 0
+	for (errorCount < maxError) {
+		wg.Add(1)
+		s.Acquire(ctx, 1);
+		book := site.Book(maxId);
+		go site.exploreThread(book, &errorCount, s, &wg, tx, save, saveError, deleteError);
+		maxId++;
+	}
+	wg.Wait()
+	err = deleteError.Close()
+	helper.CheckError(err)
+	err = saveError.Close()
+	helper.CheckError(err)
+	err = save.Close()
+	helper.CheckError(err)
+	err = site.bookTx.Commit()
+	err = tx.Commit()
+	helper.CheckError(err)
 }
