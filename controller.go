@@ -15,27 +15,27 @@ import (
 )
 
 func LoadSites(configLocation string) (map[string]model.Site) {
-	sites := make(map[string]model.Site);
-	data, err := ioutil.ReadFile(configLocation);
-	helper.CheckError(err);
-	var info []map[string]interface{};
+	sites := make(map[string]model.Site)
+	data, err := ioutil.ReadFile(configLocation)
+	helper.CheckError(err)
+	var info []map[string]interface{}
 	if err = json.Unmarshal(data, &info); err != nil {
-        panic(err);
+        panic(err)
 	}
 	for _, config := range info {
-		var decoder *encoding.Decoder;
+		var decoder *encoding.Decoder
 		if (config["decode"] == "big5") {
-			decoder = traditionalchinese.Big5.NewDecoder();
+			decoder = traditionalchinese.Big5.NewDecoder()
 		} else {
-			decoder = nil;
+			decoder = nil
 		}
 		sites[config["name"].(string)] =
 			model.NewSite(config["name"].(string), decoder,
 							config["configLocation"].(string),
 							config["databaseLocation"].(string),
-							config["downloadLocation"].(string));
+							config["downloadLocation"].(string))
 	}
-	return sites;
+	return sites
 }
 
 func help() {
@@ -48,129 +48,111 @@ func help() {
     fmt.Println("error" + strings.Repeat(" ", 13) + "update all website may have error")
     fmt.Println("backup" + strings.Repeat(" ", 12) + "backup the current database by the current date and time")
     fmt.Println("regular" + strings.Repeat(" ", 11) + "do the default operation (explore->update->download->check)")
-    fmt.Println("\n")
+	fmt.Println("fix" + strings.Repeat(" ", 15) + "fix the error in database and storage in the site")
+	fmt.Println("\n")
 }
 
 func download(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tdownload");
-		site.Download();
+		fmt.Println(name + "\tdownload")
+		site.Download()
 		runtime.GC()
 	}
 }
 func update(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate");
-		site.Update();
+		fmt.Println(name + "\tupdate")
+		site.Update()
 		runtime.GC()
 	}
 }
 func explore(sites map[string]model.Site, maxError int) {
 	for name, site := range sites {
-		fmt.Println(name + "\texplore");
-		site.Explore(maxError);
+		fmt.Println(name + "\texplore")
+		site.Explore(maxError)
 		runtime.GC()
 	}
 }
 func updateError(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tupdate error");
-		site.UpdateError();
+		fmt.Println(name + "\tupdate error")
+		site.UpdateError()
 		runtime.GC()
 	}
 }
 func info(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tinfo");
-		fmt.Println(strings.Repeat("- ", 20));
-		site.Info();
-		fmt.Println(strings.Repeat("- ", 20));
+		fmt.Println(name + "\tinfo")
+		fmt.Println(strings.Repeat("- ", 20))
+		site.Info()
+		fmt.Println(strings.Repeat("- ", 20))
 	}
 }
 func check(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tcheck");
-		site.Check();
+		fmt.Println(name + "\tcheck")
+		fmt.Println(strings.Repeat("- ", 20))
+		site.Check()
+		fmt.Println(strings.Repeat("- ", 20))
 		runtime.GC()
 	}
 }
 func backup(sites map[string]model.Site) {
 	for name, site := range sites {
-		fmt.Println(name + "\tbackup");
-		site.Backup();
+		fmt.Println(name + "\tbackup")
+		site.Backup()
+		runtime.GC()
+	}
+}
+func fix(sites map[string]model.Site) {
+	for name, site := range sites {
+		fmt.Println(name + "\tfix")
+		site.Fix()
 		runtime.GC()
 	}
 }
 func test(sites map[string]model.Site) {
 	site := sites["ck101"]
-	book := site.Book(409111)
-	fmt.Println(book.String())
-	book.Update()
-	fmt.Println(book.String())
-	fmt.Println()
+	site.Fix()
 }
 
 func main() {
-	fmt.Println("test (v0.0.0) - - - - - - - - - -");
+	fmt.Println("test (v0.0.0) - - - - - - - - - -")
 	if (len(os.Args) < 2) {
-		help();
-		fmt.Println("No arguements");
-		return;
+		help()
+		fmt.Println("No arguements")
+		return
 	}
 	/*
 	big5Decoder := traditionalchinese.Big5.NewDecoder()
 
-	sites := make(map[string]model.Site);
-	sites["ck101"] = model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./");
+	sites := make(map[string]model.Site)
+	sites["ck101"] = model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./")
 	*/
 
-	sites := LoadSites("./config/config.json");
+	sites := LoadSites("./config/config.json")
 
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
-		update(sites);
+		update(sites)
 	case "EXPLORE":
-		explore(sites, 1000);
+		explore(sites, 1000)
 	case "DOWNLOAD":
-		download(sites);
+		download(sites)
 	case "ERROR":
-		updateError(sites);
+		updateError(sites)
 	case "INFO":
-		info(sites);
+		info(sites)
 	case "CHECK":
-		check(sites);
+		check(sites)
 	case "BACKUP":
-		backup(sites);
+		backup(sites)
+	case "FIX":
+		fix(sites)
 	case "TEST":
-		test(sites);
+		test(sites)
 	default:
-		help();
+		help()
+		fmt.Println("Invalid rguement")
 	}
-	/*
-	book := model.NewBook("ck101", 1, big5Decoder,
-		"https://www.ck101.org/book/1.html", "", "",
-		"<h1>.*?<a.*?>(.*?)</a>.*?</h1>", "", "", "", "", "", "");
-	fmt.Println(book.Site)
-	book.Update();
-	fmt.Println(book.Title);
-	*/
-	/*
-	site := model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./");
-	fmt.Println(site.MetaBaseUrl);
-	*/
-	
-	//book := site.Book(-1);
-	//book.Update();
-	/*
-	fmt.Println(book.Title);
-	fmt.Println(book.Writer)
-	fmt.Println(book.Type)
-	fmt.Println(book.LastUpdate)
-	fmt.Println(book.LastChapter)
-	*/
-	//site.Update()
-	/*
-	input := bufio.NewScanner(os.Stdin)
-	input.Scan()
-	*/
 }

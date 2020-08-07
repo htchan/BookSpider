@@ -1,3 +1,4 @@
+// This is a package provide helper functions.
 package helper
 
 import (
@@ -49,6 +50,7 @@ func SearchAll(str, regex string) ([]string) {
 	}
 	return results
 }
+
 func Contains(arr []int, target int) (bool) {
 	for _, i := range arr {
 		if (i == target) {

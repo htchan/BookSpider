@@ -208,3 +208,19 @@ func (book Book) String() (string) {
 			book.Title + "\t" + book.Writer + "\n"+
 			book.LastUpdate + "\t" + book.LastChapter;
 }
+
+func (book Book) JsonString() (string) {
+	return "{"+
+		"\"site\" : \""+book.SiteName+"\", "+
+		"\"num\" : \""+strconv.Itoa(book.Id)+"\", "+
+		"\"version\" : \""+strconv.Itoa(book.Version)+"\", "+
+		"\"title\" : \""+book.Title+"\", "+
+		"\"writer\" : \""+book.Writer+"\", "+
+		"\"type\" : \""+book.Type+"\", "+
+		"\"update\" : \""+book.LastUpdate+"\", "+
+		"\"chapter\" : \""+book.LastChapter+"\", "+
+		"\"end\" : \""+strconv.FormatBool(book.EndFlag)+"\", "+
+		"\"read\" : \""+strconv.FormatBool(book.ReadFlag)+"\", "+
+		"\"download\" : \""+strconv.FormatBool(book.DownloadFlag)+"\""+
+	"}"
+}
