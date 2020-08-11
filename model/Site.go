@@ -245,13 +245,9 @@ func (site *Site) Explore(maxError int) () {
 					" values "+
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	saveError, err := site.database.Prepare("insert into error "+
-					"(site, num)"+
-					" values "+
-					"(?, ?)");
+	saveError, err := site.database.Prepare("insert into error (site, num) values (?, ?)");
 	helper.CheckError(err);
-	deleteError, err := site.database.Prepare("delete from books "+
-					"where site=? and num=?");
+	deleteError, err := site.database.Prepare("delete from error where site=? and num=?");
 	helper.CheckError(err);
 	// find max id
 	rows, err := site.database.Query("select site, num from books order by num desc");
@@ -457,17 +453,27 @@ func (site *Site) fixDatabaseDuplicateError() () {
 		rows.Scan(&book.Id, &book.Version, &count)
 		if (count > 1) {
 			booksDuplicate = append(booksDuplicate, book)
-		}  
+		}
 	}
 	err = rows.Close()
 	helper.CheckError(err)
 	// TODO delete duplicate record
 	stmt, err := tx.Prepare("delete from books where num=? and version=?")
 	helper.CheckError(err)
+	add, err := tx.Prepare("insert into books " +
+				"(site, num, version, name, writer, type, date, chapter, end, download, read) " +
+				"values " +
+				"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	helper.CheckError(err)
 	fmt.Println("duplicate book count : " + strconv.Itoa(len(booksDuplicate)))
 	for _, book := range booksDuplicate {
 		fmt.Println("duplicate book - - - - - - - - - -\n"+book.String())
 		_, err := tx.Stmt(stmt).Exec(book.Id, book.Version)
+		helper.CheckError(err)
+		tx.Stmt(stmt).Exec(book.SiteName, book.Id, book.Version,
+					book.Title, book.Writer, book.Type,
+					book.LastUpdate, book.LastChapter,
+					book.EndFlag, book.DownloadFlag, book.ReadFlag)
 		helper.CheckError(err)
 	}
 	err = stmt.Close()
@@ -489,10 +495,15 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	// TODO delete duplicate record
 	stmt, err = tx.Prepare("delete from error where num=?")
 	helper.CheckError(err)
+	add, err = tx.Prepare("insert into error (num) values (?)")
+	helper.CheckError(err)
 	fmt.Println("duplicate error count : " + strconv.Itoa(len(errorDuplicate)))
 	for _, book := range errorDuplicate {
 		fmt.Println("duplicate error - - - - - - - - - -\n"+book.String())
-		tx.Stmt(stmt).Exec(book.Id)
+		_, err = tx.Stmt(stmt).Exec(book.Id)
+		helper.CheckError(err)
+		_, err = tx.Stmt(add).Exec(book.Id)
+		helper.CheckError(err)
 	}
 	err = stmt.Close()
 	helper.CheckError(err)
@@ -584,7 +595,10 @@ func (site *Site) fixDatabaseMissingError() () {
 		" values "+
 		"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	saveError, err := site.database.Prepare("insert into error (site, num) values (?,?)");
+	saveError, err := site.database.Prepare("insert into error "+
+					"(site, num)"+
+					" values "+
+					"(?, ?)");
 	helper.CheckError(err);
 	deleteError, err := site.database.Prepare("delete from error "+
 		"where site=? and num=?");

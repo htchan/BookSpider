@@ -13,3 +13,21 @@ go build ./controller.go
 in terminal under the `go-lang` folder.
 
 for the usage details of controller, use `./controller` to check.
+
+# structure
+- main
+	- controller.go
+		* provide command line control
+	- backend.go
+		* provide http api control
+- model
+	- Site.go
+		* manage site behavior (eg. get book from database, update all books...)
+		* manage book and database communication (eg. save / update the book in database)
+	- Book.go
+		* manage book behavior (eg. update specific book, generate book object...)
+- helper
+	- helper.go
+		* provide helper function (eg. regex, get url response...)
+- frontend
+	* it is a react folder containing all fontend needed

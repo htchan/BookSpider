@@ -1,0 +1,109 @@
+.App {
+  text-align: left;
+  background-color: #404040;
+  height: 100vh;
+}
+
+header {
+  height: 7vh;
+  font-size: 5vh;
+  color: #f0f0f0;
+  background: #404040;
+  padding-left: 1vh;
+}
+
+header > a {
+  height: 100%;
+  font-size: 5vh;
+  color: #a0f0f0;
+  background: #404040;
+}
+
+.Page {
+  background: #404040;
+  padding: 1vh;
+}
+
+a, label {
+  text-align: left;
+  font-size: 4vh;
+  color: #ffffff;
+  padding-left: 1vh;
+}
+
+.empty-process {
+  border: none;
+  text-align: left;
+  width: 50%;
+  background: #404040;
+  font-size: 4vh;
+  color: #00ff00;
+}
+
+.running-process {
+  border: none;
+  text-align: left;
+  width: 50%;
+  background: #404040;
+  font-size: 4vh;
+  color: #ff0000;
+}
+
+.able-process {
+  background: #a0a0a0;
+  font-size: 4vh;
+  color: #00ff00;
+}
+
+:disabled {
+  color: #ff0000;
+}
+
+button {
+  width: 80%;
+  height: 20%;
+  font-size: 7vh;
+  text-align: left;
+  padding-left: 1vh;
+}
+button.download {
+  text-align: center;
+  color: #00ff00;
+}
+button.search {
+  text-align: center;
+  color: #0000f0;
+}
+
+form {
+  border: solid;
+  border-color: #00a0a0;
+  padding: 1vh;
+}
+
+input {
+  font-size: 3vh;
+  padding-left: 1vh;
+}
+
+input[type=submit] {
+  margin-right: 0;
+  margin-left:auto;
+  display:block;
+}
+
+.scroller {
+  height: 50vh;
+  overflow: auto;
+  padding-left: 1vh;
+}
+
+table {
+  font-size: 3vh;
+  color: #ffffff;
+  width: 100%
+}
+
+.writer-info, .chapter-info {
+  text-align: right;
+}

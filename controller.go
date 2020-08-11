@@ -112,8 +112,9 @@ func fix(sites map[string]model.Site) {
 	}
 }
 func test(sites map[string]model.Site) {
-	site := sites["ck101"]
-	site.Fix()
+	site := sites["hjwzw"]
+	site.Explore(1000)
+	//site.Update()
 }
 
 func main() {

@@ -80,6 +80,7 @@ func (book *Book) Update() (bool) {
 	}
 	if (title == "error" || writer == "error" || typeName == "error" ||
 		lastUpdate== "error" || lastChapter == "error") {
+			fmt.Println(book.SiteName+"\t"+strconv.Itoa(book.Id))
 			fmt.Println(title+"\t"+writer+"\t"+typeName)
 			fmt.Println(lastUpdate+"\t"+lastChapter)
 		}
@@ -219,8 +220,8 @@ func (book Book) JsonString() (string) {
 		"\"type\" : \""+book.Type+"\", "+
 		"\"update\" : \""+book.LastUpdate+"\", "+
 		"\"chapter\" : \""+book.LastChapter+"\", "+
-		"\"end\" : \""+strconv.FormatBool(book.EndFlag)+"\", "+
-		"\"read\" : \""+strconv.FormatBool(book.ReadFlag)+"\", "+
-		"\"download\" : \""+strconv.FormatBool(book.DownloadFlag)+"\""+
+		"\"end\" : "+strconv.FormatBool(book.EndFlag)+", "+
+		"\"read\" : "+strconv.FormatBool(book.ReadFlag)+", "+
+		"\"download\" : "+strconv.FormatBool(book.DownloadFlag)+
 	"}"
 }

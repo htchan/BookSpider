@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"time"
+	"sort"
 	"io/ioutil"
 	"runtime"
 	"strings"
@@ -113,6 +114,7 @@ func fix() {
 
 func Start(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	operation := req.URL.Query().Get("operation")
 	if currentProcess != "" {
 		res.WriteHeader(http.StatusLocked)
@@ -140,7 +142,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	res.WriteHeader(http.StatusAccepted)
-	fmt.Fprintf(res, "{\"code\" : 202, \"message\" : \"<" + operation + " is put to process\"}")
+	fmt.Fprintf(res, "{\"code\" : 202, \"message\" : \"<" + operation + "> is put to process\"}")
 }
 
 func (logs *Logs) update() {
@@ -151,8 +153,8 @@ func (logs *Logs) update() {
 		}
 		dataStrings := strings.Split(string(data), "\n")
 		min := len(logs.Logs)
-		if (len(logs.Logs) > len(data)) {
-			min = len(data)
+		if (len(logs.Logs) > len(dataStrings)) {
+			min = len(dataStrings)
 		}
 		for i := 1; i < min; i += 1 {
 			logs.Logs[i] = dataStrings[len(dataStrings) - min + i]
@@ -163,6 +165,7 @@ func (logs *Logs) update() {
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	f, err := os.Stat("nohup.out")
 	// get create time, last update time of nohup.out
 	if err != nil {
@@ -176,10 +179,11 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	// print them
 	fmt.Fprintf(res, "{")
 	fmt.Fprintf(res, "\"time\" : \"" + modifyTime + "\", ")
+	fmt.Fprintf(res, "\"currentProcess\" : \""+currentProcess+"\", ")
 	fmt.Fprintf(res, "\"logs\" : [\n")
 	for i, log := range logs.Logs {
 		fmt.Fprintf(res, "\"" + log + "\"")
-		if i < len(logs.Logs) {
+		if i < len(logs.Logs) - 1 {
 			fmt.Fprintf(res, ",\n")
 		}
 	}
@@ -188,21 +192,26 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	fmt.Fprintf(res, "{\"currentProcess\" : \""+currentProcess+"\", ")
-	fmt.Fprintf(res, "\"siteNames\" : [")
-	var i int
+	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
-		fmt.Fprintf(res, "\""+siteName+"\"")
-		if i < len(sites)-1 {
+		siteNames = append(siteNames, siteName)
+	}
+	sort.Strings(siteNames)
+	fmt.Fprintf(res, "\"siteNames\" : [")
+	for i, siteName := range siteNames {
+		fmt.Fprintf(res, "\"" + siteName + "\"")
+		if i < len(siteNames) - 1 {
 			fmt.Fprintf(res, ", ")
 		}
-		i += 1
 	}
 	fmt.Fprintf(res, "]}")
 }
 
 func SiteInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -216,6 +225,7 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 
 func BookInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -242,6 +252,7 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 
 func BookDownload(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -274,6 +285,7 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 
 func bookSearch(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -318,7 +330,7 @@ func main() () {
 	http.HandleFunc("/process", ProcessState)
 	http.HandleFunc("/info", GeneralInfo)
 	fmt.Println("started")
-	log.Fatal(http.ListenAndServe(":9001", nil))
+	log.Fatal(http.ListenAndServe(":9427", nil))
 }
 
 /*
