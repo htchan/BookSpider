@@ -31,6 +31,20 @@ a, label {
   padding-left: 1vh;
 }
 
+a.page {
+  width: 65%;
+  display: inline-block;
+}
+
+button.lastPage {
+  width: 15%;
+  text-align: center;
+}
+button.nextPage {
+  width: 15%;
+  text-align: center;
+}
+
 .empty-process {
   border: none;
   text-align: left;
@@ -53,10 +67,6 @@ a, label {
   background: #a0a0a0;
   font-size: 4vh;
   color: #00ff00;
-}
-
-:disabled {
-  color: #ff0000;
 }
 
 button {

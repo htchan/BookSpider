@@ -14,8 +14,8 @@ class GeneralInfoPage extends React.Component {
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       this.setState({
-        process : JSON.parse(xhr.responseText).currentProcess,
-        sites : JSON.parse(xhr.responseText).siteNames,
+        process : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).currentProcess,
+        sites : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).siteNames,
       });
     })
     xhr.open('GET', url);
@@ -72,7 +72,7 @@ class ProcessInfoPage extends React.Component {
   }
   start(processName) {
     return () => {
-      let url = "http://192.168.128.146:9427/start?operation="+processName;
+      let url = "http://192.168.128.146:9427/start?operation="+processName.replace(' ', '');
       let xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.send();
@@ -81,7 +81,7 @@ class ProcessInfoPage extends React.Component {
   render() {
     let process = (this.state.process === "") ? (<button className="empty-process">empty</button>) : (<button className="running-process">{this.state.process}</button>)
     let items = []
-    let processes = ["Update", "Explore", "Download", "Error", "Check", "Backup", "Fix"]
+    let processes = ["Update", "Explore", "Download", "Error", "Check", "Check End", "Backup", "Fix"]
     for (let i in processes) {
       if (this.state.process === "") {
         items.push(<button className="able-process" onClick={this.start(processes[i])}>{processes[i]}</button>)
@@ -156,22 +156,27 @@ class SiteInfoPage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      name : props.match.params.name
+      name : props.match.params.name,
+      formValues : {
+        title : "",
+        writer : ""
+      }
     };
+    this.search = this.search.bind(this)
   }
   componentDidMount() {
     let url = "http://192.168.128.146:9427/info/"+this.state.name;
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       this.setState({
-        bookCount : JSON.parse(xhr.responseText).bookCount,
-        errorCount : JSON.parse(xhr.responseText).errorCount,
-        totalCount : JSON.parse(xhr.responseText).totalCount,
-        bookVersionCount : JSON.parse(xhr.responseText).bookVersionCount,
-        endCount : JSON.parse(xhr.responseText).endCount,
-        downloadCount : JSON.parse(xhr.responseText).downloadCount,
-        readCount : JSON.parse(xhr.responseText).readCount,
-        maxNum : JSON.parse(xhr.responseText).maxNum
+        bookCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).bookCount,
+        errorCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).errorCount,
+        totalCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).totalCount,
+        bookVersionCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).bookVersionCount,
+        endCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).endCount,
+        downloadCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).downloadCount,
+        readCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).readCount,
+        maxNum : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).maxNum
       });
     })
     xhr.open('GET', url);
@@ -180,6 +185,24 @@ class SiteInfoPage extends React.Component {
   redirect(destination) {
     return () => this.props.history.push(destination);
   }
+  search() {
+    let url = "/" + this.state.name + "/search?title=" + this.state.formValue.title + "&writer=" + this.state.formValue.writer
+    console.log(url)
+    this.redirect(url)();
+    return false
+  }
+  handleChange(event) {
+    event.preventDefault();
+    let formValues = this.state.formValues;
+    let name = event.target.name;
+    let value = event.target.value;
+
+    formValues[name] = value;
+
+    this.setState({
+      formValue : formValues
+    });
+}
   render() {
     return (
       <div className="container">
@@ -193,13 +216,13 @@ class SiteInfoPage extends React.Component {
           <a>Download Count : {this.state.downloadCount}</a><br/>
           <a>Read Count : {this.state.readCount}</a><br/>
           <a>Max ID : {this.state.maxNum}</a><br/>
-          <form action={"/"+this.state.name+"/search"} autoComplete="off">
+          <form onSubmit={this.search} autoComplete="off">
             <a>Search</a><br/>
             <hr/>
             <label for="title">Title : </label>
-            <input type="text" id="title" name="title" placeholder="Title" value={this.state.searchTitle}/><br/>
+            <input type="text" id="title" name="title" placeholder="Title" value={this.state.searchTitle} onChange={this.handleChange.bind(this)}/><br/>
             <label for="writer">Writer : </label>
-            <input type="text" id="writer" name="writer" placeholder="Writer name" value={this.state.searchWriter}/><br/>
+            <input type="text" id="writer" name="writer" placeholder="Writer name" value={this.state.searchWriter} onChange={this.handleChange.bind(this)}/><br/>
             <input type="submit"></input>
           </form>
         </div>
@@ -214,17 +237,22 @@ class SearchBookPage extends React.Component {
     let uri = new URLSearchParams(this.props.location.search)
     this.state = {
       name : props.match.params.name,
+      page : 0,
       title : uri.get('title'),
-      writer : uri.get('writer')
+      writer : uri.get('writer'),
+      books : []
     }
+    this.search = this.search.bind(this);
+    this.nextPage = this.nextPage.bind(this);
+    this.lastPage = this.lastPage.bind(this);
   }
-  componentDidMount() {
+  componentDidMount(page=0) {
     let url = 'http://192.168.128.146:9427/search/'+this.state.name+"?title="+
-      this.state.title+"&writer="+this.state.writer;
+      this.state.title+"&writer="+this.state.writer+"&page="+page;
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       this.setState({
-        books : JSON.parse(xhr.responseText).books
+        books : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).books
       });
     })
     xhr.open('GET', url);
@@ -233,30 +261,65 @@ class SearchBookPage extends React.Component {
   redirect(destination) {
     return () => this.props.history.push(destination);
   }
+  search() {
+    let url = "/" + this.state.name + "/search?title=" + this.state.formValue.title + "&writer=" + this.state.formValue.writer
+    console.log(url)
+    this.redirect(url)();
+    return false
+  }
+  nextPage() {
+    if (this.state.books.length < 20) {
+      return
+    }
+    this.setState({page : this.state.page + 1});
+    this.componentDidMount(this.state.page + 1);
+  }
+  lastPage() {
+    if (this.state.page === 0) {
+      return
+    }
+    this.setState({page : this.state.page - 1});
+    this.componentDidMount(this.state.page - 1);
+  }
   render() {
     let books = []
     for (let i in this.state.books) {
       let book = this.state.books[i]
       books.push(<table className="book" onClick={this.redirect("/"+this.state.name+"/book/"+book.num)}>
-        <tr><td className="title-info">{book.title}</td><td className="writer-info">{book.writer}</td></tr>
-        <tr><td className="date-info">{book.update}</td><td className="chapter-info">{book.chapter}</td></tr>
+        <tbody>
+          <tr><td className="title-info">{book.title}</td><td className="writer-info">{book.writer}</td></tr>
+          <tr><td className="date-info">{book.update}</td><td className="chapter-info">{book.chapter}</td></tr>
+        </tbody>
       </table>)
       books.push(<hr/>)
     }
     if (books.length === 0) {
-      books.push(<a>No matched result found</a>)
+      books.push(<a>No matched result found</a>);
+    }
+    let nextAvail = false
+    let lastAvail = false
+    if (this.state.books.length < 20) {
+      nextAvail = true;
+    }
+    if (this.state.page === 0) {
+      lastAvail = true;
     }
     return (
       <div className="container">
         <header><a onClick={this.redirect("/")}>Book</a> > <a>Search</a></header>
         <div className="page">
-          <form action={"/"+this.state.name+"/search"} autoComplete="off">
+          <form onSubmit={this.search} autoComplete="off">
             <label for="title">Title : </label>
             <input type="text" id="title" name="title" placeholder="Title"value={this.state.searchTitle}/><br/>
             <label for="writer">Writer : </label>
             <input type="text" id="writer" name="writer" placeholder="Writer name" value={this.state.searchWriter}/><br/>
             <input type="submit"></input>
           </form>
+          <div className="page">
+            <button className="lastPage" onClick={this.lastPage} disabled={lastAvail}>&lt;</button>
+            <a className="page">{this.state.page}</a>
+            <button className="nextPage" onClick={this.nextPage} disabled={nextAvail}>&gt;</button>
+          </div>
           <div className="scroller">
             {books}
           </div>
@@ -282,7 +345,7 @@ class BookInfoPage extends React.Component {
     let url = 'http://192.168.128.146:9427/info/' + this.state.name + '/' + this.state.num;
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
-      let book = JSON.parse(xhr.responseText);
+      let book = JSON.parse(xhr.responseText.replace(/\t/g, ' '));
       this.setState({
         title : book.title,
         writer : book.writer,

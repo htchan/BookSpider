@@ -14,7 +14,8 @@ import (
 	"time"
 	"golang.org/x/sync/semaphore"
 	// read write files
-	"io/ioutil"
+	//"io/ioutil"
+	"os"
 	// self define helper package
 	"../helper"
 )
@@ -117,12 +118,16 @@ func (book *Book) Download(savePath string) (bool) {
 			break;
 		}
 	}
-
 	urls := helper.SearchAll(html, book.chapterUrlRegex);
 	titles := helper.SearchAll(html, book.chapterTitleRegex);
 	// if length are difference, return error
 	if (len(urls) != len(titles)) {
 		fmt.Println("download error")
+		return false
+	}
+	if len(urls) == 0 {
+		fmt.Println("no chapter found in " + book.SiteName + "-<" + strconv.Itoa(book.Id) + ">" +
+			"-v" + strconv.Itoa(book.Version) + "\t" + book.Title)
 		return false
 	}
 	// use go routine to load chapter content
@@ -133,7 +138,11 @@ func (book *Book) Download(savePath string) (bool) {
 	for i = range urls {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		urls[i] = fmt.Sprintf(book.chapterUrl, urls[i]);
+		if strings.HasPrefix(urls[i], "/") || strings.HasPrefix(urls[i], "http") {
+			urls[i] = fmt.Sprintf(book.chapterUrl, urls[i]);
+		} else {
+			urls[i] = book.downloadUrl + urls[i]
+		}
 		go book.downloadChapter(urls[i], titles[i], s, &wg, ch)
 		if ((i % 100 == 0) && (i > 0)) {
 			for j := 0; j < 100; j++ {
@@ -142,24 +151,56 @@ func (book *Book) Download(savePath string) (bool) {
 
 		}
 	}
-	fmt.Println(i)
 	offset := i % 100;
-	for j := -1; j < offset; j++ {
+	for j := 0; j <= offset; j++ {
 		results[i - offset + j] = <-ch
 	}
 	wg.Wait()
-	fmt.Println("finish")
-	content := book.Title + "\n" + book.Writer + "\n" + strings.Repeat("-", 20) + strings.Repeat("\n", 2)
+	fmt.Println(book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" +
+		strconv.Itoa(book.Version) + "\t" + book.Title + "finish")
+	//content := book.Title + "\n" + book.Writer + "\n" + 
+	//	strings.Repeat("-", 20) + strings.Repeat("\n", 2)
+	errorCount := 0
+	// save the content to target path
+	path := savePath + strconv.Itoa(book.Id);
+	if (book.Version == 0) {
+		path = path + ".txt";
+	} else {
+		path = path + "-v" + strconv.Itoa(book.Version) + ".txt";
+	}
+	f, err := os.Create(path)
+	helper.CheckError(err)
+	f.WriteString(book.Title + "\n" + book.Writer + "\n" + 
+		strings.Repeat("-", 20) + strings.Repeat("\n", 2))
 	// put chapters content into content with order
 	for _, url := range urls {
 		for _, chapter := range results {
 			if (url == chapter.Url) {
-				content = content + chapter.Title + "\n" + strings.Repeat("-", 20) + "\n"
-				content = content + chapter.Content + strings.Repeat("\n", 2)
+				if chapter.Content == "error" {
+					errorCount += 1
+				}
+				/*
+				content += chapter.Title + "\n" + strings.Repeat("-", 20) + "\n"
+				content += chapter.Content + strings.Repeat("\n", 2)
+				*/
+				_, err = f.WriteString(chapter.Title + "\n" + strings.Repeat("-", 20) + "\n")
+				helper.CheckError(err)
+				_, err = f.WriteString(chapter.Content + strings.Repeat("\n", 2))
+				helper.CheckError(err)
 				break
 			}
 		}
 	}
+	f.Close()
+	if errorCount > 50 {
+		fmt.Println("too many error occour in " + book.SiteName + "-" +
+			"<" + strconv.Itoa(book.Id) + ">-v" + strconv.Itoa(book.Version) + book.Title)
+		fmt.Println("download cancelled")
+		err = os.Remove(path)
+		helper.CheckError(err)
+		return false
+	}
+	/*
 	// save the content to target path
 	path := savePath + strconv.Itoa(book.Id);
 	if (book.Version == 0) {
@@ -170,7 +211,7 @@ func (book *Book) Download(savePath string) (bool) {
 	bytes := []byte(content);
 	err := ioutil.WriteFile(path, bytes, 0644);
 	helper.CheckError(err);
-
+	*/
 	return true
 }
 func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *sync.WaitGroup, ch chan<-chapter) () {
@@ -189,15 +230,21 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			break;
 		}
 	}
-	fmt.Println(url + "\t" + title);
 	// extract chapter
 	content := helper.Search(html, book.chapterContentRegex)
-	content = strings.Replace(content, "<br />", "", -1);
-	content = strings.Replace(content, "&nbsp;", "", -1);
-	content = strings.Replace(content, "<b>", "", -1);
-	content = strings.Replace(content, "</b>", "", -1);
-	content = strings.Replace(content, "<p>", "", -1);
-	content = strings.Replace(content, "</p>", "", -1);
+	if content == "error" {
+		fmt.Println(url + "\t" + title);
+	} else {
+		content = strings.ReplaceAll(content, "<br />", "");
+		content = strings.ReplaceAll(content, "&nbsp;", "");
+		content = strings.ReplaceAll(content, "<b>", "");
+		content = strings.ReplaceAll(content, "</b>", "");
+		content = strings.ReplaceAll(content, "<p>", "");
+		content = strings.ReplaceAll(content, "</p>", "");
+		content = strings.ReplaceAll(content, "                ", "")
+		content = strings.ReplaceAll(content, "<p/>", "\n")
+	}
+	
 	// put the chapter info to channel
 	ch <- chapter{Url:url, Title:title, Content: content}
 	return

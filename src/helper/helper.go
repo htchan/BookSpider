@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"time"
+	"os"
 )
 
 func CheckError(e error) {
@@ -58,4 +59,12 @@ func Contains(arr []int, target int) (bool) {
 		}
 	}
 	return false
+}
+
+func Exists(path string) (bool) {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

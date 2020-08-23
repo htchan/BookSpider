@@ -1,0 +1,14 @@
+{
+    "metaBaseUrl" : "https://tw.hjwzw.com/Book/%v/",
+    "metaDownloadUrl" : "https://tw.hjwzw.com/Book/Chapter/%v/",
+    "metaChapterUrl" : "https://tw.hjwzw.com%v",
+    "chapterPattern" : "/.8?\\.html",
+    "titleRegex" : "<meta property=\"og:novel:book_name\" content=\"(.*?)\" />",
+    "writerRegex" : "<meta property=\"og:novel:author\" content=\"(.*?)\" />",
+    "typeRegex" : "<meta property=\"og:novel:category\" content=\"(.*?)\" />",
+    "lastUpdateRegex" : "<meta property=\"og:novel:update_time\" content=\"(.*?)\" />",
+    "lastChapterRegex" : "<meta property=\"og:novel:latest_chapter_name\" content=\"(.*?)\" />",
+    "chapterUrlRegex" : "<td><a href=\"(.*?)\".*?>.*?</a>",
+    "chapterTitleRegex" : "<td><a.*?>(.*?)</a>",
+    "chapterContentRegex" : "(?s)<div.*?AllySite.*?>.*?<div.*?>(.*?)</div>"
+}

@@ -11,45 +11,26 @@ import (
 	"strconv"
 	"net/http"
 	"log"
-	"encoding/json"
-	"golang.org/x/text/encoding/traditionalchinese"
-	"golang.org/x/text/encoding"
+	//"encoding/json"
+	//"golang.org/x/text/encoding/traditionalchinese"
+	//"golang.org/x/text/encoding"
 
-	"./helper"
-	"./model"
+	//"../helper"
+	"../model"
 )
 
 type Logs struct {
+	logLocation string
 	Logs []string
 	LastUpdate time.Time
-}
-
-func LoadSites(configLocation string) (map[string]model.Site) {
-	sites := make(map[string]model.Site)
-	data, err := ioutil.ReadFile(configLocation)
-	helper.CheckError(err)
-	var info []map[string]interface{}
-	if err = json.Unmarshal(data, &info); err != nil {
-        panic(err)
-	}
-	for _, config := range info {
-		var decoder *encoding.Decoder
-		if (config["decode"] == "big5") {
-			decoder = traditionalchinese.Big5.NewDecoder()
-		} else {
-			decoder = nil
-		}
-		sites[config["name"].(string)] =
-			model.NewSite(config["name"].(string), decoder,
-							config["configLocation"].(string),
-							config["databaseLocation"].(string),
-							config["downloadLocation"].(string))
-	}
-	return sites
+	size int64
 }
 
 func download() {
 	for name, site := range sites {
+		if name == "80txt" {
+			continue
+		}
 		currentProcess = name + "\tdownload"
 		fmt.Println(name + "\tdownload")
 		site.Download()
@@ -93,6 +74,15 @@ func check() {
 	}
 	currentProcess = ""
 }
+func checkEnd() {
+	for name, site := range sites {
+		currentProcess = name + "\tcheck end"
+		fmt.Println(name + "\tcheck end")
+		site.CheckEnd()
+		runtime.GC()
+	}
+	currentProcess = ""
+}
 func backup() {
 	for name, site := range sites {
 		currentProcess = name + "\tbackup"
@@ -132,6 +122,8 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		go updateError()
 	case "CHECK":
 		go check()
+	case "CHECKEND":
+		go checkEnd()
 	case "BACKUP":
 		go backup()
 	case "FIX":
@@ -146,26 +138,34 @@ func Start(res http.ResponseWriter, req *http.Request) {
 }
 
 func (logs *Logs) update() {
-	if (time.Now().Unix() - logs.LastUpdate.Unix() > 600) {
-		data, err := ioutil.ReadFile("./nohup.out")
-		if err != nil {
-			return
-		}
-		dataStrings := strings.Split(string(data), "\n")
-		min := len(logs.Logs)
-		if (len(logs.Logs) > len(dataStrings)) {
-			min = len(dataStrings)
-		}
-		for i := 1; i < min; i += 1 {
-			logs.Logs[i] = dataStrings[len(dataStrings) - min + i]
-		}
-		logs.LastUpdate = time.Now()
+	logFileStat, err := os.Stat(logs.logLocation)
+	if err != nil {
+		return
 	}
+	fileSize := logFileStat.Size()
+	if fileSize - logs.size < 1000 {
+		return
+	}
+	logs.size = fileSize
+	data, err := ioutil.ReadFile(logs.logLocation)
+	if err != nil {
+		return
+	}
+	dataStrings := strings.Split(string(data), "\n")
+	min := len(logs.Logs)
+	if (len(logs.Logs) > len(dataStrings)) {
+		min = len(dataStrings)
+	}
+	for i := 1; i < min; i += 1 {
+		logs.Logs[i] = dataStrings[len(dataStrings) - min + i]
+	}
+	logs.LastUpdate = time.Now()
 }
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	/*
 	f, err := os.Stat("nohup.out")
 	// get create time, last update time of nohup.out
 	if err != nil {
@@ -174,6 +174,8 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	modifyTime := f.ModTime().String()[:19]
+	*/
+	modifyTime := logs.LastUpdate.String()[:19]
 	// get last several line of nohup.out
 	logs.update()
 	// print them
@@ -241,7 +243,8 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	fmt.Println(id)
-	book := site.Book(id)
+	// TODO accept user to input version for searching
+	book := site.Book(id, -1)
 	if (book.Title == "") {
 		res.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + "> in site <" + siteName + "> not found\"}")
@@ -267,7 +270,8 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
 		return
 	}
-	book := site.Book(id)
+	// TODO allow user to download old version of the books
+	book := site.Book(id, -1)
 	if !book.DownloadFlag {
 		res.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")
@@ -318,8 +322,8 @@ var sites map[string]model.Site
 
 func main() () {
 	currentProcess = ""
-	logs = Logs{Logs: make([]string, 100), LastUpdate: time.Unix(0, 0)}
-	sites = LoadSites("./config/config.json")
+	logs = Logs{logLocation: "./nohup.out", Logs: make([]string, 100), LastUpdate: time.Unix(0, 0)}
+	sites = model.LoadSites("./config/config.json")
 	http.HandleFunc("/start", Start)
 	for name, _ := range sites {
 		http.HandleFunc("/search/"+name+"", bookSearch)

@@ -1,19 +1,16 @@
 package main
 
 import (
-	"golang.org/x/text/encoding/traditionalchinese"
-	"golang.org/x/text/encoding"
-	//"bufio"
 	"os"
-	"encoding/json"
 	"strings"
-	"io/ioutil"
 	"fmt"
-	"./model"
-	"./helper"
+	"../model"
 	"runtime"
+	_ "net/http/pprof"
+	"log"
+	"net/http"
 )
-
+/*
 func LoadSites(configLocation string) (map[string]model.Site) {
 	sites := make(map[string]model.Site)
 	data, err := ioutil.ReadFile(configLocation)
@@ -37,6 +34,7 @@ func LoadSites(configLocation string) (map[string]model.Site) {
 	}
 	return sites
 }
+*/
 
 func help() {
 	fmt.Println("Command: ")
@@ -54,6 +52,9 @@ func help() {
 
 func download(sites map[string]model.Site) {
 	for name, site := range sites {
+		if name == "80txt" {
+			continue
+		}
 		fmt.Println(name + "\tdownload")
 		site.Download()
 		runtime.GC()
@@ -97,6 +98,15 @@ func check(sites map[string]model.Site) {
 		runtime.GC()
 	}
 }
+func checkEnd(sites map[string]model.Site) {
+	for name, site := range sites {
+		fmt.Println(name + "\tcheck end")
+		fmt.Println(strings.Repeat("- ", 20))
+		site.CheckEnd()
+		fmt.Println(strings.Repeat("- ", 20))
+		runtime.GC()
+	}
+}
 func backup(sites map[string]model.Site) {
 	for name, site := range sites {
 		fmt.Println(name + "\tbackup")
@@ -113,11 +123,13 @@ func fix(sites map[string]model.Site) {
 }
 func test(sites map[string]model.Site) {
 	site := sites["hjwzw"]
-	site.Explore(1000)
+	site.Download()
+	//site.Explore(1000)
 	//site.Update()
 }
 
 func main() {
+	go func() { log.Fatal(http.ListenAndServe(":4000", nil)) }()
 	fmt.Println("test (v0.0.0) - - - - - - - - - -")
 	if (len(os.Args) < 2) {
 		help()
@@ -131,7 +143,7 @@ func main() {
 	sites["ck101"] = model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./")
 	*/
 
-	sites := LoadSites("./config/config.json")
+	sites := model.LoadSites("./config/config.json")
 
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
@@ -146,6 +158,8 @@ func main() {
 		info(sites)
 	case "CHECK":
 		check(sites)
+	case "CHECKEND":
+		checkEnd(sites)
 	case "BACKUP":
 		backup(sites)
 	case "FIX":
