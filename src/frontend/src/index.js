@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import {GeneralInfoPage, ProcessInfoPage, LogsInfoPage, SiteInfoPage, SearchBookPage, BookInfoPage} from './App';
 import * as serviceWorker from './serviceWorker';
-import { BrowserRouter as Router,Route, Redirect, Switch } from 'react-router-dom';
+import { BrowserRouter as Router,Route, Switch } from 'react-router-dom';
 
 function Routes(){
   return (

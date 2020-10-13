@@ -12,7 +12,7 @@ header {
   padding-left: 1vh;
 }
 
-header > a {
+header > p {
   height: 100%;
   font-size: 5vh;
   color: #a0f0f0;
@@ -24,7 +24,8 @@ header > a {
   padding: 1vh;
 }
 
-a, label {
+p, label {
+  display: inline;
   text-align: left;
   font-size: 4vh;
   color: #ffffff;

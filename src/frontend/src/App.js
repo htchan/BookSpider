@@ -1,6 +1,8 @@
 import React from 'react';
 import './App.css';
 
+var host = "http://192.168.128.146:9427/";
+
 class GeneralInfoPage extends React.Component {
   constructor(props) {
     super(props);
@@ -10,7 +12,7 @@ class GeneralInfoPage extends React.Component {
     };
   }
   componentDidMount() {
-    let url = "http://192.168.128.146:9427/info";
+    let url = host + "info";
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       this.setState({
@@ -27,7 +29,7 @@ class GeneralInfoPage extends React.Component {
   }
   render() {
     let items = [];
-      items.push(<a>Process : </a>)
+      items.push(<p>Process : </p>)
     if (this.state.process === "") {
       items.push(<button className="empty-process" onClick={this.redirect("process")}>empty</button>)
       items.push(<br/>)
@@ -40,7 +42,7 @@ class GeneralInfoPage extends React.Component {
     }
     return (
     <div className="container">
-      <header><a>Book</a></header>
+      <header><p>Book</p></header>
       <div className="Page">
         {items}
       </div>
@@ -57,7 +59,7 @@ class ProcessInfoPage extends React.Component {
     }
   }
   componentDidMount() {
-    let url = "http://192.168.128.146:9427/info";
+    let url = host + "info";
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
       this.setState({
@@ -72,7 +74,7 @@ class ProcessInfoPage extends React.Component {
   }
   start(processName) {
     return () => {
-      let url = "http://192.168.128.146:9427/start?operation="+processName.replace(' ', '');
+      let url = host + "start?operation="+processName.replace(' ', '');
       let xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.send();
@@ -92,9 +94,9 @@ class ProcessInfoPage extends React.Component {
     }
     return (
       <div className="container">
-        <header><a onClick={this.redirect("/")}>Book</a> > <a>Process</a></header>
+        <header><p onClick={this.redirect("/")}>Book</p> > <p>Process</p></header>
         <div className="page">
-          <a>Process : </a>{process}<br/>
+          <p>Process : </p>{process}<br/>
           <div className="scroller">
             {items}
           </div>
@@ -115,14 +117,22 @@ class LogsInfoPage extends React.Component {
     }
   }
   componentDidMount() {
-    let url = "http://192.168.128.146:9427/process";
+    let url = host + "process";
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
-      this.setState({
-        datetime : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).time,
-        logs : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).logs,
-      });
-    })
+      try {
+        let obj = JSON.parse(xhr.responseText.replace(/\t/g, ' ').replace(/="/g, '=\'').replace(/" (\w)/g, '\' $1').replace(/">/g, '\'>'));
+        this.setState({
+          datetime : obj.time,
+          logs : obj.logs,
+        });
+      } catch (e){
+        this.setState({
+	  datetime : "unknown",
+	  logs : xhr.responseText.replace(/"/g, "").split(','),
+	});
+      }
+    });
     xhr.open('GET', url);
     xhr.send();
   }
@@ -132,15 +142,15 @@ class LogsInfoPage extends React.Component {
   render() {
     let logs = []
     for (let i in this.state.logs) {
-      logs.push(<a>{this.state.logs[i]}</a>)
+      logs.push(<p>{this.state.logs[i]}</p>)
       logs.push(<br/>)
     }
     console.log(logs)
     return (
       <div className="container">
-        <header><a onClick={this.redirect("/")}>Book</a> > <a onClick={this.redirect("/process/")}>Process</a> > <a>Logs</a></header>
+        <header><p onClick={this.redirect("/")}>Book</p> > <p onClick={this.redirect("/process/")}>Process</p> > <p>Logs</p></header>
         <div className="page">
-          <a>Datetime : {this.state.datetime}</a>
+          <p>Datetime : {this.state.datetime}</p>
           <br/><br/>
           <hr/>
           <div className="scroller" style={{height: "70vh"}}>
@@ -165,18 +175,21 @@ class SiteInfoPage extends React.Component {
     this.search = this.search.bind(this)
   }
   componentDidMount() {
-    let url = "http://192.168.128.146:9427/info/"+this.state.name;
+    let url = host + "info/"+this.state.name;
     let xhr = new XMLHttpRequest();
     xhr.addEventListener('load', () => {
+      let obj = JSON.parse(xhr.responseText.replace(/\t/g, ' '))
       this.setState({
-        bookCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).bookCount,
-        errorCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).errorCount,
-        totalCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).totalCount,
-        bookVersionCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).bookVersionCount,
-        endCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).endCount,
-        downloadCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).downloadCount,
-        readCount : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).readCount,
-        maxNum : JSON.parse(xhr.responseText.replace(/\t/g, ' ')).maxNum
+        bookCount : obj.bookCount,
+        errorCount : obj.errorCount,
+        endCount : obj.endCount,
+        downloadCount : obj.downloadCount,
+        bookRecordCount : obj.bookRecordCount,
+        errorRecordCount : obj.errorRecordCount,
+        endRecordCount : obj.endRecordCount,
+        downloadRecordCount : obj.downloadRecordCount,
+        readCount : obj.readCount,
+        maxNum : obj.maxid
       });
     })
     xhr.open('GET', url);
@@ -206,18 +219,16 @@ class SiteInfoPage extends React.Component {
   render() {
     return (
       <div className="container">
-        <header><a onClick={this.redirect("/")}>Book</a> > <a>Site</a> > <a>{this.state.name}</a></header>
+        <header><p onClick={this.redirect("/")}>Book</p> > <p>Site</p> > <p>{this.state.name}</p></header>
         <div className="page">
-          <a>Book Count : {this.state.bookCount}</a><br/>
-          <a>Error Count : {this.state.errorCount}</a><br/>
-          <a>Total Count : {this.state.totalCount}</a><br/>
-          <a>Book Version Count : {this.state.bookVersionCount}</a><br/>
-          <a>End Count : {this.state.endCount}</a><br/>
-          <a>Download Count : {this.state.downloadCount}</a><br/>
-          <a>Read Count : {this.state.readCount}</a><br/>
-          <a>Max ID : {this.state.maxNum}</a><br/>
+          <p>Book Count : {this.state.bookCount + this.state.errorCount} ({this.state.bookCount} + {this.state.errorCount})</p><br/>
+          <p>Record Count : {this.state.bookRecordCount + this.state.errorRecordCount} ({this.state.bookRecordCount} + {this.state.errorRecordCount})</p><br/>
+          <p>End Count : {this.state.endCount} ({this.state.endRecordCount})</p><br/>
+          <p>Download Count : {this.state.downloadCount} ({this.state.downloadRecordCount})</p><br/>
+          <p>Read Count : {this.state.readCount}</p><br/>
+          <p>Max ID : {this.state.maxNum}</p><br/>
           <form onSubmit={this.search} autoComplete="off">
-            <a>Search</a><br/>
+            <p>Search</p><br/>
             <hr/>
             <label for="title">Title : </label>
             <input type="text" id="title" name="title" placeholder="Title" value={this.state.searchTitle} onChange={this.handleChange.bind(this)}/><br/>
@@ -294,7 +305,7 @@ class SearchBookPage extends React.Component {
       books.push(<hr/>)
     }
     if (books.length === 0) {
-      books.push(<a>No matched result found</a>);
+      books.push(<p>No matched result found</p>);
     }
     let nextAvail = false
     let lastAvail = false
@@ -306,7 +317,7 @@ class SearchBookPage extends React.Component {
     }
     return (
       <div className="container">
-        <header><a onClick={this.redirect("/")}>Book</a> > <a>Search</a></header>
+        <header><p onClick={this.redirect("/")}>Book</p> > <p>Search</p></header>
         <div className="page">
           <form onSubmit={this.search} autoComplete="off">
             <label for="title">Title : </label>
@@ -317,7 +328,7 @@ class SearchBookPage extends React.Component {
           </form>
           <div className="page">
             <button className="lastPage" onClick={this.lastPage} disabled={lastAvail}>&lt;</button>
-            <a className="page">{this.state.page}</a>
+            <p className="page">{this.state.page}</p>
             <button className="nextPage" onClick={this.nextPage} disabled={nextAvail}>&gt;</button>
           </div>
           <div className="scroller">
@@ -379,14 +390,14 @@ class BookInfoPage extends React.Component {
     }
     return (
       <div className="container">
-        <header><a onClick={this.redirect("/")}>Book</a> > <a onClick={this.redirect("/"+this.state.name+"/")}>{this.state.name}</a> > <a>{this.state.title}</a></header>
+        <header><p onClick={this.redirect("/")}>Book</p> > <p onClick={this.redirect("/"+this.state.name+"/")}>{this.state.name}</p> > <p>{this.state.title}</p></header>
         <div className="page">
-          <a>Title : {this.state.title}</a><br/>
-          <a>Writer : {this.state.writer}</a><br/>
-          <a>Type : {this.state.type}</a><br/>
-          <a>Update : {this.state.update}</a><br/>
-          <a>Chapter : {this.state.chapter}</a><br/>
-          <a>Version : {this.state.version}</a><br/>
+          <p>Title : {this.state.title}</p><br/>
+          <p>Writer : {this.state.writer}</p><br/>
+          <p>Type : {this.state.type}</p><br/>
+          <p>Update : {this.state.update}</p><br/>
+          <p>Chapter : {this.state.chapter}</p><br/>
+          <p>Version : {this.state.version}</p><br/>
           {button}
         </div>
       </div>
