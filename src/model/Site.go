@@ -76,11 +76,11 @@ func LoadSite(config map[string]interface{}) (Site) {
 	} else {
 		decoder = nil
 	}
-	sites[config["name"].(string)] =
-		NewSite(config["name"].(string), decoder,
-						config["configLocation"].(string),
-						config["databaseLocation"].(string),
-						config["downloadLocation"].(string))
+	site :=NewSite(config["name"].(string), decoder,
+					config["configLocation"].(string),
+					config["databaseLocation"].(string),
+					config["downloadLocation"].(string))
+	return site
 }
 func LoadSites(configLocation string) (map[string]Site) {
 	sites := make(map[string]Site)
@@ -1043,7 +1043,8 @@ func (site Site) Test() () {
 */
 func (site Site)JsonString() (string) {
 	site.OpenDatabase()
-	var bookCount, bookVersionCount, errorCount, endCount, downloadCount, readCount, maxid int
+	var bookCount, bookRecordCount, errorCount, errorRecordCount, endCount, endRecordCount int
+	var downloadCount, downloadRecordCount, readCount, maxid int
 	rows, err := site.database.Query("select count(DISTINCT books.num) from books")
 	if err == nil && rows.Next() {
 		rows.Scan(&bookCount)
@@ -1051,22 +1052,37 @@ func (site Site)JsonString() (string) {
 	rows.Close()
 	rows, err = site.database.Query("select count(*) from books")
 	if err == nil && rows.Next() {
-		rows.Scan(&bookVersionCount)
+		rows.Scan(&bookRecordCount)
 	}
 	rows.Close()
-	rows, err = site.database.Query("select count(DISTINCT num) from error")
+	rows, err = site.database.Query("select count(DISTINCT error.num) from error")
 	if err == nil && rows.Next() {
 		rows.Scan(&errorCount)
 	}
 	rows.Close()
-	rows, err = site.database.Query("select count(DISTINCT num) from books where end=?", true)
+	rows, err = site.database.Query("select count(*) from error")
+	if err == nil && rows.Next() {
+		rows.Scan(&errorRecordCount)
+	}
+	rows.Close()
+	rows, err = site.database.Query("select count(DISTINCT books.num) from books where end=?", true)
 	if err == nil && rows.Next() {
 		rows.Scan(&endCount)
 	}
 	rows.Close()
-	rows, err = site.database.Query("select count(num) from books where download=?", true)
+	rows, err = site.database.Query("select count(*) from books where end=?", true)
+	if err == nil && rows.Next() {
+		rows.Scan(&endRecordCount)
+	}
+	rows.Close()
+	rows, err = site.database.Query("select count(DISTINCT books.num) from books where download=?", true)
 	if err == nil && rows.Next() {
 		rows.Scan(&downloadCount)
+	}
+	rows.Close()
+	rows, err = site.database.Query("select count(*) from books where download=?", true)
+	if err == nil && rows.Next() {
+		rows.Scan(&downloadRecordCount)
 	}
 	rows.Close()
 	rows, err = site.database.Query("select count(num) from books where read=?", true)
@@ -1093,10 +1109,12 @@ func (site Site)JsonString() (string) {
 		"\"name\" : \"" + site.SiteName + "\"" + ", " +
 		"\"bookCount\" : " + strconv.Itoa(bookCount) + ", " +
 		"\"errorCount\" : " + strconv.Itoa(errorCount) + ", " +
-		"\"totalCount\" : " + strconv.Itoa(bookCount+errorCount) + ", " +
-		"\"bookVersionCount\" : " + strconv.Itoa(bookVersionCount) + ", " +
+		"\"bookRecordCount\" : " + strconv.Itoa(bookRecordCount) + ", " +
+		"\"errorRecordCount\" : " + strconv.Itoa(errorRecordCount) + ", " +
 		"\"endCount\" : " + strconv.Itoa(endCount) + ", " +
+		"\"endRecordCount\" : " + strconv.Itoa(endRecordCount) + ", " +
 		"\"downloadCount\" : " + strconv.Itoa(downloadCount) + ", " +
+		"\"downloadRecordCount\" : " + strconv.Itoa(downloadRecordCount) + ", " +
 		"\"readCount\" : " + strconv.Itoa(readCount) + ", " +
 		"\"maxid\" : " + strconv.Itoa(maxid) +
 	"}"
