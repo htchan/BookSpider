@@ -3,3 +3,6 @@ Books/__pycache__/*
 *.txt
 .setting
 *.pyc
+bin/
+build/
+backup-bin/
