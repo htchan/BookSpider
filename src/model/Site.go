@@ -301,7 +301,7 @@ func (site *Site) Explore(maxError int) () {
 	var err error
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(maxError))
 	var wg sync.WaitGroup
 	// prepare transaction and statement
 	tx, err := site.database.Begin();
@@ -527,10 +527,13 @@ func (site *Site) CheckEnd() {
 		sql += "chapter like '%" + str + "%' or "
 	}
 	sql += "date < '"+strconv.Itoa(time.Now().Year()-1)+"') and (end <> true or end is null)"
-	_, err = tx.Exec(sql)
+	result, err := tx.Exec(sql)
+	helper.CheckError(err)
+	rowAffect, err := result.RowsAffected()
 	helper.CheckError(err)
 	err = tx.Commit()
 	helper.CheckError(err)
+	fmt.Println("Row affected: ", rowAffect)
 	site.CloseDatabase()
 }
 

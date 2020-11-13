@@ -174,6 +174,7 @@ func (book *Book) Download(savePath string) (bool) {
 		strings.Repeat("-", 20) + strings.Repeat("\n", 2))
 	// put chapters content into content with order
 	for _, url := range urls {
+		found := false
 		for _, chapter := range results {
 			if (url == chapter.Url) {
 				if chapter.Content == "error" {
@@ -187,12 +188,20 @@ func (book *Book) Download(savePath string) (bool) {
 				helper.CheckError(err)
 				_, err = f.WriteString(chapter.Content + strings.Repeat("\n", 2))
 				helper.CheckError(err)
+				found = true
 				break
 			}
 		}
+		if (!found) {
+			fmt.Println("No chapter for {" + url + "} found")
+		}
 	}
 	f.Close()
-	if errorCount > 50 {
+	maxErrorCount := 50
+	if (int(float64(len(results)) * 0.1) < 50) {
+		maxErrorCount = int(float64(len(results)) * 0.1);
+	}
+	if errorCount > maxErrorCount {
 		fmt.Println("too many error occour in " + book.SiteName + "-" +
 			"<" + strconv.Itoa(book.Id) + ">-v" + strconv.Itoa(book.Version) + book.Title)
 		fmt.Println("download cancelled")
@@ -219,21 +228,32 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 	defer s.Release(1)
 	// get chapter resource
 	var html string;
+	keepRetry := true;
+	retryCount := 0;
 	for i := 0; i < 10; i++ {
 		html = helper.GetWeb(url);
 		if (len(html) == 0) {
-			fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + url + "\t" + title);
+			//fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + url + "\t" + title);
+			retryCount += 1;
 			continue
 		}
 		if (book.decoder != nil) {
 			html, _, _ = transform.String(book.decoder, html);
+			keepRetry = false
 			break;
 		}
+	}
+	if (retryCount > 0) {
+		fmt.Println("tried <" + strconv.Itoa(retryCount) + "> count on " + url + "\t" + title);
 	}
 	// extract chapter
 	content := helper.Search(html, book.chapterContentRegex)
 	if content == "error" {
-		fmt.Println(url + "\t" + title);
+		if (keepRetry) {
+			fmt.Println("retry error:" + url + "\t" + title);
+		} else {
+			fmt.Println("error: " + url + "\t" + title);
+		}
 	} else {
 		content = strings.ReplaceAll(content, "<br />", "");
 		content = strings.ReplaceAll(content, "&nbsp;", "");
@@ -244,7 +264,6 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		content = strings.ReplaceAll(content, "                ", "")
 		content = strings.ReplaceAll(content, "<p/>", "\n")
 	}
-	
 	// put the chapter info to channel
 	ch <- chapter{Url:url, Title:title, Content: content}
 	return

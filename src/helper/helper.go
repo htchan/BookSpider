@@ -26,6 +26,7 @@ func GetWeb(url string) (string) {
 		return "";
 	}
 	resp.Body.Close();
+	client.CloseIdleConnections()
 	return string(body);
 }
 
