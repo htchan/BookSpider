@@ -122,6 +122,16 @@ func fix(sites map[string]model.Site) {
 		runtime.GC()
 	}
 }
+func random(sites map[string]model.Site) {
+	for name, site := range sites {
+		fmt.Println(name + "\trandom")
+		results := site.Random(5)
+		for _, result := range results {
+			fmt.Println(result.String()+"\n")
+		}
+		runtime.GC()
+	}
+}
 func test(sites map[string]model.Site) {
 	site := sites["hjwzw"]
 	site.Download()
@@ -165,6 +175,8 @@ func main() {
 		backup(sites)
 	case "FIX":
 		fix(sites)
+	case "RANDOM":
+		random(sites)
 	case "TEST":
 		test(sites)
 	default:

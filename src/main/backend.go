@@ -104,7 +104,7 @@ func fix() {
 
 func Start(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	operation := req.URL.Query().Get("operation")
 	if currentProcess != "" {
 		res.WriteHeader(http.StatusLocked)
@@ -164,7 +164,7 @@ func (logs *Logs) update() {
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	/*
 	f, err := os.Stat("nohup.out")
 	// get create time, last update time of nohup.out
@@ -194,7 +194,7 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(res, "{\"currentProcess\" : \""+currentProcess+"\", ")
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
@@ -213,7 +213,7 @@ func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 
 func SiteInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -227,7 +227,7 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 
 func BookInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -255,7 +255,7 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 
 func BookDownload(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -287,9 +287,9 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, content)
 }
 
-func bookSearch(res http.ResponseWriter, req *http.Request) {
+func BookSearch(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "http://192.168.128.146:8427")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[2]
 	site, ok := sites[siteName]
@@ -316,6 +316,33 @@ func bookSearch(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "]}")
 }
 
+func BookRandom(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	uri := strings.Split(req.URL.Path, "/")
+	siteName := uri[2]
+	site, ok := sites[siteName]
+	if !ok {
+		res.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		return
+	}
+	num, err := strconv.Atoi(req.URL.Query().Get("num"))
+	if (err != nil) {
+		num = 20;
+	}
+	if (num > 50) { num = 50 }
+	books := site.Random(num)
+	fmt.Fprintf(res, "{\"books\" : [")
+	for i, book := range books {
+		fmt.Fprintf(res, book.JsonString())
+		if i < len(books)-1 {
+			fmt.Fprintf(res, ",")
+		}
+	}
+	fmt.Fprintf(res, "]}")
+}
+
 var currentProcess string
 var logs Logs
 var sites map[string]model.Site
@@ -326,10 +353,11 @@ func main() () {
 	sites = model.LoadSites("./config/config.json")
 	http.HandleFunc("/start", Start)
 	for name, _ := range sites {
-		http.HandleFunc("/search/"+name+"", bookSearch)
+		http.HandleFunc("/search/"+name+"", BookSearch)
 		http.HandleFunc("/download/"+name+"/", BookDownload)
 		http.HandleFunc("/info/"+name+"/", BookInfo)
 		http.HandleFunc("/info/"+name, SiteInfo)
+		http.HandleFunc("/random/"+name, BookRandom)
 	}
 	http.HandleFunc("/process", ProcessState)
 	http.HandleFunc("/info", GeneralInfo)

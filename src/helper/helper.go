@@ -16,7 +16,7 @@ func CheckError(e error) {
 }
 
 func GetWeb(url string) (string) {
-	client := http.Client{Timeout: 30*time.Second}
+	client := http.Client{Timeout: 10*time.Second}
 	resp, err := client.Get(url);
 	if err != nil {
 		return "";

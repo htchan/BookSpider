@@ -1,12 +1,12 @@
 .PHONY: frontend
 
 
-all: controller backend frontend
+all: controller backend #frontend
 	mkdir -p ./build
 	mv ./controller ./build/
 	mv ./backend ./build/
-	rm ./build/frontend -rf
-	mv ./src/frontend/build/ ./build/frontend
+	#rm ./build/frontend -rf
+	#mv ./src/frontend/build/ ./build/frontend
 	cp ./src/public/* ./build -r
 
 run:

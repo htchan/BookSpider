@@ -39,10 +39,10 @@ type Book struct {
 func (book *Book) Update() (bool) {
 	// get online resource, try maximum 10 times if it keeps failed
 	var html string
-	for i := 0; i < 10; i++ {
+	var i int;
+	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(book.baseUrl);
 		if (len(html) == 0) || (helper.Search(html, book.titleRegex) == "error") {
-			fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + book.baseUrl);
 			time.Sleep(1000)
 			continue
 		}
@@ -52,7 +52,20 @@ func (book *Book) Update() (bool) {
 		}
 	}
 	if (len(html) == 0) {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail\"}");
 		return false;
+	} else {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html success\"}");
 	}
 	// extract info from source
 	update := false;
@@ -71,7 +84,16 @@ func (book *Book) Update() (bool) {
 				title != book.Title || writer != book.Writer || typeName != book.Type ||
 				book.Version < 0) {
 				if (book.DownloadFlag) {
-					fmt.Println(book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t is already downloaded")
+					fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+								"\"id\":" + strconv.Itoa(book.Id) + ", " +
+								"\"version\":" + strconv.Itoa(book.Version) + ", " +
+								"\"old : {title\":\"" + book.Title + "\", " + 
+								"\"writer\":\"" + book.Writer + "\", " + 
+								"\"type\":\"" + book.Type + "\"}, " + 
+								"\"new : {title\":\"" + title + "\", " + 
+								"\"writer\":\"" + writer + "\", " + 
+								"\"type\":\"" + typeName + "\"}, " + 
+								"\"message\":\"already download\"}");
 				}
 				book.Version++;
 				book.EndFlag = false;
@@ -81,9 +103,13 @@ func (book *Book) Update() (bool) {
 	}
 	if (title == "error" || writer == "error" || typeName == "error" ||
 		lastUpdate== "error" || lastChapter == "error") {
-			fmt.Println(book.SiteName+"\t"+strconv.Itoa(book.Id))
-			fmt.Println(title+"\t"+writer+"\t"+typeName)
-			fmt.Println(lastUpdate+"\t"+lastChapter)
+			fmt.Println("{\"site\":\"" + book.SiteName + "\", " + 
+						"\"id\":" + strconv.Itoa(book.Id) + "," +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"title\":\"" + title + "\", \"writer\":\"" + writer + "\", " +
+						"\"typeName\" : \"" + typeName + "\", " +
+						"\"lastUpdate\":\"" + lastUpdate + "\", " +
+						"\"lastChapter\":\"" + lastChapter + "\"}")
 		}
 	if (update) {
 		// sync with online info
@@ -107,10 +133,10 @@ func (book *Book) Download(savePath string) (bool) {
 	var wg sync.WaitGroup
 	// get basic info (all chapter url and title)
 	var html string;
-	for i := 0; i < 10; i++ {
+	var i int;
+	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(book.downloadUrl);
 		if (len(html) == 0) {
-			fmt.Println("retry download info (" + strconv.Itoa(i) + ")\t" + book.downloadUrl);
 			continue
 		}
 		if (book.decoder != nil) {
@@ -118,23 +144,46 @@ func (book *Book) Download(savePath string) (bool) {
 			break;
 		}
 	}
+	if (len(html) == 0) {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail\"}");
+		return false;
+	} else {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html success\"}");
+	}
 	urls := helper.SearchAll(html, book.chapterUrlRegex);
 	titles := helper.SearchAll(html, book.chapterTitleRegex);
 	// if length are difference, return error
 	if (len(urls) != len(titles)) {
-		fmt.Println("download error")
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"chapterCount\":" + strconv.Itoa(len(urls)) + ", " +
+					"\"titleCount\"" + strconv.Itoa(len(titles)) + ", " +
+					"\"message\":\"title and url have different length\"}")
 		return false
 	}
 	if len(urls) == 0 {
-		fmt.Println("no chapter found in " + book.SiteName + "-<" + strconv.Itoa(book.Id) + ">" +
-			"-v" + strconv.Itoa(book.Version) + "\t" + book.Title)
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"title\":\"" + book.Title + "\", " + 
+					"\"message\":\"no chapter found\"}");
 		return false
 	}
 	// use go routine to load chapter content
 	// put result of chapter into results
 	ch := make(chan chapter)
 	results := make([]chapter, len(urls))
-	var i int
 	for i = range urls {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
@@ -156,10 +205,11 @@ func (book *Book) Download(savePath string) (bool) {
 		results[i - offset + j] = <-ch
 	}
 	wg.Wait()
-	fmt.Println(book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" +
-		strconv.Itoa(book.Version) + "\t" + book.Title + "finish")
-	//content := book.Title + "\n" + book.Writer + "\n" + 
-	//	strings.Repeat("-", 20) + strings.Repeat("\n", 2)
+	fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+				"\"id\":" + strconv.Itoa(book.Id) + ", " +
+				"\"version\":" + strconv.Itoa(book.Version) + ", " +
+				"\"title\":\"" + book.Title + "\", " + 
+				"\"message\":\"all chapter download\"}");
 	errorCount := 0
 	// save the content to target path
 	path := savePath + strconv.Itoa(book.Id);
@@ -180,10 +230,6 @@ func (book *Book) Download(savePath string) (bool) {
 				if chapter.Content == "error" {
 					errorCount += 1
 				}
-				/*
-				content += chapter.Title + "\n" + strings.Repeat("-", 20) + "\n"
-				content += chapter.Content + strings.Repeat("\n", 2)
-				*/
 				_, err = f.WriteString(chapter.Title + "\n" + strings.Repeat("-", 20) + "\n")
 				helper.CheckError(err)
 				_, err = f.WriteString(chapter.Content + strings.Repeat("\n", 2))
@@ -193,7 +239,11 @@ func (book *Book) Download(savePath string) (bool) {
 			}
 		}
 		if (!found) {
-			fmt.Println("No chapter for {" + url + "} found")
+			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+						"\"id\":" + strconv.Itoa(book.Id) + ", " +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"title\":\"" + book.Title + "\", " + 
+						"\"message\":\"no chapter found\"}");
 		}
 	}
 	f.Close()
@@ -202,9 +252,12 @@ func (book *Book) Download(savePath string) (bool) {
 		maxErrorCount = int(float64(len(results)) * 0.1);
 	}
 	if errorCount > maxErrorCount {
-		fmt.Println("too many error occour in " + book.SiteName + "-" +
-			"<" + strconv.Itoa(book.Id) + ">-v" + strconv.Itoa(book.Version) + book.Title)
-		fmt.Println("download cancelled")
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"title\":\"" + book.Title + "\", " + 
+					"\"message\":\"download cancel due to more than " + strconv.Itoa(maxErrorCount) +
+					" chapters loss\"}");
 		err = os.Remove(path)
 		helper.CheckError(err)
 		return false
@@ -228,32 +281,41 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 	defer s.Release(1)
 	// get chapter resource
 	var html string;
-	keepRetry := true;
-	retryCount := 0;
-	for i := 0; i < 10; i++ {
+	var i int;
+	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(url);
 		if (len(html) == 0) {
-			//fmt.Println("retry (" + strconv.Itoa(i) + ")\t" + url + "\t" + title);
-			retryCount += 1;
 			continue
 		}
 		if (book.decoder != nil) {
 			html, _, _ = transform.String(book.decoder, html);
-			keepRetry = false
 			break;
 		}
 	}
-	if (retryCount > 0) {
-		fmt.Println("tried <" + strconv.Itoa(retryCount) + "> count on " + url + "\t" + title);
+	if (len(html) == 0) {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail\"}");
+		return;
+	} else {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html success\"}");
 	}
 	// extract chapter
 	content := helper.Search(html, book.chapterContentRegex)
 	if content == "error" {
-		if (keepRetry) {
-			fmt.Println("retry error:" + url + "\t" + title);
-		} else {
-			fmt.Println("error: " + url + "\t" + title);
-		}
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"recognize html fail\"}");
 	} else {
 		content = strings.ReplaceAll(content, "<br />", "");
 		content = strings.ReplaceAll(content, "&nbsp;", "");

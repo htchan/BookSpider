@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 	"runtime"
+	"math/rand"
 	"io/ioutil"
 	"encoding/json"
 	"golang.org/x/text/encoding"
@@ -127,7 +128,8 @@ func (site *Site) Book(id, version int) (Book) {
 		helper.CheckError(err)
 		defer site.bookTx.Commit()
 	}
-	for i := 0; i < 1; i++ {
+	var i int;
+	for i = 0; i < 2; i++ {
 		var rows *sql.Rows
 		var err error
 		if version < 0 {
@@ -149,13 +151,17 @@ func (site *Site) Book(id, version int) (Book) {
 			rows.Scan(&siteName, &temp, &version, &title, &writer, &typeName,
 						&lastUpdate, &lastChapter, &end, &download, &read);
 		} else {
-			fmt.Println("retry (" + strconv.Itoa(i) + ") Cannot load " + strconv.Itoa(id) + " from database")
 			//time.Sleep(1000)
 			continue
 		}
 		rows.Close()
-		break
 		//panic(err)
+	}
+	if (siteName == "") {
+		fmt.Println("{\"site\":\"" + site.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(id) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"message\":\"cannot load from database\"}")
 	}
 	book := Book{
 		SiteName: site.SiteName,
@@ -247,7 +253,10 @@ func (site *Site) Update() () {
 			}
 		}
 		if (book.Version == -1) {
-			panic(strconv.Itoa(book.Version) + " cannot cache from database")
+			fmt.Println("{\"site\":\"" + site.SiteName + "\", " +
+						"\"id\":" + strconv.Itoa(id) + ", " +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"message\":\"cannot load from database\"}")
 		}
 		go site.updateThread(book, s, &wg, tx, save, update);
 	}
@@ -277,19 +286,28 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 						book.Title, book.Writer, book.Type,
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag);
-			fmt.Println("new version update " + strconv.Itoa(checkVersion) + " -> " + strconv.Itoa(book.Version) + " - - - - - - - -\n"+book.String());
-			fmt.Println();
+			fmt.Println("{\"site\":\"" +book.SiteName + "\", " +
+						"\"id\":" + strconv.Itoa(book.Id) + ", " +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"title\":" + book.Title + ", " +
+						"\"message\":\"new version updated\"}")
 		} else { // update old record
 			tx.Stmt(update).Exec(book.Title, book.Writer, book.Type,
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag,
 						book.SiteName, book.Id, book.Version);
-			fmt.Println("regular version update - - - - - - - - - -\n"+book.String());
+			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+						"\"id\":" + strconv.Itoa(book.Id) + ", " +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"message\":\"regular update\"}")
 			fmt.Println();
 		}
 	} else {
 		// tell others nothing updated
-		fmt.Println("Not updated - - - - - - - - - - - - - - -\n" + book.String())
+			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+						"\"id\":" + strconv.Itoa(book.Id) + ", " +
+						"\"version\":" + strconv.Itoa(book.Version) + ", " +
+						"\"message\":\"not updated\"}")
 		fmt.Println()
 	}
 }
@@ -364,14 +382,16 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		helper.CheckError(err)
 		_, err = tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
 		helper.CheckError(err)
-		fmt.Println("Explore - - - - - - - - - - - -\n" + book.String())
-		fmt.Println();
+		fmt.Println("{\"book\":" + book.JsonString() + ", " +
+					"\"message\":\"explored\"}")
 		*errorCount = 0;
 	} else { // increase error Count
 		_, err := tx.Stmt(saveError).Exec(book.SiteName, book.Id)
 		helper.CheckError(err)
-		fmt.Println("Unreachable - - - - - - - - - - -\n" + book.String());
-		fmt.Println();
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"message\":\"no such book\"}")
 		*errorCount++;
 	}
 }
@@ -394,10 +414,18 @@ func (site *Site) Download() () {
 		if book.DownloadFlag {
 			continue
 		}
-		fmt.Println("start download " + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\t" + book.Title)
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+		"\"id\":" + strconv.Itoa(book.Id) + ", " +
+		"\"version\":" + strconv.Itoa(book.Version) + ", " +
+		"\"title\":" + book.Title + ", " +
+		"\"message\":\"start download\"}")
 		check := book.Download(site.downloadLocation)
 		if (! check) {
-			fmt.Println("download failure\t" + strconv.Itoa(book.Id) + "\t" + book.Title)
+			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+			"\"id\":" + strconv.Itoa(book.Id) + ", " +
+			"\"version\":" + strconv.Itoa(book.Version) + ", " +
+			"\"title\":" + book.Title + ", " +
+			"\"message\":\"download failure\"}")
 		} else {
 			tx.Stmt(update).Exec(true, book.Id, book.Version)
 		}
@@ -467,12 +495,16 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, wg *sync.W
 					book.LastUpdate, book.LastChapter,
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
 		tx.Stmt(delete).Exec(site.SiteName, book.Id);
-		fmt.Println("Error update - - - - - - - - - -\n"+book.String());
-		fmt.Println();
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"title\":" + book.Title + ", " +
+					"\"message\":\"error updated\"}")
 	} else {
 		// tell others nothing updated
-		fmt.Println("Not updated - - - - - - - - - - -\n" + book.String())
-		fmt.Println()
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"message\":\"error not updated\"}")
 	}
 }
 
@@ -510,7 +542,7 @@ func (site *Site) Info() () {
 	} else {
 		max = errorCount;
 	}
-	fmt.Println("Max Book idber :\t" + strconv.Itoa(max));
+	fmt.Println("Max Book id :\t" + strconv.Itoa(max));
 	site.CloseDatabase()
 }
 
@@ -535,6 +567,33 @@ func (site *Site) CheckEnd() {
 	helper.CheckError(err)
 	fmt.Println("Row affected: ", rowAffect)
 	site.CloseDatabase()
+}
+
+func (site *Site) Random(size int) ([]Book) {
+	var downloadCount int
+	site.OpenDatabase()
+	tx, err := site.database.Begin()
+	site.bookTx, err = site.database.Begin()
+	rows, err := tx.Query("select count(*) from books where download=?", true)
+	if err == nil && rows.Next() {
+		rows.Scan(&downloadCount)
+	}
+	rows.Close()
+	if (downloadCount < size) { size = downloadCount }
+	var result = make([]Book, size)
+	var tempId, tempVersion int
+	for i := 0; i < size; i++ {
+		rows, err := tx.Query("select num, version from books where download=? order by num limit ?, 1", true, rand.Intn(size))
+		if err == nil && rows.Next() {
+			rows.Scan(&tempId, &tempVersion)
+		}
+		rows.Close()
+		result[i] = site.Book(tempId, tempVersion)
+	}
+	site.bookTx.Commit()
+	tx.Commit()
+	site.CloseDatabase()
+	return result;
 }
 
 func (site *Site) fixStroageError() () {
