@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'Book',
       theme: ThemeData(
         textTheme: Theme.of(context).textTheme.apply(
-          fontSizeFactor: 2,
+          fontSizeFactor: 1.25,
         ),
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,

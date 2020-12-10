@@ -14,7 +14,7 @@ class RandomPage extends StatefulWidget{
 class _RandomPageState extends State<RandomPage> {
   final String url, siteName;
   bool error = true;
-  int n = 0;
+  int n = 20;
   List<Map<String, dynamic>> books;
   final GlobalKey scaffoldKey = GlobalKey();
   final ScrollController scrollController;
@@ -45,6 +45,10 @@ class _RandomPageState extends State<RandomPage> {
         subtitle: Text(book['update'] + ' - ' + book['chapter']),
         onTap: () {
           // go to book page
+          Navigator.pushNamed(
+            this.scaffoldKey.currentContext,
+            '/$siteName/${book['num']}/'
+          );
         }
       ));
     }
