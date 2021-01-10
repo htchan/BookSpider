@@ -42,7 +42,11 @@ class _SearchPageState extends State<SearchPage> {
     if (this.page > 0) {
       buttons.add(TextButton(
         child: Text('Load Above'),
-        onPressed: () => this._loadPage(--this.page),
+        onPressed: () {
+          this.error = true;
+          setState(() {});
+          this._loadPage(--this.page);
+        },
       ));
     }
     for (Map<String, dynamic> book in this.books) {
@@ -62,6 +66,8 @@ class _SearchPageState extends State<SearchPage> {
       buttons.add(TextButton(
         child: Text('Load More'),
         onPressed: () {
+          this.error = true;
+          setState(() {});
           this._loadPage(++this.page);
           scrollController.animateTo(
             0,
@@ -82,7 +88,7 @@ class _SearchPageState extends State<SearchPage> {
     // show the content
     List<Widget> buttons = this._renderBooks();
     return Scaffold(
-      appBar: AppBar(title: Text('Book')),
+      appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
         child: ListView.separated(

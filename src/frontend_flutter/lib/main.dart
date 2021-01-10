@@ -4,6 +4,7 @@ import './UI/sitePage.dart';
 import './UI/searchPage.dart';
 import './UI/randomPage.dart';
 import './UI/bookPage.dart';
+import './UI/stagePage.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,7 +31,11 @@ class MyApp extends StatelessWidget {
         }
         var uri = Uri.parse(settings.name);
         print(uri.pathSegments);
-        if (uri.pathSegments.length == 2) {
+        if (uri.pathSegments.indexOf('stage') == 0) {
+          return MaterialPageRoute(builder: (context) => StagePage(
+            url: url,
+          ));
+        } else if (uri.pathSegments.length == 2) {
           return MaterialPageRoute(builder: (context) => SitePage(
             url: url,
             siteName: uri.pathSegments[0]
@@ -47,7 +52,7 @@ class MyApp extends StatelessWidget {
             url: url, 
             siteName: uri.pathSegments[0]
           ));
-        }else if (uri.pathSegments.length == 3) {
+        } else if (uri.pathSegments.length == 3) {
           return MaterialPageRoute(builder: (context) => BookPage(
             url: url,
             siteName: uri.pathSegments[0],

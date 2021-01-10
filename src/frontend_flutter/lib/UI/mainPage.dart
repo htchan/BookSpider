@@ -31,7 +31,16 @@ class _MainPageState extends State<MainPage> {
   }
   List<Widget> _renderSiteButton() {
     List<String> siteNames = (this.error) ? [] : List<String>.from(this.info['siteNames']);
-    List<Widget> buttons = [];
+    List<Widget> buttons = [RaisedButton(
+      child: Text('Stage'),
+      color: Colors.lightBlueAccent,
+      onPressed: () {
+        Navigator.pushNamed(
+          this.scaffoldKey.currentContext, 
+          '/stage/'
+        );
+      }
+    )];
     for (String name in siteNames) {
       buttons.add(RaisedButton(
         child: Text(name),

@@ -56,6 +56,8 @@ class _RandomPageState extends State<RandomPage> {
       buttons.add(TextButton(
         child: Text('Reload'),
         onPressed: () {
+          this.error = true;
+          setState(() {});
           this._loadPage();
           scrollController.animateTo(
             0,
@@ -76,7 +78,7 @@ class _RandomPageState extends State<RandomPage> {
     // show the content
     List<Widget> buttons = this._renderBooks();
     return Scaffold(
-      appBar: AppBar(title: Text('Book')),
+      appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
         child: ListView.separated(
