@@ -242,12 +242,17 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
 		return
 	}
-	fmt.Println(id)
-	// TODO accept user to input version for searching
-	book := site.Book(id, -1)
+	version := -1;
+	if len(uri) > 4 {
+		version, err =strconv.Atoi(uri[4])
+		if err != nil {
+			version = -1
+		}
+	}
+	book := site.Book(id, version)
 	if (book.Title == "") {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + "> in site <" + siteName + "> not found\"}")
+		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
 	} else {
 		fmt.Fprintf(res, book.JsonString())
 	}
@@ -270,8 +275,19 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
 		return
 	}
-	// TODO allow user to download old version of the books
-	book := site.Book(id, -1)
+	version := -1;
+	if len(uri) > 4 {
+		version, err =strconv.Atoi(uri[4])
+		if err != nil {
+			version = -1
+		}
+	}
+	book := site.Book(id, version)
+	if (book.Title == "") {
+		res.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
+		return
+	}
 	if !book.DownloadFlag {
 		res.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")

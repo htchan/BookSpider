@@ -1,0 +1,8 @@
+#! /bin/bash
+
+
+# run book spider backend and frontend
+cd /home/ubuntu/Project/BookSpider/bin && ./backend > backend.log
+cd /home/ubuntu/Project/BookSpider/bin/frontend && python3 -m http.server 8427
+
+exit 0
