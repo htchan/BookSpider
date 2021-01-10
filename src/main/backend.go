@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"net/http"
 	"log"
+	"path/filepath"
 	//"encoding/json"
 	//"golang.org/x/text/encoding/traditionalchinese"
 	//"golang.org/x/text/encoding"
@@ -22,9 +23,11 @@ import (
 type Logs struct {
 	logLocation string
 	Logs []string
-	LastUpdate time.Time
+	MemoryLastUpdate, FileLastUpdate time.Time
 	size int64
 }
+
+var stageFileName string
 
 func download() {
 	for name, site := range sites {
@@ -143,7 +146,8 @@ func (logs *Logs) update() {
 		return
 	}
 	fileSize := logFileStat.Size()
-	if fileSize - logs.size < 1000 {
+	logs.FileLastUpdate = logFileStat.ModTime()
+	if (fileSize - logs.size < 1000) && (time.Now().Sub(logs.MemoryLastUpdate).Seconds() > 3600) {
 		return
 	}
 	logs.size = fileSize
@@ -159,7 +163,7 @@ func (logs *Logs) update() {
 	for i := 1; i < min; i += 1 {
 		logs.Logs[i] = dataStrings[len(dataStrings) - min + i]
 	}
-	logs.LastUpdate = time.Now()
+	logs.MemoryLastUpdate = time.Now()
 }
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
@@ -175,16 +179,15 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	}
 	modifyTime := f.ModTime().String()[:19]
 	*/
-	modifyTime := logs.LastUpdate.String()[:19]
+	modifyTime := logs.FileLastUpdate.String()[:19]
 	// get last several line of nohup.out
 	logs.update()
 	// print them
 	fmt.Fprintf(res, "{")
 	fmt.Fprintf(res, "\"time\" : \"" + modifyTime + "\", ")
-	fmt.Fprintf(res, "\"currentProcess\" : \""+currentProcess+"\", ")
 	fmt.Fprintf(res, "\"logs\" : [\n")
 	for i, log := range logs.Logs {
-		fmt.Fprintf(res, "\"" + log + "\"")
+		fmt.Fprintf(res, "\"" + strings.ReplaceAll(log, "\"", "\\\"") + "\"")
 		if i < len(logs.Logs) - 1 {
 			fmt.Fprintf(res, ",\n")
 		}
@@ -195,7 +198,12 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-	fmt.Fprintf(res, "{\"currentProcess\" : \""+currentProcess+"\", ")
+	data, err := ioutil.ReadFile(stageFileName)
+	if err != nil {
+		fmt.Fprintf(res, "{\"stage\" : \""+err.Error()+"\", ")
+	} else {
+		fmt.Fprintf(res, "{\"stage\" : \""+strings.ReplaceAll(string(data), "\n", "\\n")+"\", ")
+	}
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
 		siteNames = append(siteNames, siteName)
@@ -365,9 +373,11 @@ var sites map[string]model.Site
 
 func main() () {
 	currentProcess = ""
-	logs = Logs{logLocation: "./nohup.out", Logs: make([]string, 100), LastUpdate: time.Unix(0, 0)}
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	stageFileName = dir + "/log/stage.txt"
+	logs = Logs{logLocation: dir + "/nohup.out", Logs: make([]string, 100), MemoryLastUpdate: time.Unix(0,0), FileLastUpdate: time.Unix(0, 0)}
 	sites = model.LoadSites("./config/config.json")
-	http.HandleFunc("/start", Start)
+	//http.HandleFunc("/start", Start)
 	for name, _ := range sites {
 		http.HandleFunc("/search/"+name+"", BookSearch)
 		http.HandleFunc("/download/"+name+"/", BookDownload)

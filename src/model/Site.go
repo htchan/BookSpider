@@ -583,7 +583,7 @@ func (site *Site) Random(size int) ([]Book) {
 	var result = make([]Book, size)
 	var tempId, tempVersion int
 	for i := 0; i < size; i++ {
-		rows, err := tx.Query("select num, version from books where download=? order by num limit ?, 1", true, rand.Intn(size))
+		rows, err := tx.Query("select num, version from books where download=? order by num limit ?, 1", true, rand.Intn(downloadCount))
 		if err == nil && rows.Next() {
 			rows.Scan(&tempId, &tempVersion)
 		}

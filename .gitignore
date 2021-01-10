@@ -6,3 +6,5 @@ Books/__pycache__/*
 bin/
 build/
 backup-bin/
+database/
+.vscode/

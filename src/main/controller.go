@@ -7,8 +7,7 @@ import (
 	"../model"
 	"runtime"
 	_ "net/http/pprof"
-	"log"
-	"net/http"
+	"path/filepath"
 )
 /*
 func LoadSites(configLocation string) (map[string]model.Site) {
@@ -36,6 +35,8 @@ func LoadSites(configLocation string) (map[string]model.Site) {
 }
 */
 
+var stageFileName string
+
 func help() {
 	fmt.Println("Command: ")
     fmt.Println("help" + strings.Repeat(" ", 14) + "show the functin list avaliable")
@@ -51,36 +52,62 @@ func help() {
 	fmt.Println("\n")
 }
 
+func writeStage(s string) () {
+	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND, 0664)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(stageFileName)
+	}
+	file.WriteString(s + "\n")
+    file.Close()
+}
+
 func download(sites map[string]model.Site) {
+	writeStage("stage: download start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		if name == "80txt" {
 			continue
 		}
 		fmt.Println(name + "\tdownload")
 		site.Download()
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: download finish")
 }
 func update(sites map[string]model.Site) {
+	writeStage("stage: update start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tupdate")
 		site.Update()
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: update finish")
 }
 func explore(sites map[string]model.Site, maxError int) {
+	writeStage("stage: explore start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\texplore")
 		site.Explore(maxError)
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: explore finish")
 }
 func updateError(sites map[string]model.Site) {
+	writeStage("stage: update error start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tupdate error")
 		site.UpdateError()
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: update error finish")
 }
 func info(sites map[string]model.Site) {
 	for name, site := range sites {
@@ -91,36 +118,52 @@ func info(sites map[string]model.Site) {
 	}
 }
 func check(sites map[string]model.Site) {
+	writeStage("stage: check error start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tcheck")
 		fmt.Println(strings.Repeat("- ", 20))
 		site.Check()
 		fmt.Println(strings.Repeat("- ", 20))
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: check error finish")
 }
 func checkEnd(sites map[string]model.Site) {
+	writeStage("stage: check end start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tcheck end")
 		fmt.Println(strings.Repeat("- ", 20))
 		site.CheckEnd()
 		fmt.Println(strings.Repeat("- ", 20))
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: check end finish")
 }
 func backup(sites map[string]model.Site) {
+	writeStage("stage: backup start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tbackup")
 		site.Backup()
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: backup finish")
 }
 func fix(sites map[string]model.Site) {
+	writeStage("stage: fix start")
 	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
 		fmt.Println(name + "\tfix")
 		site.Fix()
 		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
 	}
+	writeStage("stage: fix finish")
 }
 func random(sites map[string]model.Site) {
 	for name, site := range sites {
@@ -132,6 +175,16 @@ func random(sites map[string]model.Site) {
 		runtime.GC()
 	}
 }
+func schedule(site map[string]model.Site) {
+	backup(site)
+	update(site)
+	explore(site, 1000)
+	updateError(site)
+	check(site)
+	fix(site)
+	checkEnd(site)
+	download(site)
+}
 func test(sites map[string]model.Site) {
 	site := sites["hjwzw"]
 	site.Download()
@@ -140,7 +193,7 @@ func test(sites map[string]model.Site) {
 }
 
 func main() {
-	go func() { log.Fatal(http.ListenAndServe(":4000", nil)) }()
+	//go func() { log.Fatal(http.ListenAndServe(":4000", nil)) }()
 	fmt.Println("test (v0.0.0) - - - - - - - - - -")
 	if (len(os.Args) < 2) {
 		help()
@@ -156,6 +209,12 @@ func main() {
 
 	sites := model.LoadSites("./config/config.json")
 
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	stageFileName = dir + "/log/stage.txt"
+
+	os.Remove(stageFileName)
+	os.Create(stageFileName)
+	
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
 		update(sites)
