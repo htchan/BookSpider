@@ -9,9 +9,7 @@ import (
 	"runtime"
 	"math/rand"
 	"io/ioutil"
-	"encoding/json"
 	"golang.org/x/text/encoding"
-	"golang.org/x/text/encoding/traditionalchinese"
 
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -35,76 +33,6 @@ type Site struct {
 	chapterContentRegex string
 	databaseLocation, downloadLocation string
 	bookTx *sql.Tx
-}
-
-func NewSite(siteName string, decoder *encoding.Decoder, configFileLocation string, databaseLocation string, downloadLocation string) (Site) {
-	//database, err := sql.Open("sqlite3", databaseLocation)
-	//helper.CheckError(err);
-	//database.SetMaxIdleConns(10);
-	//database.SetMaxOpenConns(99999);
-	data, err := ioutil.ReadFile(configFileLocation)
-	helper.CheckError(err);
-	var info map[string]interface{};
-	if err = json.Unmarshal(data, &info); err != nil {
-        panic(err);
-	}
-	site := Site{
-		SiteName: siteName,
-		//database: database,
-		database: nil,
-		MetaBaseUrl: info["metaBaseUrl"].(string),
-		metaDownloadUrl: info["metaDownloadUrl"].(string),
-		metaChapterUrl: info["metaChapterUrl"].(string),
-		chapterPattern: info["chapterPattern"].(string),
-		decoder: decoder,
-		titleRegex: info["titleRegex"].(string),
-		writerRegex: info["writerRegex"].(string),
-		typeRegex: info["typeRegex"].(string),
-		lastUpdateRegex: info["lastUpdateRegex"].(string),
-		lastChapterRegex: info["lastChapterRegex"].(string),
-		chapterUrlRegex: info["chapterUrlRegex"].(string),
-		chapterTitleRegex: info["chapterTitleRegex"].(string),
-		chapterContentRegex: info["chapterContentRegex"].(string),
-		databaseLocation: databaseLocation,
-		downloadLocation: downloadLocation};
-	return site;
-}
-
-func LoadSite(config map[string]interface{}) (Site) {
-	var decoder *encoding.Decoder
-	if (config["decode"] == "big5") {
-		decoder = traditionalchinese.Big5.NewDecoder()
-	} else {
-		decoder = nil
-	}
-	site :=NewSite(config["name"].(string), decoder,
-					config["configLocation"].(string),
-					config["databaseLocation"].(string),
-					config["downloadLocation"].(string))
-	return site
-}
-func LoadSites(configLocation string) (map[string]Site) {
-	sites := make(map[string]Site)
-	data, err := ioutil.ReadFile(configLocation)
-	helper.CheckError(err)
-	var info []map[string]interface{}
-	if err = json.Unmarshal(data, &info); err != nil {
-        panic(err)
-	}
-	for _, config := range info {
-		var decoder *encoding.Decoder
-		if (config["decode"] == "big5") {
-			decoder = traditionalchinese.Big5.NewDecoder()
-		} else {
-			decoder = nil
-		}
-		sites[config["name"].(string)] =
-			NewSite(config["name"].(string), decoder,
-							config["configLocation"].(string),
-							config["databaseLocation"].(string),
-							config["downloadLocation"].(string))
-	}
-	return sites
 }
 
 func (site *Site) Book(id, version int) (Book) {

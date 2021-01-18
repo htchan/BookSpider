@@ -376,17 +376,19 @@ func main() () {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	stageFileName = dir + "/log/stage.txt"
 	logs = Logs{logLocation: dir + "/nohup.out", Logs: make([]string, 100), MemoryLastUpdate: time.Unix(0,0), FileLastUpdate: time.Unix(0, 0)}
-	sites = model.LoadSites("./config/config.json")
-	//http.HandleFunc("/start", Start)
-	for name, _ := range sites {
-		http.HandleFunc("/search/"+name+"", BookSearch)
-		http.HandleFunc("/download/"+name+"/", BookDownload)
-		http.HandleFunc("/info/"+name+"/", BookInfo)
-		http.HandleFunc("/info/"+name, SiteInfo)
-		http.HandleFunc("/random/"+name, BookRandom)
-	}
-	http.HandleFunc("/process", ProcessState)
-	http.HandleFunc("/info", GeneralInfo)
+	config := model.LoadYaml("./config/config.json")
+	sites = model.LoadSitesYaml(config)
+	apiFunc := make(map[string]func())
+	apiFunc["control"] = func() { http.HandleFunc("/start", Start) }
+	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/search/"+name+"", BookSearch) } }
+	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/download/"+name+"/", BookDownload) } }
+	apiFunc["siteInfo"] = func() { for name := range sites { http.HandleFunc("/info/"+name, SiteInfo) } }
+	apiFunc["bookInfo"] = func() { for name := range sites { http.HandleFunc("/info/"+name+"/", BookInfo) } }
+	apiFunc["random"] = func() { for name := range sites { http.HandleFunc("/random/"+name, BookRandom) } }
+	apiFunc["process"] = func() { http.HandleFunc("/process", ProcessState) }
+	apiFunc["info"] = func() { http.HandleFunc("/info", GeneralInfo) }
+
+	for _, api := range config.Api { apiFunc[api]() }
 	fmt.Println("started")
 	log.Fatal(http.ListenAndServe(":9427", nil))
 }

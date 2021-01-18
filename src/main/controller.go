@@ -206,8 +206,8 @@ func main() {
 	sites := make(map[string]model.Site)
 	sites["ck101"] = model.NewSite("ck101", big5Decoder, "./book-config/ck101-desktop.json", "./database/ck101.db", "./")
 	*/
-
-	sites := model.LoadSites("./config/config.json")
+	config := model.LoadYaml("./config/config.yaml")
+	sites := model.LoadSitesYaml(config)
 
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	stageFileName = dir + "/log/stage.txt"
