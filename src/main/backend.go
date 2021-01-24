@@ -195,6 +195,16 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "]}")
 }
 
+func ValidateState(res http.Response.Writer, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	b, err := ioutil.ReadFile("./validate.json")
+	if err != nil {
+		fmt.Fprintf(res, "{}")
+	}
+	fmt.Fprintf(res, string(b))
+}
+
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
@@ -387,6 +397,7 @@ func main() () {
 	apiFunc["random"] = func() { for name := range sites { http.HandleFunc("/random/"+name, BookRandom) } }
 	apiFunc["process"] = func() { http.HandleFunc("/process", ProcessState) }
 	apiFunc["info"] = func() { http.HandleFunc("/info", GeneralInfo) }
+	apiFunc["validate"] = func() {http.HandleFunc("/validate", ValidateState)}
 
 	for _, api := range config.Api { apiFunc[api]() }
 	fmt.Println("started")

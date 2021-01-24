@@ -1088,6 +1088,40 @@ func (site Site) Test() () {
 	helper.CheckError(err)
 }
 */
+
+func (site Site) Validate() (int) {
+	site.OpenDatabase()
+
+	var err error
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
+
+	rows, err := site.database.Query("select num, version from books where download=? order by random()", true)
+	helper.CheckError(err)
+
+	success, tried := 0, 0
+	for success < 10 && tried < 1000 && rows.Next() {
+		var num, version int
+		rows.Scan(&num, &version)
+		book := site.Book(num, version)
+		book.Title = ""
+		if book.Update() {
+			success += 1
+		}
+		tried += 1
+		fmt.Println("hi")
+	}
+
+	site.CloseDatabase()
+	fmt.Print("tried")
+	fmt.Println(tried)
+	fmt.Print("success")
+	fmt.Println(success)
+	if tried / success > 90 {
+		return -1
+	}
+	return tried / success
+}
 func (site Site)JsonString() (string) {
 	site.OpenDatabase()
 	var bookCount, bookRecordCount, errorCount, errorRecordCount, endCount, endRecordCount int

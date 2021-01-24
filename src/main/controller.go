@@ -5,9 +5,13 @@ import (
 	"strings"
 	"fmt"
 	"../model"
+	"../helper"
 	"runtime"
 	_ "net/http/pprof"
 	"path/filepath"
+	
+	"encoding/json"
+	"io/ioutil"
 )
 /*
 func LoadSites(configLocation string) (map[string]model.Site) {
@@ -186,19 +190,31 @@ func random(sites map[string]model.Site) {
 		runtime.GC()
 	}
 }
-func schedule(site map[string]model.Site) {
-	backup(site)
-	update(site)
-	explore(site, 1000)
-	updateError(site)
-	check(site)
-	fix(site)
-	checkEnd(site)
-	download(site)
+func validate(sites map[string]model.Site) {
+	result := make(map[string]int)
+	for name, site := range sites {
+		result[name] = site.Validate()
+	}
+	b, err := json.Marshal(result)
+	helper.CheckError(err)
+	err = ioutil.WriteFile("./validate.json", b, 0644)
+	helper.CheckError(err)
+
+}
+func schedule(sites map[string]model.Site) {
+	validate(sites)
+	backup(sites)
+	update(sites)
+	explore(sites, 1000)
+	updateError(sites)
+	check(sites)
+	fix(sites)
+	checkEnd(sites)
+	download(sites)
 }
 func test(sites map[string]model.Site) {
-	site := sites["hjwzw"]
-	site.BackupString()
+	site := sites["ck101"]
+	site.Validate()
 	//site.Explore(1000)
 	//site.Update()
 }
@@ -249,6 +265,8 @@ func main() {
 		fix(sites)
 	case "RANDOM":
 		random(sites)
+	case "VALIDATE":
+		validate(sites)
 	case "TEST":
 		test(sites)
 	default:
