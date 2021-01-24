@@ -945,6 +945,63 @@ func (site *Site) Backup() (bool) {
 	helper.CheckError(err)
 	return true
 }
+func (site *Site) table2StringSlice(table string) ([]string) {
+	result := make([]string, 0)
+	rows, err := site.database.Query("select * from " + table)
+	helper.CheckError(err)
+	cols, _ := rows.Columns()
+	containers := make([]string, len(cols))
+	values := make([]interface{}, len(cols))
+	for i, _ := range containers {
+		values[i] = &containers[i]
+	}
+	for rows.Next() {
+		rows.Scan(values...)
+		insertStmt := "insert into " + table + " values ("
+		for i, value := range values {
+			insertStmt += "\"" + *value.(*string) + "\""
+			if i < len(cols) - 1 {
+				insertStmt += ", "
+			}
+		}
+		insertStmt += ")"
+		result = append(result, insertStmt + ";")
+	}
+	return result
+}
+func (site *Site) BackupString() (bool) {
+	y, m, d := time.Now().Date()
+	folderName := fmt.Sprintf("%d-%d-%d/", y, m, d)
+	path := strings.Replace(
+		strings.Replace(site.databaseLocation, "database/", "backup/"+folderName, -1),
+		".db", ".sql", -1)
+	// create folder of today if not exist
+	if _, err := os.Stat(strings.Replace(path, site.SiteName+".sql", "", -1)); os.IsNotExist(err) {
+		err := os.Mkdir(strings.Replace(path, site.SiteName+".sql", "", -1), os.ModeDir+0755)
+		helper.CheckError(err)
+		fmt.Println(strings.Replace(path, site.SiteName+".sql", "", -1)+" created")
+	}
+	// save as day-time-site.db for backup
+	site.OpenDatabase()
+	// load table name and sql
+	tableNames := make([]string, 0)
+	sqlStmts := make([]string, 0)
+	rows, err := site.database.Query("SELECT name, sql FROM sqlite_master")
+	helper.CheckError(err)
+	for rows.Next() {
+		var name, sql string
+		rows.Scan(&name, &sql)
+		tableNames = append(tableNames, name)
+		sqlStmts = append(sqlStmts, sql + ";")
+	}
+	// load each row in table
+	for _, tableName := range tableNames {
+		sqlStmts = append(sqlStmts, site.table2StringSlice(tableName)...)
+	}
+	site.CloseDatabase()
+	ioutil.WriteFile(path, []byte(strings.Join(sqlStmts, "\n")), 0644)
+	return true
+}
 
 func (site *Site) Search(title, writer string, page int) ([]Book) {
 	site.OpenDatabase()

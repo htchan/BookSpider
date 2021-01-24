@@ -154,6 +154,17 @@ func backup(sites map[string]model.Site) {
 	}
 	writeStage("stage: backup finish")
 }
+func backupString(sites map[string]model.Site) {
+	writeStage("stage: backup string start")
+	for name, site := range sites {
+		writeStage("sub_stage: " + name + " start")
+		fmt.Println(name + "\tbackup")
+		site.Backup()
+		runtime.GC()
+		writeStage("sub_stage: " + name + " finish")
+	}
+	writeStage("stage: backup string finish")
+}
 func fix(sites map[string]model.Site) {
 	writeStage("stage: fix start")
 	for name, site := range sites {
@@ -187,7 +198,7 @@ func schedule(site map[string]model.Site) {
 }
 func test(sites map[string]model.Site) {
 	site := sites["hjwzw"]
-	site.Download()
+	site.BackupString()
 	//site.Explore(1000)
 	//site.Update()
 }
@@ -232,6 +243,8 @@ func main() {
 		checkEnd(sites)
 	case "BACKUP":
 		backup(sites)
+	case "BACKUPSTRING":
+		backupString(sites)
 	case "FIX":
 		fix(sites)
 	case "RANDOM":
