@@ -15,6 +15,7 @@ func CheckError(e error) {
 	}
 }
 
+/* web related */
 func GetWeb(url string) (string) {
 	client := http.Client{Timeout: 10*time.Second}
 	resp, err := client.Get(url);
@@ -30,6 +31,7 @@ func GetWeb(url string) (string) {
 	return string(body);
 }
 
+/* regex relates */
 func Match(str, regex string) (bool) {
 	return false;
 }

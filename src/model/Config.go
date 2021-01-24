@@ -45,14 +45,14 @@ func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation 
 	return site;
 }
 
-func LoadSiteYaml(config map[string]string) (Site) {
+func LoadSiteYaml(siteName string, config map[string]string) (Site) {
 	var decoder *encoding.Decoder
 	if (config["decode"] == "big5") {
 		decoder = traditionalchinese.Big5.NewDecoder()
 	} else {
 		decoder = nil
 	}
-	site := NewSiteYaml(config["name"], decoder,
+	site := NewSiteYaml(siteName, decoder,
 					config["configLocation"],
 					config["databaseLocation"],
 					config["downloadLocation"])
@@ -62,7 +62,7 @@ func LoadSiteYaml(config map[string]string) (Site) {
 func LoadSitesYaml(config Config) (map[string]Site) {
 	sites := make(map[string]Site)
 	for siteName, siteConfig := range config.Sites {
-		sites[siteName] = LoadSiteYaml(siteConfig)
+		sites[siteName] = LoadSiteYaml(siteName, siteConfig)
 	}
 	return sites
 }
@@ -106,14 +106,14 @@ func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation 
 	return site;
 }
 
-func LoadSiteJson(config map[string]string) (Site) {
+func LoadSiteJson(siteName string, config map[string]string) (Site) {
 	var decoder *encoding.Decoder
 	if (config["decode"] == "big5") {
 		decoder = traditionalchinese.Big5.NewDecoder()
 	} else {
 		decoder = nil
 	}
-	site :=NewSiteJson(config["name"], decoder,
+	site :=NewSiteJson(siteName, decoder,
 					config["configLocation"],
 					config["databaseLocation"],
 					config["downloadLocation"])
@@ -122,7 +122,7 @@ func LoadSiteJson(config map[string]string) (Site) {
 func LoadSitesJson(config Config) (map[string]Site) {
 	sites := make(map[string]Site)
 	for siteName, config := range config.Sites {
-		sites[siteName] = LoadSiteJson(config)
+		sites[siteName] = LoadSiteJson(siteName, config)
 	}
 	return sites
 }

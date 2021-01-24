@@ -1,12 +1,12 @@
-metaBaseUrl : "https://www.book100.com/book/book%v.html",
-metaDownloadUrl : "https://www.book100.com/book/book%v.html",
-metaChapterUrl : "https://www.book100.com/%v",
-chapterPattern : "/novel.*?\\.html",
-titleRegex : "<title>(.*?) 在線觀看</title>",
-writerRegex : "作者:<font.*?>(.*?)</font>",
-typeRegex : "<a href='/category/\\d+.html' id='cat\\d+' class=\"nav\" >(.*?)</a>",
-lastUpdateRegex : "更新: <b><font.*?>(.*?)</font></b>",
-lastChapterRegex : "(?s).*<a.*?>(.*?)</a> <font.*?></font>",
-chapterUrlRegex : "<td.*?><a href=\"(.*?)\".*?>.*?</a>.*?</td>",
-chapterTitleRegex : "<td.*?><a.*?>(.*?)</a>.*?</td>",
+metaBaseUrl : "https://www.book100.com/book/book%v.html"
+metaDownloadUrl : "https://www.book100.com/book/book%v.html"
+metaChapterUrl : "https://www.book100.com/%v"
+chapterPattern : "/novel.*?\\.html"
+titleRegex : "<title>(.*?) 在線觀看</title>"
+writerRegex : "作者:<font.*?>(.*?)</font>"
+typeRegex : "<a href='/category/\\d+.html' id='cat\\d+' class=\"nav\" >(.*?)</a>"
+lastUpdateRegex : "更新: <b><font.*?>(.*?)</font></b>"
+lastChapterRegex : "(?s).*<a.*?>(.*?)</a> <font.*?></font>"
+chapterUrlRegex : "<td.*?><a href=\"(.*?)\".*?>.*?</a>.*?</td>"
+chapterTitleRegex : "<td.*?><a.*?>(.*?)</a>.*?</td>"
 chapterContentRegex : "(?s)<p class=\"content\">(.*?)</p>"

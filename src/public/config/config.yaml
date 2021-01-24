@@ -20,9 +20,9 @@ sites:
         databaseLocation : "./database/hjwzw.db"
         downloadLocation : "/mnt/addition/download/Books/hjwzw/"
     # bestory:
-    #     decode : "big5",
-    #     configLocation : "./config/bestory-desktop.json",
-    #     databaseLocation : "./database/bestory.db",
+    #     decode : "big5"
+    #     configLocation : "./config/bestory-desktop.json"
+    #     databaseLocation : "./database/bestory.db"
     #     downloadLocation : "/mnt/addition/download/Book/bestory"
 api:
   - search
