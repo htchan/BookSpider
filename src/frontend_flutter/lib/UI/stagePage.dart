@@ -98,7 +98,13 @@ class _StagePageState extends State<StagePage> {
           children: [
             Row(children: stage,),
             Divider(),
-            Row(children: subStage,),
+            Container(
+              height: 20.0,
+              child: ListView(
+                children: subStage,
+                scrollDirection: Axis.horizontal,
+              )
+            ),
             Divider(),
             Expanded(
               child: ListView(
