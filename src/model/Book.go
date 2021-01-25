@@ -42,8 +42,8 @@ func (book *Book) Update() (bool) {
 	var i int;
 	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(book.baseUrl);
-		if (len(html) == 0) || (helper.Search(html, book.titleRegex) == "error") {
-			time.Sleep(1000)
+		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) || (helper.Search(html, book.titleRegex) == "error") {
+			time.Sleep(time.Duration(i * i) * time.Second)
 			continue
 		}
 		if (book.decoder != nil) {
@@ -59,6 +59,13 @@ func (book *Book) Update() (bool) {
 					"\"url\":\"" + book.baseUrl + "\", " +
 					"\"result\":\"load html fail\"}");
 		return false;
+	} else if _, err := strconv.Atoi(html); err == nil {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail - code " + html + "\"}");
 	} else {
 		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
 					"\"id\":" + strconv.Itoa(book.Id) + ", " +
@@ -136,7 +143,8 @@ func (book *Book) Download(savePath string) (bool) {
 	var i int;
 	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(book.downloadUrl);
-		if (len(html) == 0) {
+		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
+			time.Sleep(time.Duration(i * i) * time.Second)
 			continue
 		}
 		if (book.decoder != nil) {
@@ -152,6 +160,13 @@ func (book *Book) Download(savePath string) (bool) {
 					"\"url\":\"" + book.baseUrl + "\", " +
 					"\"result\":\"load html fail\"}");
 		return false;
+	} else if _, err := strconv.Atoi(html); err == nil {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail - code " + html + "\"}");
 	} else {
 		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
 					"\"id\":" + strconv.Itoa(book.Id) + ", " +
@@ -284,7 +299,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 	var i int;
 	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(url);
-		if (len(html) == 0) {
+		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
+			time.Sleep(time.Duration(i * i) * time.Second)
 			continue
 		}
 		if (book.decoder != nil) {
@@ -300,6 +316,13 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 					"\"url\":\"" + book.baseUrl + "\", " +
 					"\"result\":\"load html fail\"}");
 		return;
+	} else if _, err := strconv.Atoi(html); err == nil {
+		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
+					"\"id\":" + strconv.Itoa(book.Id) + ", " +
+					"\"version\":" + strconv.Itoa(book.Version) + ", " +
+					"\"retry\":" + strconv.Itoa(i) + ", " +
+					"\"url\":\"" + book.baseUrl + "\", " +
+					"\"result\":\"load html fail - code " + html + "\"}");
 	} else {
 		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
 					"\"id\":" + strconv.Itoa(book.Id) + ", " +

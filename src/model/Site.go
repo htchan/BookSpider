@@ -1089,7 +1089,7 @@ func (site Site) Test() () {
 }
 */
 
-func (site Site) Validate() (int) {
+func (site Site) Validate() (float64) {
 	site.OpenDatabase()
 
 	var err error
@@ -1099,14 +1099,12 @@ func (site Site) Validate() (int) {
 	rows, err := site.database.Query("select num, version from books where download=? order by random()", true)
 	helper.CheckError(err)
 
+	ctx := context.Background()
 	var s = semaphore.NewWeighted(int64(20))
 	var wg sync.WaitGroup
 
-	success, tried := 0, 0
+	success, tried := 0.0, 1.0
 	for success < 10 && tried < 1000 && rows.Next() {
-		if success = 10 {
-			break
-		}
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		var num, version int
@@ -1121,16 +1119,18 @@ func (site Site) Validate() (int) {
 	}
 	return tried / success
 }
-func (site Site) validateThread(num int, version int, success *int, tried *int, s *semaphore.Weighted, wg *sync.WaitGroup) {
+func (site Site) validateThread(num int, version int, success *float64, tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
 	defer wg.Done()
 	book := site.Book(num, version)
 	book.Title = ""
-	if book.Update() {
+	if book.Update() && *success < 10 {
 		*success ++
 	} else {
 		s.Release(1)
 	}
-	*tried ++
+	if *success < 10 {
+		*tried ++
+	}
 }
 func (site Site)JsonString() (string) {
 	site.OpenDatabase()

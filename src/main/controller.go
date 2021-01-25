@@ -191,7 +191,7 @@ func random(sites map[string]model.Site) {
 	}
 }
 func validate(sites map[string]model.Site) {
-	result := make(map[string]int)
+	result := make(map[string]float64)
 	for name, site := range sites {
 		result[name] = site.Validate()
 	}

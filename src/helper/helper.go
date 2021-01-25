@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"time"
 	"os"
 )
@@ -17,14 +18,17 @@ func CheckError(e error) {
 
 /* web related */
 func GetWeb(url string) (string) {
-	client := http.Client{Timeout: 10*time.Second}
+	client := http.Client{Timeout: 30*time.Second}
 	resp, err := client.Get(url);
 	if err != nil {
-		return "";
+		return ""
+	}
+	if resp.StatusCode >= 300 {
+		return strconv.Itoa(resp.StatusCode)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "";
+		return ""
 	}
 	resp.Body.Close();
 	client.CloseIdleConnections()
@@ -33,7 +37,7 @@ func GetWeb(url string) (string) {
 
 /* regex relates */
 func Match(str, regex string) (bool) {
-	return false;
+	return false
 }
 
 func Search(str, regex string) (string) {
@@ -42,7 +46,7 @@ func Search(str, regex string) (string) {
 	if(len(result) > 1) {
 		return result[1]
 	}
-	return "error";
+	return "error"
 }
 
 func SearchAll(str, regex string) ([]string) {
