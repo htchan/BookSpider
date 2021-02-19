@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"io/ioutil"
 	"golang.org/x/text/encoding"
+	"encoding/json"
 
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -1147,6 +1148,7 @@ func (site Site) Test() () {
 */
 
 func (site Site) Validate() (float64) {
+	os.Mkdir("./validate-download/", 0755)
 	site.OpenDatabase()
 
 	var err error
@@ -1171,6 +1173,7 @@ func (site Site) Validate() (float64) {
 	rows.Close()
 	wg.Wait()
 	site.CloseDatabase()
+	os.RemoveAll("./validate-download/")
 	if tried / success > 90 {
 		return -1
 	}
@@ -1180,7 +1183,7 @@ func (site Site) validateThread(num int, version int, success *float64, tried *f
 	defer wg.Done()
 	book := site.Book(num, version)
 	book.Title = ""
-	if book.Update() && *success < 10 {
+	if book.Update() && book.Download("./validate-download") && *success < 10 {
 		*success ++
 	} else {
 		s.Release(1)
@@ -1267,6 +1270,6 @@ func (site Site)JsonString() (string) {
 		"maxid": strconv.Itoa(maxid),
 	})
 	helper.CheckError(err)
-	fmr.Println(string(resultByte))
+	fmt.Println(string(resultByte))
 	return string(resultByte)
 }

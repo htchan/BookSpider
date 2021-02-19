@@ -6,6 +6,7 @@ import (
 	// string operation and encoding
 	"strings"
 	"strconv"
+	"encoding/json"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
 	// concurrency related
@@ -58,7 +59,7 @@ func (book *Book) Update() (bool) {
 			"version": book.Version,
 			"retry": i,
 			"url": book.baseUrl,
-			"message": "load html fail"
+			"message": "load html fail",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -70,7 +71,7 @@ func (book *Book) Update() (bool) {
 			"version": book.Version,
 			"retry": i,
 			"url": book.baseUrl,
-			"message": "load html fail - code " + html
+			"message": "load html fail - code " + html,
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -82,7 +83,7 @@ func (book *Book) Update() (bool) {
 			"version": book.Version,
 			"retry": i,
 			"url": book.baseUrl,
-			"message": "load html success"
+			"message": "load html success",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -111,14 +112,14 @@ func (book *Book) Update() (bool) {
 						"old": map[string]interface{} {
 							"title": book.Title,
 							"writer": book.Writer,
-							"type": book.Type
-						}
+							"type": book.Type,
+						},
 						"new": map[string]interface{} {
 							"title": title,
 							"writer": writer,
-							"type": typeName
+							"type": typeName,
 						},
-						"message": "already download"
+						"message": "already download",
 					})
 					helper.CheckError(err)
 					fmt.Println(string(strByte))
@@ -140,7 +141,7 @@ func (book *Book) Update() (bool) {
 				"type": typeName,
 				"lastUpdate": lastUpdate,
 				"lastChapter": lastChapter,
-				"message": "extract html fail"
+				"message": "extract html fail",
 			})
 			helper.CheckError(err)
 			fmt.Println(string(strByte))
@@ -185,8 +186,8 @@ func (book *Book) Download(savePath string) (bool) {
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail"
+			"url": book.downloadUrl,
+			"message": "load html fail",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -197,8 +198,8 @@ func (book *Book) Download(savePath string) (bool) {
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail - code " + html
+			"url": book.downloadUrl,
+			"message": "load html fail - code " + html,
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -209,8 +210,8 @@ func (book *Book) Download(savePath string) (bool) {
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html success"
+			"url": book.downloadUrl,
+			"message": "load html success",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -225,7 +226,7 @@ func (book *Book) Download(savePath string) (bool) {
 			"version": book.Version,
 			"chapterCount": len(urls),
 			"titleCount": len(titles),
-			"message": "title and url have different length"
+			"message": "title and url have different length",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -237,7 +238,7 @@ func (book *Book) Download(savePath string) (bool) {
 			"id": book.Id,
 			"version": book.Version,
 			"title": book.Title,
-			"message": "no chapter found"
+			"message": "no chapter found",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -272,8 +273,8 @@ func (book *Book) Download(savePath string) (bool) {
 		"site": book.SiteName,
 		"id": book.Id,
 		"version": book.Version,
-		"title": book.Title
-		"message": "all chapter download"
+		"title": book.Title,
+		"message": "all chapter download",
 	})
 	helper.CheckError(err)
 	fmt.Println(string(strByte))
@@ -311,7 +312,7 @@ func (book *Book) Download(savePath string) (bool) {
 				"id": book.Id,
 				"version": book.Version,
 				"title": book.Title,
-				"message": "no chapter found"
+				"message": "no chapter found",
 			})
 			helper.CheckError(err)
 			fmt.Println(string(strByte))
@@ -329,7 +330,7 @@ func (book *Book) Download(savePath string) (bool) {
 			"version": book.Version,
 			"title": book.Title,
 			"message": "download cancel due to more than " + strconv.Itoa(maxErrorCount) +
-			" chapters loss"
+			" chapters loss",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -374,8 +375,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail"
+			"url": url,
+			"message": "load html fail",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -386,8 +387,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail - code " + html
+			"url": url,
+			"message": "load html fail - code " + html,
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -397,8 +398,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html success"
+			"url": url,
+			"message": "load html success",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -411,8 +412,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			"id": book.Id,
 			"version": book.Version,
 			"retry": i,
-			"url": book.baseUrl,
-			"message": "recognize html fail"
+			"url": url,
+			"message": "recognize html fail",
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
@@ -450,7 +451,7 @@ func (book Book) JsonString() (string) {
 		"chapter": book.LastChapter,
 		"end": book.EndFlag,
 		"read": book.ReadFlag,
-		"download": book.DownloadFlag
+		"download": book.DownloadFlag,
 	})
 	helper.CheckError(err)
 	return string(resultByte)
