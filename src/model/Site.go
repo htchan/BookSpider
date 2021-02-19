@@ -86,10 +86,15 @@ func (site *Site) Book(id, version int) (Book) {
 		//panic(err)
 	}
 	if (siteName == "") {
-		fmt.Println("{\"site\":\"" + site.SiteName + "\", " +
-					"\"id\":" + strconv.Itoa(id) + ", " +
-					"\"retry\":" + strconv.Itoa(i) + ", " +
-					"\"message\":\"cannot load from database\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": site.SiteName,
+			"id": strconv.Itoa(id),
+			"retry": strconv.Itoa(i),
+			"message": "cannot load from database",
+		})
+
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 	}
 	book := Book{
 		SiteName: site.SiteName,
@@ -181,10 +186,15 @@ func (site *Site) Update() () {
 			}
 		}
 		if (book.Version == -1) {
-			fmt.Println("{\"site\":\"" + site.SiteName + "\", " +
-						"\"id\":" + strconv.Itoa(id) + ", " +
-						"\"version\":" + strconv.Itoa(book.Version) + ", " +
-						"\"message\":\"cannot load from database\"}")
+			strByte, err := json.Marshal(map[string]interface{} {
+				"site": site.SiteName,
+				"id": strconv.Itoa(id),
+				"version": strconv.Itoa(book.Version),
+				"message": "cannot load from database",
+			})
+
+			helper.CheckError(err)
+			fmt.Println(string(strByte))
 		}
 		go site.updateThread(book, s, &wg, tx, save, update);
 	}
@@ -214,28 +224,44 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 						book.Title, book.Writer, book.Type,
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag);
-			fmt.Println("{\"site\":\"" +book.SiteName + "\", " +
-						"\"id\":" + strconv.Itoa(book.Id) + ", " +
-						"\"version\":" + strconv.Itoa(book.Version) + ", " +
-						"\"title\":" + book.Title + ", " +
-						"\"message\":\"new version updated\"}")
+			
+			strByte, err := json.Marshal(map[string]interface{} {
+				"site": book.SiteName,
+				"id": strconv.Itoa(book.Id),
+				"version": strconv.Itoa(book.Version),
+				"title": book.Title,
+				"message": "new version updated",
+			})
+
+			helper.CheckError(err)
+			fmt.Println(string(strByte))
 		} else { // update old record
 			tx.Stmt(update).Exec(book.Title, book.Writer, book.Type,
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag,
 						book.SiteName, book.Id, book.Version);
-			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-						"\"id\":" + strconv.Itoa(book.Id) + ", " +
-						"\"version\":" + strconv.Itoa(book.Version) + ", " +
-						"\"message\":\"regular update\"}")
+			strByte, err := json.Marshal(map[string]interface{} {
+				"site": book.SiteName,
+				"id": strconv.Itoa(book.Id),
+				"version": strconv.Itoa(book.Version),
+				"message": "regular update",
+			})
+
+			helper.CheckError(err)
+			fmt.Println(string(strByte))
 			fmt.Println();
 		}
 	} else {
 		// tell others nothing updated
-			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-						"\"id\":" + strconv.Itoa(book.Id) + ", " +
-						"\"version\":" + strconv.Itoa(book.Version) + ", " +
-						"\"message\":\"not updated\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": strconv.Itoa(book.Id),
+			"version": strconv.Itoa(book.Version),
+			"message": "not updated",
+		})
+		
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 		fmt.Println()
 	}
 }
@@ -310,16 +336,26 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		helper.CheckError(err)
 		_, err = tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
 		helper.CheckError(err)
-		fmt.Println("{\"book\":" + book.JsonString() + ", " +
-					"\"message\":\"explored\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"book": book.JsonString(),
+			"message": "explored",
+		})
+
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 		*errorCount = 0;
 	} else { // increase error Count
 		_, err := tx.Stmt(saveError).Exec(book.SiteName, book.Id)
 		helper.CheckError(err)
-		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-					"\"id\":" + strconv.Itoa(book.Id) + ", " +
-					"\"version\":" + strconv.Itoa(book.Version) + ", " +
-					"\"message\":\"no such book\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": strconv.Itoa(book.Id),
+			"version": strconv.Itoa(book.Version),
+			"message": "no such book",
+		})
+
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 		*errorCount++;
 	}
 }
@@ -342,18 +378,29 @@ func (site *Site) Download() () {
 		if book.DownloadFlag {
 			continue
 		}
-		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-		"\"id\":" + strconv.Itoa(book.Id) + ", " +
-		"\"version\":" + strconv.Itoa(book.Version) + ", " +
-		"\"title\":" + book.Title + ", " +
-		"\"message\":\"start download\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": strconv.Itoa(book.Id),
+			"version": strconv.Itoa(book.Version),
+			"title": book.Title,
+			"message": "start download",
+		})
+
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
+
 		check := book.Download(site.downloadLocation)
 		if (! check) {
-			fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-			"\"id\":" + strconv.Itoa(book.Id) + ", " +
-			"\"version\":" + strconv.Itoa(book.Version) + ", " +
-			"\"title\":" + book.Title + ", " +
-			"\"message\":\"download failure\"}")
+			strByte, err := json.Marshal(map[string]interface{} {
+				"site": book.SiteName,
+				"id": strconv.Itoa(book.Id),
+				"version": strconv.Itoa(book.Version),
+				"title": book.Title,
+				"message": "download failure",
+			})
+
+			helper.CheckError(err)
+			fmt.Println(string(strByte))
 		} else {
 			tx.Stmt(update).Exec(true, book.Id, book.Version)
 		}
@@ -423,16 +470,26 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, wg *sync.W
 					book.LastUpdate, book.LastChapter,
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
 		tx.Stmt(delete).Exec(site.SiteName, book.Id);
-		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-					"\"id\":" + strconv.Itoa(book.Id) + ", " +
-					"\"version\":" + strconv.Itoa(book.Version) + ", " +
-					"\"title\":" + book.Title + ", " +
-					"\"message\":\"error updated\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": strconv.Itoa(book.Id),
+			"version": strconv.Itoa(book.Version),
+			"title": book.Title,
+			"message": "error updated",
+		})
+		
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 	} else {
 		// tell others nothing updated
-		fmt.Println("{\"site\":\"" + book.SiteName + "\", " +
-					"\"id\":" + strconv.Itoa(book.Id) + ", " +
-					"\"message\":\"error not updated\"}")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": strconv.Itoa(book.Id),
+			"message": "error not updated",
+		})
+		
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
 	}
 }
 
@@ -1196,17 +1253,20 @@ func (site Site)JsonString() (string) {
 	}
 	rows.Close()
 	site.CloseDatabase()
-	return "{" +
-		"\"name\" : \"" + site.SiteName + "\"" + ", " +
-		"\"bookCount\" : " + strconv.Itoa(bookCount) + ", " +
-		"\"errorCount\" : " + strconv.Itoa(errorCount) + ", " +
-		"\"bookRecordCount\" : " + strconv.Itoa(bookRecordCount) + ", " +
-		"\"errorRecordCount\" : " + strconv.Itoa(errorRecordCount) + ", " +
-		"\"endCount\" : " + strconv.Itoa(endCount) + ", " +
-		"\"endRecordCount\" : " + strconv.Itoa(endRecordCount) + ", " +
-		"\"downloadCount\" : " + strconv.Itoa(downloadCount) + ", " +
-		"\"downloadRecordCount\" : " + strconv.Itoa(downloadRecordCount) + ", " +
-		"\"readCount\" : " + strconv.Itoa(readCount) + ", " +
-		"\"maxid\" : " + strconv.Itoa(maxid) +
-	"}"
+	resultByte, err := json.Marshal(map[string]interface{} {
+		"name": site.SiteName + "\"",
+		"bookCount": strconv.Itoa(bookCount),
+		"errorCount": strconv.Itoa(errorCount),
+		"bookRecordCount": strconv.Itoa(bookRecordCount),
+		"errorRecordCount": strconv.Itoa(errorRecordCount),
+		"endCount": strconv.Itoa(endCount),
+		"endRecordCount": strconv.Itoa(endRecordCount),
+		"downloadCount": strconv.Itoa(downloadCount),
+		"downloadRecordCount": strconv.Itoa(downloadRecordCount),
+		"readCount": strconv.Itoa(readCount),
+		"maxid": strconv.Itoa(maxid),
+	})
+	helper.CheckError(err)
+	fmr.Println(string(resultByte))
+	return string(resultByte)
 }
