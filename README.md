@@ -35,4 +35,7 @@ for the usage details of controller, use `./controller` to check.
 	* it is a flutter folder containing all frontend needed
 
 # POC
-- compare `http` and `grequest`
+- compare `http` and `grequest
+- compare  json  and  yaml  as config
+- compare  regex  and  html parser library
+`

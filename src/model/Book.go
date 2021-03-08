@@ -358,6 +358,7 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 	// get chapter resource
 	var html string;
 	var i int;
+	fmt.Println("start download" + title)
 	for i = 0; i < 10; i++ {
 		html = helper.GetWeb(url);
 		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
@@ -380,6 +381,7 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
+		ch <- chapter{Url: url, Title: title, Content: "load html fail"}
 		return;
 	} else if _, err := strconv.Atoi(html); err == nil {
 		strByte, err := json.Marshal(map[string]interface{} {
@@ -392,6 +394,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
+		ch <- chapter{Url: url, Title: title, Content: "load html fail - code " + html}
+		return
 	} else {
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
@@ -417,6 +421,8 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		})
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
+		ch <- chapter{Url: url, Title: title, Content: "recognize html fail\n"+html}
+		return
 	} else {
 		content = strings.ReplaceAll(content, "<br />", "");
 		content = strings.ReplaceAll(content, "&nbsp;", "");
@@ -426,10 +432,21 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		content = strings.ReplaceAll(content, "</p>", "");
 		content = strings.ReplaceAll(content, "                ", "")
 		content = strings.ReplaceAll(content, "<p/>", "\n")
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": book.Id,
+			"version": book.Version,
+			"chapter": title,
+			"url": url,
+			"message": "download success",
+		})
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
+	
+		// put the chapter info to channel
+		ch <- chapter{Url:url, Title:title, Content: content}
+		return
 	}
-	// put the chapter info to channel
-	ch <- chapter{Url:url, Title:title, Content: content}
-	return
 }
 
 // to string function

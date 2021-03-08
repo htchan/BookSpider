@@ -1183,12 +1183,56 @@ func (site Site) validateThread(num int, version int, success *float64, tried *f
 	defer wg.Done()
 	book := site.Book(num, version)
 	book.Title = ""
-	if book.Update() && book.Download("./validate-download") && *success < 10 {
+	if *success < 10 && book.Update() && *success < 10 {
 		*success ++
 	} else {
 		s.Release(1)
 	}
 	if *success < 10 {
+		*tried ++
+	}
+}
+func (site Site) ValidateDownload() (float64) {
+	os.Mkdir("./validate-download/", 0755)
+	site.OpenDatabase()
+
+	var err error
+	site.bookTx, err = site.database.Begin()
+	helper.CheckError(err)
+
+	rows, err := site.database.Query("select num, version from books where download=? order by random()", true)
+	helper.CheckError(err)
+
+	ctx := context.Background()
+	var s = semaphore.NewWeighted(int64(4))
+	var wg sync.WaitGroup
+
+	success, tried := 0.0, 1.0
+	for success < 2 && tried < 100 && rows.Next() {
+		wg.Add(1)
+		s.Acquire(ctx, 1);
+		var num, version int
+		rows.Scan(&num, &version)
+		go site.validateDownloadThread(num, version, &success, &tried, s, &wg)
+	}
+	rows.Close()
+	wg.Wait()
+	site.CloseDatabase()
+	os.RemoveAll("./validate-download/")
+	if tried / success > 90 {
+		return -1
+	}
+	return tried / success
+}
+func (site Site) validateDownloadThread(num int, version int, success *float64, tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
+	defer wg.Done()
+	book := site.Book(num, version)
+	if *success < 2 && book.Download("./validate-download/") && *success < 2 {
+		*success ++
+	} else {
+		s.Release(1)
+	}
+	if *success < 2 {
 		*tried ++
 	}
 }

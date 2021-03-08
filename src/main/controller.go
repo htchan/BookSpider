@@ -191,13 +191,21 @@ func random(sites map[string]model.Site) {
 	}
 }
 func validate(sites map[string]model.Site) {
-	result := make(map[string]float64)
+	exploreResult := make(map[string]float64)
+	downloadResult := make(map[string]float64)
 	for name, site := range sites {
-		result[name] = site.Validate()
+		fmt.Println(name + "\tvalidate explore")
+		exploreResult[name] = site.Validate()
+		fmt.Println(name + "\tvalidate download")
+		downloadResult[name] = site.ValidateDownload()
 	}
-	b, err := json.Marshal(result)
+	b, err := json.Marshal(exploreResult)
 	helper.CheckError(err)
 	err = ioutil.WriteFile("./validate.json", b, 0644)
+	helper.CheckError(err)
+	b, err = json.Marshal(downloadResult)
+	helper.CheckError(err)
+	err = ioutil.WriteFile("./validate-download.json", b, 0644)
 	helper.CheckError(err)
 
 }
@@ -213,8 +221,10 @@ func schedule(sites map[string]model.Site) {
 	download(sites)
 }
 func test(sites map[string]model.Site) {
-	site := sites["ck101"]
-	site.Validate()
+	site := sites["hjwzw"]
+	book := site.Book(36458, -1)
+	book.Download("./validate-download/")
+	//site.Validate()
 	//site.Explore(1000)
 	//site.Update()
 }
