@@ -856,131 +856,138 @@ func (site *Site) Fix() () {
 	site.CloseDatabase()
 }
 
-func (site *Site) Check() () {
-	// init variable
-	site.OpenDatabase()
-	tx, err := site.database.Begin()
+func (site *Site) checkDuplicateBook() {
 	// check duplicate record
 	// check any duplicate record in books table and show them
-	rows, err := tx.Query("select num, version, count(*) as c from books group by num, version order by c desc")
+	tx, err := site.database.Begin()
+	rows, err := tx.Query("select num, version from books group by num, version having count(*) > 1")
 	helper.CheckError(err)
-	booksDuplicate := make([]Book, 0)
-	for rows.Next() {
-		var book Book
-		var count int
-		rows.Scan(&book.Id, &book.Version, &count)
-		if (count > 1) {
-			booksDuplicate = append(booksDuplicate, book)
-		}
-	}
-	err = rows.Close()
-	helper.CheckError(err)
-	fmt.Println("duplicate books count : " + strconv.Itoa(len(booksDuplicate)))
 	fmt.Print("duplicate books id : [")
-	for i, book := range booksDuplicate {
-		fmt.Print("(" + strconv.Itoa(book.Id) + ", " + strconv.Itoa(book.Version) + ")")
-		if (i < len(booksDuplicate) - 1) {
-			fmt.Print(" ")
+	var id, version, count int
+	for rows.Next() {
+		if count > 0 {
+			fmt.Println(", ")
 		}
+		rows.Scan(&id, &version)
+		fmt.Print("(" + strconv.Itoa(id) + ", " + strconv.Itoa(version) + ")")
+		count++
 	}
 	fmt.Println("]")
-
-	// check any duplicate record in error table and show them
-	rows, err = tx.Query("select num, count(*) as c from error group by num order by c desc")
-	helper.CheckError(err)
-	errorDuplicate := make([]Book, 0)
-	for rows.Next() {
-		var book Book
-		var count int
-		rows.Scan(&book.Id, &count)
-		if (count > 1) {
-			errorDuplicate = append(errorDuplicate, book)
-		}
-	}
+	fmt.Println("duplicate books count : " + strconv.Itoa(count))
 	err = rows.Close()
 	helper.CheckError(err)
-	fmt.Println("duplicate error count : " + strconv.Itoa(len(errorDuplicate)))
+	err = tx.Rollback()
+	helper.CheckError(err)
+}
+func (site *Site) checkDuplicateError() {
+	// check duplicate record
+	// check any duplicate record in books table and show them
+	tx, err := site.database.Begin()
+	rows, err := tx.Query("select num from error group by num having count(*) > 1")
+	helper.CheckError(err)
 	fmt.Print("duplicate error id : [")
-	for i, book := range errorDuplicate {
-		fmt.Print(strconv.Itoa(book.Id))
-		if (i < len(errorDuplicate) - 1) {
-			fmt.Print(" ")
+	var id, count int
+	for rows.Next() {
+		if count > 0 {
+			fmt.Print(", ")
 		}
+		rows.Scan(&id)
+		fmt.Print(strconv.Itoa(id))
+		count++
 	}
 	fmt.Println("]")
-	// TODO check if any record in book table duplicate in error table
-	rows, err = tx.Query("select books.num from books, error where books.num=error.num")
-	helper.CheckError(err)
-	crossDuplicate := make([]int, 0)
-	for rows.Next() {
-		var id int
-		rows.Scan(&id)
-		crossDuplicate = append(crossDuplicate, id)
-	}
+	fmt.Println("duplicate error count : " + strconv.Itoa(count))
 	err = rows.Close()
 	helper.CheckError(err)
-	fmt.Println("duplicate cross count : " + strconv.Itoa(len(crossDuplicate)))
+	err = tx.Rollback()
+	helper.CheckError(err)
+}
+func (site *Site) checkDuplicateCrossTable() {
+	// check duplicate record
+	// check if any record in book table duplicate in error table
+	tx, err := site.database.Begin()
+	rows, err := tx.Query("select distinct num from books where num in (select num from error)")
+	helper.CheckError(err)
 	fmt.Print("duplicate cross id : [")
-	for i, id := range crossDuplicate {
-		fmt.Print(id)
-		if (i < len(crossDuplicate) - 1) {
-			fmt.Print(" ")
+	var id, count int
+	for rows.Next() {
+		if count > 0 {
+			fmt.Print(", ")
 		}
+		rows.Scan(&id)
+		fmt.Print(strconv.Itoa(id))
+		count++
 	}
 	fmt.Println("]")
-
-	// check missing record
-	rows, err = tx.Query("select num from books group by num")
+	fmt.Println("duplicate cross count : " + strconv.Itoa(count))
+	err = rows.Close()
 	helper.CheckError(err)
+	err = tx.Rollback()
+	helper.CheckError(err)
+}
+func (site *Site) getAllIds() []int {
 	ids := make([]int, 0)
-	for rows.Next() {
-		var id int
-		rows.Scan(&id)
-		ids = append(ids, id)
-	}
-	rows.Close()
-	rows, err = tx.Query("select num from error group by num")
+	tx, err := site.database.Begin()
 	helper.CheckError(err)
+	// check missing record
+	rows, err := tx.Query("select num from error union select num from books")
+	helper.CheckError(err)
+	var id int
 	for rows.Next() {
-		var id int
 		rows.Scan(&id)
 		if !(helper.Contains(ids, id)) {
 			ids = append(ids, id)
 		}
 	}
-	rows.Close()
+	err = rows.Close()
+	helper.CheckError(err)
+	err = tx.Rollback()
+	helper.CheckError(err)
+	return ids
+}
+func (site *Site) getMaxId() int {
 	// get max id from database
-	max := -1
-	rows, err = tx.Query("select num from books order by num desc")
+	tx, err := site.database.Begin()
+	var maxErrorId, maxBookId int
+	rows, err := tx.Query("select num from books order by num desc")
 	helper.CheckError(err)
 	if rows.Next() {
-		var id int
-		rows.Scan(&id)
-		if (id > max) {
-			max = id
-		}
+		rows.Scan(&maxBookId)
 	}
 	err = rows.Close()
 	helper.CheckError(err)
 	rows, err = tx.Query("select num from error order by num desc")
 	helper.CheckError(err)
 	if rows.Next() {
-		var id int
-		rows.Scan(&id)
-		if (id > max) {
-			max = id
-		}
+		rows.Scan(&maxErrorId)
 	}
 	err = rows.Close()
 	helper.CheckError(err)
+	err = tx.Rollback()
+	helper.CheckError(err)
+	if maxBookId > maxErrorId {
+		return maxBookId
+	} else {
+		return maxErrorId
+	}
+}
+
+func (site *Site) Check() () {
+	// init variable
+	site.OpenDatabase()
+	site.checkDuplicateBook()
+	site.checkDuplicateError()
+	site.checkDuplicateCrossTable()
+
+	// check missing record
+	ids := site.getAllIds()
+	max := site.getMaxId()
 	missingid := make([]int, 0)
 	for i := 1; i < max; i += 1 {
 		if !(helper.Contains(ids, i)) {
 			missingid = append(missingid, i)
 		}
 	}
-	err = tx.Commit()
-	helper.CheckError(err)
 	fmt.Println("missing count :\t" + strconv.Itoa(len(missingid)))
 	fmt.Print("missing id :\t")
 	fmt.Println(missingid)
