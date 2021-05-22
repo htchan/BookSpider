@@ -161,10 +161,10 @@ type chapter struct {
 	Url, Title, Content string
 }
 
-func (book *Book) Download(savePath string) (bool) {
+func (book *Book) Download(savePath string, MAX_THREAD int) (bool) {
 	// set up semaphore and routine pool
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(BOOK_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(MAX_THREAD))
 	var wg sync.WaitGroup
 	// get basic info (all chapter url and title)
 	var html string;

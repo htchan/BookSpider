@@ -6,6 +6,7 @@ import (
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/traditionalchinese"
 	"io/ioutil"
+	"strconv"
 
 	"../helper"
 )
@@ -15,7 +16,8 @@ type Config struct {
 	Api []string
 }
 
-func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation string, databaseLocation string, downloadLocation string) (Site) {
+func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation string, 
+	databaseLocation string, downloadLocation string, MAX_THREAD_COUNT int) (Site) {
 	//database, err := sql.Open("sqlite3", databaseLocation)
 	//helper.CheckError(err);
 	//database.SetMaxIdleConns(10);
@@ -41,7 +43,8 @@ func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation 
 		chapterTitleRegex: info["chapterTitleRegex"],
 		chapterContentRegex: info["chapterContentRegex"],
 		databaseLocation: databaseLocation,
-		downloadLocation: downloadLocation};
+		downloadLocation: downloadLocation,
+		MAX_THREAD_COUNT: MAX_THREAD_COUNT};
 	return site;
 }
 
@@ -52,10 +55,12 @@ func LoadSiteYaml(siteName string, config map[string]string) (Site) {
 	} else {
 		decoder = nil
 	}
+	MAX_THREAD_COUNT, _ := strconv.Atoi(config["threadsCount"])
 	site := NewSiteYaml(siteName, decoder,
 					config["configLocation"],
 					config["databaseLocation"],
-					config["downloadLocation"])
+					config["downloadLocation"],
+					MAX_THREAD_COUNT)
 	return site
 }
 

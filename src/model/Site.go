@@ -22,7 +22,7 @@ import (
 	"../helper"
 )
 
-const SITE_MAX_THREAD = 1000;
+const MAX_THREAD_COUNT = 1000;
 
 type Site struct {
 	SiteName string
@@ -34,6 +34,7 @@ type Site struct {
 	chapterContentRegex string
 	databaseLocation, downloadLocation string
 	bookTx *sql.Tx
+	MAX_THREAD_COUNT int
 }
 
 func (site *Site) Book(id, version int) (Book) {
@@ -157,7 +158,7 @@ func (site *Site) Update() () {
 	site.OpenDatabase()
 	ctx := context.Background()
 	site.bookTx, _ = site.database.Begin()
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
@@ -390,7 +391,7 @@ func (site *Site) Download() () {
 		helper.CheckError(err)
 		fmt.Println(string(strByte))
 
-		check := book.Download(site.downloadLocation)
+		check := book.Download(site.downloadLocation, site.MAX_THREAD_COUNT)
 		if (! check) {
 			strByte, err := json.Marshal(map[string]interface{} {
 				"site": book.SiteName,
@@ -422,7 +423,7 @@ func (site *Site) UpdateError() () {
 	var err error
 	ctx := context.Background()
 	site.bookTx, err = site.database.Begin()
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
@@ -585,7 +586,7 @@ func (site *Site) Random(size int) ([]Book) {
 func (site *Site) fixStroageError() () {
 	// init var for concurrency
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
 	var wg sync.WaitGroup
 
 	tx, err := site.database.Begin()
@@ -803,7 +804,7 @@ func (site *Site) fixDatabaseMissingError() () {
 	ctx := context.Background()
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
 	var wg sync.WaitGroup
 	var errorCount int
 	save, err := site.database.Prepare("insert into books "+
@@ -1094,7 +1095,7 @@ func (site Site) Test() () {
 	var err error
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(SITE_MAX_THREAD))
+	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
 	var wg sync.WaitGroup
 	// prepare transaction and statement
 	tx, err := site.database.Begin();
@@ -1227,7 +1228,9 @@ func (site Site) ValidateDownload() (float64) {
 func (site Site) validateDownloadThread(num int, version int, success *float64, tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
 	defer wg.Done()
 	book := site.Book(num, version)
-	if *success < 2 && book.Download("./validate-download/") && *success < 2 {
+	// here have two same condition because `book.Download` take a long time
+	// the success may change after funush download
+	if *success < 2 && book.Download("./validate-download/", site.MAX_THREAD_COUNT) && *success < 2 {
 		*success ++
 	} else {
 		s.Release(1)
@@ -1312,6 +1315,7 @@ func (site Site)JsonString() (string) {
 		"downloadRecordCount": strconv.Itoa(downloadRecordCount),
 		"readCount": strconv.Itoa(readCount),
 		"maxid": strconv.Itoa(maxid),
+		"maxThread": site.MAX_THREAD_COUNT,
 	})
 	helper.CheckError(err)
 	fmt.Println(string(resultByte))

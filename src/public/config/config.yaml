@@ -4,21 +4,25 @@ sites:
         configLocation : "./config/ck101-desktop.yaml"
         databaseLocation : "./database/ck101.db"
         downloadLocation : "/mnt/addition/download/Books/ck101/"
+        threadsCount : 200
     80txt:
         decode : utf8
         configLocation : "./config/80txt-desktop.yaml"
         databaseLocation : "./database/80txt.db"
         downloadLocation : "/mnt/addition/download/Books/80txt/"
+        threadsCount : 200
     xqishu:
         decode : utf8
         configLocation : "./config/xqishu-desktop.yaml"
         databaseLocation : "./database/xqishu.db"
         downloadLocation : "/mnt/addition/download/Books/xqishu/"
+        threadsCount : 200
     hjwzw:
         decode : utf8
         configLocation : "./config/hjwzw-desktop.yaml"
         databaseLocation : "./database/hjwzw.db"
         downloadLocation : "/mnt/addition/download/Books/hjwzw/"
+        threadsCount : 200
     # bestory:
     #     decode : "big5"
     #     configLocation : "./config/bestory-desktop.json"

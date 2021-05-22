@@ -12,32 +12,9 @@ import (
 	
 	"encoding/json"
 	"io/ioutil"
+
+	"sync"
 )
-/*
-func LoadSites(configLocation string) (map[string]model.Site) {
-	sites := make(map[string]model.Site)
-	data, err := ioutil.ReadFile(configLocation)
-	helper.CheckError(err)
-	var info []map[string]interface{}
-	if err = json.Unmarshal(data, &info); err != nil {
-        panic(err)
-	}
-	for _, config := range info {
-		var decoder *encoding.Decoder
-		if (config["decode"] == "big5") {
-			decoder = traditionalchinese.Big5.NewDecoder()
-		} else {
-			decoder = nil
-		}
-		sites[config["name"].(string)] =
-			model.NewSite(config["name"].(string), decoder,
-							config["configLocation"].(string),
-							config["databaseLocation"].(string),
-							config["downloadLocation"].(string))
-	}
-	return sites
-}
-*/
 
 var stageFileName string
 
@@ -57,7 +34,7 @@ func help() {
 }
 
 func writeStage(s string) () {
-	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND, 0664)
+	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Println(stageFileName)
@@ -68,48 +45,70 @@ func writeStage(s string) () {
 
 func download(sites map[string]model.Site) {
 	writeStage("stage: download start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		if name == "80txt" {
-			continue
-		}
-		fmt.Println(name + "\tdownload")
-		site.Download()
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			if name == "80txt" {
+				wg.Done()
+				return
+			}
+			fmt.Println(name + "\tdownload")
+			site.Download()
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: download finish")
 }
 func update(sites map[string]model.Site) {
 	writeStage("stage: update start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tupdate")
-		site.Update()
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\tupdate")
+			site.Update()
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
+	wg.Wait()
 	writeStage("stage: update finish")
 }
 func explore(sites map[string]model.Site, maxError int) {
 	writeStage("stage: explore start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\texplore")
-		site.Explore(maxError)
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\texplore")
+			site.Explore(maxError)
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: explore finish")
 }
 func updateError(sites map[string]model.Site) {
 	writeStage("stage: update error start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tupdate error")
-		site.UpdateError()
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\tupdate error")
+			site.UpdateError()
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: update error finish")
 }
@@ -136,25 +135,35 @@ func check(sites map[string]model.Site) {
 }
 func checkEnd(sites map[string]model.Site) {
 	writeStage("stage: check end start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tcheck end")
-		fmt.Println(strings.Repeat("- ", 20))
-		site.CheckEnd()
-		fmt.Println(strings.Repeat("- ", 20))
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\tcheck end")
+			fmt.Println(strings.Repeat("- ", 20))
+			site.CheckEnd()
+			fmt.Println(strings.Repeat("- ", 20))
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: check end finish")
 }
 func backup(sites map[string]model.Site) {
 	writeStage("stage: backup start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tbackup")
-		site.Backup()
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\tbackup")
+			site.Backup()
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: backup finish")
 }
@@ -171,12 +180,17 @@ func backupString(sites map[string]model.Site) {
 }
 func fix(sites map[string]model.Site) {
 	writeStage("stage: fix start")
+	var wg sync.WaitGroup
 	for name, site := range sites {
-		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tfix")
-		site.Fix()
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
+		wg.Add(1)
+		go func() {
+			writeStage("sub_stage: " + name + " start")
+			fmt.Println(name + "\tfix")
+			site.Fix()
+			runtime.GC()
+			writeStage("sub_stage: " + name + " finish")
+			wg.Done()
+		} ()
 	}
 	writeStage("stage: fix finish")
 }
@@ -223,7 +237,7 @@ func schedule(sites map[string]model.Site) {
 func test(sites map[string]model.Site) {
 	site := sites["hjwzw"]
 	book := site.Book(36458, -1)
-	book.Download("./validate-download/")
+	book.Download("./validate-download/", 1000)
 	//site.Validate()
 	//site.Explore(1000)
 	//site.Update()
