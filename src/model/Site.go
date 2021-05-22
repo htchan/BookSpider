@@ -925,26 +925,6 @@ func (site *Site) checkDuplicateCrossTable() {
 	err = tx.Rollback()
 	helper.CheckError(err)
 }
-func (site *Site) getAllIds() []int {
-	ids := make([]int, 0)
-	tx, err := site.database.Begin()
-	helper.CheckError(err)
-	// check missing record
-	rows, err := tx.Query("select num from error union select num from books")
-	helper.CheckError(err)
-	var id int
-	for rows.Next() {
-		rows.Scan(&id)
-		if !(helper.Contains(ids, id)) {
-			ids = append(ids, id)
-		}
-	}
-	err = rows.Close()
-	helper.CheckError(err)
-	err = tx.Rollback()
-	helper.CheckError(err)
-	return ids
-}
 func (site *Site) getMaxId() int {
 	// get max id from database
 	tx, err := site.database.Begin()
@@ -971,6 +951,33 @@ func (site *Site) getMaxId() int {
 		return maxErrorId
 	}
 }
+func (site *Site) checkMissingId(maxId int) {
+	tx, err := site.database.Begin()
+	helper.CheckError(err)
+	// check missing record
+	rows, err := tx.Query("select num from (select num from error union select num from books) order by num")
+	helper.CheckError(err)
+	var i, id, count int
+	i = 1
+	fmt.Print("missing id : [")
+	for rows.Next() {
+		rows.Scan(&id)
+		for ; i < id; i++ {
+			if i > 1 {
+				fmt.Print(", ")
+			}
+			fmt.Print(i)
+			count++
+		}
+		i++
+	}
+	fmt.Println("]")
+	fmt.Println("missing count : " + strconv.Itoa(count))
+	err = rows.Close()
+	helper.CheckError(err)
+	err = tx.Rollback()
+	helper.CheckError(err)
+}
 
 func (site *Site) Check() () {
 	// init variable
@@ -980,17 +987,8 @@ func (site *Site) Check() () {
 	site.checkDuplicateCrossTable()
 
 	// check missing record
-	ids := site.getAllIds()
-	max := site.getMaxId()
-	missingid := make([]int, 0)
-	for i := 1; i < max; i += 1 {
-		if !(helper.Contains(ids, i)) {
-			missingid = append(missingid, i)
-		}
-	}
-	fmt.Println("missing count :\t" + strconv.Itoa(len(missingid)))
-	fmt.Print("missing id :\t")
-	fmt.Println(missingid)
+	maxId := site.getMaxId()
+	site.checkMissingId(maxId)
 	site.CloseDatabase()
 }
 
