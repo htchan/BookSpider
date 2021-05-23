@@ -61,6 +61,7 @@ func download(sites map[string]model.Site) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: download finish")
 }
 func update(sites map[string]model.Site) {
@@ -94,6 +95,7 @@ func explore(sites map[string]model.Site, maxError int) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: explore finish")
 }
 func updateError(sites map[string]model.Site) {
@@ -110,6 +112,7 @@ func updateError(sites map[string]model.Site) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: update error finish")
 }
 func info(sites map[string]model.Site) {
@@ -149,6 +152,7 @@ func checkEnd(sites map[string]model.Site) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: check end finish")
 }
 func backup(sites map[string]model.Site) {
@@ -165,6 +169,7 @@ func backup(sites map[string]model.Site) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: backup finish")
 }
 func backupString(sites map[string]model.Site) {
@@ -192,6 +197,7 @@ func fix(sites map[string]model.Site) {
 			wg.Done()
 		} ()
 	}
+	wg.Wait()
 	writeStage("stage: fix finish")
 }
 func random(sites map[string]model.Site) {
