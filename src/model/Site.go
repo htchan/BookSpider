@@ -27,7 +27,7 @@ const MAX_THREAD_COUNT = 1000;
 type Site struct {
 	SiteName string
 	database *sql.DB
-	MetaBaseUrl, metaDownloadUrl, metaChapterUrl, chapterPattern string
+	metaBaseUrl, metaDownloadUrl, metaChapterUrl, chapterPattern string
 	decoder *encoding.Decoder
 	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
 	chapterUrlRegex, chapterTitleRegex string
@@ -38,18 +38,11 @@ type Site struct {
 }
 
 func (site *Site) Book(id, version int) (Book) {
-	baseUrl := fmt.Sprintf(site.MetaBaseUrl, id);
+	baseUrl := fmt.Sprintf(site.metaBaseUrl, id);
 	downloadUrl := fmt.Sprintf(site.metaDownloadUrl, id);
-	var siteName string;
+	var siteName, title, writer, typeName, lastUpdate, lastChapter string;
 	var temp int;
-	title := "";
-	writer := "";
-	typeName := "";
-	lastUpdate := "";
-	lastChapter := "";
-	end := false;
-	download := false;
-	read := false;
+	var end, download, read bool
 	if site.bookTx == nil {
 		var err error
 		site.OpenDatabase()
@@ -72,8 +65,7 @@ func (site *Site) Book(id, version int) (Book) {
 							"num=? and version=?", id, version)
 		}
 		if (err != nil) {
-			fmt.Println(id)
-			fmt.Println(err)
+			fmt.Print(id, "---", err)
 			//time.Sleep(1000)
 			continue
 		}
@@ -339,7 +331,7 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		_, err = tx.Stmt(deleteError).Exec(book.SiteName, book.Id)
 		helper.CheckError(err)
 		strByte, err := json.Marshal(map[string]interface{} {
-			"book": book.JsonString(),
+			"book": book.Map(),
 			"message": "explored",
 		})
 
@@ -513,23 +505,9 @@ func (site *Site) Info() () {
 	rows.Close()
 	fmt.Println("Error Book Count :\t" + strconv.Itoa(errorCount));
 	fmt.Println("Total Book Count :\t" + strconv.Itoa(normalCount + errorCount));
-	rows, _ = site.database.Query("select num from books order by num desc limit 1");
-	for rows.Next() {
-		rows.Scan(&normalCount);
-	}
-	rows.Close()
-	rows, _ = site.database.Query("select num from error order by num desc limit 1");
-	for rows.Next() {
-		rows.Scan(&errorCount);
-	}
-	rows.Close()
-	var max int;
-	if (normalCount > errorCount) {
-		max = normalCount;
-	} else {
-		max = errorCount;
-	}
-	fmt.Println("Max Book id :\t" + strconv.Itoa(max));
+	
+	maxId := site.getMaxId()
+	fmt.Println("Max Book id :\t" + strconv.Itoa(maxId));
 	site.CloseDatabase()
 }
 
@@ -661,20 +639,17 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	// init variable
 	tx, err := site.database.Begin()
 	// check any duplicate record in books table and show them
-	rows, err := tx.Query("select num, version, count(*) as c from books group by num, version order by c desc")
+	rows, err := tx.Query("select num, version from books group by num, version having count(*) > 1")
 	helper.CheckError(err)
 	booksDuplicate := make([]Book, 0)
 	for rows.Next() {
 		var book Book
-		var count int
-		rows.Scan(&book.Id, &book.Version, &count)
-		if (count > 1) {
-			booksDuplicate = append(booksDuplicate, book)
-		}
+		rows.Scan(&book.Id, &book.Version)
+		booksDuplicate = append(booksDuplicate, book)
 	}
 	err = rows.Close()
 	helper.CheckError(err)
-	// delete duplicate record
+	// delete duplicate record in book
 	stmt, err := tx.Prepare("delete from books where num=? and version=?")
 	helper.CheckError(err)
 	add, err := tx.Prepare("insert into books " +
@@ -696,16 +671,13 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	err = stmt.Close()
 	helper.CheckError(err)
 	// check any duplicate record in error table and show them
-	rows, err = tx.Query("select num, count(*) as c from error group by num order by c desc")
+	rows, err = tx.Query("select num from error group by num having count(*) > 1")
 	helper.CheckError(err)
 	errorDuplicate := make([]Book, 0)
 	for rows.Next() {
 		var book Book
-		var count int
-		rows.Scan(&book.Id, &count)
-		if (count > 1) {
-			errorDuplicate = append(errorDuplicate, book)
-		}
+		rows.Scan(&book.Id)
+		errorDuplicate = append(errorDuplicate, book)
 	}
 	err = rows.Close()
 	helper.CheckError(err)
@@ -725,22 +697,10 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	err = stmt.Close()
 	helper.CheckError(err)
 	// check if any record in book table duplicate in error table
-	rows, err = tx.Query("select books.num from books, error where books.num=error.num")
+	fmt.Println("duplicate cross - - - - - - - - - -\n")
+	stmt, err = tx.Prepare("delete from error where num in (select distinct num from books)")
 	helper.CheckError(err)
-	crossDuplicate := make([]int, 0)
-	for rows.Next() {
-		var id int
-		rows.Scan(&id)
-		crossDuplicate = append(crossDuplicate, id)
-	}
-	err = rows.Close()
-	helper.CheckError(err)
-	stmt, err = tx.Prepare("delete from error where num=?")
-	helper.CheckError(err)
-	for _, id := range crossDuplicate {
-		fmt.Println("duplicate cross - - - - - - - - - -\n"+strconv.Itoa(id))
-		tx.Stmt(stmt).Exec(id)
-	}
+	tx.Stmt(stmt).Exec()
 	err = stmt.Close()
 	helper.CheckError(err)
 	err = tx.Commit()
@@ -1244,7 +1204,7 @@ func (site Site) validateDownloadThread(num int, version int, success *float64, 
 		*tried ++
 	}
 }
-func (site Site)JsonString() (string) {
+func (site Site)Map() map[string]interface{} {
 	site.OpenDatabase()
 	var bookCount, bookRecordCount, errorCount, errorRecordCount, endCount, endRecordCount int
 	var downloadCount, downloadRecordCount, readCount, maxid int
@@ -1308,7 +1268,7 @@ func (site Site)JsonString() (string) {
 	}
 	rows.Close()
 	site.CloseDatabase()
-	resultByte, err := json.Marshal(map[string]interface{} {
+	return map[string]interface{} {
 		"name": site.SiteName + "\"",
 		"bookCount": strconv.Itoa(bookCount),
 		"errorCount": strconv.Itoa(errorCount),
@@ -1321,8 +1281,5 @@ func (site Site)JsonString() (string) {
 		"readCount": strconv.Itoa(readCount),
 		"maxid": strconv.Itoa(maxid),
 		"maxThread": site.MAX_THREAD_COUNT,
-	})
-	helper.CheckError(err)
-	fmt.Println(string(resultByte))
-	return string(resultByte)
+	}
 }
