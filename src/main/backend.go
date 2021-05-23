@@ -6,7 +6,6 @@ import (
 	"time"
 	"sort"
 	"io/ioutil"
-	"runtime"
 	"strings"
 	"strconv"
 	"net/http"
@@ -15,9 +14,11 @@ import (
 	//"encoding/json"
 	//"golang.org/x/text/encoding/traditionalchinese"
 	//"golang.org/x/text/encoding"
+	"encoding/json"
 
 	//"../helper"
 	"../model"
+	"../helper"
 )
 
 type Logs struct {
@@ -29,140 +30,30 @@ type Logs struct {
 
 var stageFileName string
 
-func download() {
-	for name, site := range sites {
-		if name == "80txt" {
-			continue
-		}
-		currentProcess = name + "\tdownload"
-		fmt.Println(name + "\tdownload")
-		site.Download()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func update() {
-	for name, site := range sites {
-		currentProcess = name + "\tupdate"
-		fmt.Println(name + "\tupdate")
-		site.Update()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func explore(maxError int) {
-	for name, site := range sites {
-		currentProcess = name + "\texplore"
-		fmt.Println(name + "\texplore")
-		site.Explore(maxError)
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func updateError() {
-	for name, site := range sites {
-		currentProcess = name + "\tupdate error"
-		fmt.Println(name + "\tupdate error")
-		site.UpdateError()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func check() {
-	for name, site := range sites {
-		currentProcess = name + "\tcheck"
-		fmt.Println(name + "\tcheck")
-		site.Check()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func checkEnd() {
-	for name, site := range sites {
-		currentProcess = name + "\tcheck end"
-		fmt.Println(name + "\tcheck end")
-		site.CheckEnd()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func backup() {
-	for name, site := range sites {
-		currentProcess = name + "\tbackup"
-		fmt.Println(name + "\tbackup")
-		site.Backup()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-func fix() {
-	for name, site := range sites {
-		currentProcess = name + "\tfix"
-		fmt.Println(name + "\tfix")
-		site.Fix()
-		runtime.GC()
-	}
-	currentProcess = ""
-}
-
-func Start(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	operation := req.URL.Query().Get("operation")
-	if currentProcess != "" {
-		res.WriteHeader(http.StatusLocked)
-		fmt.Fprintf(res, "{\"code\" : 423, \"message\" : \"locked - <" + currentProcess + "> is operating, please wait until it finish\"}")
-		return
-	}
-	switch strings.ToUpper(operation) {
-	case "UPDATE":
-		go update()
-	case "EXPLORE":
-		go explore(1000)
-	case "DOWNLOAD":
-		go download()
-	case "ERROR":
-		go updateError()
-	case "CHECK":
-		go check()
-	case "CHECKEND":
-		go checkEnd()
-	case "BACKUP":
-		go backup()
-	case "FIX":
-		go fix()
-	default:
-		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"not found - operation <"+operation+"> not found\"}")
-		return
-	}
-	res.WriteHeader(http.StatusAccepted)
-	fmt.Fprintf(res, "{\"code\" : 202, \"message\" : \"<" + operation + "> is put to process\"}")
-}
-
 func (logs *Logs) update() {
+	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 {
+		return
+	}
 	logFileStat, err := os.Stat(logs.logLocation)
 	if err != nil {
 		return
 	}
 	fileSize := logFileStat.Size()
 	logs.FileLastUpdate = logFileStat.ModTime()
-	if (fileSize - logs.size < 1000) && (time.Now().Sub(logs.MemoryLastUpdate).Seconds() > 3600) {
+	if fileSize == logs.size {
 		return
 	}
+	file, err := os.Open(logs.logLocation)
+	helper.CheckError(err)
+	defer file.Close()
 	logs.size = fileSize
-	data, err := ioutil.ReadFile(logs.logLocation)
-	if err != nil {
-		return
+	offset := fileSize - 1000
+	if offset < 1000 {
+		offset = 0
 	}
-	dataStrings := strings.Split(string(data), "\n")
-	min := len(logs.Logs)
-	if (len(logs.Logs) > len(dataStrings)) {
-		min = len(dataStrings)
-	}
-	for i := 1; i < min; i += 1 {
-		logs.Logs[i] = dataStrings[len(dataStrings) - min + i]
-	}
+	b := make([]byte, 1000)
+	file.ReadAt(b, offset)
+	logs.Logs = strings.Split(string(b), "\n")
 	logs.MemoryLastUpdate = time.Now()
 }
 
@@ -241,7 +132,9 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
 		return
 	}
-	fmt.Fprintf(res, site.JsonString())
+	siteByte, err := json.Marshal(site.Map())
+	helper.CheckError(err)
+	fmt.Fprintf(res, string(siteByte))
 }
 
 func BookInfo(res http.ResponseWriter, req *http.Request) {
@@ -273,7 +166,9 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
 	} else {
-		fmt.Fprintf(res, book.JsonString())
+		bookByte, err := json.Marshal(book.Map())
+		helper.CheckError(err)
+		fmt.Fprintf(res, string(bookByte))
 	}
 }
 
@@ -343,7 +238,9 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 	books := site.Search(title, writer, page)
 	fmt.Fprintf(res, "{\"books\" : [")
 	for i, book := range books {
-		fmt.Fprintf(res, book.JsonString())
+		bookByte, err := json.Marshal(book.Map())
+		helper.CheckError(err)
+		fmt.Fprintf(res, string(bookByte))
 		if i < len(books)-1 {
 			fmt.Fprintf(res, ",")
 		}
@@ -370,7 +267,9 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	books := site.Random(num)
 	fmt.Fprintf(res, "{\"books\" : [")
 	for i, book := range books {
-		fmt.Fprintf(res, book.JsonString())
+		bookByte, err := json.Marshal(book.Map())
+		helper.CheckError(err)
+		fmt.Fprintf(res, string(bookByte))
 		if i < len(books)-1 {
 			fmt.Fprintf(res, ",")
 		}
@@ -386,11 +285,14 @@ func main() () {
 	currentProcess = ""
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	stageFileName = dir + "/log/stage.txt"
-	logs = Logs{logLocation: dir + "/nohup.out", Logs: make([]string, 100), MemoryLastUpdate: time.Unix(0,0), FileLastUpdate: time.Unix(0, 0)}
+	logs = Logs{
+		logLocation: dir + "/nohup.out", 
+		Logs: make([]string, 100), 
+		MemoryLastUpdate: time.Unix(0,0), 
+		FileLastUpdate: time.Unix(0, 0)}
 	config := model.LoadYaml("./config/config.yaml")
 	sites = model.LoadSitesYaml(config)
 	apiFunc := make(map[string]func())
-	apiFunc["control"] = func() { http.HandleFunc("/start", Start) }
 	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/search/"+name+"", BookSearch) } }
 	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/download/"+name+"/", BookDownload) } }
 	apiFunc["siteInfo"] = func() { for name := range sites { http.HandleFunc("/info/"+name, SiteInfo) } }
@@ -408,11 +310,6 @@ func main() () {
 /*
 // get info of server
 host:port
-
-<operation> := download, update, explore, update error, check, backup
-// start a currentProcess
-host:port/start?operation=<operation>
-** if current currentProcess is not "", currentProcess cannot be start and return 403
 
 // get currentProcess info
 host:port/currentProcess
