@@ -277,7 +277,7 @@ func (site *Site) Explore(maxError int) () {
 					" values "+
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	saveError, err := site.database.Prepare("insert into error (site, num) values (?, ?)");
+	saveError, err := site.database.Prepare("insert into error(site, num) select ?, ? from error where not exists(select 1 from error where num=?) limit 1");
 	helper.CheckError(err);
 	deleteError, err := site.database.Prepare("delete from error where site=? and num=?");
 	helper.CheckError(err);
@@ -339,7 +339,7 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		fmt.Println(string(strByte))
 		*errorCount = 0;
 	} else { // increase error Count
-		_, err := tx.Stmt(saveError).Exec(book.SiteName, book.Id)
+		_, err := tx.Stmt(saveError).Exec(book.SiteName, book.Id, book.Id)
 		helper.CheckError(err)
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
@@ -659,7 +659,8 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	helper.CheckError(err)
 	fmt.Println("duplicate book count : " + strconv.Itoa(len(booksDuplicate)))
 	for _, book := range booksDuplicate {
-		fmt.Println("duplicate book - - - - - - - - - -\n"+book.String())
+		// fmt.Println("duplicate book - - - - - - - - - -\n"+book.String())
+		fmt.Println("(" + book.SiteName + ", " + strconv.Itoa(book.Id) + ", " + strconv.Itoa(book.Version) + ")")
 		_, err := tx.Stmt(stmt).Exec(book.Id, book.Version)
 		helper.CheckError(err)
 		tx.Stmt(stmt).Exec(book.SiteName, book.Id, book.Version,
@@ -688,7 +689,8 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	helper.CheckError(err)
 	fmt.Println("duplicate error count : " + strconv.Itoa(len(errorDuplicate)))
 	for _, book := range errorDuplicate {
-		fmt.Println("duplicate error - - - - - - - - - -\n"+book.String())
+		// fmt.Println("duplicate error - - - - - - - - - -\n"+book.String())
+		fmt.Println("(" + book.SiteName + ", " + strconv.Itoa(book.Id) + ")")
 		_, err = tx.Stmt(stmt).Exec(book.Id)
 		helper.CheckError(err)
 		_, err = tx.Stmt(add).Exec(book.Id)
@@ -709,58 +711,9 @@ func (site *Site) fixDatabaseDuplicateError() () {
 
 func (site *Site) fixDatabaseMissingError() () {
 	// init variable
+	missingIds := site.getMissingId()
 	tx, err := site.database.Begin()
-	// check any id missing in the database
-	rows, err := tx.Query("select num from books group by num")
-	helper.CheckError(err)
-	ids := make([]int, 0)
-	for rows.Next() {
-		var id int
-		rows.Scan(&id)
-		ids = append(ids, id)
-	}
-	rows.Close()
-	rows, err = tx.Query("select num from error group by num")
-	helper.CheckError(err)
-	for rows.Next() {
-		var id int
-		rows.Scan(&id)
-		if !(helper.Contains(ids, id)) {
-			ids = append(ids, id)
-		}
-	}
-	rows.Close()
-	max := -1
-	rows, err = tx.Query("select num from books order by num desc")
-	helper.CheckError(err)
-	if rows.Next() {
-		var id int
-		rows.Scan(&id)
-		if (id > max) {
-			max = id
-		}
-	}
-	err = rows.Close()
-	helper.CheckError(err)
-	rows, err = tx.Query("select num from error order by num desc")
-	helper.CheckError(err)
-	if rows.Next() {
-		var id int
-		rows.Scan(&id)
-		if (id > max) {
-			max = id
-		}
-	}
-	err = rows.Close()
-	helper.CheckError(err)
-	missingid := make([]int, 0)
-	for i := 1; i < max; i += 1 {
-		if !(helper.Contains(ids, i)) {
-			missingid = append(missingid, i)
-		}
-	}
-	// insert missing record
-	// init concurrent variable
+	// insert missing record by thread
 	ctx := context.Background()
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
@@ -780,8 +733,8 @@ func (site *Site) fixDatabaseMissingError() () {
 	deleteError, err := site.database.Prepare("delete from error "+
 		"where site=? and num=?");
 	helper.CheckError(err);
-	fmt.Println("start add missing count " + strconv.Itoa(len(missingid)))
-	for _, id := range missingid {
+	fmt.Println("missing count : " + strconv.Itoa(len(missingIds)))
+	for _, id := range missingIds {
 		fmt.Println(id)
 		wg.Add(1)
 		s.Acquire(ctx, 1);
@@ -800,7 +753,7 @@ func (site *Site) fixDatabaseMissingError() () {
 	err = tx.Commit()
 	helper.CheckError(err)
 	// print missing record count
-	fmt.Println("finish add missing count "+strconv.Itoa(len(missingid)))
+	fmt.Println("finish add missing count "+strconv.Itoa(len(missingIds)))
 
 }
 
@@ -911,32 +864,38 @@ func (site *Site) getMaxId() int {
 		return maxErrorId
 	}
 }
-func (site *Site) checkMissingId(maxId int) {
+func (site *Site) getMissingId() []int {
+	maxId := site.getMaxId()
+	missingIds := make([]int, 0)
 	tx, err := site.database.Begin()
 	helper.CheckError(err)
 	// check missing record
 	rows, err := tx.Query("select num from (select num from error union select num from books) order by num")
 	helper.CheckError(err)
-	var i, id, count int
+	var i, id int
 	i = 1
-	fmt.Print("missing id : [")
 	for rows.Next() {
 		rows.Scan(&id)
 		for ; i < id; i++ {
-			if i > 1 {
-				fmt.Print(", ")
-			}
-			fmt.Print(i)
-			count++
+			missingIds = append(missingIds, i)
 		}
 		i++
 	}
-	fmt.Println("]")
-	fmt.Println("missing count : " + strconv.Itoa(count))
+	for ; i < maxId; i++ {
+		missingIds = append(missingIds, i)
+	}
 	err = rows.Close()
 	helper.CheckError(err)
 	err = tx.Rollback()
 	helper.CheckError(err)
+	return missingIds
+}
+func (site *Site) checkMissingId() {
+	missingIds := site.getMissingId()
+	b, err := json.Marshal(missingIds)
+	helper.CheckError(err)
+	fmt.Println("missing id : ", string(b))
+	fmt.Println("missing count : " + strconv.Itoa(len(missingIds)))
 }
 
 func (site *Site) Check() () {
@@ -947,8 +906,7 @@ func (site *Site) Check() () {
 	site.checkDuplicateCrossTable()
 
 	// check missing record
-	maxId := site.getMaxId()
-	site.checkMissingId(maxId)
+	site.checkMissingId()
 	site.CloseDatabase()
 }
 
