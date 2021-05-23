@@ -29,7 +29,7 @@ func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation 
 	site := Site{
 		SiteName: siteName,
 		database: nil,
-		MetaBaseUrl: info["metaBaseUrl"],
+		metaBaseUrl: info["metaBaseUrl"],
 		metaDownloadUrl: info["metaDownloadUrl"],
 		metaChapterUrl: info["metaChapterUrl"],
 		chapterPattern: info["chapterPattern"],
@@ -93,7 +93,7 @@ func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation 
 		SiteName: siteName,
 		//database: database,
 		database: nil,
-		MetaBaseUrl: info["metaBaseUrl"],
+		metaBaseUrl: info["metaBaseUrl"],
 		metaDownloadUrl: info["metaDownloadUrl"],
 		metaChapterUrl: info["metaChapterUrl"],
 		chapterPattern: info["chapterPattern"],

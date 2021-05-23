@@ -36,6 +36,46 @@ type Book struct {
 	chapterContentRegex string
 }
 
+func (book *Book) checkHTML(html string, url string, trial int) bool {
+	if (len(html) == 0) {
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": book.Id,
+			"version": book.Version,
+			"retry": trial,
+			"url": url,
+			"message": "load html fail",
+		})
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
+		return false;
+	} else if _, err := strconv.Atoi(html); err == nil {
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": book.Id,
+			"version": book.Version,
+			"retry": trial,
+			"url": url,
+			"message": "load html fail - code " + html,
+		})
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
+		return false
+	} else {
+		strByte, err := json.Marshal(map[string]interface{} {
+			"site": book.SiteName,
+			"id": book.Id,
+			"version": book.Version,
+			"retry": trial,
+			"url": url,
+			"message": "load html success",
+		})
+		helper.CheckError(err)
+		fmt.Println(string(strByte))
+	}
+	return true
+}
+
 // update the book with online info
 func (book *Book) Update() (bool) {
 	// get online resource, try maximum 10 times if it keeps failed
@@ -52,41 +92,8 @@ func (book *Book) Update() (bool) {
 			break
 		}
 	}
-	if (len(html) == 0) {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
-		return false;
-	} else if _, err := strconv.Atoi(html); err == nil {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html fail - code " + html,
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
+	if !book.checkHTML(html, book.baseUrl, i) {
 		return false
-	} else {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.baseUrl,
-			"message": "load html success",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
 	}
 	// extract info from source
 	update := false;
@@ -95,41 +102,6 @@ func (book *Book) Update() (bool) {
 	typeName := helper.Search(html, book.typeRegex);
 	lastUpdate := helper.Search(html, book.lastUpdateRegex);
 	lastChapter := helper.Search(html, book.lastChapterRegex);
-	// check difference
-	if (title != book.Title || writer != book.Writer || typeName != book.Type || 
-		lastUpdate != book.LastUpdate || lastChapter != book.LastChapter) && 
-		(title != "error" && writer != "error" && typeName != "error" &&
-		lastUpdate!= "error" && lastChapter != "error") {
-			update = true;
-			if (book.DownloadFlag ||
-				title != book.Title || writer != book.Writer || typeName != book.Type ||
-				book.Version < 0) {
-				if (book.DownloadFlag) {
-					strByte, err := json.Marshal(map[string]interface{} {
-						"site": book.SiteName,
-						"id": book.Id,
-						"version": book.Version,
-						"old": map[string]interface{} {
-							"title": book.Title,
-							"writer": book.Writer,
-							"type": book.Type,
-						},
-						"new": map[string]interface{} {
-							"title": title,
-							"writer": writer,
-							"type": typeName,
-						},
-						"message": "already download",
-					})
-					helper.CheckError(err)
-					fmt.Println(string(strByte))
-				}
-				book.Version++;
-				book.EndFlag = false;
-				book.DownloadFlag = false;
-				book.ReadFlag = false;
-			}
-	}
 	if (title == "error" || writer == "error" || typeName == "error" ||
 		lastUpdate== "error" || lastChapter == "error") {
 			strByte, err := json.Marshal(map[string]interface{} {
@@ -145,7 +117,39 @@ func (book *Book) Update() (bool) {
 			})
 			helper.CheckError(err)
 			fmt.Println(string(strByte))
+			return false
 		}
+	// check difference
+	if lastUpdate != book.LastUpdate || lastChapter != book.LastChapter {
+		update = true
+	}
+	if (title != book.Title || writer != book.Writer || typeName != book.Type) {
+		update = true;
+		if (book.DownloadFlag) {
+			strByte, err := json.Marshal(map[string]interface{} {
+				"site": book.SiteName,
+				"id": book.Id,
+				"version": book.Version,
+				"old": map[string]interface{} {
+					"title": book.Title,
+					"writer": book.Writer,
+					"type": book.Type,
+				},
+				"new": map[string]interface{} {
+					"title": title,
+					"writer": writer,
+					"type": typeName,
+				},
+				"message": "already download",
+			})
+			helper.CheckError(err)
+			fmt.Println(string(strByte))
+		}
+		book.Version++;
+		book.EndFlag = false;
+		book.DownloadFlag = false;
+		book.ReadFlag = false;
+	}
 	if (update) {
 		// sync with online info
 		book.Title = title;
@@ -180,41 +184,8 @@ func (book *Book) Download(savePath string, MAX_THREAD int) (bool) {
 			break;
 		}
 	}
-	if (len(html) == 0) {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.downloadUrl,
-			"message": "load html fail",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
-		return false;
-	} else if _, err := strconv.Atoi(html); err == nil {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.downloadUrl,
-			"message": "load html fail - code " + html,
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
+	if !book.checkHTML(html, book.downloadUrl, i) {
 		return false
-	} else {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": book.downloadUrl,
-			"message": "load html success",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
 	}
 	urls := helper.SearchAll(html, book.chapterUrlRegex);
 	titles := helper.SearchAll(html, book.chapterTitleRegex);
@@ -338,18 +309,6 @@ func (book *Book) Download(savePath string, MAX_THREAD int) (bool) {
 		helper.CheckError(err)
 		return false
 	}
-	/*
-	// save the content to target path
-	path := savePath + strconv.Itoa(book.Id);
-	if (book.Version == 0) {
-		path = path + ".txt";
-	} else {
-		path = path + "-v" + strconv.Itoa(book.Version) + ".txt";
-	}
-	bytes := []byte(content);
-	err := ioutil.WriteFile(path, bytes, 0644);
-	helper.CheckError(err);
-	*/
 	return true
 }
 func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *sync.WaitGroup, ch chan<-chapter) () {
@@ -370,43 +329,9 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 			break;
 		}
 	}
-	if (len(html) == 0) {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": url,
-			"message": "load html fail",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
+	if !book.checkHTML(html, url, i) {
 		ch <- chapter{Url: url, Title: title, Content: "load html fail"}
-		return;
-	} else if _, err := strconv.Atoi(html); err == nil {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": url,
-			"message": "load html fail - code " + html,
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
-		ch <- chapter{Url: url, Title: title, Content: "load html fail - code " + html}
 		return
-	} else {
-		strByte, err := json.Marshal(map[string]interface{} {
-			"site": book.SiteName,
-			"id": book.Id,
-			"version": book.Version,
-			"retry": i,
-			"url": url,
-			"message": "load html success",
-		})
-		helper.CheckError(err)
-		fmt.Println(string(strByte))
 	}
 	// extract chapter
 	content := helper.Search(html, book.chapterContentRegex)
@@ -424,12 +349,12 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 		ch <- chapter{Url: url, Title: title, Content: "recognize html fail\n"+html}
 		return
 	} else {
-		content = strings.ReplaceAll(content, "<br />", "");
-		content = strings.ReplaceAll(content, "&nbsp;", "");
-		content = strings.ReplaceAll(content, "<b>", "");
-		content = strings.ReplaceAll(content, "</b>", "");
-		content = strings.ReplaceAll(content, "<p>", "");
-		content = strings.ReplaceAll(content, "</p>", "");
+		content = strings.ReplaceAll(content, "<br />", "")
+		content = strings.ReplaceAll(content, "&nbsp;", "")
+		content = strings.ReplaceAll(content, "<b>", "")
+		content = strings.ReplaceAll(content, "</b>", "")
+		content = strings.ReplaceAll(content, "<p>", "")
+		content = strings.ReplaceAll(content, "</p>", "")
 		content = strings.ReplaceAll(content, "                ", "")
 		content = strings.ReplaceAll(content, "<p/>", "\n")
 		strByte, err := json.Marshal(map[string]interface{} {
@@ -456,8 +381,8 @@ func (book Book) String() (string) {
 			book.LastUpdate + "\t" + book.LastChapter;
 }
 
-func (book Book) JsonString() (string) {
-	resultByte, err := json.Marshal(map[string]interface{} {
+func(book Book) Map() map[string]interface{} {
+	return map[string]interface{} {
 		"site": book.SiteName,
 		"id": book.Id,
 		"version": book.Version,
@@ -469,7 +394,5 @@ func (book Book) JsonString() (string) {
 		"end": book.EndFlag,
 		"read": book.ReadFlag,
 		"download": book.DownloadFlag,
-	})
-	helper.CheckError(err)
-	return string(resultByte)
+	}
 }
