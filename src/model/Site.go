@@ -37,7 +37,7 @@ type Site struct {
 	MAX_THREAD_COUNT int
 }
 
-func (site *Site) Book(id, version int) (Book) {
+func (site *Site) Book(id, version int) Book {
 	baseUrl := fmt.Sprintf(site.metaBaseUrl, id);
 	downloadUrl := fmt.Sprintf(site.metaDownloadUrl, id);
 	var siteName, title, writer, typeName, lastUpdate, lastChapter string;
@@ -118,7 +118,7 @@ func (site *Site) Book(id, version int) (Book) {
 	return book;
 }
 
-func (site *Site) BookContent(book Book) (string) {
+func (site *Site) BookContent(book Book) string {
 	if book.Title == "" || !book.DownloadFlag {
 		return ""
 	}
@@ -132,25 +132,27 @@ func (site *Site) BookContent(book Book) (string) {
 	return string(content)
 }
 
-func (site *Site) OpenDatabase() () {
+func (site *Site) OpenDatabase() {
 	var err error
 	site.database, err = sql.Open("sqlite3", site.databaseLocation)
 	helper.CheckError(err)
 	site.database.SetMaxIdleConns(10);
 	site.database.SetMaxOpenConns(99999);
 }
-func (site *Site) CloseDatabase() () {
+func (site *Site) CloseDatabase() {
 	err := site.database.Close()
 	helper.CheckError(err)
 	site.database = nil
 }
 
-func (site *Site) Update() () {
+func (site *Site) Update(s *semaphore.Weighted) {
 	// init concurrent variable
 	site.OpenDatabase()
 	ctx := context.Background()
 	site.bookTx, _ = site.database.Begin()
-	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	}
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
@@ -204,7 +206,8 @@ func (site *Site) Update() () {
 	helper.CheckError(err)
 	site.CloseDatabase()
 }
-func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save *sql.Stmt, update *sql.Stmt) () {
+func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGroup, 
+	tx *sql.Tx, save *sql.Stmt, update *sql.Stmt) {
 	defer wg.Done()
 	defer s.Release(1)
 	//book := site.Book(id)
@@ -260,14 +263,16 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 	}
 }
 
-func (site *Site) Explore(maxError int) () {
+func (site *Site) Explore(maxError int, s *semaphore.Weighted) {
 	// init concurrent variable
 	site.OpenDatabase()
 	ctx := context.Background()
 	var err error
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(maxError))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(maxError))
+	}
 	var wg sync.WaitGroup
 	// prepare transaction and statement
 	tx, err := site.database.Begin();
@@ -316,7 +321,8 @@ func (site *Site) Explore(maxError int) () {
 	helper.CheckError(err)
 	site.CloseDatabase()
 }
-func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, save, saveError, deleteError *sql.Stmt) () {
+func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighted, 
+	wg *sync.WaitGroup, tx *sql.Tx, save, saveError, deleteError *sql.Stmt) {
 	defer wg.Done()
 	defer s.Release(1)
 	//book := site.Book(id)
@@ -354,7 +360,7 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 	}
 }
 
-func (site *Site) Download() () {
+func (site *Site) Download() {
 	site.OpenDatabase()
 	var err error
 	site.bookTx, err = site.database.Begin()
@@ -409,13 +415,15 @@ func (site *Site) Download() () {
 	site.CloseDatabase()
 }
 
-func (site *Site) UpdateError() () {
+func (site *Site) UpdateError(s *semaphore.Weighted) {
 	// init concurrent variable
 	site.OpenDatabase()
 	var err error
 	ctx := context.Background()
 	site.bookTx, err = site.database.Begin()
-	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	}
 	var wg sync.WaitGroup
 	var siteName string;
 	var id int;
@@ -451,7 +459,8 @@ func (site *Site) UpdateError() () {
 	helper.CheckError(err)
 	site.CloseDatabase()
 }
-func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, delete, save *sql.Stmt) () {
+func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, 
+	wg *sync.WaitGroup, tx *sql.Tx, delete, save *sql.Stmt) {
 	defer wg.Done()
 	defer s.Release(1)
 	// try to update book
@@ -487,7 +496,7 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted, wg *sync.W
 	}
 }
 
-func (site *Site) Info() () {
+func (site *Site) Info() {
 	site.OpenDatabase()
 	fmt.Println("Site :\t" + site.SiteName);
 	var normalCount, errorCount int;
@@ -534,7 +543,7 @@ func (site *Site) CheckEnd() {
 	site.CloseDatabase()
 }
 
-func (site *Site) Random(size int) ([]Book) {
+func (site *Site) Random(size int) []Book {
 	var downloadCount int
 	site.OpenDatabase()
 	tx, err := site.database.Begin()
@@ -561,10 +570,12 @@ func (site *Site) Random(size int) ([]Book) {
 	return result;
 }
 
-func (site *Site) fixStroageError() () {
+func (site *Site) fixStroageError(s *semaphore.Weighted) {
 	// init var for concurrency
 	ctx := context.Background()
-	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	}
 	var wg sync.WaitGroup
 
 	tx, err := site.database.Begin()
@@ -614,7 +625,9 @@ func (site *Site) fixStroageError() () {
 	err = tx.Commit()
 	helper.CheckError(err)
 }
-func (site *Site)CheckDownloadExistThread(id, version int, recordDownload bool, s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, markDownload, markNotDownload *sql.Stmt) {
+func (site *Site)CheckDownloadExistThread(id, version int, recordDownload bool, 
+	s *semaphore.Weighted, wg *sync.WaitGroup, tx *sql.Tx, markDownload, 
+	markNotDownload *sql.Stmt) {
 	defer wg.Done()
 	defer s.Release(1)
 	path := site.downloadLocation + strconv.Itoa(id)
@@ -635,7 +648,7 @@ func (site *Site)CheckDownloadExistThread(id, version int, recordDownload bool, 
 	}
 }
 
-func (site *Site) fixDatabaseDuplicateError() () {
+func (site *Site) fixDatabaseDuplicateError() {
 	// init variable
 	tx, err := site.database.Begin()
 	// check any duplicate record in books table and show them
@@ -709,7 +722,7 @@ func (site *Site) fixDatabaseDuplicateError() () {
 	helper.CheckError(err)
 }
 
-func (site *Site) fixDatabaseMissingError() () {
+func (site *Site) fixDatabaseMissingError(s *semaphore.Weighted) {
 	// init variable
 	missingIds := site.getMissingId()
 	tx, err := site.database.Begin()
@@ -717,7 +730,9 @@ func (site *Site) fixDatabaseMissingError() () {
 	ctx := context.Background()
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	}
 	var wg sync.WaitGroup
 	var errorCount int
 	save, err := site.database.Prepare("insert into books "+
@@ -757,14 +772,14 @@ func (site *Site) fixDatabaseMissingError() () {
 
 }
 
-func (site *Site) Fix() () {
+func (site *Site) Fix(s *semaphore.Weighted) {
 	site.OpenDatabase()
 	fmt.Println("Add Missing Record")
-	site.fixDatabaseMissingError()
+	site.fixDatabaseMissingError(s)
 	fmt.Println("Fix duplicate record")
 	site.fixDatabaseDuplicateError()
 	fmt.Println("Fix storage error")
-	site.fixStroageError()
+	site.fixStroageError(s)
 	fmt.Println()
 	site.CloseDatabase()
 }
@@ -898,7 +913,7 @@ func (site *Site) checkMissingId() {
 	fmt.Println("missing count : " + strconv.Itoa(len(missingIds)))
 }
 
-func (site *Site) Check() () {
+func (site *Site) Check() {
 	// init variable
 	site.OpenDatabase()
 	site.checkDuplicateBook()
@@ -910,7 +925,7 @@ func (site *Site) Check() () {
 	site.CloseDatabase()
 }
 
-func (site *Site) Backup() (bool) {
+func (site *Site) Backup() bool {
 	y, m, d := time.Now().Date()
 	folderName := fmt.Sprintf("%d-%d-%d/", y, m, d)
 	path := strings.Replace(site.databaseLocation, "database/", "backup/"+folderName, -1)
@@ -927,7 +942,7 @@ func (site *Site) Backup() (bool) {
 	helper.CheckError(err)
 	return true
 }
-func (site *Site) table2StringSlice(table string) ([]string) {
+func (site *Site) table2StringSlice(table string) []string {
 	result := make([]string, 0)
 	rows, err := site.database.Query("select * from " + table)
 	helper.CheckError(err)
@@ -951,7 +966,7 @@ func (site *Site) table2StringSlice(table string) ([]string) {
 	}
 	return result
 }
-func (site *Site) BackupString() (bool) {
+func (site *Site) BackupString() bool {
 	y, m, d := time.Now().Date()
 	folderName := fmt.Sprintf("%d-%d-%d/", y, m, d)
 	path := strings.Replace(
@@ -985,7 +1000,7 @@ func (site *Site) BackupString() (bool) {
 	return true
 }
 
-func (site *Site) Search(title, writer string, page int) ([]Book) {
+func (site *Site) Search(title, writer string, page int) []Book {
 	site.OpenDatabase()
 	results := make([]Book, 0)
 	var err error
@@ -1012,13 +1027,15 @@ func (site *Site) Search(title, writer string, page int) ([]Book) {
 	return results
 }
 /*
-func (site Site) Test() () {
+func (site Site) Test() {
 	maxError := 5
 	ctx := context.Background()
 	var err error
 	site.bookTx, err = site.database.Begin()
 	helper.CheckError(err)
-	var s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	if s == nil {
+		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
+	}
 	var wg sync.WaitGroup
 	// prepare transaction and statement
 	tx, err := site.database.Begin();
@@ -1071,7 +1088,7 @@ func (site Site) Test() () {
 }
 */
 
-func (site Site) Validate() (float64) {
+func (site Site) Validate() float64 {
 	os.Mkdir("./validate-download/", 0755)
 	site.OpenDatabase()
 
@@ -1103,7 +1120,8 @@ func (site Site) Validate() (float64) {
 	}
 	return tried / success
 }
-func (site Site) validateThread(num int, version int, success *float64, tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
+func (site Site) validateThread(num int, version int, success *float64, 
+	tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
 	defer wg.Done()
 	book := site.Book(num, version)
 	book.Title = ""
@@ -1116,7 +1134,7 @@ func (site Site) validateThread(num int, version int, success *float64, tried *f
 		*tried ++
 	}
 }
-func (site Site) ValidateDownload() (float64) {
+func (site Site) ValidateDownload() float64 {
 	os.Mkdir("./validate-download/", 0755)
 	site.OpenDatabase()
 
@@ -1148,7 +1166,8 @@ func (site Site) ValidateDownload() (float64) {
 	}
 	return tried / success
 }
-func (site Site) validateDownloadThread(num int, version int, success *float64, tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
+func (site Site) validateDownloadThread(num int, version int, success *float64, 
+	tried *float64, s *semaphore.Weighted, wg *sync.WaitGroup) {
 	defer wg.Done()
 	book := site.Book(num, version)
 	// here have two same condition because `book.Download` take a long time

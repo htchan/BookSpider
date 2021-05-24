@@ -10,6 +10,8 @@ import (
 	_ "net/http/pprof"
 	"path/filepath"
 	
+	"golang.org/x/sync/semaphore"
+	
 	"encoding/json"
 	"io/ioutil"
 
@@ -33,7 +35,7 @@ func help() {
 	fmt.Println("\n")
 }
 
-func writeStage(s string) () {
+func writeStage(s string) {
 	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
 	if err != nil {
 		fmt.Println(err)
@@ -43,7 +45,7 @@ func writeStage(s string) () {
     file.Close()
 }
 
-func download(sites map[string]model.Site) {
+func download(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: download start")
 	var wg sync.WaitGroup
 	for name, site := range sites {
@@ -64,15 +66,16 @@ func download(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: download finish")
 }
-func update(sites map[string]model.Site) {
+func update(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: update start")
 	var wg sync.WaitGroup
+	var s = semaphore.NewWeighted(int64(config.MaxThreads))
 	for name, site := range sites {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
 			fmt.Println(name + "\tupdate")
-			site.Update()
+			site.Update(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
 			wg.Done()
@@ -81,15 +84,16 @@ func update(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: update finish")
 }
-func explore(sites map[string]model.Site, maxError int) {
+func explore(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: explore start")
 	var wg sync.WaitGroup
+	var s = semaphore.NewWeighted(int64(config.MaxThreads))
 	for name, site := range sites {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
 			fmt.Println(name + "\texplore")
-			site.Explore(maxError)
+			site.Explore(config.MaxExploreError, s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
 			wg.Done()
@@ -98,15 +102,16 @@ func explore(sites map[string]model.Site, maxError int) {
 	wg.Wait()
 	writeStage("stage: explore finish")
 }
-func updateError(sites map[string]model.Site) {
+func updateError(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: update error start")
 	var wg sync.WaitGroup
+	var s = semaphore.NewWeighted(int64(config.MaxThreads))
 	for name, site := range sites {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
 			fmt.Println(name + "\tupdate error")
-			site.UpdateError()
+			site.UpdateError(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
 			wg.Done()
@@ -115,7 +120,7 @@ func updateError(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: update error finish")
 }
-func info(sites map[string]model.Site) {
+func info(sites map[string]model.Site, config model.Config) {
 	for name, site := range sites {
 		fmt.Println(name + "\tinfo")
 		fmt.Println(strings.Repeat("- ", 20))
@@ -123,7 +128,7 @@ func info(sites map[string]model.Site) {
 		fmt.Println(strings.Repeat("- ", 20))
 	}
 }
-func check(sites map[string]model.Site) {
+func check(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: check error start")
 	for name, site := range sites {
 		writeStage("sub_stage: " + name + " start")
@@ -136,7 +141,7 @@ func check(sites map[string]model.Site) {
 	}
 	writeStage("stage: check error finish")
 }
-func checkEnd(sites map[string]model.Site) {
+func checkEnd(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: check end start")
 	var wg sync.WaitGroup
 	for name, site := range sites {
@@ -155,7 +160,7 @@ func checkEnd(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: check end finish")
 }
-func backup(sites map[string]model.Site) {
+func backup(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: backup start")
 	var wg sync.WaitGroup
 	for name, site := range sites {
@@ -172,7 +177,7 @@ func backup(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: backup finish")
 }
-func backupString(sites map[string]model.Site) {
+func backupString(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: backup string start")
 	for name, site := range sites {
 		writeStage("sub_stage: " + name + " start")
@@ -183,15 +188,16 @@ func backupString(sites map[string]model.Site) {
 	}
 	writeStage("stage: backup string finish")
 }
-func fix(sites map[string]model.Site) {
+func fix(sites map[string]model.Site, config model.Config) {
 	writeStage("stage: fix start")
 	var wg sync.WaitGroup
+	var s = semaphore.NewWeighted(int64(config.MaxThreads))
 	for name, site := range sites {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
 			fmt.Println(name + "\tfix")
-			site.Fix()
+			site.Fix(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
 			wg.Done()
@@ -200,7 +206,7 @@ func fix(sites map[string]model.Site) {
 	wg.Wait()
 	writeStage("stage: fix finish")
 }
-func random(sites map[string]model.Site) {
+func random(sites map[string]model.Site, config model.Config) {
 	for name, site := range sites {
 		fmt.Println(name + "\trandom")
 		results := site.Random(5)
@@ -210,7 +216,7 @@ func random(sites map[string]model.Site) {
 		runtime.GC()
 	}
 }
-func validate(sites map[string]model.Site) {
+func validate(sites map[string]model.Site, config model.Config) {
 	exploreResult := make(map[string]float64)
 	downloadResult := make(map[string]float64)
 	for name, site := range sites {
@@ -229,18 +235,18 @@ func validate(sites map[string]model.Site) {
 	helper.CheckError(err)
 
 }
-func schedule(sites map[string]model.Site) {
-	validate(sites)
-	backup(sites)
-	update(sites)
-	explore(sites, 1000)
-	updateError(sites)
-	check(sites)
-	fix(sites)
-	checkEnd(sites)
-	download(sites)
+func schedule(sites map[string]model.Site, config model.Config) {
+	validate(sites, config)
+	backup(sites, config)
+	update(sites, config)
+	explore(sites, config)
+	updateError(sites, config)
+	check(sites, config)
+	fix(sites, config)
+	checkEnd(sites, config)
+	download(sites, config)
 }
-func test(sites map[string]model.Site) {
+func test(sites map[string]model.Site, config model.Config) {
 	site := sites["hjwzw"]
 	book := site.Book(36458, -1)
 	book.Download("./validate-download/", 1000)
@@ -274,31 +280,31 @@ func main() {
 	
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
-		update(sites)
+		update(sites, config)
 	case "EXPLORE":
-		explore(sites, 1000)
+		explore(sites, config)
 	case "DOWNLOAD":
-		download(sites)
+		download(sites, config)
 	case "ERROR":
-		updateError(sites)
+		updateError(sites, config)
 	case "INFO":
-		info(sites)
+		info(sites, config)
 	case "CHECK":
-		check(sites)
+		check(sites, config)
 	case "CHECKEND":
-		checkEnd(sites)
+		checkEnd(sites, config)
 	case "BACKUP":
-		backup(sites)
+		backup(sites, config)
 	case "BACKUPSTRING":
-		backupString(sites)
+		backupString(sites, config)
 	case "FIX":
-		fix(sites)
+		fix(sites, config)
 	case "RANDOM":
-		random(sites)
+		random(sites, config)
 	case "VALIDATE":
-		validate(sites)
+		validate(sites, config)
 	case "TEST":
-		test(sites)
+		test(sites, config)
 	default:
 		help()
 		fmt.Println("Invalid rguement")

@@ -14,10 +14,12 @@ import (
 type Config struct {
 	Sites map[string]map[string]string
 	Api []string
+	MaxThreads int
+	MaxExploreError int
 }
 
 func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation string, 
-	databaseLocation string, downloadLocation string, MAX_THREAD_COUNT int) (Site) {
+	databaseLocation string, downloadLocation string, MAX_THREAD_COUNT int) Site {
 	//database, err := sql.Open("sqlite3", databaseLocation)
 	//helper.CheckError(err);
 	//database.SetMaxIdleConns(10);
@@ -48,7 +50,7 @@ func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation 
 	return site;
 }
 
-func LoadSiteYaml(siteName string, config map[string]string) (Site) {
+func LoadSiteYaml(siteName string, config map[string]string) Site {
 	var decoder *encoding.Decoder
 	if (config["decode"] == "big5") {
 		decoder = traditionalchinese.Big5.NewDecoder()
@@ -64,7 +66,7 @@ func LoadSiteYaml(siteName string, config map[string]string) (Site) {
 	return site
 }
 
-func LoadSitesYaml(config Config) (map[string]Site) {
+func LoadSitesYaml(config Config) map[string]Site {
 	sites := make(map[string]Site)
 	for siteName, siteConfig := range config.Sites {
 		sites[siteName] = LoadSiteYaml(siteName, siteConfig)
@@ -72,7 +74,7 @@ func LoadSitesYaml(config Config) (map[string]Site) {
 	return sites
 }
 
-func LoadYaml(configFileLocation string) (Config) {
+func LoadYaml(configFileLocation string) Config {
 	var config Config
 	data, err := ioutil.ReadFile(configFileLocation)
 	helper.CheckError(err)
@@ -80,7 +82,8 @@ func LoadYaml(configFileLocation string) (Config) {
 	return config
 }
 
-func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation string, databaseLocation string, downloadLocation string) (Site) {
+func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation string, 
+	databaseLocation string, downloadLocation string) Site {
 	//database, err := sql.Open("sqlite3", databaseLocation)
 	//helper.CheckError(err);
 	//database.SetMaxIdleConns(10);
@@ -111,7 +114,7 @@ func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation 
 	return site;
 }
 
-func LoadSiteJson(siteName string, config map[string]string) (Site) {
+func LoadSiteJson(siteName string, config map[string]string) Site {
 	var decoder *encoding.Decoder
 	if (config["decode"] == "big5") {
 		decoder = traditionalchinese.Big5.NewDecoder()
@@ -124,7 +127,7 @@ func LoadSiteJson(siteName string, config map[string]string) (Site) {
 					config["downloadLocation"])
 	return site
 }
-func LoadSitesJson(config Config) (map[string]Site) {
+func LoadSitesJson(config Config) map[string]Site {
 	sites := make(map[string]Site)
 	for siteName, config := range config.Sites {
 		sites[siteName] = LoadSiteJson(siteName, config)
@@ -132,7 +135,7 @@ func LoadSitesJson(config Config) (map[string]Site) {
 	return sites
 }
 
-func LoadJson(configFileLocation string) (Config) {
+func LoadJson(configFileLocation string) Config {
 	var config Config
 	data, err := ioutil.ReadFile(configFileLocation)
 	helper.CheckError(err)

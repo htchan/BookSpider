@@ -77,7 +77,7 @@ func (book *Book) checkHTML(html string, url string, trial int) bool {
 }
 
 // update the book with online info
-func (book *Book) Update() (bool) {
+func (book *Book) Update() bool {
 	// get online resource, try maximum 10 times if it keeps failed
 	var html string
 	var i int;
@@ -165,7 +165,7 @@ type chapter struct {
 	Url, Title, Content string
 }
 
-func (book *Book) Download(savePath string, MAX_THREAD int) (bool) {
+func (book *Book) Download(savePath string, MAX_THREAD int) bool {
 	// set up semaphore and routine pool
 	ctx := context.Background()
 	var s = semaphore.NewWeighted(int64(MAX_THREAD))
@@ -311,7 +311,8 @@ func (book *Book) Download(savePath string, MAX_THREAD int) (bool) {
 	}
 	return true
 }
-func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *sync.WaitGroup, ch chan<-chapter) () {
+func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, 
+	wg *sync.WaitGroup, ch chan<-chapter) {
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
@@ -375,7 +376,7 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted, wg *
 }
 
 // to string function
-func (book Book) String() (string) {
+func (book Book) String() string {
 	return book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\n" +
 			book.Title + "\t" + book.Writer + "\n"+
 			book.LastUpdate + "\t" + book.LastChapter;

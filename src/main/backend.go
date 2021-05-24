@@ -54,39 +54,34 @@ func (logs *Logs) update() {
 	b := make([]byte, 1000)
 	file.ReadAt(b, offset)
 	logs.Logs = strings.Split(string(b), "\n")
+	for i, _ := range logs.Logs {
+		logs.Logs[i] = strings.ReplaceAll(logs.Logs[i], "\"", "\\\"")
+	}
 	logs.MemoryLastUpdate = time.Now()
+}
+
+func response(res http.ResponseWriter, data map[string]interface{}) {
+	dataByte, err := json.Marshal(data)
+	helper.CheckError(err)
+	fmt.Fprintln(res, string(dataByte))
 }
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-	/*
-	f, err := os.Stat("nohup.out")
-	// get create time, last update time of nohup.out
-	if err != nil {
-		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"no log found\"}")
-		return
-	}
-	modifyTime := f.ModTime().String()[:19]
-	*/
 	modifyTime := logs.FileLastUpdate.String()[:19]
 	// get last several line of nohup.out
 	logs.update()
 	// print them
-	fmt.Fprintf(res, "{")
-	fmt.Fprintf(res, "\"time\" : \"" + modifyTime + "\", ")
-	fmt.Fprintf(res, "\"logs\" : [\n")
-	for i, log := range logs.Logs {
-		fmt.Fprintf(res, "\"" + strings.ReplaceAll(log, "\"", "\\\"") + "\"")
-		if i < len(logs.Logs) - 1 {
-			fmt.Fprintf(res, ",\n")
-		}
-	}
-	fmt.Fprintf(res, "]}")
+	response(res, map[string]interface{} {
+		"time": modifyTime,
+		"logs": logs.Logs,
+	})
 }
 
 func ValidateState(res http.ResponseWriter, req *http.Request) {
+	//TODO: conside to turn this json to a yaml array to show what site is working
+	//TODO: maybe also put it into config.yaml
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	b, err := ioutil.ReadFile("./validate.json")
@@ -101,24 +96,21 @@ func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	data, err := ioutil.ReadFile(stageFileName)
+	var stageStr string
 	if err != nil {
-		fmt.Fprintf(res, "{\"stage\" : \""+err.Error()+"\", ")
+		stageStr = err.Error()
 	} else {
-		fmt.Fprintf(res, "{\"stage\" : \""+strings.ReplaceAll(string(data), "\n", "\\n")+"\", ")
+		stageStr = strings.ReplaceAll(string(data), "\n", "\\n")
 	}
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
 		siteNames = append(siteNames, siteName)
 	}
 	sort.Strings(siteNames)
-	fmt.Fprintf(res, "\"siteNames\" : [")
-	for i, siteName := range siteNames {
-		fmt.Fprintf(res, "\"" + siteName + "\"")
-		if i < len(siteNames) - 1 {
-			fmt.Fprintf(res, ", ")
-		}
-	}
-	fmt.Fprintf(res, "]}")
+	response(res, map[string]interface{} {
+		"stage": stageStr,
+		"siteNames": siteNames,
+	})
 }
 
 func SiteInfo(res http.ResponseWriter, req *http.Request) {
@@ -129,12 +121,14 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "site <" + siteName + "> not found",
+		})
 		return
 	}
-	siteByte, err := json.Marshal(site.Map())
-	helper.CheckError(err)
-	fmt.Fprintf(res, string(siteByte))
+	response(res, site.Map())
 }
 
 func BookInfo(res http.ResponseWriter, req *http.Request) {
@@ -145,13 +139,21 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "site <" + siteName + "> not found",
+		})
 		return
 	}
 	id, err := strconv.Atoi(uri[3])
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
+		// fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
+		response(res, map[string]interface{} {
+			"code": 400,
+			"message": "id <" + uri[3] + "> is not a number",
+		})
 		return
 	}
 	version := -1;
@@ -164,11 +166,13 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 	book := site.Book(id, version)
 	if (book.Title == "") {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found",
+		})
 	} else {
-		bookByte, err := json.Marshal(book.Map())
-		helper.CheckError(err)
-		fmt.Fprintf(res, string(bookByte))
+		response(res, book.Map())
 	}
 }
 
@@ -180,18 +184,26 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "site <" + siteName + "> not found",
+		})
 		return
 	}
 	id, err := strconv.Atoi(uri[3])
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
+		// fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
+		response(res, map[string]interface{} {
+			"code": 400,
+			"message": "id <" + uri[3] + "> is not a number",
+		})
 		return
 	}
 	version := -1;
 	if len(uri) > 4 {
-		version, err =strconv.Atoi(uri[4])
+		version, err = strconv.Atoi(uri[4])
 		if err != nil {
 			version = -1
 		}
@@ -199,12 +211,20 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	book := site.Book(id, version)
 	if (book.Title == "") {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found",
+		})
 		return
 	}
 	if !book.DownloadFlag {
 		res.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")
+		// fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")
+		response(res, map[string]interface{} {
+			"code": 406,
+			"message": "book <" + uri[3] + "> not download yet",
+		})
 		return
 	}
 	fileName := book.Title + "-" + book.Writer
@@ -225,7 +245,11 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "site <" + siteName + "> not found",
+		})
 		return
 	}
 	title := strings.ReplaceAll(req.URL.Query().Get("title"), "*", "%")
@@ -236,16 +260,13 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 		page = 0
 	}
 	books := site.Search(title, writer, page)
-	fmt.Fprintf(res, "{\"books\" : [")
-	for i, book := range books {
-		bookByte, err := json.Marshal(book.Map())
-		helper.CheckError(err)
-		fmt.Fprintf(res, string(bookByte))
-		if i < len(books)-1 {
-			fmt.Fprintf(res, ",")
-		}
+	booksArray := make([]map[string]interface{}, 0)
+	for _, book := range books {
+		booksArray = append(booksArray, book.Map())
 	}
-	fmt.Fprintf(res, "]}")
+	response(res, map[string]interface{} {
+		"books": booksArray,
+	})
 }
 
 func BookRandom(res http.ResponseWriter, req *http.Request) {
@@ -256,7 +277,11 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
+		response(res, map[string]interface{} {
+			"code": 404,
+			"message": "site <" + siteName + "> not found",
+		})
 		return
 	}
 	num, err := strconv.Atoi(req.URL.Query().Get("num"))
@@ -265,30 +290,27 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	}
 	if (num > 50) { num = 50 }
 	books := site.Random(num)
-	fmt.Fprintf(res, "{\"books\" : [")
-	for i, book := range books {
-		bookByte, err := json.Marshal(book.Map())
-		helper.CheckError(err)
-		fmt.Fprintf(res, string(bookByte))
-		if i < len(books)-1 {
-			fmt.Fprintf(res, ",")
-		}
+	booksArray := make([]map[string]interface{}, 0)
+	for _, book := range books {
+		booksArray = append(booksArray, book.Map())
 	}
-	fmt.Fprintf(res, "]}")
+	response(res, map[string]interface{} {
+		"books": booksArray,
+	})
 }
 
 var currentProcess string
 var logs Logs
 var sites map[string]model.Site
 
-func main() () {
+func main() {
 	currentProcess = ""
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	stageFileName = dir + "/log/stage.txt"
 	logs = Logs{
 		logLocation: dir + "/nohup.out", 
 		Logs: make([]string, 100), 
-		MemoryLastUpdate: time.Unix(0,0), 
+		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}
 	config := model.LoadYaml("./config/config.yaml")
 	sites = model.LoadSitesYaml(config)

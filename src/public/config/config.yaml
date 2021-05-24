@@ -37,3 +37,5 @@ api:
   - process
   - info
   - validate
+maxThreads: 1000
+maxExploreError: 1000
