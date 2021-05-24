@@ -29,6 +29,7 @@ type Logs struct {
 }
 
 var stageFileName string
+const readLogLen int64 = 10000
 
 func (logs *Logs) update() {
 	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 {
@@ -47,13 +48,14 @@ func (logs *Logs) update() {
 	helper.CheckError(err)
 	defer file.Close()
 	logs.size = fileSize
-	offset := fileSize - 1000
-	if offset < 1000 {
+	offset := fileSize - readLogLen
+	if offset < readLogLen {
 		offset = 0
 	}
-	b := make([]byte, 1000)
+	b := make([]byte, readLogLen)
 	file.ReadAt(b, offset)
 	logs.Logs = strings.Split(string(b), "\n")
+	logs.Logs = logs.Logs[1:]
 	for i, _ := range logs.Logs {
 		logs.Logs[i] = strings.ReplaceAll(logs.Logs[i], "\"", "\\\"")
 	}
