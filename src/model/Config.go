@@ -12,10 +12,10 @@ import (
 )
 
 type Config struct {
-	Sites map[string]map[string]string
-	Api []string
-	MaxThreads int
-	MaxExploreError int
+	Sites map[string]map[string]string `yaml:"sites"`
+	Api []string `yaml:"api"`
+	MaxThreads int `yaml:"maxThreads"`
+	MaxExploreError int `yaml:"maxExploreError"`
 }
 
 func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation string, 
