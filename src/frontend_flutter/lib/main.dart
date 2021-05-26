@@ -27,37 +27,48 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (settings.name == '/') {
-          return MaterialPageRoute(builder: (context) => MainPage(url: url,));
+          return MaterialPageRoute(builder: (context) => MainPage(url: url,),
+            settings: settings);
         }
         var uri = Uri.parse(settings.name);
         print(uri.pathSegments);
         if (uri.pathSegments.indexOf('stage') == 0) {
-          return MaterialPageRoute(builder: (context) => StagePage(
-            url: url,
-          ));
+          return MaterialPageRoute(
+            builder: (context) => StagePage(
+              url: url,
+            ), 
+            settings: settings);
         } else if (uri.pathSegments.length == 2) {
-          return MaterialPageRoute(builder: (context) => SitePage(
-            url: url,
-            siteName: uri.pathSegments[0]
-          ));
+          return MaterialPageRoute(
+            builder: (context) => SitePage(
+              url: url,
+              siteName: uri.pathSegments[0]
+            ),
+            settings: settings);
         } else if (uri.pathSegments.indexOf('search') == 1) {
-          return MaterialPageRoute(builder: (context) => SearchPage(
-            url: url, 
-            siteName: uri.pathSegments[0],
-            title: uri.queryParameters['title'],
-            writer: uri.queryParameters['writer']
-          ));
+          return MaterialPageRoute(
+            builder: (context) => SearchPage(
+              url: url, 
+              siteName: uri.pathSegments[0],
+              title: uri.queryParameters['title'],
+              writer: uri.queryParameters['writer']
+            ),
+            settings: settings);
         } else if (uri.pathSegments.indexOf('random') == 1) {
-          return MaterialPageRoute(builder: (context) => RandomPage(
-            url: url, 
-            siteName: uri.pathSegments[0]
-          ));
+          return MaterialPageRoute(
+            builder: (context) => RandomPage(
+              url: url, 
+              siteName: uri.pathSegments[0]
+            ),
+            settings: settings);
         } else if (uri.pathSegments.length == 3) {
-          return MaterialPageRoute(builder: (context) => BookPage(
-            url: url,
-            siteName: uri.pathSegments[0],
-            bookId: uri.pathSegments[1]
-          ));
+          return MaterialPageRoute(
+            builder: (context) => BookPage(
+              url: url,
+              siteName: uri.pathSegments[0],
+              bookId: uri.pathSegments[1]
+            ),
+            settings: settings);
         }
       }
     );
