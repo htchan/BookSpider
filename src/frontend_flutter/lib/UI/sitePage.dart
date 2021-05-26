@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:charts_flutter/flutter.dart' as charts;
 
 class SitePage extends StatefulWidget{
   final String url, siteName;
@@ -11,11 +12,18 @@ class SitePage extends StatefulWidget{
   _SitePageState createState() => _SitePageState(this.url, this.siteName);
 }
 
-class _SitePageState extends State<SitePage> {
+class Data {
+  final String name;
+  final int value;
+  Data(this.name, this.value);
+}
+
+class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin {
   final String siteName, url;
-  bool error = true;
+  bool load = false;
   Map<String, dynamic> info;
   final GlobalKey scaffoldKey = GlobalKey();
+  TabController _tabController;
 
   _SitePageState(this.url, this.siteName) {
     // call backend api
@@ -24,16 +32,17 @@ class _SitePageState extends State<SitePage> {
     .then( (response) {
       if (response.statusCode != 404) {
         this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.error = false;
+        this.load = true;
         setState((){});
       }
     });
+    _tabController = TabController(length: 2, vsync: this);
   }
-  Widget _renderBookCount(BuildContext context) {
-    String bookCount = (this.error) ? '' : this.info['bookCount'].toString();
-    String errorCount = (this.error) ? '' : this.info['errorCount'].toString();
-    String totalCount = (this.error) ? '' : (this.info['bookCount'] + this.info['errorCount']).toString();
-    String maxId = (this.error) ? '' : this.info['maxid'].toString();
+  Widget _renderBookCount() {
+    String bookCount = (this.load) ? this.info['bookCount'].toString() : '';
+    String errorCount = (this.load) ? this.info['errorCount'].toString() : '';
+    String totalCount = (this.load) ? (int.parse(this.info['bookCount']) + int.parse(this.info['errorCount'])).toString() : '';
+    String maxId = (this.load) ? this.info['maxid'].toString() : '';
     Color totalCountColor = (totalCount == maxId) ? Colors.black : Colors.red;
     return RichText(
       textScaleFactor: Theme.of(context).textTheme.bodyText1.fontSize / 14,
@@ -49,20 +58,74 @@ class _SitePageState extends State<SitePage> {
 
   }
   Widget _renderRecordCount() {
-    String bookRecordCount = (this.error) ? '' : this.info['bookRecordCount'].toString();
-    String errorRecordCount = (this.error) ? '' : this.info['errorRecordCount'].toString();
-    String totalRecordCount = (this.error) ? '' : (this.info['bookRecordCount'] + this.info['errorRecordCount']).toString();
+    String bookRecordCount = (this.load) ? this.info['bookRecordCount'].toString() : '';
+    String errorRecordCount = (this.load) ? this.info['errorRecordCount'].toString() : '';
+    String totalRecordCount = (this.load) ? (int.parse(this.info['bookRecordCount']) + int.parse(this.info['errorRecordCount'])).toString() : '';
     return Text('TotalCount : $totalRecordCount ($bookRecordCount + $errorRecordCount)');
   }
   Widget _renderEndCount() {
-    String endCount = (this.error) ? '' : this.info['endCount'].toString();
-    String endRecordCount = (this.error) ? '' : this.info['endRecordCount'].toString();
+    String endCount = (this.load) ? this.info['endCount'].toString() : '';
+    String endRecordCount = (this.load) ? this.info['endRecordCount'].toString() : '';
     return Text('EndCount : $endCount ($endRecordCount)');
   }
   Widget _renderDownloadCount() {
-    String downloadCount = (this.error) ? '' : this.info['downloadCount'].toString();
-    String downloadRecordCount = (this.error) ? '' : this.info['downloadRecordCount'].toString();
+    String downloadCount = (this.load) ? this.info['downloadCount'].toString() : '';
+    String downloadRecordCount = (this.load) ? this.info['downloadRecordCount'].toString() : '';
     return Text('DownloadCount : $downloadCount ($downloadRecordCount)');
+  }
+  List<charts.Series<Data, String>> _formatData() {
+    if (!this.load) return [];
+
+    List<Data> data = [
+      Data('Download', int.parse(this.info['downloadCount'])),
+      Data('Book', int.parse(this.info['bookCount']) - int.parse(this.info['downloadCount'])),
+      Data('error', int.parse(this.info['errorCount']))
+    ];
+    
+    return [
+      charts.Series<Data, String>(
+        id: 'DownloadData',
+        domainFn: (Data data, _) => data.name,
+        measureFn: (Data data, _) => data.value,
+        data: data,
+        // Set a label accessor to control the text of the arc label.
+        labelAccessorFn: (Data row, _) => '${row.name}: ${row.value}',
+      )
+    ];
+  }
+  Widget _renderData() {
+    if (!this.load) return Center(child: Text("Loading Data"));
+    return Column(
+      children: [
+        _renderBookCount(),
+        _renderRecordCount(),
+        _renderEndCount(),
+        _renderDownloadCount(),
+      ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+  Widget _renderChart() {
+    if (!this.load) return Center(child: Text("Loading Chart"),);
+
+    return Stack(
+      children: <Widget>[
+        charts.PieChart(
+          this._formatData(),
+          animate: true,
+          defaultRenderer: charts.ArcRendererConfig(
+            arcWidth: 100,
+            arcRendererDecorators: [new charts.ArcLabelDecorator()]),
+        ),
+        Center(child: Text(
+          (this.load) ? this.info["maxid"].toString() : '',
+          style: TextStyle(
+            fontSize: 30.0,
+            color: Colors.blue,
+            fontWeight: FontWeight.bold
+          )
+        ))
+      ],);
   }
   Widget _renderSearchPanel() {
     TextEditingController titleControler, writerController;
@@ -116,15 +179,28 @@ class _SitePageState extends State<SitePage> {
       appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
-        child: ListView(
-          children: [
-            this._renderBookCount(context),
-            this._renderRecordCount(),
-            this._renderEndCount(),
-            this._renderDownloadCount(),
+        child: Column(
+          children:[
+            Container(
+              decoration: new BoxDecoration(color: Theme.of(context).primaryColor),
+              child: TabBar(
+                tabs: <Widget>[
+                  Tab(text: 'Chart',), Tab(text: 'Data',)
+                ],
+                controller: this._tabController,)),
+            Container(
+              height: 500,
+              child: TabBarView(
+                children: [
+                  this._renderChart(),
+                  this._renderData()
+                ],
+                controller: this._tabController,
+              )
+            ),
             this._renderSearchPanel(),
             Divider(),
-            this._renderRandomButton()
+            this._renderRandomButton(),
           ],
         ),
         margin: EdgeInsets.symmetric(horizontal: 5.0),
