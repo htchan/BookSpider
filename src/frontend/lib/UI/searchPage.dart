@@ -37,7 +37,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Widget> _renderBooks() {
     List<Widget> buttons = [];
     if (this.error) {
-      return [Text('loading...')];
+      return [Center(child: Text('Loading Books...'))];
     }
     if (this.page > 0) {
       buttons.add(TextButton(
@@ -57,7 +57,7 @@ class _SearchPageState extends State<SearchPage> {
           // go to book page
           Navigator.pushNamed(
             this.scaffoldKey.currentContext,
-            '/$siteName/${book['num']}/'
+            '/books/$siteName/${book['id']}'
           );
         }
       ));
@@ -78,7 +78,7 @@ class _SearchPageState extends State<SearchPage> {
       ));
     }
     if (this.books.length == 0) {
-      buttons.add(Text('No books found'));
+      buttons.add(Center(child: Text('No books found')));
     }
     return buttons;
   }

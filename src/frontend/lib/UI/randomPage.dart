@@ -37,7 +37,7 @@ class _RandomPageState extends State<RandomPage> {
   List<Widget> _renderBooks() {
     List<Widget> buttons = [];
     if (this.error) {
-      return [Text('loading...')];
+      return [Center(child: Text('Loading Books...'))];
     }
     for (Map<String, dynamic> book in this.books) {
       buttons.add(ListTile(
@@ -47,7 +47,7 @@ class _RandomPageState extends State<RandomPage> {
           // go to book page
           Navigator.pushNamed(
             this.scaffoldKey.currentContext,
-            '/$siteName/${book['num']}/'
+            '/books/$siteName/${book['id']}'
           );
         }
       ));

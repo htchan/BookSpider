@@ -37,7 +37,7 @@ class _MainPageState extends State<MainPage> {
       onPressed: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext, 
-          '/stage/'
+          '/stage'
         );
       }
     )];
@@ -48,7 +48,7 @@ class _MainPageState extends State<MainPage> {
           // redirect to site page with its name
           Navigator.pushNamed(
             this.scaffoldKey.currentContext,
-            '/$name/'
+            '/sites/$name'
           );
         },
       ));

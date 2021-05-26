@@ -13,7 +13,7 @@ class StagePage extends StatefulWidget{
 
 class _StagePageState extends State<StagePage> {
   final String url;
-  bool error = true;
+  bool load = false;
   Map<String, dynamic> info, process;
   final GlobalKey scaffoldKey = GlobalKey();
 
@@ -24,8 +24,10 @@ class _StagePageState extends State<StagePage> {
     .then( (response) {
       if (response.statusCode != 404) {
         this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.error = false;
+        this.load = true;
         setState((){});
+      } else {
+        load = false;
       }
     });
     String dataUrl = '$url/process';
@@ -33,8 +35,11 @@ class _StagePageState extends State<StagePage> {
     .then( (response) {
       if (response.statusCode != 404) {
         this.process = Map<String, dynamic>.from(jsonDecode(response.body.replaceAll(String.fromCharCode(9), " ")));
-        this.error = false;
+        this.process['logs'] = List<String>.from(this.process['logs']).where( (s) => s.startsWith('{'));
+        this.load = true;
         setState((){});
+      } else {
+        load = false;
       }
     });
   }
@@ -60,6 +65,7 @@ class _StagePageState extends State<StagePage> {
         this._addStage(result, line);
       }
     }
+    result.add(Text(this.process['time']));
     return result;
   }
   List<Widget> _renderSubStage() {
@@ -75,20 +81,34 @@ class _StagePageState extends State<StagePage> {
     }
     return result;
   }
-  List<Widget> _renderProcess() {
-    if (this.process == null) { return []; }
-    List<Widget> result = [Text(this.process['time'])];
-    for (String line in this.process['logs']) {
-      if (line.length > 0) { result.add(Text(line)); }
-    }
-    return result;
+  Widget _renderProcess() {
+    if (this.process == null) { return Center(child: Text('Loading logs')); }
+    List<String> logs = List<String>.from(this.process['logs']);
+    return ListView.builder(
+      padding: const EdgeInsets.all(1),
+      itemCount: this.process['logs'].length,
+      itemBuilder: (BuildContext context, int index) {
+        Map<String, dynamic> content = Map<String, dynamic>.from(jsonDecode(logs[index]));
+        String subTitle;
+        if (content['book'] != null) {
+          subTitle = 'title: ' + content['book']['title'] + "\nchapter: " + content['book']['chapter'];
+        } else if (content['new'] != null) {
+          subTitle = content['old']['title'] + ' -> ' + content['new']['title'];
+        } else {
+          subTitle = 'id: ' + content['id'].toString();
+        }
+        return ListTile(
+          title: Text(content['site'] + " - " + content['message']),
+          subtitle: Text(subTitle),
+        );
+      }
+    );
   }
   
   @override
   Widget build(BuildContext context) {
     List<Widget> stage = this._renderStage();
     List<Widget> subStage = this._renderSubStage();
-    List<Widget> process = this._renderProcess();
     // show the content
     return Scaffold(
       appBar: AppBar(title: Text('Stage')),
@@ -113,9 +133,7 @@ class _StagePageState extends State<StagePage> {
             ),
             Divider(),
             Expanded(
-              child: ListView(
-                children: process
-              )
+              child: this._renderProcess(),
             )
           ],
         ),

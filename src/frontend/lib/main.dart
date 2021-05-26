@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_strategy/url_strategy.dart';
+
 import './UI/mainPage.dart';
 import './UI/sitePage.dart';
 import './UI/searchPage.dart';
@@ -7,6 +9,7 @@ import './UI/bookPage.dart';
 import './UI/stagePage.dart';
 
 void main() {
+  setPathUrlStrategy();
   runApp(MyApp());
 }
 
@@ -38,35 +41,35 @@ class MyApp extends StatelessWidget {
               url: url,
             ), 
             settings: settings);
-        } else if (uri.pathSegments.length == 2) {
+        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('sites') == 0) {
           return MaterialPageRoute(
             builder: (context) => SitePage(
               url: url,
-              siteName: uri.pathSegments[0]
+              siteName: uri.pathSegments[1]
             ),
             settings: settings);
-        } else if (uri.pathSegments.indexOf('search') == 1) {
+        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('search') == 0) {
           return MaterialPageRoute(
             builder: (context) => SearchPage(
               url: url, 
-              siteName: uri.pathSegments[0],
+              siteName: uri.pathSegments[1],
               title: uri.queryParameters['title'],
               writer: uri.queryParameters['writer']
             ),
             settings: settings);
-        } else if (uri.pathSegments.indexOf('random') == 1) {
+        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('random') == 0) {
           return MaterialPageRoute(
             builder: (context) => RandomPage(
               url: url, 
-              siteName: uri.pathSegments[0]
+              siteName: uri.pathSegments[1]
             ),
             settings: settings);
-        } else if (uri.pathSegments.length == 3) {
+        } else if (uri.pathSegments.length >= 3 && uri.pathSegments.indexOf('books') == 0) {
           return MaterialPageRoute(
             builder: (context) => BookPage(
               url: url,
-              siteName: uri.pathSegments[0],
-              bookId: uri.pathSegments[1]
+              siteName: uri.pathSegments[1],
+              bookId: uri.pathSegments[2]
             ),
             settings: settings);
         }
