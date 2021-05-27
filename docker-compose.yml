@@ -1,0 +1,37 @@
+version: "3.7"
+
+service:
+    backend:
+        build: 
+            context: ./backend
+            dockerfile: Dockerfile.backend
+        expose: 9427
+        volumes:
+            - novel_database_volume:/usr/src/app/database
+            - novel_log_volume:/usr/src/app/log
+            - /mnt/addition/download/Books:/usr/src/app/Books
+        networks:
+            - router
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile.build
+        networks:
+            - router
+        volume:
+            - frontend_volume:/usr/src/build
+        depends_on:
+
+volumes:
+    frontend_volume:
+        name: novel_frontend_volume
+    database_volume:
+        name: novel_database_volume
+    log_volume:
+        name: novel_log_volume
+    backup_volume:
+        name: novel_backup_volume
+
+networks:
+    router:
+        driver: bridge

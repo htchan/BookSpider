@@ -1,1 +1,13 @@
 FROM ubuntu:20.04
+
+WORKDIR /usr/src/app
+
+RUN snap install flutter --classic
+
+RUN flutter version
+
+COPY ./src .
+
+RUN flutter build web
+
+CMD ['cp /usr/src/app/build/web /usr/src/build']
