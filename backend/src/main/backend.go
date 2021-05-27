@@ -317,14 +317,14 @@ func main() {
 	config := model.LoadYaml("./config/config.yaml")
 	sites = model.LoadSitesYaml(config)
 	apiFunc := make(map[string]func())
-	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/search/"+name+"", BookSearch) } }
-	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/download/"+name+"/", BookDownload) } }
-	apiFunc["siteInfo"] = func() { for name := range sites { http.HandleFunc("/info/"+name, SiteInfo) } }
-	apiFunc["bookInfo"] = func() { for name := range sites { http.HandleFunc("/info/"+name+"/", BookInfo) } }
-	apiFunc["random"] = func() { for name := range sites { http.HandleFunc("/random/"+name, BookRandom) } }
-	apiFunc["process"] = func() { http.HandleFunc("/process", ProcessState) }
-	apiFunc["info"] = func() { http.HandleFunc("/info", GeneralInfo) }
-	apiFunc["validate"] = func() { http.HandleFunc("/validate", ValidateState) }
+	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
+	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } }
+	apiFunc["siteInfo"] = func() { for name := range sites { http.HandleFunc("/api/novel/info/"+name, SiteInfo) } }
+	apiFunc["bookInfo"] = func() { for name := range sites { http.HandleFunc("/api/novel/info/"+name+"/", BookInfo) } }
+	apiFunc["random"] = func() { for name := range sites { http.HandleFunc("/api/novel/random/"+name, BookRandom) } }
+	apiFunc["process"] = func() { http.HandleFunc("/api/novel/process", ProcessState) }
+	apiFunc["info"] = func() { http.HandleFunc("/api/novel/info", GeneralInfo) }
+	apiFunc["validate"] = func() { http.HandleFunc("/api/novel/validate", ValidateState) }
 
 	for _, api := range config.Api { apiFunc[api]() }
 	fmt.Println("started")
