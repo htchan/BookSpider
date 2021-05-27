@@ -28,15 +28,24 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
     // call backend api
     String apiUrl = '$url/sites/$siteName';
     _chartPanel = Center(child: Text("Loading Chart"));
-    _chartPanel = Center(child: Text("Loading Data"));
+    _dataPanel = Center(child: Text("Loading Data"));
     http.get(apiUrl)
     .then( (response) {
       if (response.statusCode != 404) {
-        Map<String, dynamic> info = jsonDecode(response.body).toMap();
+        Map<String, dynamic> info = Map<String, dynamic>.from(jsonDecode(response.body));
         setState((){
           _chartPanel = _renderChartPanel(info);
           _dataPanel = _renderDataPanel(info);
         });
+      } else {
+        _chartPanel = _dataPanel = Center(
+          child: Column(
+            children: [
+              Text(response.statusCode.toString()),
+              Text(response.body)
+            ],
+          )
+        );
       }
     });
     _tabController = TabController(length: 2, vsync: this);
@@ -45,7 +54,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   Widget _renderBookCount(Map<String, dynamic> info) {
     var bookCount = info['bookCount'];
     var errorCount = info['errorCount'];
-    var totalCount = (int.parse(info['bookCount']) + int.parse(info['errorCount']));
+    var totalCount = info['bookCount'] + info['errorCount'];
     var maxId = info['maxid'];
     Color totalCountColor = (totalCount == maxId) ? Colors.black : Colors.red;
     return RichText(
@@ -63,17 +72,17 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   Widget _renderRecordCount(Map<String, dynamic> info) {
     var bookRecordCount = info['bookRecordCount'];
     var errorRecordCount = info['errorRecordCount'];
-    var totalRecordCount = (int.parse(info['bookRecordCount']) + int.parse(info['errorRecordCount']));
+    var totalRecordCount = info['bookRecordCount'] + info['errorRecordCount'];
     return Text('TotalCount : $totalRecordCount ($bookRecordCount + $errorRecordCount)');
   }
   Widget _renderEndCount(Map<String, dynamic> info) {
-    String endCount = info['endCount'];
-    String endRecordCount = info['endRecordCount'];
+    var endCount = info['endCount'];
+    var endRecordCount = info['endRecordCount'];
     return Text('EndCount : $endCount ($endRecordCount)');
   }
   Widget _renderDownloadCount(Map<String, dynamic> info) {
-    String downloadCount = info['downloadCount'];
-    String downloadRecordCount = info['downloadRecordCount'];
+    var downloadCount = info['downloadCount'];
+    var downloadRecordCount = info['downloadRecordCount'];
     return Text('DownloadCount : $downloadCount ($downloadRecordCount)');
   }
 
@@ -91,9 +100,9 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   
   List<charts.Series<Data, String>> _formatData(Map<String, dynamic> info) {
     List<Data> data = [
-      Data('Download', int.parse(info['downloadCount'])),
-      Data('Book', int.parse(info['bookCount']) - int.parse(info['downloadCount'])),
-      Data('error', int.parse(info['errorCount']))
+      Data('Download', info['downloadCount']),
+      Data('Book', info['bookCount'] - info['downloadCount']),
+      Data('error', info['errorCount'])
     ];
     return [
       charts.Series<Data, String>(
@@ -186,14 +195,16 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
               decoration: new BoxDecoration(color: Theme.of(context).primaryColor),
               child: TabBar(
                 tabs: <Widget>[
-                  Tab(text: 'Chart',), Tab(text: 'Data',),
+                  Tab(text: 'Chart',), 
+                  Tab(text: 'Data',),
                 ],
                 controller: this._tabController,)),
             Container(
               height: 500,
               child: TabBarView(
                 children: [
-                  _chartPanel, _dataPanel,
+                  _chartPanel, 
+                  _dataPanel,
                 ],
                 controller: this._tabController,
               )

@@ -33,6 +33,15 @@ class _SearchPageState extends State<SearchPage> {
             jsonDecode(response.body)['books'] ?? []
           ));
         });
+      } else {
+        _booksPanel = Center(
+          child: Column(
+            children: [
+              Text(response.statusCode.toString()),
+              Text(response.body)
+            ],
+          )
+        );
       }
     });
   }

@@ -13,8 +13,6 @@ class MainPage extends StatefulWidget{
 
 class _MainPageState extends State<MainPage> {
   final String url;
-  bool load = false;
-  Map<String, dynamic> info;
   List<Widget> _buttons;
   final GlobalKey scaffoldKey = GlobalKey();
 

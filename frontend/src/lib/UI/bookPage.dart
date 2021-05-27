@@ -14,21 +14,28 @@ class BookPage extends StatefulWidget{
 
 class _BookPageState extends State<BookPage> {
   final String siteName, url, bookId;
-  bool load = false;
-  Map<String, dynamic> info;
   Widget _body;
   final GlobalKey scaffoldKey = GlobalKey();
 
   _BookPageState(this.url, this.siteName, this.bookId) {
     // call backend api
-    String apiUrl = '$url/sites/$siteName/$bookId';
+    String apiUrl = '$url/books/$siteName/$bookId';
     _body = Center(child: Text('Loading'));
     http.get(apiUrl)
     .then( (response) {
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (200 <= response.statusCode && response.statusCode < 300) {
         setState(() {
           _body = _renderBookContent(jsonDecode(response.body));
         });
+      } else {
+        _body = Center(
+          child: Column(
+            children: [
+              Text(response.statusCode.toString()),
+              Text(response.body)
+            ],
+          )
+        );
       }
     });
   }
