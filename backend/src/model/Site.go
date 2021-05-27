@@ -1247,16 +1247,16 @@ func (site Site)Map() map[string]interface{} {
 	site.CloseDatabase()
 	return map[string]interface{} {
 		"name": site.SiteName + "\"",
-		"bookCount": strconv.Itoa(bookCount),
-		"errorCount": strconv.Itoa(errorCount),
-		"bookRecordCount": strconv.Itoa(bookRecordCount),
-		"errorRecordCount": strconv.Itoa(errorRecordCount),
-		"endCount": strconv.Itoa(endCount),
-		"endRecordCount": strconv.Itoa(endRecordCount),
-		"downloadCount": strconv.Itoa(downloadCount),
-		"downloadRecordCount": strconv.Itoa(downloadRecordCount),
-		"readCount": strconv.Itoa(readCount),
-		"maxid": strconv.Itoa(maxid),
+		"bookCount": bookCount,
+		"errorCount": errorCount,
+		"bookRecordCount": bookRecordCount,
+		"errorRecordCount": errorRecordCount,
+		"endCount": endCount,
+		"endRecordCount": endRecordCount,
+		"downloadCount": downloadCount,
+		"downloadRecordCount": downloadRecordCount,
+		"readCount": readCount,
+		"maxid": maxid,
 		"maxThread": site.MAX_THREAD_COUNT,
 	}
 }
