@@ -26,7 +26,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
 
   _SitePageState(this.url, this.siteName) {
     // call backend api
-    String apiUrl = '$url/info/$siteName';
+    String apiUrl = '$url/sites/$siteName';
     _chartPanel = Center(child: Text("Loading Chart"));
     _chartPanel = Center(child: Text("Loading Data"));
     http.get(apiUrl)

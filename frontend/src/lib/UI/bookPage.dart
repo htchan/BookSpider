@@ -21,7 +21,7 @@ class _BookPageState extends State<BookPage> {
 
   _BookPageState(this.url, this.siteName, this.bookId) {
     // call backend api
-    String apiUrl = '$url/info/$siteName/$bookId';
+    String apiUrl = '$url/sites/$siteName/$bookId';
     _body = Center(child: Text('Loading'));
     http.get(apiUrl)
     .then( (response) {

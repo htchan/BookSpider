@@ -15,7 +15,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  String url = 'http://192.168.128.146:9427';
+  String url = 'http://192.168.128.146:9427/api/novel';
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
