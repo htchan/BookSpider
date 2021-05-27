@@ -13,9 +13,8 @@ class RandomPage extends StatefulWidget{
 
 class _RandomPageState extends State<RandomPage> {
   final String url, siteName;
-  bool error = true;
   int n = 20;
-  List<Map<String, dynamic>> books;
+  Widget _booksPanel;
   final GlobalKey scaffoldKey = GlobalKey();
   final ScrollController scrollController;
 
@@ -23,71 +22,65 @@ class _RandomPageState extends State<RandomPage> {
   : this.scrollController = ScrollController() {
     this._loadPage();
   }
+
   void _loadPage() {
     String apiUrl = '$url/random/$siteName?num=$n';
+    _booksPanel = Center(child: Text("Loading books..."));
     http.get(apiUrl)
     .then( (response) {
-      if (response.statusCode != 404) {
-        this.books = List<Map<String, dynamic>>.from(jsonDecode(response.body)['books']);
-        this.error = false;
-        setState((){});
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState((){
+          _booksPanel = _renderBooksPanel(List<Map<String, dynamic>>.from(
+            jsonDecode(response.body)['books'] ?? []
+          ));
+        });
       }
     });
   }
-  List<Widget> _renderBooks() {
-    List<Widget> buttons = [];
-    if (this.error) {
-      return [Center(child: Text('Loading Books...'))];
-    }
-    for (Map<String, dynamic> book in this.books) {
-      buttons.add(ListTile(
-        title: Text(book['title'] + ' - ' + book['writer']),
-        subtitle: Text(book['update'] + ' - ' + book['chapter']),
-        onTap: () {
-          // go to book page
-          Navigator.pushNamed(
-            this.scaffoldKey.currentContext,
-            '/books/$siteName/${book['id']}'
-          );
-        }
-      ));
-    }
-    if (this.books.length == 20) {
-      buttons.add(TextButton(
-        child: Text('Reload'),
-        onPressed: () {
-          this.error = true;
-          setState(() {});
+
+  Widget _renderRandomButton() {
+    return TextButton(
+      child: Text('Reload'),
+      onPressed: () {
+        setState(() {
           this._loadPage();
-          scrollController.animateTo(
-            0,
-            duration: Duration(milliseconds: 500),
-            curve: Curves.fastOutSlowIn
-          );
-        },
-      ));
-    }
-    if (this.books.length == 0) {
-      buttons.add(Text('No books found'));
-    }
-    return buttons;
+        });
+        scrollController.animateTo(0,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.fastOutSlowIn
+        );
+      },
+    );
+  }
+
+  Widget _renderBooksPanel(List<Map<String, dynamic>> books) {
+    if (books.length == 0) { return Center(child: Text('no books found')); }
+    List<Widget> list = books.map( (book) => ListTile(
+      title: Text('${book['title']} - ${book['writer']}'),
+      subtitle: Text('${book['update']} - ${book['chapter']}'),
+      onTap: () {
+        Navigator.pushNamed(
+          this.scaffoldKey.currentContext,
+          '/books/$siteName/${book['id']}'
+        );
+    })).toList();
+    if (books.length == 20) { list.add(_renderRandomButton()); }
+    return ListView.separated(
+      controller: scrollController,
+      separatorBuilder: (context, index) => Divider(height: 10,),
+      itemCount: list.length,
+      itemBuilder: (context, index) => list[index],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     // show the content
-    List<Widget> buttons = this._renderBooks();
     return Scaffold(
       appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
-        child: ListView.separated(
-          controller: scrollController,
-          separatorBuilder: (context, index) => Divider(height: 10,),
-          itemCount: buttons.length,
-          itemBuilder: (context, index) => buttons[index],
-          
-        ),
+        child: _booksPanel,
         margin: EdgeInsets.symmetric(horizontal: 5.0),
       ),
     );

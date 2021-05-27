@@ -68,6 +68,7 @@ class _StagePageState extends State<StagePage> {
     result.add(Text(this.process['time']));
     return result;
   }
+  
   List<Widget> _renderSubStage() {
     if (this.process == null) { return []; }
     List<Widget> result = [];
@@ -81,7 +82,8 @@ class _StagePageState extends State<StagePage> {
     }
     return result;
   }
-  Widget _renderProcess() {
+
+  Widget _renderProcesses() {
     if (this.process == null) { return Center(child: Text('Loading logs')); }
     List<String> logs = List<String>.from(this.process['logs']);
     return ListView.builder(
@@ -91,14 +93,14 @@ class _StagePageState extends State<StagePage> {
         Map<String, dynamic> content = Map<String, dynamic>.from(jsonDecode(logs[index]));
         String subTitle;
         if (content['book'] != null) {
-          subTitle = 'title: ' + content['book']['title'] + "\nchapter: " + content['book']['chapter'];
+          subTitle = 'title: ${content['book']['title']}\nchapter: ${content['book']['chapter']}';
         } else if (content['new'] != null) {
-          subTitle = content['old']['title'] + ' -> ' + content['new']['title'];
+          subTitle = '${content['old']['title']} -> ${content['new']['title']}';
         } else {
-          subTitle = 'id: ' + content['id'].toString();
+          subTitle = 'id: ${content['id'].toString()}';
         }
         return ListTile(
-          title: Text(content['site'] + " - " + content['message']),
+          title: Text('${content['site']} - ${content['message']}'),
           subtitle: Text(subTitle),
         );
       }
@@ -133,7 +135,7 @@ class _StagePageState extends State<StagePage> {
             ),
             Divider(),
             Expanded(
-              child: this._renderProcess(),
+              child: this._renderProcesses(),
             )
           ],
         ),

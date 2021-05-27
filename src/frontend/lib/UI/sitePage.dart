@@ -20,29 +20,33 @@ class Data {
 
 class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin {
   final String siteName, url;
-  bool load = false;
-  Map<String, dynamic> info;
+  Widget _chartPanel, _dataPanel;
   final GlobalKey scaffoldKey = GlobalKey();
   TabController _tabController;
 
   _SitePageState(this.url, this.siteName) {
     // call backend api
     String apiUrl = '$url/info/$siteName';
+    _chartPanel = Center(child: Text("Loading Chart"));
+    _chartPanel = Center(child: Text("Loading Data"));
     http.get(apiUrl)
     .then( (response) {
       if (response.statusCode != 404) {
-        this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.load = true;
-        setState((){});
+        Map<String, dynamic> info = jsonDecode(response.body).toMap();
+        setState((){
+          _chartPanel = _renderChartPanel(info);
+          _dataPanel = _renderDataPanel(info);
+        });
       }
     });
     _tabController = TabController(length: 2, vsync: this);
   }
-  Widget _renderBookCount() {
-    String bookCount = (this.load) ? this.info['bookCount'].toString() : '';
-    String errorCount = (this.load) ? this.info['errorCount'].toString() : '';
-    String totalCount = (this.load) ? (int.parse(this.info['bookCount']) + int.parse(this.info['errorCount'])).toString() : '';
-    String maxId = (this.load) ? this.info['maxid'].toString() : '';
+
+  Widget _renderBookCount(Map<String, dynamic> info) {
+    var bookCount = info['bookCount'];
+    var errorCount = info['errorCount'];
+    var totalCount = (int.parse(info['bookCount']) + int.parse(info['errorCount']));
+    var maxId = info['maxid'];
     Color totalCountColor = (totalCount == maxId) ? Colors.black : Colors.red;
     return RichText(
       textScaleFactor: Theme.of(context).textTheme.bodyText1.fontSize / 14,
@@ -55,33 +59,42 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
         ]
       )
     );
-
   }
-  Widget _renderRecordCount() {
-    String bookRecordCount = (this.load) ? this.info['bookRecordCount'].toString() : '';
-    String errorRecordCount = (this.load) ? this.info['errorRecordCount'].toString() : '';
-    String totalRecordCount = (this.load) ? (int.parse(this.info['bookRecordCount']) + int.parse(this.info['errorRecordCount'])).toString() : '';
+  Widget _renderRecordCount(Map<String, dynamic> info) {
+    var bookRecordCount = info['bookRecordCount'];
+    var errorRecordCount = info['errorRecordCount'];
+    var totalRecordCount = (int.parse(info['bookRecordCount']) + int.parse(info['errorRecordCount']));
     return Text('TotalCount : $totalRecordCount ($bookRecordCount + $errorRecordCount)');
   }
-  Widget _renderEndCount() {
-    String endCount = (this.load) ? this.info['endCount'].toString() : '';
-    String endRecordCount = (this.load) ? this.info['endRecordCount'].toString() : '';
+  Widget _renderEndCount(Map<String, dynamic> info) {
+    String endCount = info['endCount'];
+    String endRecordCount = info['endRecordCount'];
     return Text('EndCount : $endCount ($endRecordCount)');
   }
-  Widget _renderDownloadCount() {
-    String downloadCount = (this.load) ? this.info['downloadCount'].toString() : '';
-    String downloadRecordCount = (this.load) ? this.info['downloadRecordCount'].toString() : '';
+  Widget _renderDownloadCount(Map<String, dynamic> info) {
+    String downloadCount = info['downloadCount'];
+    String downloadRecordCount = info['downloadRecordCount'];
     return Text('DownloadCount : $downloadCount ($downloadRecordCount)');
   }
-  List<charts.Series<Data, String>> _formatData() {
-    if (!this.load) return [];
 
+  Widget _renderDataPanel(Map<String, dynamic> info) {
+    return Column(
+      children: [
+        _renderBookCount(info),
+        _renderRecordCount(info),
+        _renderEndCount(info),
+        _renderDownloadCount(info),
+      ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+  
+  List<charts.Series<Data, String>> _formatData(Map<String, dynamic> info) {
     List<Data> data = [
-      Data('Download', int.parse(this.info['downloadCount'])),
-      Data('Book', int.parse(this.info['bookCount']) - int.parse(this.info['downloadCount'])),
-      Data('error', int.parse(this.info['errorCount']))
+      Data('Download', int.parse(info['downloadCount'])),
+      Data('Book', int.parse(info['bookCount']) - int.parse(info['downloadCount'])),
+      Data('error', int.parse(info['errorCount']))
     ];
-    
     return [
       charts.Series<Data, String>(
         id: 'DownloadData',
@@ -93,32 +106,19 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
       )
     ];
   }
-  Widget _renderData() {
-    if (!this.load) return Center(child: Text("Loading Data"));
-    return Column(
-      children: [
-        _renderBookCount(),
-        _renderRecordCount(),
-        _renderEndCount(),
-        _renderDownloadCount(),
-      ],
-      crossAxisAlignment: CrossAxisAlignment.start,
-    );
-  }
-  Widget _renderChart() {
-    if (!this.load) return Center(child: Text("Loading Chart"),);
 
+  Widget _renderChartPanel(Map<String, dynamic> info) {
     return Stack(
       children: <Widget>[
         charts.PieChart(
-          this._formatData(),
+          this._formatData(info),
           animate: true,
           defaultRenderer: charts.ArcRendererConfig(
             arcWidth: 100,
             arcRendererDecorators: [new charts.ArcLabelDecorator()]),
         ),
         Center(child: Text(
-          (this.load) ? this.info["maxid"].toString() : '',
+          info["maxid"].toString(),
           style: TextStyle(
             fontSize: 30.0,
             color: Colors.blue,
@@ -127,6 +127,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
         ))
       ],);
   }
+
   Widget _renderSearchPanel() {
     TextEditingController titleControler, writerController;
     titleControler = TextEditingController();
@@ -185,15 +186,14 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
               decoration: new BoxDecoration(color: Theme.of(context).primaryColor),
               child: TabBar(
                 tabs: <Widget>[
-                  Tab(text: 'Chart',), Tab(text: 'Data',)
+                  Tab(text: 'Chart',), Tab(text: 'Data',),
                 ],
                 controller: this._tabController,)),
             Container(
               height: 500,
               child: TabBarView(
                 children: [
-                  this._renderChart(),
-                  this._renderData()
+                  _chartPanel, _dataPanel,
                 ],
                 controller: this._tabController,
               )

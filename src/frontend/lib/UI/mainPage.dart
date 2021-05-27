@@ -13,24 +13,47 @@ class MainPage extends StatefulWidget{
 
 class _MainPageState extends State<MainPage> {
   final String url;
-  bool error = true;
+  bool load = false;
   Map<String, dynamic> info;
+  List<Widget> _buttons;
   final GlobalKey scaffoldKey = GlobalKey();
 
   _MainPageState(this.url) {
-    // call backend api
     String apiUrl = '$url/info';
+    _buttons = _renderStageButton();
     http.get(apiUrl)
     .then( (response) {
-      if (response.statusCode != 404) {
-        this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.error = false;
-        setState((){});
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState(() {
+          _buttons.addAll(_renderSiteButtons(
+            Map<String, dynamic>.from(jsonDecode(response.body))
+          ));
+        });
+      } else {
+        setState(() {
+          _buttons.addAll([ 
+            Text(response.statusCode.toString()),
+            Text(response.body)
+          ]);
+        });
       }
     });
   }
-  List<Widget> _renderSiteButton() {
-    List<String> siteNames = (this.error) ? [] : List<String>.from(this.info['siteNames']);
+
+  Iterable<Widget> _renderSiteButtons(Map<String, dynamic> info) {
+    List<String> siteNames = List<String>.from(info['siteNames'] ?? []);
+    return siteNames.map( (name) => RaisedButton(
+      child: Text(name),
+      onPressed: () {
+        Navigator.pushNamed(
+          scaffoldKey.currentContext,
+          '/sites/$name'
+        );
+      },
+    ));
+  }
+
+  List<Widget> _renderStageButton() {
     List<Widget> buttons = [RaisedButton(
       child: Text('Stage'),
       color: Colors.lightBlueAccent,
@@ -41,34 +64,20 @@ class _MainPageState extends State<MainPage> {
         );
       }
     )];
-    for (String name in siteNames) {
-      buttons.add(RaisedButton(
-        child: Text(name),
-        onPressed: () {
-          // redirect to site page with its name
-          Navigator.pushNamed(
-            this.scaffoldKey.currentContext,
-            '/sites/$name'
-          );
-        },
-      ));
-    }
     return buttons;
   }
 
   @override
   Widget build(BuildContext context) {
     // show the content
-    List<Widget> buttons = this._renderSiteButton();
     return Scaffold(
       appBar: AppBar(title: Text('Book')),
       key: this.scaffoldKey,
       body: Container(
         child: ListView.separated(
           separatorBuilder: (context, index) => Divider(height: 10,),
-          itemCount: buttons.length,
-          itemBuilder: (context, index) => buttons[index],
-          
+          itemCount: _buttons.length,
+          itemBuilder: (context, index) => _buttons[index],
         ),
         margin: EdgeInsets.symmetric(horizontal: 5.0),
       ),
