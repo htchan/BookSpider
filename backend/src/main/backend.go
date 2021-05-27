@@ -119,7 +119,7 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[2]
+	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
@@ -137,30 +137,28 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[2]
+	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
 		response(res, map[string]interface{} {
 			"code": 404,
 			"message": "site <" + siteName + "> not found",
 		})
 		return
 	}
-	id, err := strconv.Atoi(uri[3])
+	id, err := strconv.Atoi(uri[5])
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
-		// fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
 		response(res, map[string]interface{} {
 			"code": 400,
-			"message": "id <" + uri[3] + "> is not a number",
+			"message": "id <" + uri[5] + "> is not a number",
 		})
 		return
 	}
 	version := -1;
-	if len(uri) > 4 {
-		version, err =strconv.Atoi(uri[4])
+	if len(uri) > 6 {
+		version, err =strconv.Atoi(uri[6])
 		if err != nil {
 			version = -1
 		}
@@ -168,7 +166,6 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 	book := site.Book(id, version)
 	if (book.Title == "") {
 		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
 		response(res, map[string]interface{} {
 			"code": 404,
 			"message": "book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found",
@@ -182,7 +179,7 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[2]
+	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
@@ -193,19 +190,19 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 		})
 		return
 	}
-	id, err := strconv.Atoi(uri[3])
+	id, err := strconv.Atoi(uri[5])
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		// fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
 		response(res, map[string]interface{} {
 			"code": 400,
-			"message": "id <" + uri[3] + "> is not a number",
+			"message": "id <" + uri[5] + "> is not a number",
 		})
 		return
 	}
 	version := -1;
-	if len(uri) > 4 {
-		version, err = strconv.Atoi(uri[4])
+	if len(uri) > 6 {
+		version, err = strconv.Atoi(uri[6])
 		if err != nil {
 			version = -1
 		}
@@ -225,7 +222,7 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 		// fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")
 		response(res, map[string]interface{} {
 			"code": 406,
-			"message": "book <" + uri[3] + "> not download yet",
+			"message": "book <" + uri[5] + "> not download yet",
 		})
 		return
 	}
@@ -243,7 +240,7 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[2]
+	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
@@ -275,7 +272,7 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[2]
+	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
