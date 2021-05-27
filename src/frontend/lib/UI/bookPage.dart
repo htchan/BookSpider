@@ -14,50 +14,47 @@ class BookPage extends StatefulWidget{
 
 class _BookPageState extends State<BookPage> {
   final String siteName, url, bookId;
-  bool error = true;
+  bool load = false;
   Map<String, dynamic> info;
+  Widget _body;
   final GlobalKey scaffoldKey = GlobalKey();
 
   _BookPageState(this.url, this.siteName, this.bookId) {
     // call backend api
     String apiUrl = '$url/info/$siteName/$bookId';
+    _body = Center(child: Text('Loading'));
     http.get(apiUrl)
     .then( (response) {
-      if (response.statusCode != 404) {
-        this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.error = false;
-        setState((){});
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState(() {
+          _body = _renderBookContent(jsonDecode(response.body));
+        });
       }
     });
   }
-  List<Widget> _renderBookContent() {
-    if (this.error) {
-      return [Text('Loading')];
-    }
-    String version = (this.error) ? '' : this.info['version'].toString();
-    String title = (this.error) ? '' : this.info['title'];
-    String writer = (this.error) ? '' : this.info['writer'];
-    String type = (this.error) ? '' : this.info['type'];
-    String lastUpdate = (this.error) ? '' : this.info['update'];
-    String lastChapter = (this.error) ? '' : this.info['chapter'];
-    List<Widget> rows = [];
-    rows.addAll([
-      Text('ID: $bookId - $version'),
-      Text('Title: $title'),
-      Text('Writer: $writer'),
-      Text('Type: $type'),
-      Text('Last Update: $lastUpdate'),
-      Text('Last Chapter: $lastChapter')
-    ]);
-    if (this.info['download']) {
+  
+  Widget _renderBookContent(Map<String, dynamic> info) {
+    List<Widget> rows = [
+      Text('ID: ${info['id']} - ${info['version']}'),
+      Text('Title: ${info['title']}'),
+      Text('Writer: ${info['writer']}'),
+      Text('Type: ${info['type']}'),
+      Text('Last Update: ${info['update']}'),
+      Text('Last Chapter: ${info['chapter']}')
+    ];
+    if (info['download']) {
       rows.add(RaisedButton(
         child: Text('Download'),
         onPressed: () => js.context.callMethod('open', ['$url/download/$siteName/$bookId']),
       ));
-    } else if (this.info['end']) {
+    } else if (info['end']) {
       rows.add(Text('End'));
     }
-    return rows;
+    return ListView.separated(
+      separatorBuilder: (context, index) => Divider(height: 10,),
+      itemCount: rows.length,
+      itemBuilder: (context, index) => rows[index],
+    );
   }
 
   @override
@@ -67,9 +64,7 @@ class _BookPageState extends State<BookPage> {
       appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
-        child: ListView(
-          children: this._renderBookContent()
-        ),
+        child: _body,
         margin: EdgeInsets.symmetric(horizontal: 5.0),
       )
     );
