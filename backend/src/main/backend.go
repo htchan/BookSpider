@@ -74,9 +74,17 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	modifyTime := logs.FileLastUpdate.String()[:19]
 	// get last several line of nohup.out
 	logs.update()
+	data, err := ioutil.ReadFile(stageFileName)
+	var stageStr []string
+	if err != nil {
+		stageStr = append(stageStr, err.Error())
+	} else {
+		stageStr = append(stageStr, strings.Split(string(data), "\n")...)
+	}
 	// print them
 	response(res, map[string]interface{} {
 		"time": modifyTime,
+		"stage": stageStr,
 		"logs": logs.Logs,
 	})
 }
@@ -97,20 +105,12 @@ func ValidateState(res http.ResponseWriter, req *http.Request) {
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-	data, err := ioutil.ReadFile(stageFileName)
-	var stageStr []string
-	if err != nil {
-		stageStr = append(stageStr, err.Error())
-	} else {
-		stageStr = append(stageStr, strings.Split(string(data), "\n")...)
-	}
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
 		siteNames = append(siteNames, siteName)
 	}
 	sort.Strings(siteNames)
 	response(res, map[string]interface{} {
-		"stage": stageStr,
 		"siteNames": siteNames,
 	})
 }
