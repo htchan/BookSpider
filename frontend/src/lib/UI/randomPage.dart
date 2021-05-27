@@ -48,9 +48,12 @@ class _RandomPageState extends State<RandomPage> {
   }
 
   Widget _renderRandomButton() {
-    return TextButton(
-      child: Text('Reload'),
-      onPressed: () {
+    return ListTile(
+      title: Center(child: Text(
+        'Reload',
+        style: TextStyle(color: Colors.blue)
+      )),
+      onTap: () {
         setState(() {
           this._loadPage();
         });
@@ -59,20 +62,21 @@ class _RandomPageState extends State<RandomPage> {
           curve: Curves.fastOutSlowIn
         );
       },
+      hoverColor: Colors.blue.shade50,
     );
   }
 
   Widget _renderBooksPanel(List<Map<String, dynamic>> books) {
     if (books.length == 0) { return Center(child: Text('no books found')); }
-    List<Widget> list = books.map( (book) => ListTile(
+    List<Widget> list = List<Widget>.from(books.map( (book) => ListTile(
       title: Text('${book['title']} - ${book['writer']}'),
       subtitle: Text('${book['update']} - ${book['chapter']}'),
       onTap: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext,
-          '/books/$siteName/${book['id']}'
+          '/novel/books/$siteName/${book['id']}'
         );
-    })).toList();
+    })));
     if (books.length == 20) { list.add(_renderRandomButton()); }
     return ListView.separated(
       controller: scrollController,

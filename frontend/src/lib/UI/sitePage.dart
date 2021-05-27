@@ -161,7 +161,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
                 String writer = writerController.text;
                 Navigator.pushNamed(
                   this.scaffoldKey.currentContext, 
-                  '/search/$siteName?title=$title&writer=$writer'
+                  '/novel/search/$siteName?title=$title&writer=$writer'
                 );
               },
             )
@@ -176,7 +176,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
       onPressed: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext,
-          '/random/$siteName'
+          '/novel/random/$siteName'
         );
       },
     );

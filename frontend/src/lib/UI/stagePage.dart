@@ -15,35 +15,46 @@ class _StagePageState extends State<StagePage> {
   final String url;
   bool load = false;
   Map<String, dynamic> info, process;
+  Widget _stage, _subStage, _logs;
   final GlobalKey scaffoldKey = GlobalKey();
 
   _StagePageState(this.url) {
     // call backend api
-    String infoUrl = '$url/info';
-    http.get(infoUrl)
-    .then( (response) {
-      if (response.statusCode != 404) {
-        this.info = Map<String, dynamic>.from(jsonDecode(response.body));
-        this.load = true;
-        setState((){});
-      } else {
-        load = false;
-      }
-    });
     String dataUrl = '$url/process';
+    _stage = Center(child: Text('Loading Stage...'));
+    _subStage = Center(child: Text('Loading Sub-Stage...'));
+    _logs = Center(child: Text('Loading Logs...'));
     http.get(dataUrl)
     .then( (response) {
-      if (response.statusCode != 404) {
-        this.process = Map<String, dynamic>.from(jsonDecode(response.body.replaceAll(String.fromCharCode(9), " ")));
-        this.process['logs'] = List<String>.from(this.process['logs']).where( (s) => s.startsWith('{'));
-        this.load = true;
-        setState((){});
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        Map<String, dynamic> info = Map<String, dynamic>.from(
+          jsonDecode(response.body.replaceAll(String.fromCharCode(9), " "))
+        );
+        info['logs'] = List<String>.from(info['logs'])
+          .where( (s) => s.startsWith('{') )
+          .map( (s) => s.replaceAll('\\\"', '\"'));
+        setState((){
+          _stage = _renderStage(info);
+          _subStage = _renderSubStage(info);
+          _logs = _renderProcesses(info);
+        });
       } else {
-        load = false;
+        setState((){
+          _stage = Center(child: Text('Error${response.statusCode}'));
+          _subStage = Center(child: Text('Error${response.statusCode}'));
+          _logs = Center(
+          child: Column(
+            children: [
+              Text(response.statusCode.toString()),
+              Text(response.body)
+            ],
+          )
+        );
+        });
       }
     });
   }
-  void _addStage(List list, String line) {
+  void _addStage(List<Widget> list, String line) {
     if (line.contains('start')) {
       list.add(Text(
         line.replaceAll('sub_', '').replaceAll('stage: ', '').replaceAll(' stage', ''),
@@ -51,44 +62,56 @@ class _StagePageState extends State<StagePage> {
       ));
       list.add(VerticalDivider());
     } else {
-      list[list.length - 2] = Text(
-        line.replaceAll('sub_', '').replaceAll('stage: ', '').replaceAll(' stage', ''),
-        style: TextStyle(backgroundColor: Colors.green, color: Colors.white)
-      );
+      String target = line.replaceAll('sub_', '').replaceAll('stage: ', '').replaceAll(' stage', '');
+      list.asMap().keys.toList().map( (i) {
+        if (list[i] is Text && (list[i] as Text).data.split(' ')[0] == target.split(' ')[0]) {
+          list[i] = Text(
+            target,
+            style: TextStyle(backgroundColor: Colors.green, color: Colors.white)
+          );
+        }
+      }).toList();
+      // list[list.length - 2] = Text(
+      //   line.replaceAll('sub_', '').replaceAll('stage: ', '').replaceAll(' stage', ''),
+      //   style: TextStyle(backgroundColor: Colors.green, color: Colors.white)
+      // );
     }
   }
-  List<Widget> _renderStage() {
-    if (this.process == null) { return []; }
-    List<Widget> result = [];
-    for (String line in this.info['stage'].split('\n')) {
+  Widget _renderStage(Map<String, dynamic> info) {
+    List<Widget> stages = [];
+    for (String line in info['stage']) {
       if (line.indexOf('stage') == 0) {
-        this._addStage(result, line);
+        _addStage(stages, line);
       }
     }
-    result.add(Text(this.process['time']));
-    return result;
+    stages.add(Text(info['time']));
+    return ListView(
+      children: stages,
+      scrollDirection: Axis.horizontal,
+    );
   }
   
-  List<Widget> _renderSubStage() {
-    if (this.process == null) { return []; }
-    List<Widget> result = [];
-    for (String line in this.info['stage'].split('\n')) {
+  Widget _renderSubStage(Map<String, dynamic> info) {
+    List<Widget> subStages = [];
+    for (String line in info['stage']) {
       if (line.indexOf('stage') == 0) {
-        if (line.contains('start')) { result.clear(); }
+        if (line.contains('start')) { subStages.clear(); }
       }
       if (line.indexOf('sub_stage') == 0) {
-        this._addStage(result, line);
+        _addStage(subStages, line);
       }
     }
-    return result;
+    return ListView(
+      children: subStages,
+      scrollDirection: Axis.horizontal,
+    );
   }
 
-  Widget _renderProcesses() {
-    if (this.process == null) { return Center(child: Text('Loading logs')); }
-    List<String> logs = List<String>.from(this.process['logs']);
+  Widget _renderProcesses(Map<String, dynamic> info) {
+    List<String> logs = List<String>.from(info['logs']);
     return ListView.builder(
       padding: const EdgeInsets.all(1),
-      itemCount: this.process['logs'].length,
+      itemCount: info['logs'].length,
       itemBuilder: (BuildContext context, int index) {
         Map<String, dynamic> content = Map<String, dynamic>.from(jsonDecode(logs[index]));
         String subTitle;
@@ -109,33 +132,25 @@ class _StagePageState extends State<StagePage> {
   
   @override
   Widget build(BuildContext context) {
-    List<Widget> stage = this._renderStage();
-    List<Widget> subStage = this._renderSubStage();
     // show the content
     return Scaffold(
       appBar: AppBar(title: Text('Stage')),
-      key: this.scaffoldKey,
+      key: scaffoldKey,
       body: Container(
         child: Column(
           children: [
             Container(
               height: 20.0,
-              child: ListView(
-                children: stage,
-                scrollDirection: Axis.horizontal,
-              )
+              child: _stage,
             ),
             Divider(),
             Container(
               height: 20.0,
-              child: ListView(
-                children: subStage,
-                scrollDirection: Axis.horizontal,
-              )
+              child: _subStage,
             ),
             Divider(),
             Expanded(
-              child: this._renderProcesses(),
+              child: _logs,
             )
           ],
         ),

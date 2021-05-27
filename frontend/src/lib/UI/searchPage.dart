@@ -82,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
           // go to book page
           Navigator.pushNamed(
             this.scaffoldKey.currentContext,
-            '/books/$siteName/${book['id']}'
+            '/novel/books/$siteName/${book['id']}'
           );
         }
       )
