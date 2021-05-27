@@ -98,11 +98,11 @@ func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	data, err := ioutil.ReadFile(stageFileName)
-	var stageStr string
+	var stageStr []string
 	if err != nil {
-		stageStr = err.Error()
+		stageStr = append(stageStr, err.Error())
 	} else {
-		stageStr = strings.ReplaceAll(string(data), "\n", "\\n")
+		stageStr = append(stageStr, strings.Split(string(data), "\n")...)
 	}
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {

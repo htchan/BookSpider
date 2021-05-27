@@ -30,12 +30,9 @@ for the usage details of controller, use `./controller` to check.
 	- helper.go
 		* provide helper function (eg. regex, get url response...)
 - frontend
-	* it is a react folder containing all fontend needed
-- frontend_flutter
 	* it is a flutter folder containing all frontend needed
 
 # POC
 - compare `http` and `grequest
 - compare  json  and  yaml  as config
 - compare  regex  and  html parser library
-`
