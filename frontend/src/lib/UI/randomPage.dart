@@ -26,7 +26,7 @@ class _RandomPageState extends State<RandomPage> {
   void _loadPage() {
     String apiUrl = '$url/random/$siteName?num=$n';
     _booksPanel = Center(child: Text("Loading books..."));
-    http.get(apiUrl)
+    http.get(Uri.parse(apiUrl))
     .then( (response) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setState((){

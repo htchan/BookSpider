@@ -29,7 +29,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
     String apiUrl = '$url/sites/$siteName';
     _chartPanel = Center(child: Text("Loading Chart"));
     _dataPanel = Center(child: Text("Loading Data"));
-    http.get(apiUrl)
+    http.get(Uri.parse(apiUrl))
     .then( (response) {
       if (response.statusCode != 404) {
         Map<String, dynamic> info = Map<String, dynamic>.from(jsonDecode(response.body));

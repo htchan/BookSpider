@@ -21,7 +21,7 @@ class _BookPageState extends State<BookPage> {
     // call backend api
     String apiUrl = '$url/books/$siteName/$bookId';
     _body = Center(child: Text('Loading'));
-    http.get(apiUrl)
+    http.get(Uri.parse(apiUrl))
     .then( (response) {
       if (200 <= response.statusCode && response.statusCode < 300) {
         setState(() {

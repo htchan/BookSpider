@@ -24,7 +24,7 @@ class _StagePageState extends State<StagePage> {
     _stage = Center(child: Text('Loading Stage...'));
     _subStage = Center(child: Text('Loading Sub-Stage...'));
     _logs = Center(child: Text('Loading Logs...'));
-    http.get(dataUrl)
+    http.get(Uri.parse(dataUrl))
     .then( (response) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         Map<String, dynamic> info = Map<String, dynamic>.from(

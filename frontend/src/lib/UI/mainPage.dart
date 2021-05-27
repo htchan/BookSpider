@@ -19,7 +19,7 @@ class _MainPageState extends State<MainPage> {
   _MainPageState(this.url) {
     String apiUrl = '$url/info';
     _buttons = _renderStageButton();
-    http.get(apiUrl)
+    http.get(Uri.parse(apiUrl))
     .then( (response) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setState(() {

@@ -25,7 +25,7 @@ class _SearchPageState extends State<SearchPage> {
   void _loadPage(int page) {
     String apiUrl = '$url/search/$siteName?title=$title&writer=$writer&page=$page';
     _booksPanel = Center(child: Text('Loading Books...'));
-    http.get(apiUrl)
+    http.get(Uri.parse(apiUrl))
     .then( (response) {
       if (response.statusCode != 404) {
         setState((){
