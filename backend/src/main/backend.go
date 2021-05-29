@@ -305,13 +305,13 @@ var sites map[string]model.Site
 func main() {
 	currentProcess = ""
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	stageFileName = dir + "/log/stage.txt"
+	config := model.LoadYaml("./config/config.yaml")
+	stageFileName = config.Backend.StageFile
 	logs = Logs{
-		logLocation: dir + "/nohup.out", 
+		logLocation: config.Backend.LogFile, 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}
-	config := model.LoadYaml("./config/config.yaml")
 	sites = model.LoadSitesYaml(config)
 	apiFunc := make(map[string]func())
 	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
@@ -323,7 +323,7 @@ func main() {
 	apiFunc["info"] = func() { http.HandleFunc("/api/novel/info", GeneralInfo) }
 	apiFunc["validate"] = func() { http.HandleFunc("/api/novel/validate", ValidateState) }
 
-	for _, api := range config.Api { apiFunc[api]() }
+	for _, api := range config.Backend.Api { apiFunc[api]() }
 	fmt.Println("started")
 	log.Fatal(http.ListenAndServe(":9427", nil))
 }

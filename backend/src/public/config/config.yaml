@@ -28,14 +28,17 @@ sites:
     #     configLocation : "./config/bestory-desktop.json"
     #     databaseLocation : "./database/bestory.db"
     #     downloadLocation : "/mnt/addition/download/Book/bestory"
-api:
-  - search
-  - download
-  - bookInfo
-  - siteInfo
-  - random
-  - process
-  - info
-  - validate
 maxThreads: 1000
 maxExploreError: 1000
+backend:
+    api:
+        - search
+        - download
+        - bookInfo
+        - siteInfo
+        - random
+        - process
+        - info
+        - validate
+    stageFile: '/log/stage.txt'
+    logFile: '/log/nohup.log'
