@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_strategy/url_strategy.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import './UI/mainPage.dart';
 import './UI/sitePage.dart';
@@ -7,15 +8,17 @@ import './UI/searchPage.dart';
 import './UI/randomPage.dart';
 import './UI/bookPage.dart';
 import './UI/stagePage.dart';
+import './UI/errorPage.dart';
 
 void main() {
-  setPathUrlStrategy();
+  // setPathUrlStrategy();
+  setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  String url = 'http://192.168.128.146:9427/api/novel';
+  String url = 'http://192.168.128.146/api/novel';
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,10 +32,6 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/novel',
       onGenerateRoute: (settings) {
-        if (settings.name == '/novel') {
-          return MaterialPageRoute(builder: (context) => MainPage(url: url,),
-            settings: settings);
-        }
         var uri = Uri.parse(settings.name);
         print(uri.pathSegments);
         if (uri.pathSegments.indexOf('stage') == 1) {
@@ -71,6 +70,9 @@ class MyApp extends StatelessWidget {
               siteName: uri.pathSegments[2],
               bookId: uri.pathSegments[3]
             ),
+            settings: settings);
+        } else {
+          return MaterialPageRoute(builder: (context) => MainPage(url: url,),
             settings: settings);
         }
       }
