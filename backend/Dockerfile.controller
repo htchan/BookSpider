@@ -17,4 +17,4 @@ COPY --from=builder /usr/src/app/backend .
 
 COPY --from=builder /usr/src/app/public/config .
 
-CMD ['./controller']
+CMD ['./backend']
