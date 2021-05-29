@@ -18,7 +18,7 @@ import (
 	//"io/ioutil"
 	"os"
 	// self define helper package
-	"../helper"
+	"github.com/htchan/BookSpider/helper"
 )
 const BOOK_MAX_THREAD = 1000;
 

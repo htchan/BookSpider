@@ -19,7 +19,7 @@ import (
 	"sync"
 	"golang.org/x/sync/semaphore"
 
-	"../helper"
+	"github.com/htchan/BookSpider/helper"
 )
 
 const MAX_THREAD_COUNT = 1000;

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"../helper"
+	"github.com/htchan/BookSpider/helper"
 )
 
 type Config struct {

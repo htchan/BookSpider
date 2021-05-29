@@ -17,8 +17,8 @@ import (
 	"encoding/json"
 
 	//"../helper"
-	"../model"
-	"../helper"
+	"github.com/htchan/BookSpider/model"
+	"github.com/htchan/BookSpider/helper"
 )
 
 type Logs struct {
