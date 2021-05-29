@@ -2,31 +2,31 @@ sites:
     ck101:
         decode : big5
         configLocation : "./config/ck101-desktop.yaml"
-        databaseLocation : "./database/ck101.db"
-        downloadLocation : "/mnt/addition/download/Books/ck101/"
+        databaseLocation : "/database/ck101.db"
+        downloadLocation : "/books/ck101/"
         threadsCount : 200
     80txt:
         decode : utf8
         configLocation : "./config/80txt-desktop.yaml"
-        databaseLocation : "./database/80txt.db"
-        downloadLocation : "/mnt/addition/download/Books/80txt/"
+        databaseLocation : "/database/80txt.db"
+        downloadLocation : "/books/80txt/"
         threadsCount : 200
     xqishu:
         decode : utf8
         configLocation : "./config/xqishu-desktop.yaml"
-        databaseLocation : "./database/xqishu.db"
-        downloadLocation : "/mnt/addition/download/Books/xqishu/"
+        databaseLocation : "/database/xqishu.db"
+        downloadLocation : "/books/xqishu/"
         threadsCount : 200
     hjwzw:
         decode : utf8
         configLocation : "./config/hjwzw-desktop.yaml"
-        databaseLocation : "./database/hjwzw.db"
-        downloadLocation : "/mnt/addition/download/Books/hjwzw/"
+        databaseLocation : "/database/hjwzw.db"
+        downloadLocation : "/books/hjwzw/"
         threadsCount : 200
     # bestory:
     #     decode : "big5"
     #     configLocation : "./config/bestory-desktop.json"
-    #     databaseLocation : "./database/bestory.db"
+    #     databaseLocation : "/database/bestory.db"
     #     downloadLocation : "/mnt/addition/download/Book/bestory"
 maxThreads: 1000
 maxExploreError: 1000

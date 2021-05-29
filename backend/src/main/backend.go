@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"net/http"
 	"log"
-	"path/filepath"
 	//"encoding/json"
 	//"golang.org/x/text/encoding/traditionalchinese"
 	//"golang.org/x/text/encoding"
@@ -304,7 +303,6 @@ var sites map[string]model.Site
 
 func main() {
 	currentProcess = ""
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	config := model.LoadYaml("./config/config.yaml")
 	stageFileName = config.Backend.StageFile
 	logs = Logs{
