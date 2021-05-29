@@ -45,7 +45,7 @@ class _MainPageState extends State<MainPage> {
       onPressed: () {
         Navigator.pushNamed(
           scaffoldKey.currentContext,
-          '/novel/sites/$name'
+          '/sites/$name'
         );
       },
     ));
@@ -58,7 +58,7 @@ class _MainPageState extends State<MainPage> {
       onPressed: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext, 
-          '/novel/stage'
+          '/stage'
         );
       }
     )];

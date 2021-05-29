@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:fluttericon/rpg_awesome_icons.dart' as Icons2;
 
 class SitePage extends StatefulWidget{
   final String url, siteName;
@@ -22,7 +23,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   final String siteName, url;
   Widget _chartPanel, _dataPanel;
   final GlobalKey scaffoldKey = GlobalKey();
-  TabController _tabController;
+  PageController _pageController;
 
   _SitePageState(this.url, this.siteName) {
     // call backend api
@@ -48,7 +49,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
         );
       }
     });
-    _tabController = TabController(length: 2, vsync: this);
+    _pageController = PageController(initialPage: 0);
   }
 
   Widget _renderBookCount(Map<String, dynamic> info) {
@@ -123,7 +124,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
           this._formatData(info),
           animate: true,
           defaultRenderer: charts.ArcRendererConfig(
-            arcWidth: 100,
+            arcWidth: (MediaQuery.of(scaffoldKey.currentContext).size.height / 8).round(),
             arcRendererDecorators: [new charts.ArcLabelDecorator()]),
         ),
         Center(child: Text(
@@ -138,8 +139,8 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   }
 
   Widget _renderSearchPanel() {
-    TextEditingController titleControler, writerController;
-    titleControler = TextEditingController();
+    TextEditingController titleController, writerController;
+    titleController = TextEditingController();
     writerController = TextEditingController();
     return Center(
       child: Card(
@@ -148,35 +149,50 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
           children: <Widget>[
             TextField(
               decoration: InputDecoration(labelText: 'Book Title'),
-              controller: titleControler
+              controller: titleController
             ),
             TextField(
               decoration: InputDecoration(labelText: 'Book Writer'),
               controller: writerController,
             ),
-            TextButton(
-              child: Text('Submit'),
-              onPressed: () {
-                String title = titleControler.text;
-                String writer = writerController.text;
-                Navigator.pushNamed(
-                  this.scaffoldKey.currentContext, 
-                  '/novel/search/$siteName?title=$title&writer=$writer'
-                );
-              },
-            )
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(child: Container()),
+                _renderSearchButton(titleController, writerController),
+                Expanded(child: Container()),
+                _renderRandomButton(),
+                Expanded(child: Container()),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+  Widget _renderSearchButton(TextEditingController titleController, 
+    TextEditingController writerController) {
+    return TextButton.icon(
+      icon: Icon(Icons.search),
+      label: Text('Search'),
+      onPressed: () {
+        String title = titleController.text;
+        String writer = writerController.text;
+        Navigator.pushNamed(
+          this.scaffoldKey.currentContext, 
+          '/search/$siteName?title=$title&writer=$writer'
+        );
+      },
+    );
+  }
   Widget _renderRandomButton() {
-    return RaisedButton(
-      child: Text('Random'),
+    return TextButton.icon(
+      icon: Icon(Icons2.RpgAwesome.perspective_dice_random),
+      label: Text('Random'),
       onPressed: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext,
-          '/novel/random/$siteName'
+          '/random/$siteName'
         );
       },
     );
@@ -185,33 +201,25 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     // show the content
+    final PageController pageController = PageController( initialPage: 0 );
     return Scaffold(
-      appBar: AppBar(title: Text(this.siteName)),
-      key: this.scaffoldKey,
+      appBar: AppBar(title: Text(siteName)),
+      key: scaffoldKey,
       body: Container(
         child: Column(
           children:[
             Container(
-              decoration: new BoxDecoration(color: Theme.of(context).primaryColor),
-              child: TabBar(
-                tabs: <Widget>[
-                  Tab(text: 'Chart',), 
-                  Tab(text: 'Data',),
-                ],
-                controller: this._tabController,)),
-            Container(
-              height: 500,
-              child: TabBarView(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: PageView(
                 children: [
                   _chartPanel, 
                   _dataPanel,
                 ],
-                controller: this._tabController,
+                controller: pageController,
               )
             ),
-            this._renderSearchPanel(),
-            Divider(),
-            this._renderRandomButton(),
+            _renderSearchPanel(),
+            // _renderRandomButton(),
           ],
         ),
         margin: EdgeInsets.symmetric(horizontal: 5.0),

@@ -74,7 +74,7 @@ class _RandomPageState extends State<RandomPage> {
       onTap: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext,
-          '/novel/books/$siteName/${book['id']}'
+          '/books/$siteName/${book['id']}'
         );
     })));
     if (books.length == 20) { list.add(_renderRandomButton()); }

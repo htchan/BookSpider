@@ -30,45 +30,45 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/novel',
+      initialRoute: '/',
       onGenerateRoute: (settings) {
         var uri = Uri.parse(settings.name);
         print(uri.pathSegments);
-        if (uri.pathSegments.indexOf('stage') == 1) {
+        if (uri.pathSegments.indexOf('stage') == 0) {
           return MaterialPageRoute(
             builder: (context) => StagePage(
               url: url,
             ), 
             settings: settings);
-        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('sites') == 1) {
+        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('sites') == 0) {
           return MaterialPageRoute(
             builder: (context) => SitePage(
               url: url,
-              siteName: uri.pathSegments[2]
+              siteName: uri.pathSegments[1]
             ),
             settings: settings);
-        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('search') == 1) {
+        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('search') == 0) {
           return MaterialPageRoute(
             builder: (context) => SearchPage(
               url: url, 
-              siteName: uri.pathSegments[2],
+              siteName: uri.pathSegments[1],
               title: uri.queryParameters['title'],
               writer: uri.queryParameters['writer']
             ),
             settings: settings);
-        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('random') == 1) {
+        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('random') == 0) {
           return MaterialPageRoute(
             builder: (context) => RandomPage(
               url: url, 
-              siteName: uri.pathSegments[2]
+              siteName: uri.pathSegments[1]
             ),
             settings: settings);
-        } else if (uri.pathSegments.length >= 3 && uri.pathSegments.indexOf('books') == 1) {
+        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('books') == 0) {
           return MaterialPageRoute(
             builder: (context) => BookPage(
               url: url,
-              siteName: uri.pathSegments[2],
-              bookId: uri.pathSegments[3]
+              siteName: uri.pathSegments[1],
+              bookId: uri.pathSegments[2]
             ),
             settings: settings);
         } else {

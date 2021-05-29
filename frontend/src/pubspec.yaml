@@ -31,6 +31,7 @@ dependencies:
   cupertino_icons: ^1.0.3
   charts_flutter: ^0.10.0
   url_strategy: ^0.2.0
+  fluttericon: ^2.0.0
 
 dev_dependencies:
   flutter_test:
