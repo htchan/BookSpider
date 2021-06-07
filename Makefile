@@ -1,4 +1,5 @@
 pwd:=$(shell pwd)
+user:=$(shell whoami)
 frontend_src_volume = $(pwd)/bin/frontend
 frontend_dst_volume = novel_frontend_volume
 
@@ -7,7 +8,13 @@ log_volume = $(pwd)/bin/log
 book_volume = /mnt/addition/download/Books
 backup_volume = $(pwd)/bin/backup
 
-.PHONY: frontend backend controller
+.PHONY: frontend backend controller build
+
+build:
+    docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
+    docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
+    docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
+    docker image prune -f
 
 frontend:
 	docker run -v ${frontend_dst_volume}:/frontend \
@@ -16,8 +23,6 @@ frontend:
 	docker rm novel_frontend
 
 backend:
-	docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
-	docker image prune -f
 	docker run --name novel_backend_container -d \
 		--network=router \
 		-v ${database_volume}:/database \
@@ -26,7 +31,6 @@ backend:
 		novel_backend ./backend > ./backend.log
 
 controller:
-	docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
 	docker run --name novel_controller_container -d \
 		-v ${database_volume}:/database \
 		-v ${log_volume}:/log \
@@ -34,10 +38,8 @@ controller:
 		novel_controller ./controller ${command} > /log/controller.log
 
 backup:
-	echo backup start
-	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
-	docker image prune -f
 	docker run --rm --name novel_backup_container -d \
 		-v ${database_volume}:/database \
 		-v ${backup_volume}:/backup \
 		novel_backup python ./backup.py
+	sudo chown -R ${user} ${backup_volume}

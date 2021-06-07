@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 	"fmt"
-	"../model"
-	"../helper"
+	"github.com/htchan/BookSpider/model"
+	"github.com/htchan/BookSpider/helper"
 	"runtime"
 	_ "net/http/pprof"
 	"path/filepath"
@@ -272,11 +272,10 @@ func main() {
 	config := model.LoadYaml("./config/config.yaml")
 	sites := model.LoadSitesYaml(config)
 
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	stageFileName = dir + "/log/stage.txt"
+	stageFileName = config.Backend.StageFile
 
-	os.Remove(stageFileName)
-	os.Create(stageFileName)
+	os.Remove(config.Backend.StageFile)
+	os.Create(config.Backend.StageFile)
 	
 	switch operation := strings.ToUpper(os.Args[1]); operation {
 	case "UPDATE":
