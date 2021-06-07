@@ -1,6 +1,6 @@
 import os, sqlite3, datetime
 
-backup_dir_location = '/backup' + str(datetime.datetime.now())[19:]
+backup_dir_location = '/backup/' + str(datetime.datetime.now())[:19]
 if not os.path.exists(backup_dir_location): os.mkdir(backup_dir_location) 
 
 database_dir_location = '/database'

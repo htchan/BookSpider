@@ -35,9 +35,9 @@ controller:
 
 backup:
 	echo backup start
-	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend
+	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
 	docker image prune -f
 	docker run --rm --name novel_backup_container -d \
 		-v ${database_volume}:/database \
 		-v ${backup_volume}:/backup \
-		novel_backup ./operation/backup.py
+		novel_backup ./backup.py

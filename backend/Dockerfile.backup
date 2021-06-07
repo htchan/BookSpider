@@ -2,4 +2,4 @@ FROM python:alpine
 
 WORKDIR /usr/src/app
 
-COPY ./src/operation .
+COPY . .
