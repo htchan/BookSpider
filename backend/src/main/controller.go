@@ -8,7 +8,6 @@ import (
 	"github.com/htchan/BookSpider/helper"
 	"runtime"
 	_ "net/http/pprof"
-	"path/filepath"
 	
 	"golang.org/x/sync/semaphore"
 	
