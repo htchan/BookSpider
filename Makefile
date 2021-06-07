@@ -11,10 +11,10 @@ backup_volume = $(pwd)/bin/backup
 .PHONY: frontend backend controller build
 
 build:
-    docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
-    docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
-    docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
-    docker image prune -f
+	docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
+	docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
+	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
+	docker image prune -f
 
 frontend:
 	docker run -v ${frontend_dst_volume}:/frontend \
