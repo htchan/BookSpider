@@ -82,9 +82,9 @@ class MyApp extends StatelessWidget {
 
 /*
 http://host/                                            => main page
-http://host/<site>                                      => site page
-http://host/<site>/search?title=<title>,writer=<writer> => search page
-http://host/<site>/random                               => random page
-http://host/<site>/<num>                                => book page
-http://host/<site>/<num>/<version>                      => book page
+http://host/sites/<site>                                      => site page
+http://host/search/<site>?title=<title>,writer=<writer> => search page
+http://host/random/<site>                               => random page
+http://host/books/<site>/<num>                                => book page
+http://host/books/<site>/<num>/<version>                      => book page
 */

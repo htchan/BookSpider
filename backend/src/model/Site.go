@@ -82,8 +82,8 @@ func (site *Site) Book(id, version int) Book {
 	if (siteName == "") {
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": site.SiteName,
-			"id": strconv.Itoa(id),
-			"retry": strconv.Itoa(i),
+			"id": id,
+			"retry": i,
 			"message": "cannot load from database",
 		})
 
@@ -184,8 +184,8 @@ func (site *Site) Update(s *semaphore.Weighted) {
 		if (book.Version == -1) {
 			strByte, err := json.Marshal(map[string]interface{} {
 				"site": site.SiteName,
-				"id": strconv.Itoa(id),
-				"version": strconv.Itoa(book.Version),
+				"id": id,
+				"version": book.Version,
 				"message": "cannot load from database",
 			})
 
@@ -224,8 +224,8 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 			
 			strByte, err := json.Marshal(map[string]interface{} {
 				"site": book.SiteName,
-				"id": strconv.Itoa(book.Id),
-				"version": strconv.Itoa(book.Version),
+				"id": book.Id,
+				"version": book.Version,
 				"title": book.Title,
 				"message": "new version updated",
 			})
@@ -239,8 +239,8 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 						book.SiteName, book.Id, book.Version);
 			strByte, err := json.Marshal(map[string]interface{} {
 				"site": book.SiteName,
-				"id": strconv.Itoa(book.Id),
-				"version": strconv.Itoa(book.Version),
+				"id": book.Id,
+				"version": book.Version,
 				"message": "regular update",
 			})
 
@@ -252,8 +252,8 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 		// tell others nothing updated
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
-			"id": strconv.Itoa(book.Id),
-			"version": strconv.Itoa(book.Version),
+			"id": book.Id,
+			"version": book.Version,
 			"message": "not updated",
 		})
 		
@@ -349,8 +349,8 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		helper.CheckError(err)
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
-			"id": strconv.Itoa(book.Id),
-			"version": strconv.Itoa(book.Version),
+			"id": book.Id,
+			"version": book.Version,
 			"message": "no such book",
 		})
 
@@ -380,8 +380,8 @@ func (site *Site) Download() {
 		}
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
-			"id": strconv.Itoa(book.Id),
-			"version": strconv.Itoa(book.Version),
+			"id": book.Id,
+			"version": book.Version,
 			"title": book.Title,
 			"message": "start download",
 		})
@@ -393,8 +393,8 @@ func (site *Site) Download() {
 		if (! check) {
 			strByte, err := json.Marshal(map[string]interface{} {
 				"site": book.SiteName,
-				"id": strconv.Itoa(book.Id),
-				"version": strconv.Itoa(book.Version),
+				"id": book.Id,
+				"version": book.Version,
 				"title": book.Title,
 				"message": "download failure",
 			})
@@ -475,8 +475,8 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted,
 		tx.Stmt(delete).Exec(site.SiteName, book.Id);
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
-			"id": strconv.Itoa(book.Id),
-			"version": strconv.Itoa(book.Version),
+			"id": book.Id,
+			"version": book.Version,
 			"title": book.Title,
 			"message": "error updated",
 		})
@@ -487,7 +487,7 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted,
 		// tell others nothing updated
 		strByte, err := json.Marshal(map[string]interface{} {
 			"site": book.SiteName,
-			"id": strconv.Itoa(book.Id),
+			"id": book.Id,
 			"message": "error not updated",
 		})
 		
@@ -595,24 +595,6 @@ func (site *Site) fixStroageError(s *semaphore.Weighted) {
 		s.Acquire(ctx, 1);
 		rows.Scan(&id, &version, &recordDownload)
 		go site.CheckDownloadExistThread(id, version, recordDownload, s, &wg, tx, markDownload, markNotDownload)
-		/*
-		path := site.downloadLocation + strconv.Itoa(id)
-		if version > 0 {
-			path += "-v" + strconv.Itoa(version)
-		}
-		path += ".txt"
-		// check book file exist
-		exist := helper.Exists(path)
-		if exist && !recordDownload {
-			// if book mark as not download, but it exist, mark as download
-			tx.Stmt(markDownload).Exec(true, true, id, version)
-			fmt.Println(site.SiteName + "\t" + strconv.Itoa(id) + "\t" + strconv.Itoa(version) + "\t" + "mark to download")
-		} else if !exist && recordDownload {
-			// if book mark as download, but not exist, mark as not download
-			tx.Stmt(markNotDownload).Exec(false, id, version)
-			fmt.Println(site.SiteName + "\t" + strconv.Itoa(id) + "\t" + strconv.Itoa(version) + "\t" + "mark to not download")
-		}
-		*/
 	}
 	wg.Wait()
 	// commit changes to database
