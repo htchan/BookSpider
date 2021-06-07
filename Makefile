@@ -28,14 +28,14 @@ backend:
 		-v ${database_volume}:/database \
 		-v ${log_volume}:/log \
 		-v ${book_volume}:/books \
-		novel_backend ./backend > ./backend.log
+		novel_backend sh -c "./backend > /log/backend.log"
 
 controller:
 	docker run --name novel_controller_container -d \
 		-v ${database_volume}:/database \
 		-v ${log_volume}:/log \
 		-v ${book_volume}:/books \
-		novel_controller ./controller ${command} > /log/controller.log
+		novel_controller sh -c "./controller ${command} > /log/controller.log"
 
 backup:
 	docker run --rm --name novel_backup_container -d \
