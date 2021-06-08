@@ -84,7 +84,7 @@ class _StagePageState extends State<StagePage> {
         _addStage(stages, line);
       }
     }
-    stages.add(Text(info['time']));
+    stages.add(Text(DateTime.fromMillisecondsSinceEpoch(info['time'] * 1000).toString()));
     return ListView(
       children: stages,
       scrollDirection: Axis.horizontal,
