@@ -70,7 +70,7 @@ func response(res http.ResponseWriter, data map[string]interface{}) {
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-	modifyTime := logs.FileLastUpdate.String()[:19]
+	//modifyTime := logs.FileLastUpdate.String()[:19]
 	// get last several line of nohup.out
 	logs.update()
 	data, err := ioutil.ReadFile(stageFileName)
@@ -82,7 +82,7 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	}
 	// print them
 	response(res, map[string]interface{} {
-		"time": modifyTime,
+		"time": logs.FileLastUpdate.Unix(),//modifyTime,
 		"stage": stageStr,
 		"logs": logs.Logs,
 	})

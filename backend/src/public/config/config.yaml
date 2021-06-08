@@ -41,4 +41,4 @@ backend:
         - info
         - validate
     stageFile: '/log/stage.txt'
-    logFile: '/log/nohup.log'
+    logFile: '/log/controller.log'
