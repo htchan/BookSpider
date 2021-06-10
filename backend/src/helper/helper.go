@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 	"os"
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/transform"
 )
 
 func CheckError(e error) {
@@ -17,7 +19,7 @@ func CheckError(e error) {
 }
 
 /* web related */
-func GetWeb(url string) (string) {
+func getWeb(url string) (string) {
 	client := http.Client{Timeout: 30*time.Second}
 	resp, err := client.Get(url);
 	if err != nil {
@@ -33,6 +35,21 @@ func GetWeb(url string) (string) {
 	resp.Body.Close();
 	client.CloseIdleConnections()
 	return string(body);
+}
+
+func GetWeb(url string, trial int, decoder *encoding.Decoder) (html string, i int) {
+	for i = 0; i < 10; i++ {
+		html = getWeb(url);
+		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
+			time.Sleep(time.Duration(i * i) * time.Second)
+			continue
+		}
+		if (decoder != nil) {
+			html, _, _ = transform.String(decoder, html);
+			break;
+		}
+	}
+	return
 }
 
 /* regex relates */
