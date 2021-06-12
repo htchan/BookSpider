@@ -42,10 +42,7 @@ func help() {
 
 func writeStage(s string) {
 	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println(stageFileName)
-	}
+	if err != nil { fmt.Println(err, "\n", stageFileName) }
 	file.WriteString(s + "\n")
     file.Close()
 }
@@ -57,11 +54,9 @@ func download(sites map[string]model.Site, config model.Config, flags Flags) {
 		if *flags.site != "" && name != *flags.site { continue }
 		wg.Add(1)
 		go func(name string, site model.Site) {
+			defer wg.Done()
 			writeStage("sub_stage: " + name + " start")
-			if name == "80txt" {
-				wg.Done()
-				return
-			}
+			if name == "80txt" { return }
 			fmt.Println(name + "\tdownload")
 			if *flags.id != -1 {
 				book := site.Book(*flags.id, -1)
@@ -71,7 +66,6 @@ func download(sites map[string]model.Site, config model.Config, flags Flags) {
 			}
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
 		} (name, site)
 	}
 	wg.Wait()
@@ -200,10 +194,8 @@ func random(sites map[string]model.Site, config model.Config, flags Flags) {
 	for name, site := range sites {
 		if *flags.site != "" && name != *flags.site { continue }
 		fmt.Println(name + "\trandom")
-		results := site.Random(5)
-		for _, result := range results {
-			fmt.Println(result.String()+"\n")
-		}
+		results := site.RandomSuggestBook(5)
+		for _, result := range results { fmt.Println(result.String()+"\n") }
 		runtime.GC()
 	}
 }

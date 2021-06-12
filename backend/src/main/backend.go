@@ -31,26 +31,21 @@ var stageFileName string
 const readLogLen int64 = 10000
 
 func (logs *Logs) update() {
-	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 {
-		return
-	}
+	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 { return }
+
 	logFileStat, err := os.Stat(logs.logLocation)
-	if err != nil {
-		return
-	}
+	if err != nil { return }
 	fileSize := logFileStat.Size()
 	logs.FileLastUpdate = logFileStat.ModTime()
-	if fileSize == logs.size {
-		return
-	}
+	if fileSize == logs.size { return }
+
 	file, err := os.Open(logs.logLocation)
 	helper.CheckError(err)
 	defer file.Close()
 	logs.size = fileSize
 	offset := fileSize - readLogLen
-	if offset < readLogLen {
-		offset = 0
-	}
+	if offset < readLogLen { offset = 0 }
+	
 	b := make([]byte, readLogLen)
 	file.ReadAt(b, offset)
 	logs.Logs = strings.Split(string(b), "\n")
@@ -66,12 +61,18 @@ func response(res http.ResponseWriter, data map[string]interface{}) {
 	helper.CheckError(err)
 	fmt.Fprintln(res, string(dataByte))
 }
+func error(res http.ResponseWriter, code int, msg string) {
+	res.WriteHeader(code)
+	response(res, map[string]interface{} {
+		"code": code,
+		"message": msg,
+	})
+}
 
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-	//modifyTime := logs.FileLastUpdate.String()[:19]
-	// get last several line of nohup.out
+	
 	logs.update()
 	data, err := ioutil.ReadFile(stageFileName)
 	var stageStr []string
@@ -80,9 +81,9 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	} else {
 		stageStr = append(stageStr, strings.Split(string(data), "\n")...)
 	}
-	// print them
+
 	response(res, map[string]interface{} {
-		"time": logs.FileLastUpdate.Unix(),//modifyTime,
+		"time": logs.FileLastUpdate.Unix(),
 		"stage": stageStr,
 		"logs": logs.Logs,
 	})
@@ -104,11 +105,13 @@ func ValidateState(res http.ResponseWriter, req *http.Request) {
 func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
+
 	siteNames := make([]string, 0)
 	for siteName, _ := range sites {
 		siteNames = append(siteNames, siteName)
 	}
 	sort.Strings(siteNames)
+
 	response(res, map[string]interface{} {
 		"siteNames": siteNames,
 	})
@@ -117,58 +120,48 @@ func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 func SiteInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
+
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "site <" + siteName + "> not found",
-		})
+		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
 		return
 	}
+
 	response(res, site.Map())
 }
 
 func BookInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
+
 	uri := strings.Split(req.URL.Path, "/")
+	if len(uri) < 6 {
+		error(res, http.StatusBadRequest, "not enough parameter")
+	}
 	siteName := uri[4]
 	site, ok := sites[siteName]
-	if !ok {
-		res.WriteHeader(http.StatusNotFound)
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "site <" + siteName + "> not found",
-		})
-		return
-	}
 	id, err := strconv.Atoi(uri[5])
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
-		response(res, map[string]interface{} {
-			"code": 400,
-			"message": "id <" + uri[5] + "> is not a number",
-		})
+	if !ok {
+		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
+		return
+	} else if err != nil {
+		error(res, http.StatusBadRequest, "id <" + uri[5] + "> is not a number")
 		return
 	}
+
 	version := -1;
 	if len(uri) > 6 {
-		version, err =strconv.Atoi(uri[6])
-		if err != nil {
-			version = -1
-		}
+		version, err = strconv.Atoi(uri[6])
+		if err != nil { version = -1 }
 	}
+
 	book := site.Book(id, version)
 	if (book.Title == "") {
-		res.WriteHeader(http.StatusNotFound)
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found",
-		})
+		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
+				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
 	} else {
 		response(res, book.Map())
 	}
@@ -178,25 +171,17 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
+	if len(uri) < 6 {
+		error(res, http.StatusBadRequest, "not enough parameter")
+	}
 	siteName := uri[4]
 	site, ok := sites[siteName]
-	if !ok {
-		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "site <" + siteName + "> not found",
-		})
-		return
-	}
 	id, err := strconv.Atoi(uri[5])
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
-		// fmt.Fprintf(res, "{\"code\" : 400, \"message\" : \"id <" + uri[3] + "> is not a number\"}")
-		response(res, map[string]interface{} {
-			"code": 400,
-			"message": "id <" + uri[5] + "> is not a number",
-		})
+	if !ok {
+		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
+		return
+	} else if err != nil {
+		error(res, http.StatusBadRequest, "id <" + uri[5] + "> is not a number")
 		return
 	}
 	version := -1;
@@ -208,28 +193,18 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	}
 	book := site.Book(id, version)
 	if (book.Title == "") {
-		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found\"}")
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "book <" + strconv.Itoa(id) + ">, version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found",
-		})
+		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
+				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
 		return
-	}
-	if !book.DownloadFlag {
-		res.WriteHeader(http.StatusNotAcceptable)
-		// fmt.Fprintf(res, "{\"code\" : 406, \"message\" : \"book <" + uri[3] + "> not download yet\"}")
-		response(res, map[string]interface{} {
-			"code": 406,
-			"message": "book <" + uri[5] + "> not download yet",
-		})
+	} else if !book.DownloadFlag {
+		error(res, http.StatusNotAcceptable, "book <" + uri[5] + "> not download yet")
 		return
 	}
 	fileName := book.Title + "-" + book.Writer
 	if book.Version > 0 {
 		fileName += "-v" + strconv.Itoa(book.Version)
 	}
-	content := site.BookContent(book)
+	content := book.Content(site.DownloadLocation)
 	res.Header().Set("Content-Type", "text/txt; charset=utf-8")
 	res.Header().Set("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"")
 	fmt.Fprintf(res, content)
@@ -241,20 +216,14 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[4]
 	site, ok := sites[siteName]
-	if !ok {
-		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "site <" + siteName + "> not found",
-		})
-		return
-	}
 	title := strings.ReplaceAll(req.URL.Query().Get("title"), "*", "%")
 	writer := strings.ReplaceAll(req.URL.Query().Get("writer"), "*", "%")
 	pageStr := req.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageStr)
-	if err != nil {
+	if !ok {
+		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
+		return
+	} else if err != nil {
 		page = 0
 	}
 	books := site.Search(title, writer, page)
@@ -274,20 +243,13 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	siteName := uri[4]
 	site, ok := sites[siteName]
 	if !ok {
-		res.WriteHeader(http.StatusNotFound)
-		// fmt.Fprintf(res, "{\"code\" : 404, \"message\" : \"site <" + siteName + "> not found\"}")
-		response(res, map[string]interface{} {
-			"code": 404,
-			"message": "site <" + siteName + "> not found",
-		})
+		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
 		return
 	}
 	num, err := strconv.Atoi(req.URL.Query().Get("num"))
-	if (err != nil) {
-		num = 20;
-	}
+	if (err != nil) { num = 20 }
 	if (num > 50) { num = 50 }
-	books := site.Random(num)
+	books := site.RandomSuggestBook(num)
 	booksArray := make([]map[string]interface{}, 0)
 	for _, book := range books {
 		booksArray = append(booksArray, book.Map())

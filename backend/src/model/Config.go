@@ -49,7 +49,7 @@ func NewSiteYaml(siteName string, decoder *encoding.Decoder, configFileLocation 
 		chapterTitleRegex: info["chapterTitleRegex"],
 		chapterContentRegex: info["chapterContentRegex"],
 		databaseLocation: databaseLocation,
-		downloadLocation: downloadLocation,
+		DownloadLocation: downloadLocation,
 		MAX_THREAD_COUNT: MAX_THREAD_COUNT};
 	return site;
 }
@@ -114,7 +114,7 @@ func NewSiteJson(siteName string, decoder *encoding.Decoder, configFileLocation 
 		chapterTitleRegex: info["chapterTitleRegex"],
 		chapterContentRegex: info["chapterContentRegex"],
 		databaseLocation: databaseLocation,
-		downloadLocation: downloadLocation};
+		DownloadLocation: downloadLocation};
 	return site;
 }
 
