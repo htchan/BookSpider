@@ -45,9 +45,9 @@ func GetWeb(url string, trial int, decoder *encoding.Decoder) (html string, i in
 			continue
 		}
 		if (decoder != nil) {
-			html, _, _ = transform.String(decoder, html);
-			break;
+			html, _, _ = transform.String(decoder, html)
 		}
+		break
 	}
 	return
 }
