@@ -2,9 +2,9 @@ module github.com/htchan/BookSpider
 
 go 1.13
 
-replace github.com/htchan/BookSpider/helper v0.0.0 => ./src/helper
+replace github.com/htchan/BookSpider/helper v0.0.0 => ./helper
 
-replace github.com/htchan/BookSpider/model v0.0.0 => ./src/model
+replace github.com/htchan/BookSpider/model v0.0.0 => ./model
 
 require (
 	github.com/htchan/BookSpider/helper v0.0.0 // indirect

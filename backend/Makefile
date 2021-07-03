@@ -1,14 +1,14 @@
 all: controller backend
 	mkdir -p ./build
-	mv ./controller ./build/
-	mv ./backend ./build/
+	mv ./src/controller ./build/
+	mv ./src/backend ./build/
 	cp ./src/public/* ./build -r
 
 controller: ./src/main/controller.go
-	go build ./src/main/controller.go
+	cd ./src && go build ./main/controller.go
 
 backend: ./src/main/controller.go
-	go build ./src/main/backend.go
+	cd ./src && go build ./main/backend.go
 
 test: ./src/helper/helper ./src/model
 	cd ./src/helper && go test
