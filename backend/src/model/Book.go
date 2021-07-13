@@ -3,6 +3,7 @@ package model
 import (
 	// for println and format string
 	"fmt"
+	"log"
 	// string operation and encoding
 	"strings"
 	"strconv"
@@ -36,7 +37,7 @@ func (book Book) Log(info map[string]interface{}) {
 	info["site"], info["id"], info["version"] = book.SiteName, book.Id, book.Version
 	outputByte, err := json.Marshal(info)
 	helper.CheckError(err)
-	fmt.Println(string(outputByte))
+	log.Println(string(outputByte))
 }
 
 func (book *Book) validHTML(html string, url string, trial int) bool {
@@ -77,7 +78,7 @@ func (book *Book) Update() bool {
 			book.Log(map[string]interface{} {
 				"title": title, "writer": writer, "type": typeName,
 				"lastUpdate": lastUpdate, "lastChapter": lastChapter,
-				"message": "extract html fail",
+				"message": "extract html fail", "stage": "update",
 			})
 			return false
 		}
@@ -93,7 +94,7 @@ func (book *Book) Update() bool {
 				"new": map[string]interface{} {
 					"title": title, "writer": writer, "type": typeName,
 				},
-				"message": "already download",
+				"message": "already download", "stage": "update",
 			})
 		}
 		book.Version++
@@ -130,7 +131,7 @@ func (book Book) saveBook(path string, urls []string, chapters []Chapter) (error
 		}
 		if (!found) {
 			book.Log(map[string]interface{} {
-				"title": book.Title, "url": url, "message": "no chapter found",
+				"title": book.Title, "url": url, "message": "no chapter found", "stage": "save book",
 			})
 		}
 	}
@@ -148,12 +149,12 @@ func (book *Book) Download(storagePath string, MAX_THREAD int) bool {
 	if len(urls) != len(titles) {
 		book.Log(map[string]interface{} {
 			"chapterCount": len(urls), "titleCount": len(titles),
-			"message": "title and url have different length",
+			"message": "title and url have different length", "stage": "download",
 		})
 		return false
 	} else if len(urls) == 0 {
 		book.Log(map[string]interface{} {
-			"title": book.Title, "message": "no chapter found",
+			"title": book.Title, "message": "no chapter found", "stage": "download",
 		})
 		return false
 	}
@@ -169,7 +170,7 @@ func (book *Book) Download(storagePath string, MAX_THREAD int) bool {
 		book.Log(map[string]interface{} {
 			"title": book.Title,
 			"message": "download cancel due to more than " + strconv.Itoa(maxErrorChapterCount) +
-			" chapters loss",
+			" chapters loss", "stage": "download",
 		})
 		helper.CheckError(os.Remove(bookLocation))
 		return false
@@ -191,7 +192,7 @@ func (book Book) downloadAllChapters(urls []string, titles []string, MAX_THREAD 
 	ctx := context.Background()
 	var s = semaphore.NewWeighted(int64(MAX_THREAD))
 	var wg sync.WaitGroup
-	ch := make(chan Chapter)
+	ch := make(chan Chapter, 100)
 	results = make([]Chapter, len(urls))
 	var i int
 	for i = range urls {
@@ -203,15 +204,20 @@ func (book Book) downloadAllChapters(urls []string, titles []string, MAX_THREAD 
 			urls[i] = book.downloadUrl + urls[i]
 		}
 		go book.downloadChapter(urls[i], titles[i], s, &wg, ch)
+		// results[i] = <-ch
+		// log.Println(i, results[i].Title)
 		if i % 100 == 0 && i > 0 {
-			for j := 0; j < 100; j++ { results[i - 100 + j] = <-ch }
+			for j := 0; j < 100; j++ { 
+				results[i - 100 + j] = <-ch
+				log.Println(j, results[i - 100 + j].Title)
+			}
 		}
 	}
 	offset := i % 100
 	for j := 0; j <= offset; j++ { results[i - offset + j] = <-ch }
 	wg.Wait()
 	book.Log(map[string]interface{} {
-		"title": book.Title, "message": "all chapter download",
+		"title": book.Title, "message": "all chapter download", "stage": "download",
 	})
 	return
 }
@@ -220,7 +226,7 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted,
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	fmt.Println("start download" + title)
+	log.Println("start download" + title + url)
 	html, trial := helper.GetWeb(url, 10, book.decoder)
 	if !book.validHTML(html, url, trial) {
 		ch <- Chapter{Url: url, Title: title, Content: "load html fail"}
@@ -230,16 +236,18 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted,
 	chapterContent := helper.Search(html, book.chapterContentRegex)
 	if chapterContent == "error" {
 		book.Log(map[string]interface{} {
-			"retry": trial, "url": url, "message": "recognize html fail",
+			"retry": trial, "url": url, "message": "recognize html fail", "stage": "download",
 		})
 		ch <- Chapter{Url: url, Title: title, Content: "recognize html fail\n"+html}
+		return
 	} else {
 		chapterContent = book.optimizeContent(chapterContent)
 		book.Log(map[string]interface{} {
-			"chapter": title, "url": url, "message": "download success",
+			"chapter": title, "url": url, "message": "download success", "stage": "download",
 		})
 		// put the chapter info to channel
 		ch <- Chapter{Url:url, Title:title, Content: chapterContent}
+		return
 	}
 }
 

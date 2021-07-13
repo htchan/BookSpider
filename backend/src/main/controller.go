@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 	"strings"
-	"fmt"
+	"log"
 	"github.com/htchan/BookSpider/model"
 	"github.com/htchan/BookSpider/helper"
 	"runtime"
@@ -21,28 +21,29 @@ import (
 var stageFileName string
 
 type Flags struct {
+	operation *string
 	site *string
 	id *int
 }
 
 func help() {
-	fmt.Println("Command: ")
-    fmt.Println("help" + strings.Repeat(" ", 14) + "show the functin list avaliable")
-    fmt.Println("download" + strings.Repeat(" ", 10) + "download books")
-    fmt.Println("update" + strings.Repeat(" ", 12) + "update books information")
-    fmt.Println("explore" + strings.Repeat(" ", 11) + "explore new books in internet")
-    fmt.Println("check" + strings.Repeat(" ", 13) + "check database or storage error")
-    fmt.Println("checkend" + strings.Repeat(" ", 10) + "check recorded books finished")
-    fmt.Println("error" + strings.Repeat(" ", 13) + "update all website may have error")
-    fmt.Println("backup" + strings.Repeat(" ", 12) + "backup the current database by the current date and time")
-    fmt.Println("regular" + strings.Repeat(" ", 11) + "do the default operation (explore->update->download->check)")
-	fmt.Println("fix" + strings.Repeat(" ", 15) + "fix the error in database and storage in the site")
-	fmt.Println("\n")
+	log.Println("Command: ")
+    log.Println("help" + strings.Repeat(" ", 14) + "show the functin list avaliable")
+    log.Println("download" + strings.Repeat(" ", 10) + "download books")
+    log.Println("update" + strings.Repeat(" ", 12) + "update books information")
+    log.Println("explore" + strings.Repeat(" ", 11) + "explore new books in internet")
+    log.Println("check" + strings.Repeat(" ", 13) + "check database or storage error")
+    log.Println("checkend" + strings.Repeat(" ", 10) + "check recorded books finished")
+    log.Println("error" + strings.Repeat(" ", 13) + "update all website may have error")
+    log.Println("backup" + strings.Repeat(" ", 12) + "backup the current database by the current date and time")
+    log.Println("regular" + strings.Repeat(" ", 11) + "do the default operation (explore->update->download->check)")
+	log.Println("fix" + strings.Repeat(" ", 15) + "fix the error in database and storage in the site")
+	log.Println("\n")
 }
 
 func writeStage(s string) {
 	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
-	if err != nil { fmt.Println(err, "\n", stageFileName) }
+	if err != nil { log.Println(err, "\n", stageFileName) }
 	file.WriteString(s + "\n")
     file.Close()
 }
@@ -57,7 +58,7 @@ func download(sites map[string]model.Site, config model.Config, flags Flags) {
 			defer wg.Done()
 			writeStage("sub_stage: " + name + " start")
 			if name == "80txt" { return }
-			fmt.Println(name + "\tdownload")
+			log.Println(name + "\tdownload")
 			if *flags.id != -1 {
 				book := site.Book(*flags.id, -1)
 				book.Download(".", site.MAX_THREAD_COUNT)
@@ -80,7 +81,7 @@ func update(sites map[string]model.Site, config model.Config, flags Flags) {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
-			fmt.Println(name + "\tupdate")
+			log.Println(name + "\tupdate")
 			site.Update(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
@@ -99,7 +100,7 @@ func explore(sites map[string]model.Site, config model.Config, flags Flags) {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
-			fmt.Println(name + "\texplore")
+			log.Println(name + "\texplore")
 			site.Explore(config.MaxExploreError, s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
@@ -118,7 +119,7 @@ func updateError(sites map[string]model.Site, config model.Config, flags Flags) 
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
-			fmt.Println(name + "\tupdate error")
+			log.Println(name + "\tupdate error")
 			site.UpdateError(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
@@ -131,10 +132,10 @@ func updateError(sites map[string]model.Site, config model.Config, flags Flags) 
 func info(sites map[string]model.Site, config model.Config, flags Flags) {
 	for name, site := range sites {
 		if *flags.site != "" && name != *flags.site { continue }
-		fmt.Println(name + "\tinfo")
-		fmt.Println(strings.Repeat("- ", 20))
+		log.Println(name + "\tinfo")
+		log.Println(strings.Repeat("- ", 20))
 		site.Info()
-		fmt.Println(strings.Repeat("- ", 20))
+		log.Println(strings.Repeat("- ", 20))
 	}
 }
 func check(sites map[string]model.Site, config model.Config, flags Flags) {
@@ -142,10 +143,10 @@ func check(sites map[string]model.Site, config model.Config, flags Flags) {
 	for name, site := range sites {
 		if *flags.site != "" && name != *flags.site { continue }
 		writeStage("sub_stage: " + name + " start")
-		fmt.Println(name + "\tcheck")
-		fmt.Println(strings.Repeat("- ", 20))
+		log.Println(name + "\tcheck")
+		log.Println(strings.Repeat("- ", 20))
 		site.Check()
-		fmt.Println(strings.Repeat("- ", 20))
+		log.Println(strings.Repeat("- ", 20))
 		runtime.GC()
 		writeStage("sub_stage: " + name + " finish")
 	}
@@ -159,10 +160,10 @@ func checkEnd(sites map[string]model.Site, config model.Config, flags Flags) {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
-			fmt.Println(name + "\tcheck end")
-			fmt.Println(strings.Repeat("- ", 20))
+			log.Println(name + "\tcheck end")
+			log.Println(strings.Repeat("- ", 20))
 			site.CheckEnd()
-			fmt.Println(strings.Repeat("- ", 20))
+			log.Println(strings.Repeat("- ", 20))
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
 			wg.Done()
@@ -180,7 +181,7 @@ func fix(sites map[string]model.Site, config model.Config, flags Flags) {
 		wg.Add(1)
 		go func(name string, site model.Site) {
 			writeStage("sub_stage: " + name + " start")
-			fmt.Println(name + "\tfix")
+			log.Println(name + "\tfix")
 			site.Fix(s)
 			runtime.GC()
 			writeStage("sub_stage: " + name + " finish")
@@ -193,9 +194,9 @@ func fix(sites map[string]model.Site, config model.Config, flags Flags) {
 func random(sites map[string]model.Site, config model.Config, flags Flags) {
 	for name, site := range sites {
 		if *flags.site != "" && name != *flags.site { continue }
-		fmt.Println(name + "\trandom")
+		log.Println(name + "\trandom")
 		results := site.RandomSuggestBook(5)
-		for _, result := range results { fmt.Println(result.String()+"\n") }
+		for _, result := range results { log.Println(result.String()+"\n") }
 		runtime.GC()
 	}
 }
@@ -204,9 +205,9 @@ func validate(sites map[string]model.Site, config model.Config, flags Flags) {
 	downloadResult := make(map[string]float64)
 	for name, site := range sites {
 		if *flags.site != "" && name != *flags.site { continue }
-		fmt.Println(name + "\tvalidate explore")
+		log.Println(name + "\tvalidate explore")
 		exploreResult[name] = site.Validate()
-		fmt.Println(name + "\tvalidate download")
+		log.Println(name + "\tvalidate download")
 		downloadResult[name] = site.ValidateDownload()
 	}
 	b, err := json.Marshal(exploreResult)
@@ -231,8 +232,8 @@ func schedule(sites map[string]model.Site, config model.Config, flags Flags) {
 }
 func test(sites map[string]model.Site, config model.Config, flags Flags) {
 	site := sites["hjwzw"]
-	fmt.Println(site.SiteName)
-	fmt.Println()
+	log.Println(site.SiteName)
+	log.Println()
 	book := site.Book(36814, -1)
 	book.Download("./validate-download/", 1000)
 	//site.Validate()
@@ -241,18 +242,20 @@ func test(sites map[string]model.Site, config model.Config, flags Flags) {
 }
 
 func main() {
-	fmt.Println("test (v0.0.0) - - - - - - - - - -")
+	log.Println("test (v0.0.0) - - - - - - - - - -")
 	if (len(os.Args) < 2) {
 		help()
-		fmt.Println("No arguements")
+		log.Println("No arguements")
 		return
 	}
 
 	var flags Flags
 
+	flags.operation = flag.String("operation", "", "the operation to work on")
 	flags.site = flag.String("site", "", "specific site to operate")
 	flags.id = flag.Int("id", -1, "specific id to operate")
 	flag.Parse()
+	// log.Println(flags.site, *flags.site)
 
 	config := model.LoadYaml("./config/config.yaml")
 	sites := model.LoadSitesYaml(config)
@@ -278,10 +281,11 @@ func main() {
 		"TEST": test,
 	}
 
-	function, exist := functionMap[strings.ToUpper(os.Args[1])]
+	// function, exist := functionMap[strings.ToUpper(os.Args[1])]
+	function, exist := functionMap[strings.ToUpper(*flags.operation)]
 	if !exist {
 		help()
-		fmt.Println("Invalid rguement")
+		log.Println("Invalid rguement")
 	} else {
 		function(sites, config, flags)
 	}

@@ -13,6 +13,7 @@ backend: ./src/main/controller.go
 test: ./src/helper/ ./src/model
 	cd ./src && go test github.com/htchan/BookSpider/helper -v
 	cd ./src && go test github.com/htchan/BookSpider/model -v
+	cd ./src && go test github.com/htchan/BookSpider/public -v
 
 clean:
 	rm ./build/ -r

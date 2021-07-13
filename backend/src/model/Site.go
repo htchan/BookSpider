@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"errors"
 	"os"
@@ -64,7 +65,7 @@ func (site *Site) Book(id, version int) Book {
 		}
 		if err != nil || !rows.Next() {
 			if err == nil { err = errors.New("no record found") }
-			fmt.Print(id, "---", err)
+			log.Print(id, "---", err)
 			continue //time.Sleep(1000)
 		}
 		rows.Scan(&siteName, &temp, &version, &title, &writer, &typeName,
@@ -77,7 +78,7 @@ func (site *Site) Book(id, version int) Book {
 			"message": "cannot load from database",
 		})
 		helper.CheckError(err)
-		fmt.Println(string(outputByte))
+		log.Println(string(outputByte))
 	}
 	book := Book{
 		SiteName: site.SiteName,
@@ -146,7 +147,7 @@ func (site *Site) Update(s *semaphore.Weighted) {
 				"message": "cannot load from database",
 			})
 			helper.CheckError(err)
-			fmt.Println(string(outputByte))
+			log.Println(string(outputByte))
 		}
 		go site.updateThread(book, s, &wg, tx, save, update);
 	}
@@ -171,8 +172,7 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 						book.LastUpdate, book.LastChapter,
 						book.EndFlag, book.DownloadFlag, book.ReadFlag);
 			book.Log(map[string]interface{} {
-				"title": book.Title,
-				"message": "new version updated",
+				"title": book.Title, "message": "new version updated", "stage": "update",
 			})
 		} else { // update old record
 			tx.Stmt(update).Exec(book.Title, book.Writer, book.Type,
@@ -180,16 +180,16 @@ func (site *Site) updateThread(book Book, s *semaphore.Weighted, wg *sync.WaitGr
 						book.EndFlag, book.DownloadFlag, book.ReadFlag,
 						book.SiteName, book.Id, book.Version);
 			book.Log(map[string]interface{} {
-				"message": "regular update",
+				"message": "regular update", "stage": "update",
 			})
-			fmt.Println();
+			log.Println();
 		}
 	} else {
 		// tell others nothing updated
 		book.Log(map[string]interface{} {
-			"message": "not updated",
+			"message": "not updated", "stage": "update",
 		})
-		fmt.Println()
+		log.Println()
 	}
 }
 
@@ -226,7 +226,7 @@ func (site *Site) Explore(maxError int, s *semaphore.Weighted) {
 		maxId = 1;
 	}
 	rows.Close();
-	fmt.Println(maxId);
+	log.Println(maxId);
 	// keep explore until reach max error count
 	errorCount := 0
 	for (errorCount < maxError) {
@@ -262,14 +262,14 @@ func (site *Site) exploreThread(book Book, errorCount *int, s *semaphore.Weighte
 		book.Log(map[string]interface{} {
 			"title": book.Title, "writer": book.Writer, "type": book.Type,
 			"lastUpdate": book.LastUpdate, "lastChapter": book.LastChapter,
-			"message": "explored",
+			"message": "explored", "stage": "explore",
 		})
 		*errorCount = 0;
 	} else { // increase error Count
 		_, err := tx.Stmt(saveError).Exec(book.SiteName, book.Id, book.Id)
 		helper.CheckError(err)
 		book.Log(map[string]interface{} {
-			"message": "no such book",
+			"message": "no such book", "stage": "explore",
 		})
 		*errorCount++;
 	}
@@ -292,13 +292,13 @@ func (site *Site) Download() {
 		book := site.Book(id, version);
 		if book.DownloadFlag { continue }
 		book.Log(map[string]interface{} {
-			"title": book.Title, "message": "start download",
+			"title": book.Title, "message": "start download", "stage": "download",
 		})
 
 		check := book.Download(site.DownloadLocation, site.MAX_THREAD_COUNT)
 		if (! check) {
 			book.Log(map[string]interface{} {
-				"title": book.Title, "message": "download failure",
+				"title": book.Title, "message": "download failure", "stage": "download",
 			})
 		} else {
 			tx.Stmt(update).Exec(true, book.Id, book.Version)
@@ -361,34 +361,33 @@ func (site *Site) updateErrorThread(book Book, s *semaphore.Weighted,
 					book.EndFlag, book.DownloadFlag, book.ReadFlag);
 		tx.Stmt(delete).Exec(site.SiteName, book.Id);
 		book.Log(map[string]interface{} {
-			"title": book.Title,
-			"message": "error updated",
+			"title": book.Title, "message": "error updated", "stage": "update",
 		})
 	} else {
 		// tell others nothing updated
 		book.Log(map[string]interface{} {
-			"message": "error not updated",
+			"message": "error not updated", "stage": "update",
 		})
 	}
 }
 
 func (site *Site) Info() {
 	site.OpenDatabase()
-	fmt.Println("Site :\t" + site.SiteName);
+	log.Println("Site :\t" + site.SiteName);
 	var normalCount, errorCount int;
 	var rows *sql.Rows;
 	rows, _ = site.database.Query("select count(DISTINCT num) as c from books");
 	for rows.Next() { rows.Scan(&normalCount); }
 	helper.CheckError(rows.Close())
-	fmt.Println(site.SiteName, "Normal Book Count :\t" + strconv.Itoa(normalCount));
+	log.Println(site.SiteName, "Normal Book Count :\t" + strconv.Itoa(normalCount));
 	rows, _ = site.database.Query("select count(num) as c from error");
 	for rows.Next() { rows.Scan(&errorCount); }
 	rows.Close()
-	fmt.Println(site.SiteName, "Error Book Count :\t" + strconv.Itoa(errorCount));
-	fmt.Println(site.SiteName, "Total Book Count :\t" + strconv.Itoa(normalCount + errorCount));
+	log.Println(site.SiteName, "Error Book Count :\t" + strconv.Itoa(errorCount));
+	log.Println(site.SiteName, "Total Book Count :\t" + strconv.Itoa(normalCount + errorCount));
 	
 	maxId := site.getMaxBookId()
-	fmt.Println("Max Book id :\t" + strconv.Itoa(maxId));
+	log.Println("Max Book id :\t" + strconv.Itoa(maxId));
 	site.CloseDatabase()
 }
 
@@ -407,7 +406,7 @@ func (site *Site) CheckEnd() {
 	rowAffect, err := result.RowsAffected()
 	helper.CheckError(err)
 	helper.CheckError(tx.Commit())
-	fmt.Println(site.SiteName, "Row affected: ", rowAffect)
+	log.Println(site.SiteName, "Row affected: ", rowAffect)
 	site.CloseDatabase()
 }
 
@@ -484,12 +483,12 @@ func (site *Site)CheckDownloadExistThread(book Book, s *semaphore.Weighted,
 	if exist && !book.DownloadFlag {
 		// if book mark as not download, but it exist, mark as download
 		tx.Stmt(markDownload).Exec(true, true, book.Id, book.Version)
-		fmt.Println(site.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + 
+		log.Println(site.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + 
 					strconv.Itoa(book.Version) + "\t" + "mark to download")
 	} else if !exist && book.DownloadFlag {
 		// if book mark as download, but not exist, mark as not download
 		tx.Stmt(markNotDownload).Exec(false, book.Id, book.Version)
-		fmt.Println(site.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + 
+		log.Println(site.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + 
 					strconv.Itoa(book.Version) + "\t" + "mark to not download")
 	}
 }
@@ -503,10 +502,10 @@ func (site *Site) fixDatabaseDuplicateError() {
 	helper.CheckError(err)
 	for rows.Next() {
 		rows.Scan(&bookId, &bookVersion)
-		fmt.Println(site.SiteName, "(" + strconv.Itoa(bookId) + ", " + strconv.Itoa(bookVersion) + ")")
+		log.Println(site.SiteName, "(" + strconv.Itoa(bookId) + ", " + strconv.Itoa(bookVersion) + ")")
 		bookCount += 1
 	}
-	fmt.Println(site.SiteName, "duplicate book count : " + strconv.Itoa(bookCount))
+	log.Println(site.SiteName, "duplicate book count : " + strconv.Itoa(bookCount))
 	helper.CheckError(rows.Close())
 	// delete duplicate record in book
 	deleteStmt, err := tx.Prepare("delete from books where rowid not in " +
@@ -520,9 +519,9 @@ func (site *Site) fixDatabaseDuplicateError() {
 	helper.CheckError(err)
 	for rows.Next() {
 		rows.Scan(&bookId)
-		fmt.Println(site.SiteName, "(" + strconv.Itoa(bookId) + ")")
+		log.Println(site.SiteName, "(" + strconv.Itoa(bookId) + ")")
 	}
-	fmt.Println(site.SiteName, "duplicate error count : " + strconv.Itoa(errorCount))
+	log.Println(site.SiteName, "duplicate error count : " + strconv.Itoa(errorCount))
 	helper.CheckError(rows.Close())
 	// delete duplicate record
 	deleteStmt, err = tx.Prepare("delete from error where rowid not in " +
@@ -532,7 +531,7 @@ func (site *Site) fixDatabaseDuplicateError() {
 	helper.CheckError(err)
 	helper.CheckError(deleteStmt.Close())
 	// check if any record in book table duplicate in error table
-	fmt.Println(site.SiteName, "duplicate cross - - - - - - - - - -\n")
+	log.Println(site.SiteName, "duplicate cross - - - - - - - - - -")
 	deleteStmt, err = tx.Prepare("delete from error where num in (select distinct num from books)")
 	helper.CheckError(err)
 	tx.Stmt(deleteStmt).Exec()
@@ -559,9 +558,9 @@ func (site *Site) fixDatabaseMissingError(s *semaphore.Weighted) {
 	helper.CheckError(err);
 	deleteError, err := site.database.Prepare("delete from error where site=? and num=?");
 	helper.CheckError(err);
-	fmt.Println(site.SiteName, "missing count : " + strconv.Itoa(len(missingBookIds)))
+	log.Println(site.SiteName, "missing count : " + strconv.Itoa(len(missingBookIds)))
 	for _, bookId := range missingBookIds {
-		fmt.Println(site.SiteName, bookId)
+		log.Println(site.SiteName, bookId)
 		wg.Add(1)
 		s.Acquire(ctx, 1);
 		book := site.Book(bookId, -1)
@@ -574,19 +573,19 @@ func (site *Site) fixDatabaseMissingError(s *semaphore.Weighted) {
 	helper.CheckError(site.bookTx.Commit())
 	helper.CheckError(tx.Commit())
 	// print missing record count
-	fmt.Println(site.SiteName, "finish add missing count", len(missingBookIds))
+	log.Println(site.SiteName, "finish add missing count", len(missingBookIds))
 
 }
 
 func (site *Site) Fix(s *semaphore.Weighted) {
 	site.OpenDatabase()
-	fmt.Println(site.SiteName, "Add Missing Record")
+	log.Println(site.SiteName, "Add Missing Record")
 	site.fixDatabaseMissingError(s)
-	fmt.Println(site.SiteName, "Fix duplicate record")
+	log.Println(site.SiteName, "Fix duplicate record")
 	site.fixDatabaseDuplicateError()
-	fmt.Println(site.SiteName, "Fix storage error")
+	log.Println(site.SiteName, "Fix storage error")
 	site.fixStroageError(s)
-	fmt.Println()
+	log.Println()
 	site.CloseDatabase()
 }
 
@@ -596,16 +595,16 @@ func (site *Site) checkDuplicateBook() {
 	tx, err := site.database.Begin()
 	rows, err := tx.Query("select num, version from books group by num, version having count(*) > 1")
 	helper.CheckError(err)
-	fmt.Print(site.SiteName, "duplicate books id : [")
+	log.Print(site.SiteName, "duplicate books id : [")
 	var id, version, count int
 	for rows.Next() {
-		if count > 0 { fmt.Println(", ") }
+		if count > 0 { log.Println(", ") }
 		rows.Scan(&id, &version)
-		fmt.Print("(" + strconv.Itoa(id) + ", " + strconv.Itoa(version) + ")")
+		log.Print("(" + strconv.Itoa(id) + ", " + strconv.Itoa(version) + ")")
 		count++
 	}
-	fmt.Println("]")
-	fmt.Println(site.SiteName, "duplicate books count : " + strconv.Itoa(count))
+	log.Println("]")
+	log.Println(site.SiteName, "duplicate books count : " + strconv.Itoa(count))
 	err = rows.Close()
 	helper.CheckError(err)
 	err = tx.Rollback()
@@ -617,16 +616,16 @@ func (site *Site) checkDuplicateError() {
 	tx, err := site.database.Begin()
 	rows, err := tx.Query("select num from error group by num having count(*) > 1")
 	helper.CheckError(err)
-	fmt.Print(site.SiteName, "duplicate error id : [")
+	log.Print(site.SiteName, "duplicate error id : [")
 	var id, count int
 	for rows.Next() {
-		if count > 0 { fmt.Print(", ") }
+		if count > 0 { log.Print(", ") }
 		rows.Scan(&id)
-		fmt.Print(strconv.Itoa(id))
+		log.Print(strconv.Itoa(id))
 		count++
 	}
-	fmt.Println("]")
-	fmt.Println(site.SiteName, "duplicate error count : " + strconv.Itoa(count))
+	log.Println("]")
+	log.Println(site.SiteName, "duplicate error count : " + strconv.Itoa(count))
 	err = rows.Close()
 	helper.CheckError(err)
 	err = tx.Rollback()
@@ -638,16 +637,16 @@ func (site *Site) checkDuplicateCrossTable() {
 	tx, err := site.database.Begin()
 	rows, err := tx.Query("select distinct num from books where num in (select num from error)")
 	helper.CheckError(err)
-	fmt.Print(site.SiteName, "duplicate cross id : [")
+	log.Print(site.SiteName, "duplicate cross id : [")
 	var id, count int
 	for rows.Next() {
-		if count > 0 { fmt.Print(", ") }
+		if count > 0 { log.Print(", ") }
 		rows.Scan(&id)
-		fmt.Print(strconv.Itoa(id))
+		log.Print(strconv.Itoa(id))
 		count++
 	}
-	fmt.Println("]")
-	fmt.Println(site.SiteName, "duplicate cross count : " + strconv.Itoa(count))
+	log.Println("]")
+	log.Println(site.SiteName, "duplicate cross count : " + strconv.Itoa(count))
 	err = rows.Close()
 	helper.CheckError(err)
 	err = tx.Rollback()
@@ -697,8 +696,8 @@ func (site *Site) checkMissingId() {
 	missingBookIds := site.getMissingBookId()
 	jsonByte, err := json.Marshal(missingBookIds)
 	helper.CheckError(err)
-	fmt.Println(site.SiteName, "missing id : ", string(jsonByte))
-	fmt.Println(site.SiteName, "missing count : " + strconv.Itoa(len(missingBookIds)))
+	log.Println(site.SiteName, "missing id : ", string(jsonByte))
+	log.Println(site.SiteName, "missing count : " + strconv.Itoa(len(missingBookIds)))
 }
 
 func (site *Site) Check() {
@@ -722,7 +721,7 @@ func (site *Site) Search(title, writer string, page int) []Book {
 	if title == "" && writer == "" { return results }
 	const n = 20
 	rows, err := site.database.Query("select num, version from books where "+
-		"name like %?% and writer like %?% limit ?, ?", title, writer, page*n, n)
+		"name like ? and writer like ? limit ?, ?", "%"+title+"%", "%"+writer+"%", page*n, n)
 	helper.CheckError(err)
 	var bookId, bookVersion int
 	for rows.Next() {

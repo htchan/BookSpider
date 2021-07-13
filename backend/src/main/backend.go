@@ -284,7 +284,7 @@ func main() {
 	apiFunc["validate"] = func() { http.HandleFunc("/api/novel/validate", ValidateState) }
 
 	for _, api := range config.Backend.Api { apiFunc[api]() }
-	fmt.Println("started")
+	log.Println("started")
 	log.Fatal(http.ListenAndServe(":9427", nil))
 }
 

@@ -1,0 +1,17 @@
+sites:
+    testing:
+        decode : big5
+        configLocation : "./test_res/test.yaml"
+        databaseLocation : "./"
+        downloadLocation : "./"
+        threadsCount : 100
+maxThreads: 1000
+maxExploreError: 1000
+backend:
+    api:
+        - search
+        - download
+        - bookInfo
+        - siteInfo
+    stageFile: '/log/stage.txt'
+    logFile: '/log/controller.log'

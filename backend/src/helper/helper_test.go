@@ -5,7 +5,7 @@ import (
 	"golang.org/x/text/encoding"
 )
 
-func Test_GetWeb(t *testing.T) {
+func TestHelper_getWeb(t *testing.T) {
 	var testcases = []struct {
 		input, expected string
 	} {
@@ -16,12 +16,12 @@ func Test_GetWeb(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := getWeb(testcase.input)
 		if actual != testcase.expected {
-			t.Fatalf("helper.getWeb(\"%v\") result gives \"%v\", but not \"%v\"\n",
+			t.Fatalf("helper.getWeb(\"%v\") result gives\n\"%v\", but not\n\"%v\"\n",
 				testcase.input, actual, testcase.expected)
 		}
 	}
 }
-func TestGetWeb(t *testing.T) {
+func TestHelper_GetWeb(t *testing.T) {
 	var testcases = []struct {
 		input1 string
 		input2 int
@@ -34,7 +34,7 @@ func TestGetWeb(t *testing.T) {
 	for _, testcase := range testcases {
 		actual1, actual2 := GetWeb(testcase.input1, testcase.input2, testcase.input3)
 		if actual1 != testcase.expected1 || actual2 != testcase.expected2 {
-			t.Fatalf("helper.GetWeb(\"%v\", %v, %v) result gives (\"%v\", %v), " +
+			t.Fatalf("helper.GetWeb(\"%v\", %v, %v) result gives\n(\"%v\", %v), " +
 				"but not (\"%v\", %v)\n",
 				testcase.input1, testcase.input2, testcase.input3,
 				actual1, actual2, testcase.expected1, testcase.expected2)
@@ -42,7 +42,7 @@ func TestGetWeb(t *testing.T) {
 	}
 }
 
-func TestSearch(t *testing.T) {
+func TestHelper_Search(t *testing.T) {
 	var testcases = []struct {
 		input1, input2, expected string
 	} {
@@ -55,13 +55,13 @@ func TestSearch(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Search(testcase.input1, testcase.input2)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Match(\"%v\", \"%v\") result gives \"%v\", but not \"%v\"\n",
+			t.Fatalf("helper.Match(\"%v\", \"%v\") result gives\n\"%v\", but not\n\"%v\"\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 	}
 }
 
-func TestSearchAll(t *testing.T) {
+func TestHelper_SearchAll(t *testing.T) {
 	var testcases = []struct {
 		input1, input2 string
 		expected []string
@@ -72,19 +72,19 @@ func TestSearchAll(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := SearchAll(testcase.input1, testcase.input2)
 		if len(actual) != len(testcase.expected) {
-			t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives %v, but not %v\n",
+			t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 		for i := range actual {
 			if actual[i] != testcase.expected[i] {
-				t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives %v, but not %v\n",
+				t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 					testcase.input1, testcase.input2, actual, testcase.expected)
 			}
 		}
 	}
 }
 
-func TestContains(t *testing.T) {
+func TestHelper_Contains(t *testing.T) {
 	var testcases = []struct {
 		input1 []int
 		input2 int
@@ -98,13 +98,13 @@ func TestContains(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Contains(testcase.input1, testcase.input2)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Contains(%v, %v) result gives %v, but not %v\n",
+			t.Fatalf("helper.Contains(%v, %v) result gives\n%v, but not\n%v\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 	}
 }
 
-func TestExist(t *testing.T) {
+func TestHelper_Exist(t *testing.T) {
 	var testcases = []struct {
 		input1 string
 		expected bool
@@ -115,7 +115,7 @@ func TestExist(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Exists(testcase.input1)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Exist(\"%v\") result gives %v, but not %v\n",
+			t.Fatalf("helper.Exist(\"%v\") result gives\n%v, but not\n%v\n",
 				testcase.input1, actual, testcase.expected)
 		}
 	}
