@@ -13,6 +13,7 @@ backup_volume = $(pwd)/bin/backup
 build:
 	docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
 	docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
+	docker build -f ./backend/Dockerfile.test -t novel_test ./backend
 	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
 	docker image prune -f
 
@@ -43,3 +44,9 @@ backup:
 		-v ${backup_volume}:/backup \
 		novel_backup python ./backup.py
 	sudo chown -R ${user} ${backup_volume}
+
+test:
+	docker run --rm --name novel_test_container novel_test \
+		go test github.com/htchan/BookSpider/helper \
+		github.com/htchan/BookSpider/model \
+		github.com/htchan/BookSpider/public -v
