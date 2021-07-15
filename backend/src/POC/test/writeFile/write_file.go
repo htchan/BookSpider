@@ -9,7 +9,7 @@ import (
 
 func main() () {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	fmt.Println(dir + "/test.txt")
+	log.Println(dir + "/test.txt")
 	/*
     err := ioutil.WriteFile(dir + "/test.txt", []byte("Hi\n"), 0644)
     if err != nil {

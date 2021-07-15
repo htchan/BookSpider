@@ -1,20 +1,27 @@
+# Introduction
+----
+This is a project that update and download book from internet. It crawl data from online site by regex pre-defined in yaml file. It can make a copy of the book content. 
+
 # Go lang version
 ----
 
-i found that this program in python is slow and take so many memory when using sqlite3
-then i found another language to make the program again
+i found that implementing this program in python is slow in multi-threading and taking a lot of memory in querying sqlite3
+then i found another language to implement the program again
 here comes Go lang version with faster speed and less memory consumption
 
-to compile the controller, install go first, then run 
+to compile and run, install docker and run 
 ```ternimal
-go get -d ./...
-go build ./controller.go
+make build
+# run backend server
+make backend
+
+# run controller to operate on database
+make controller command=help
 ```
-in terminal under the `go-lang` folder.
 
-for the usage details of controller, use `./controller` to check.
+to enable the frontend features, you have to install flutter and run it.
 
-# structure
+# backend structure
 - main
 	- controller.go
 		* provide command line control
@@ -26,6 +33,8 @@ for the usage details of controller, use `./controller` to check.
 		* manage book and database communication (eg. save / update the book in database)
 	- Book.go
 		* manage book behavior (eg. update specific book, generate book object...)
+	- Config.go
+		* read the config from yaml file and turn it to `model.Site` and `model.Book` class
 - helper
 	- helper.go
 		* provide helper function (eg. regex, get url response...)
@@ -36,3 +45,4 @@ for the usage details of controller, use `./controller` to check.
 - compare `http` and `grequest
 - compare  json  and  yaml  as config
 - compare  regex  and  html parser library
+- try the flag to read parameter from command line

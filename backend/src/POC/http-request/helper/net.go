@@ -12,7 +12,7 @@ func requestNet(client http.Client) (int) {
 	// _, err := client.Get("http://localhost:10427")
 	_, err := client.Get("https://reqres.in/api/users?page=2")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return 1
 	} else {
 		return 0

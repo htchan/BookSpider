@@ -14,8 +14,8 @@ func printMemStat() (uint64) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 	// For info on each, see: https://golang.org/pkg/runtime/#MemStats
-	// fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-	// fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
+	// log.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+	// log.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
 	return  m.Mallocs
 }
 
@@ -23,25 +23,25 @@ func test(f func (int) (int), n int) () {
 	alloc := printMemStat()
 	startTime := time.Now()
 	err := helper.NetLinearRequest(n)
-	fmt.Println(time.Since(startTime))
+	log.Println(time.Since(startTime))
 	newAlloc := printMemStat()
-	fmt.Println("Alloc = ", (newAlloc - alloc))
-	fmt.Println("total error : ", err, "/", n, "\n")
+	log.Println("Alloc = ", (newAlloc - alloc))
+	log.Println("total error : ", err, "/", n, "\n")
 }
 
 func main() () {
 	totalN := 999
 	// go helper.StartServer()
 
-	fmt.Println("net - Linear request")
+	log.Println("net - Linear request")
 	test(helper.NetLinearRequest, totalN)
 	
-	fmt.Println("goreq - Linear request")
+	log.Println("goreq - Linear request")
 	test(helper.GoreqLinearRequest, totalN)
 
-	fmt.Println("net - go routine request")
+	log.Println("net - go routine request")
 	test(helper.NetGoRequest, totalN)
 
-	fmt.Println("goreq - go routine request")
+	log.Println("goreq - go routine request")
 	test(helper.GoreqGoRequest, totalN)
 }

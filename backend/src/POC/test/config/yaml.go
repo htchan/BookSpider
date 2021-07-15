@@ -24,14 +24,14 @@ func main() () {
 	//var mapConfig map[string]interface{}
 	var mapConfig Config
 	err = yaml.Unmarshal(s, &mapConfig)
-	//fmt.Println(mapConfig)
-	fmt.Println(mapConfig.Sites)
-	fmt.Println(mapConfig.Sites["ck101"])
-	fmt.Println(mapConfig.Api)
+	//log.Println(mapConfig)
+	log.Println(mapConfig.Sites)
+	log.Println(mapConfig.Sites["ck101"])
+	log.Println(mapConfig.Api)
 	/*
 	for i, site := range map[string]interface{}(mapConfig["sites"]) {
-		fmt.Print(i)
-		fmt.Println(site)
+		log.Print(i)
+		log.Println(site)
 	}
 	*/
 }
