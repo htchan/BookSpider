@@ -15,12 +15,12 @@ build:
 	docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
 	docker build -f ./backend/Dockerfile.test -t novel_test ./backend
 	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
+	docker build -f ./frontend/Dockerfile.build -t novel_frontend ./frontend
 	docker image prune -f
 
 frontend:
-	docker run -v ${frontend_dst_volume}:/frontend \
-		--name novel_frontend busybox true
-	docker cp ${frontend_src_volume}/. novel_frontend:/frontend/
+	docker run -v ${frontend_dst_volume}:/usr/src/app/build/web \
+		--name novel_frontend
 	docker rm novel_frontend
 
 backend:
