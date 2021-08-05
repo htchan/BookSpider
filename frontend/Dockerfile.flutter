@@ -10,6 +10,7 @@ ENV PATH "$PATH:/flutter/bin"
 RUN flutter channel stable
 RUN flutter doctor
 
-COPY ./src .
+RUN mkdir /build
+RUN echo '{ "build-dir": "../../../build" }' > /root/.flutter_settings
 
-CMD ['flutter build web']
+CMD ['flutter pub get ; flutter build web']

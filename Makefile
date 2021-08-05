@@ -1,6 +1,6 @@
 pwd:=$(shell pwd)
 user:=$(shell whoami)
-frontend_src_volume = $(pwd)/bin/frontend
+frontend_src_volume = $(pwd)/frontend/src
 frontend_dst_volume = novel_frontend_volume
 
 database_volume = $(pwd)/bin/database
@@ -10,18 +10,25 @@ backup_volume = $(pwd)/bin/backup
 
 .PHONY: frontend backend controller build
 
-build:
+build_backend:
 	docker build -f ./backend/Dockerfile.backend -t novel_backend ./backend
+build_controller:
 	docker build -f ./backend/Dockerfile.controller -t novel_controller ./backend
+build_test:
 	docker build -f ./backend/Dockerfile.test -t novel_test ./backend
+build_backup:
 	docker build -f ./backend/Dockerfile.backup -t novel_backup ./backend/src/operation
-	docker build -f ./frontend/Dockerfile.build -t novel_frontend ./frontend
+build_frontend:
+	docker build -f ./frontend/Dockerfile.flutter -t flutter ./frontend
+
+build: build_backend build_controller build_test build_backup build_frontend
 	docker image prune -f
 
 frontend:
-	docker run -v ${frontend_dst_volume}:/usr/src/app/build/web \
-		--name novel_frontend
-	docker rm novel_frontend
+	docker run --rm --name novel_frontend_container \
+		-v ${frontend_dst_volume}:/build/web \
+		-v ${frontend_src_volume}:/usr/src/app \
+		flutter sh -c "flutter pub get ; flutter build web"
 
 backend:
 	docker run --name novel_backend_container -d \
