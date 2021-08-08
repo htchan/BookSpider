@@ -140,7 +140,7 @@ func (site *Site) Update(s *semaphore.Weighted) {
 		s.Acquire(ctx, 1)
 		rows.Scan(&siteName, &bookId)
 		var book Book
-		for i := 0; i < 10 || book.Version >= 0; i += 1 { book = site.Book(bookId, -1) }
+		for i := 0; i < 10 || book.Version < 0; i += 1 { book = site.Book(bookId, -1) }
 		if (book.Version == -1) {
 			outputByte, err := json.Marshal(map[string]interface{} {
 				"site": site.SiteName, "id": bookId, "version": book.Version,
