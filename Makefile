@@ -43,7 +43,7 @@ controller:
 		-v ${database_volume}:/database \
 		-v ${log_volume}:/log \
 		-v ${book_volume}:/books \
-		novel_controller sh -c "./controller ${command} >> /log/controller.log"
+		novel_controller sh -c "./controller --operation ${command} >> /log/controller.log"
 
 backup:
 	docker run --rm --name novel_backup_container \
