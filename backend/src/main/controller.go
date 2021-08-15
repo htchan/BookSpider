@@ -242,6 +242,7 @@ func test(sites map[string]model.Site, config model.Config, flags Flags) {
 }
 
 func main() {
+	// runtime.GOMAXPROCS(3)
 	log.Println("test (v0.0.0) - - - - - - - - - -")
 	if (len(os.Args) < 2) {
 		help()

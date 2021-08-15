@@ -10,6 +10,7 @@ import (
 	"os"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
+	"math/rand"
 )
 
 func CheckError(e error) {
@@ -37,11 +38,14 @@ func getWeb(url string) (string) {
 	return string(body);
 }
 
+const MIN_SLEEP_MS_MULTIPLIER = 2000
+const MAX_SLEEP_MS = 30000
 func GetWeb(url string, trial int, decoder *encoding.Decoder) (html string, i int) {
 	for i = 0; i < 10; i++ {
 		html = getWeb(url);
 		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
-			time.Sleep(time.Duration(i * i) * time.Second)
+			minSleepMs := i * MIN_SLEEP_MS_MULTIPLIER
+			time.Sleep(time.Duration(rand.Intn(MAX_SLEEP_MS - minSleepMs) + minSleepMs) * time.Millisecond)
 			continue
 		}
 		if (decoder != nil) {

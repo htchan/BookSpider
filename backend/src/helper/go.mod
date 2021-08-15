@@ -1,4 +1,4 @@
-module github.com/htchan/BookSpider
+module github.com/htchan/BookSpider/helper
 
 go 1.13
 
