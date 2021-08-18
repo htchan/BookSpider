@@ -8,3 +8,6 @@ build/
 backup-bin/
 database/
 .vscode/
+*.log
+*.sql
+temp/
