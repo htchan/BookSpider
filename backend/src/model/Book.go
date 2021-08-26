@@ -226,7 +226,6 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted,
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	log.Println("start download" + title + url)
 	html, trial := helper.GetWeb(url, 10, book.decoder)
 	if !book.validHTML(html, url, trial) {
 		ch <- Chapter{Url: url, Title: title, Content: "load html fail"}
