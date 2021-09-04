@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:url_strategy/url_strategy.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import './UI/mainPage.dart';
-import './UI/sitePage.dart';
-import './UI/searchPage.dart';
-import './UI/randomPage.dart';
-import './UI/bookPage.dart';
-import './UI/stagePage.dart';
-import './UI/errorPage.dart';
+import './Pages/mainPage.dart';
+import './Pages/sitePage.dart';
+import './Pages/searchPage.dart';
+import './Pages/randomPage.dart';
+import './Pages/bookPage.dart';
+import './Pages/stagePage.dart';
+import './Pages/errorPage.dart';
 
 void main() {
   // setPathUrlStrategy();

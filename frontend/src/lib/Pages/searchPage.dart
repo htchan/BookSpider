@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../Components/bookList.dart';
 
 class SearchPage extends StatefulWidget{
   final String url, siteName, title, writer;
@@ -29,9 +30,15 @@ class _SearchPageState extends State<SearchPage> {
     .then( (response) {
       if (response.statusCode != 404) {
         setState((){
-          _booksPanel = _renderBooksPenal(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['books'] ?? []
-          ));
+          _booksPanel = BookList(
+            scaffoldKey,
+            siteName,
+            List<Map<String, dynamic>>.from(
+              jsonDecode(response.body)['books'] ?? []
+            ),
+            _page > 0 ? loadAboveButton : null,
+            loadMoreButton
+          );
         });
       } else {
         _booksPanel = Center(
@@ -46,21 +53,12 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
-  Widget _renderLoadAbove() {
+  Widget loadAboveButton(ScrollController controller) {
     return TextButton(
       child: Text('Load Above'),
       onPressed: () {
         setState(() { this._loadPage(--_page); });
-      },
-    );
-  }
-
-  Widget _renderLoadMore() {
-    return TextButton(
-      child: Text('Load More'),
-      onPressed: () {
-        setState(() { this._loadPage(++_page); });
-        scrollController.animateTo(
+        controller.animateTo(
           0,
           duration: Duration(milliseconds: 500),
           curve: Curves.fastOutSlowIn
@@ -69,30 +67,17 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _renderBooksPenal(List<Map<String, dynamic>> books) {
-    if (books.length == 0) {
-      return Center(child: Text('No books found'));
-    }
-    List<Widget> list = [];
-    if (_page > 0) { list.add(_renderLoadAbove()); }
-    list.addAll(books.map( (book) => ListTile(
-        title: Text('${book['title']} - ${book['writer']}'),
-        subtitle: Text('${book['update']} - ${book['chapter']}'),
-        onTap: () {
-          // go to book page
-          Navigator.pushNamed(
-            this.scaffoldKey.currentContext,
-            '/books/$siteName/${book['id']}'
-          );
-        }
-      )
-    ));
-    if (books.length == 20) { list.add(_renderLoadMore()); }
-    return ListView.separated(
-      controller: scrollController,
-      separatorBuilder: (context, index) => Divider(height: 10,),
-      itemCount: list.length,
-      itemBuilder: (context, index) => list[index],
+  Widget loadMoreButton(ScrollController controller) {
+    return TextButton(
+      child: Text('Load More'),
+      onPressed: () {
+        setState(() { this._loadPage(++_page); });
+        controller.animateTo(
+          controller.position.maxScrollExtent,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.fastOutSlowIn
+        );
+      },
     );
   }
 

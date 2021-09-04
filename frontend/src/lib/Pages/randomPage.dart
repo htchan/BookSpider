@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../Components/bookList.dart';
 
 class RandomPage extends StatefulWidget{
   final String url, siteName;
@@ -30,9 +31,15 @@ class _RandomPageState extends State<RandomPage> {
     .then( (response) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setState((){
-          _booksPanel = _renderBooksPanel(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['books'] ?? []
-          ));
+          _booksPanel = BookList(
+            scaffoldKey, 
+            siteName,
+            List<Map<String, dynamic>>.from(
+              jsonDecode(response.body)['books'] ?? []
+            ),
+            null,
+            randomButton
+          );
         });
       } else {
         _booksPanel = Center(
@@ -47,7 +54,7 @@ class _RandomPageState extends State<RandomPage> {
     });
   }
 
-  Widget _renderRandomButton() {
+  Widget randomButton(ScrollController controller) {
     return ListTile(
       title: Center(child: Text(
         'Reload',
@@ -57,32 +64,12 @@ class _RandomPageState extends State<RandomPage> {
         setState(() {
           this._loadPage();
         });
-        scrollController.animateTo(0,
+        controller.animateTo(0,
           duration: Duration(milliseconds: 500),
           curve: Curves.fastOutSlowIn
         );
       },
       hoverColor: Colors.blue.shade50,
-    );
-  }
-
-  Widget _renderBooksPanel(List<Map<String, dynamic>> books) {
-    if (books.length == 0) { return Center(child: Text('no books found')); }
-    List<Widget> list = List<Widget>.from(books.map( (book) => ListTile(
-      title: Text('${book['title']} - ${book['writer']}'),
-      subtitle: Text('${book['update']} - ${book['chapter']}'),
-      onTap: () {
-        Navigator.pushNamed(
-          this.scaffoldKey.currentContext,
-          '/books/$siteName/${book['id']}'
-        );
-    })));
-    if (books.length == 20) { list.add(_renderRandomButton()); }
-    return ListView.separated(
-      controller: scrollController,
-      separatorBuilder: (context, index) => Divider(height: 10,),
-      itemCount: list.length,
-      itemBuilder: (context, index) => list[index],
     );
   }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../Components/logList.dart';
 
 class StagePage extends StatefulWidget{
   final String url;
@@ -31,25 +32,25 @@ class _StagePageState extends State<StagePage> {
           jsonDecode(response.body.replaceAll(String.fromCharCode(9), " "))
         );
         info['logs'] = List<String>.from(info['logs'])
-          .where( (s) => s.startsWith('{') )
+          .where( (s) => s.contains('{') && s.contains('}') && s.contains('"') && s.contains(':') )
           .map( (s) => s.replaceAll('\\\"', '\"'));
         setState((){
           _stage = _renderStage(info);
           _subStage = _renderSubStage(info);
-          _logs = _renderProcesses(info);
+          _logs = LogList(logs: List<String>.from(info['logs']));
         });
       } else {
         setState((){
           _stage = Center(child: Text('Error${response.statusCode}'));
           _subStage = Center(child: Text('Error${response.statusCode}'));
           _logs = Center(
-          child: Column(
-            children: [
-              Text(response.statusCode.toString()),
-              Text(response.body)
-            ],
-          )
-        );
+            child: Column(
+              children: [
+                Text(response.statusCode.toString()),
+                Text(response.body)
+              ],
+            )
+          );
         });
       }
     });
@@ -104,29 +105,6 @@ class _StagePageState extends State<StagePage> {
     return ListView(
       children: subStages,
       scrollDirection: Axis.horizontal,
-    );
-  }
-
-  Widget _renderProcesses(Map<String, dynamic> info) {
-    List<String> logs = List<String>.from(info['logs']);
-    return ListView.builder(
-      padding: const EdgeInsets.all(1),
-      itemCount: info['logs'].length,
-      itemBuilder: (BuildContext context, int index) {
-        Map<String, dynamic> content = Map<String, dynamic>.from(jsonDecode(logs[index]));
-        String subTitle;
-        if (content['book'] != null) {
-          subTitle = 'title: ${content['book']['title']}\nchapter: ${content['book']['chapter']}';
-        } else if (content['new'] != null) {
-          subTitle = '${content['old']['title']} -> ${content['new']['title']}';
-        } else {
-          subTitle = 'id: ${content['id'].toString()}';
-        }
-        return ListTile(
-          title: Text('${content['site']} - ${content['message']}'),
-          subtitle: Text(subTitle),
-        );
-      }
     );
   }
   
