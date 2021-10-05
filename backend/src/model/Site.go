@@ -554,7 +554,8 @@ func (site *Site) fixDatabaseMissingError(s *semaphore.Weighted) {
 		"(site, num, version, name, writer, type, date, chapter, end, download, read)"+
 		" values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 	helper.CheckError(err);
-	saveError, err := site.database.Prepare("insert into error (site, num) values (?, ?)");
+	saveError, err := site.database.Prepare("insert into error (site, num) " +
+					"select ?, ? from error where not exists(select 1 from error where num=?) limit 1");
 	helper.CheckError(err);
 	deleteError, err := site.database.Prepare("delete from error where site=? and num=?");
 	helper.CheckError(err);
