@@ -16,7 +16,7 @@ import (
 	"encoding/json"
 
 	//"../helper"
-	"github.com/htchan/BookSpider/model"
+	"github.com/htchan/BookSpider/models"
 	"github.com/htchan/BookSpider/helper"
 )
 

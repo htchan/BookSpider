@@ -4,7 +4,8 @@ import (
 	"os"
 	"strings"
 	"log"
-	"github.com/htchan/BookSpider/model"
+	"github.com/htchan/BookSpider/models"
+	// "github.com/htchan/BookSpider/services"
 	"github.com/htchan/BookSpider/helper"
 	"runtime"
 	_ "net/http/pprof"
@@ -61,7 +62,7 @@ func download(sites map[string]model.Site, config model.Config, flags Flags) {
 			log.Println(name + "\tdownload")
 			if *flags.id != -1 {
 				book := site.Book(*flags.id, -1)
-				book.Download(".", site.MAX_THREAD_COUNT)
+				book.Download(site.DownloadLocation, site.MAX_THREAD_COUNT)
 			} else {
 				site.Download()
 			}
