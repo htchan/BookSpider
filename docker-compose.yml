@@ -5,33 +5,44 @@ services:
         build: 
             context: ./backend
             dockerfile: Dockerfile.backend
-        expose:
-            - 9427
         volumes:
-            - database_volume:/usr/src/app/database
-            - log_volume:/usr/src/app/log
+            - ./bin/database:/usr/src/app/database
+            - ./bin/log:/log
             - /mnt/addition/download/Books:/usr/src/app/Books
         networks:
             - router
-    # frontend:
-    #     build:
-    #         context: ./frontend
-    #         dockerfile: Dockerfile.build
-    #     networks:
-    #         - router
-    #     volumes:
-    #         - frontend_volume:/usr/src/build
-    #     # depends_on:
+        profiles:
+            - backend
+            - web
+        command: sh -c "./backend > /log/backend.log"
+
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile.flutter
+        volumes:
+            - frontend_volume:/build/web
+            - ./frontend/src:/usr/src/app
+        networks:
+            - router
+        profiles:
+            - frontend
+            - web
+        command: sh -c "flutter --version ; flutter pub get ; flutter build web"
+    
+    backend_test:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.test
+        profiles:
+            - test
+        command: "go test github.com/htchan/BookSpider/helper \
+		    github.com/htchan/BookSpider/model \
+		    github.com/htchan/BookSpider/public -v"
 
 volumes:
     frontend_volume:
         name: novel_frontend_volume
-    database_volume:
-        name: novel_database_volume
-    log_volume:
-        name: novel_log_volume
-    backup_volume:
-        name: novel_backup_volume
 
 networks:
     router:
