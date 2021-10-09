@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 	"os"
+	"log"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
 	"math/rand"
@@ -17,6 +18,15 @@ func CheckError(e error) {
 	if (e != nil) {
 		panic(e);
 	}
+}
+
+var StageFileName string
+
+func WriteStage(s string) {
+	file, err := os.OpenFile(StageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
+	if err != nil { log.Println(err, "\n", StageFileName) }
+	file.WriteString(s + "\n")
+    file.Close()
 }
 
 /* web related */
