@@ -261,18 +261,18 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 
 var currentProcess string
 var logs Logs
-var sites map[string]model.Site
+var sites map[string]models.Site
 
 func main() {
 	currentProcess = ""
-	config := model.LoadYaml("./config/config.yaml")
+	config := models.LoadYaml("./config/config.yaml")
 	stageFileName = config.Backend.StageFile
 	logs = Logs{
 		logLocation: config.Backend.LogFile, 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}
-	sites = model.LoadSitesYaml(config)
+	sites = models.LoadSitesYaml(config)
 	apiFunc := make(map[string]func())
 	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
 	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } }

@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"gopkg.in/yaml.v2"

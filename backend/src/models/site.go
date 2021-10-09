@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"golang.org/x/text/encoding"
 	"encoding/json"
+	"path/filepath"
 
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
@@ -827,6 +828,47 @@ func (site Site) validateDownloadThread(num int, version int, success *float64,
 		*tried ++
 	}
 }
+
+func (site Site)BackupSql(destinationDirectory string) {
+	destinationFileName := filepath.Join(destinationDirectory, time.Now().Format("2006-01-02"))
+	os.MkdirAll(destinationFileName, os.ModePerm)
+	destinationFileName = filepath.Join(destinationFileName, site.SiteName + ".sql")
+	createBooksTableSql := "CREATE TABLE books " +
+						"( `name` varchar ( 50 ), `writer` varchar ( 30 ), " +
+						"`date` varchar ( 30 ), `chapter` varchar ( 50 ), `type` varchar ( 20 ), " +
+						"`end` boolean, `download` boolean, `read` boolean, " +
+						"`site` varchar ( 15 ), `num` INTEGER , version integer)"
+	createErrorTableSql := "CREATE TABLE error " +
+						"( `type` varchar ( 10 ), `site` varchar ( 15 ), `num` INTEGER )"
+	site.OpenDatabase()
+	file, err := os.OpenFile(destinationFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
+	helper.CheckError(err)
+	file.WriteString(fmt.Sprintf("%v\n%v\n", createBooksTableSql, createErrorTableSql))
+	rows, err := site.database.Query("select name, writer, date, chapter, type, " +
+									"end, download, read, site, num, version from books")
+	helper.CheckError(err)
+	var tempName, tempWriter, tempDate, tempChapter, tempType, tempSite string
+	var tempEnd, tempDownload, tempRead bool
+	var tempNum, tempVersion int
+	for rows.Next() {
+		rows.Scan(&tempName, &tempWriter, &tempDate, &tempChapter, &tempType, 
+				&tempEnd, &tempDownload, &tempRead, &tempSite, &tempNum, &tempVersion)
+		file.WriteString(fmt.Sprintf("insert into books values (" +
+						"'%v', '%v', '%v', '%v', '%v', %v, %v, %v, '%v', %v, %v);\n", 
+						tempName, tempWriter, tempDate, tempChapter, tempType, 
+						tempEnd, tempDownload, tempRead, tempSite, tempNum, tempVersion))
+	}
+	rows, err = site.database.Query("select type, site, num from books")
+	helper.CheckError(err)
+	for rows.Next() {
+		rows.Scan(&tempType, &tempSite, &tempNum)
+		file.WriteString(fmt.Sprintf("insert into error values ('%v', '%v', %v);\n", 
+						tempType, tempSite, tempNum))
+	}
+    file.Close()
+	site.CloseDatabase()
+}
+
 func (site Site)Map() map[string]interface{} {
 	site.OpenDatabase()
 	var bookCount, bookRecordCount, errorCount, errorRecordCount, endCount, endRecordCount int

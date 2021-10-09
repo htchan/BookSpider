@@ -5,27 +5,14 @@ import (
 	"strings"
 	"log"
 	"github.com/htchan/BookSpider/models"
-	// "github.com/htchan/BookSpider/services"
+	"github.com/htchan/BookSpider/services"
 	"github.com/htchan/BookSpider/helper"
-	"runtime"
 	_ "net/http/pprof"
-	
-	"golang.org/x/sync/semaphore"
-	
-	"encoding/json"
-	"io/ioutil"
 
-	"sync"
 	"flag"
 )
 
 var stageFileName string
-
-type Flags struct {
-	operation *string
-	site *string
-	id *int
-}
 
 func help() {
 	log.Println("Command: ")
@@ -42,201 +29,32 @@ func help() {
 	log.Println("\n")
 }
 
-func writeStage(s string) {
-	file, err := os.OpenFile(stageFileName, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0664)
-	if err != nil { log.Println(err, "\n", stageFileName) }
-	file.WriteString(s + "\n")
-    file.Close()
-}
-
-func download(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: download start")
-	var wg sync.WaitGroup
+func info(sites map[string]models.Site, flags models.Flags) {
 	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			defer wg.Done()
-			writeStage("sub_stage: " + name + " start")
-			if name == "80txt" { return }
-			log.Println(name + "\tdownload")
-			if *flags.id != -1 {
-				book := site.Book(*flags.id, -1)
-				book.Download(site.DownloadLocation, site.MAX_THREAD_COUNT)
-			} else {
-				site.Download()
-			}
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: download finish")
-}
-func update(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: update start")
-	var wg sync.WaitGroup
-	var s = semaphore.NewWeighted(int64(config.MaxThreads))
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			writeStage("sub_stage: " + name + " start")
-			log.Println(name + "\tupdate")
-			site.Update(s)
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: update finish")
-}
-func explore(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: explore start")
-	var wg sync.WaitGroup
-	var s = semaphore.NewWeighted(int64(config.MaxThreads))
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			writeStage("sub_stage: " + name + " start")
-			log.Println(name + "\texplore")
-			site.Explore(config.MaxExploreError, s)
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: explore finish")
-}
-func updateError(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: update error start")
-	var wg sync.WaitGroup
-	var s = semaphore.NewWeighted(int64(config.MaxThreads))
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			writeStage("sub_stage: " + name + " start")
-			log.Println(name + "\tupdate error")
-			site.UpdateError(s)
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: update error finish")
-}
-func info(sites map[string]model.Site, config model.Config, flags Flags) {
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
+		if *flags.Site != "" && name != *flags.Site { continue }
 		log.Println(name + "\tinfo")
 		log.Println(strings.Repeat("- ", 20))
 		site.Info()
 		log.Println(strings.Repeat("- ", 20))
 	}
 }
-func check(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: check error start")
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		writeStage("sub_stage: " + name + " start")
-		log.Println(name + "\tcheck")
-		log.Println(strings.Repeat("- ", 20))
-		site.Check()
-		log.Println(strings.Repeat("- ", 20))
-		runtime.GC()
-		writeStage("sub_stage: " + name + " finish")
-	}
-	writeStage("stage: check error finish")
-}
-func checkEnd(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: check end start")
-	var wg sync.WaitGroup
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			writeStage("sub_stage: " + name + " start")
-			log.Println(name + "\tcheck end")
-			log.Println(strings.Repeat("- ", 20))
-			site.CheckEnd()
-			log.Println(strings.Repeat("- ", 20))
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: check end finish")
-}
-func fix(sites map[string]model.Site, config model.Config, flags Flags) {
-	writeStage("stage: fix start")
-	var wg sync.WaitGroup
-	var s = semaphore.NewWeighted(int64(config.MaxThreads))
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		wg.Add(1)
-		go func(name string, site model.Site) {
-			writeStage("sub_stage: " + name + " start")
-			log.Println(name + "\tfix")
-			site.Fix(s)
-			runtime.GC()
-			writeStage("sub_stage: " + name + " finish")
-			wg.Done()
-		} (name, site)
-	}
-	wg.Wait()
-	writeStage("stage: fix finish")
-}
-func random(sites map[string]model.Site, config model.Config, flags Flags) {
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		log.Println(name + "\trandom")
-		results := site.RandomSuggestBook(5)
-		for _, result := range results { log.Println(result.String()+"\n") }
-		runtime.GC()
-	}
-}
-func validate(sites map[string]model.Site, config model.Config, flags Flags) {
-	exploreResult := make(map[string]float64)
-	downloadResult := make(map[string]float64)
-	for name, site := range sites {
-		if *flags.site != "" && name != *flags.site { continue }
-		log.Println(name + "\tvalidate explore")
-		exploreResult[name] = site.Validate()
-		log.Println(name + "\tvalidate download")
-		downloadResult[name] = site.ValidateDownload()
-	}
-	b, err := json.Marshal(exploreResult)
-	helper.CheckError(err)
-	err = ioutil.WriteFile("./validate.json", b, 0644)
-	helper.CheckError(err)
-	b, err = json.Marshal(downloadResult)
-	helper.CheckError(err)
-	err = ioutil.WriteFile("./validate-download.json", b, 0644)
-	helper.CheckError(err)
-
-}
-func schedule(sites map[string]model.Site, config model.Config, flags Flags) {
-	validate(sites, config, flags)
-	update(sites, config, flags)
-	explore(sites, config, flags)
-	updateError(sites, config, flags)
-	check(sites, config, flags)
-	fix(sites, config, flags)
-	checkEnd(sites, config, flags)
-	download(sites, config, flags)
-}
-func test(sites map[string]model.Site, config model.Config, flags Flags) {
+// func schedule(sites map[string]models.Site, config models.Config, flags models.Flags) {
+// 	validate(sites, config, flags)
+// 	update(sites, config, flags)
+// 	explore(sites, config, flags)
+// 	updateError(sites, config, flags)
+// 	check(sites, config, flags)
+// 	fix(sites, config, flags)
+// 	checkEnd(sites, config, flags)
+// 	services.Download(sites, flags)
+// }
+func test(sites map[string]models.Site, flags models.Flags) {
 	site := sites["hjwzw"]
 	log.Println(site.SiteName)
 	log.Println()
-	book := site.Book(36814, -1)
-	book.Download("./validate-download/", 1000)
+	// book := site.Book(36814, -1)
+	// book.Download("./validate-download/", 1000)
+	site.BackupSql("/backup")
 	//site.Validate()
 	//site.Explore(1000)
 	//site.Update()
@@ -251,44 +69,51 @@ func main() {
 		return
 	}
 
-	var flags Flags
+	var flags models.Flags
 
-	flags.operation = flag.String("operation", "", "the operation to work on")
-	flags.site = flag.String("site", "", "specific site to operate")
-	flags.id = flag.Int("id", -1, "specific id to operate")
+	flags.Operation = flag.String("operation", "", "the operation to work on")
+	flags.Site = flag.String("site", "", "specific site to operate")
+	flags.Id = flag.Int("id", -1, "specific id to operate")
+	flags.MaxThreads = flag.Int("max-threads", -1, "maximum number of threads to carry the process")
 	flag.Parse()
-	// log.Println(flags.site, *flags.site)
+	// log.Println(flags.Site, *flags.Site)
 
-	config := model.LoadYaml("./config/config.yaml")
-	sites := model.LoadSitesYaml(config)
+	config := models.LoadYaml("./config/config.yaml")
+	sites := models.LoadSitesYaml(config)
 
-	stageFileName = config.Backend.StageFile
+	if *flags.MaxThreads <= 0 {
+		*flags.MaxThreads = config.MaxThreads
+	} else if *flags.MaxThreads <= 100 {
+		*flags.MaxThreads = 100
+	}
+
+	helper.StageFileName = config.Backend.StageFile
 
 	os.Remove(config.Backend.StageFile)
 	os.Create(config.Backend.StageFile)
 
-	functionMap := map[string]func(map[string]model.Site, model.Config, Flags){
-		"UPDATE": update,
-		"EXPLORE": explore,
-		"DOWNLOAD": download,
-		"ERROR": updateError,
+	functionMap := map[string]func(map[string]models.Site, models.Flags){
+		"UPDATE": services.Update,
+		"EXPLORE": services.Explore,
+		"DOWNLOAD": services.Download,
+		"ERROR": services.UpdateError,
 		"INFO": info,
-		"CHECK": check,
-		"CHECKEND": checkEnd,
+		"CHECK": services.Check,
+		"CHECKEND": services.CheckEnd,
 		// "BACKUP": backup,
-		// "BACKUPSTRING": backupString,
-		"FIX": fix,
-		"RANDOM": random,
-		"VALIDATE": validate,
+		"BACKUP": services.BackupSql,
+		"FIX": services.Fix,
+		"RANDOM": nil,
+		"VALIDATE": services.Validate,
 		"TEST": test,
 	}
 
 	// function, exist := functionMap[strings.ToUpper(os.Args[1])]
-	function, exist := functionMap[strings.ToUpper(*flags.operation)]
+	function, exist := functionMap[strings.ToUpper(*flags.Operation)]
 	if !exist {
 		help()
 		log.Println("Invalid rguement")
 	} else {
-		function(sites, config, flags)
+		function(sites, flags)
 	}
 }
