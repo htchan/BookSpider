@@ -6,15 +6,32 @@ services:
             context: ./backend
             dockerfile: Dockerfile.backend
         volumes:
-            - ./bin/database:/usr/src/app/database
+            - ./bin/database:/database
             - ./bin/log:/log
-            - /mnt/addition/download/Books:/usr/src/app/Books
+            - /mnt/addition/download/Books:/books
         networks:
             - router
         profiles:
+            - all
             - backend
             - web
         command: sh -c "./backend > /log/backend.log"
+
+    controller:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.controller
+        volumes:
+            - ./bin/database:/database
+            - ./bin/log:/log
+            - /mnt/addition/download/Books:/books
+            - ./bin/backup:/backup
+        networks:
+            - router
+        profiles:
+            - all
+            - controller
+        command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log"
 
     frontend:
         build:
@@ -26,6 +43,7 @@ services:
         networks:
             - router
         profiles:
+            - all
             - frontend
             - web
         command: sh -c "flutter --version ; flutter pub get ; flutter build web"
@@ -35,6 +53,7 @@ services:
             context: ./backend
             dockerfile: Dockerfile.test
         profiles:
+            - all
             - test
         command: "go test github.com/htchan/BookSpider/helper \
 		    github.com/htchan/BookSpider/model \
