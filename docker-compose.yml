@@ -4,7 +4,7 @@ services:
     backend:
         build: 
             context: ./backend
-            dockerfile: Dockerfile.backend
+            dockerfile: ./build/Dockerfile.backend
         volumes:
             - ./bin/database:/database
             - ./bin/log:/log
@@ -20,7 +20,7 @@ services:
     controller:
         build:
             context: ./backend
-            dockerfile: Dockerfile.controller
+            dockerfile: ./build/Dockerfile.controller
         volumes:
             - ./bin/database:/database
             - ./bin/log:/log
@@ -51,13 +51,16 @@ services:
     backend_test:
         build:
             context: ./backend
-            dockerfile: Dockerfile.test
+            dockerfile: ./build/Dockerfile.test
         profiles:
             - all
             - test
-        command: "go test github.com/htchan/BookSpider/helper \
-		    github.com/htchan/BookSpider/model \
-		    github.com/htchan/BookSpider/public -v"
+        command: "go test github.com/htchan/BookSpider/internal/utils \
+            github.com/htchan/BookSpider/pkg/books \
+		    github.com/htchan/BookSpider/pkg/flags -v"
+
+        # github.com/htchan/BookSpider/pkg/sites \
+        # github.com/htchan/BookSpider/pkg/configs \
 
 volumes:
     frontend_volume:
