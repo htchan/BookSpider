@@ -94,9 +94,9 @@ func TestNewBook(t *testing.T) {
 		"chapterContentRegex" : "(?s)<div.*?yuedu_zhengwen.*?>(.*?)</div>",
 	})
 
-	database, err := sql.Open("sqlite3", location)
+	database, err := sql.Open("sqlite3", databaseLocation)
 	if err != nil {
-		t.Fatalf("cannot open database at %v", location)
+		t.Fatalf("cannot open database at %v", databaseLocation)
 	}
 
 	tx, err := database.Begin()
