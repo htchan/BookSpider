@@ -1,25 +1,26 @@
 package books
 
 import (
+	"encoding/json"
+	"github.com/htchan/BookSpider/internal/utils"
+	"golang.org/x/text/encoding"
+	"io/ioutil"
 	"log"
 	"strconv"
-	"encoding/json"
-	"io/ioutil"
-	"golang.org/x/text/encoding"
-	"github.com/htchan/BookSpider/internal/utils"
 
-	"fmt"
 	"errors"
+	"fmt"
 
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 )
+
 const BOOK_MAX_THREAD = 1000
 
 type MetaInfo struct {
-	baseUrl, downloadUrl, chapterUrl, chapterUrlPattern string
+	baseUrl, downloadUrl, chapterUrl, chapterUrlPattern                   string
 	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
-	chapterUrlRegex, chapterTitleRegex, chapterContentRegex string
+	chapterUrlRegex, chapterTitleRegex, chapterContentRegex               string
 }
 
 func NewMetaInfo(info map[string]string) (*MetaInfo, error) {
@@ -27,7 +28,7 @@ func NewMetaInfo(info map[string]string) (*MetaInfo, error) {
 	expectKey := [12]string{
 		"baseUrl", "downloadUrl", "chapterUrl", "chapterUrlPattern",
 		"titleRegex", "writerRegex", "typeRegex", "lastUpdateRegex",
-		"lastChapterRegex", "chapterUrlRegex", "chapterTitleRegex", "chapterContentRegex" }
+		"lastChapterRegex", "chapterUrlRegex", "chapterTitleRegex", "chapterContentRegex"}
 	for _, key := range expectKey {
 		_, ok := info[key]
 		if !ok {
@@ -50,52 +51,52 @@ func NewMetaInfo(info map[string]string) (*MetaInfo, error) {
 }
 
 type Book struct {
-	SiteName string
-	Id, Version int
+	SiteName                                     string
+	Id, Version                                  int
 	Title, Writer, Type, LastUpdate, LastChapter string
-	EndFlag, DownloadFlag, ReadFlag bool
-	decoder *encoding.Decoder
-	metaInfo MetaInfo
+	EndFlag, DownloadFlag, ReadFlag              bool
+	decoder                                      *encoding.Decoder
+	metaInfo                                     MetaInfo
 }
 
-
-func NewBook(siteName string, id, version int, metaInfo MetaInfo,
-	decoder *encoding.Decoder, tx *sql.Tx) (*Book, error) {
+func NewBook(siteName string, id int, metaInfo MetaInfo,
+	decoder *encoding.Decoder, tx *sql.Tx) *Book {
 	book := new(Book)
 	book.SiteName = siteName
 	book.Id = id
+	book.Version = -1
 	book.decoder = decoder
 	book.metaInfo = metaInfo
-	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, id);
-	book.metaInfo.downloadUrl = fmt.Sprintf(metaInfo.downloadUrl, id);
-	var err error
+	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, id)
+	book.metaInfo.downloadUrl = fmt.Sprintf(metaInfo.downloadUrl, id)
 	var rows *sql.Rows
+	var err error
 	for i := 0; i < 2; i++ {
-		if version < 0 {
-			rows, err = tx.Query("select version, name, writer, type, " +
-							"date, chapter, end, download, read from books where " +
-							"site=? and num=? order by version desc", siteName, id);
-		} else {
-			rows, err = tx.Query("select version, name, writer, type, " +
-							"date, chapter, end, download, read from books where " +
-							"site=? and num=? and version=?", siteName, id, version)
+		rows, err = tx.Query("select max(version) from books where "+
+			"site=? and num=?", siteName, id)
+		if err != nil {
+			if i == 1 {
+				panic(err)
+			}
+			continue
+		} else if rows.Next() {
+			rows.Scan(&book.Version)
 		}
-		if (err != nil || !rows.Next()) && i == 1 {
-			if err == nil { err = errors.New("no record found") }
-			log.Print(id, "---", err)
-			book.Log(map[string]interface{} {
-				"retry": i, "error": err.Error(),
-			})
-			return nil, err
-		}
-		rows.Scan(&book.Version, &book.Title, &book.Writer, &book.Type,
-					&book.LastUpdate, &book.LastChapter,
-					&book.EndFlag, &book.DownloadFlag, &book.ReadFlag);
-		rows.Close()
 	}
-	return book, nil
+	rows.Close()
+	return book
 }
 
+func LoadBook(rows *sql.Rows, metaInfo MetaInfo, decoder *encoding.Decoder) (*Book, error) {
+	book := new(Book)
+	book.decoder = decoder
+	book.metaInfo = metaInfo
+	err := rows.Scan(&book.SiteName, &book.Id, &book.Version, &book.Title, &book.Writer, &book.Type,
+		&book.LastUpdate, &book.LastChapter, &book.EndFlag, &book.DownloadFlag, &book.ReadFlag)
+	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, book.Id)
+	book.metaInfo.downloadUrl = fmt.Sprintf(metaInfo.downloadUrl, book.Id)
+	return book, err
+}
 
 func (book Book) Log(info map[string]interface{}) {
 	info["site"], info["id"], info["version"] = book.SiteName, book.Id, book.Version
@@ -105,18 +106,18 @@ func (book Book) Log(info map[string]interface{}) {
 }
 
 func (book *Book) validHTML(html string, url string, trial int) bool {
-	if (len(html) == 0) {
-		book.Log(map[string]interface{} {
+	if len(html) == 0 {
+		book.Log(map[string]interface{}{
 			"retry": trial, "url": url, "message": "load html fail - zero length",
 		})
 		return false
 	} else if _, err := strconv.Atoi(html); err == nil {
-		book.Log(map[string]interface{} {
+		book.Log(map[string]interface{}{
 			"retry": trial, "url": url, "message": "load html fail - code " + html,
 		})
 		return false
 	} else {
-		book.Log(map[string]interface{} {
+		book.Log(map[string]interface{}{
 			"retry": trial, "url": url, "message": "load html success",
 		})
 	}
@@ -124,38 +125,42 @@ func (book *Book) validHTML(html string, url string, trial int) bool {
 }
 
 func (book Book) Content(bookStoragePath string) string {
-	if book.Title == "" || !book.DownloadFlag { return "" }
-	bookLocation := book.storageLocation(bookStoragePath)
+	if book.Title == "" || !book.DownloadFlag {
+		return ""
+	}
+	bookLocation := book.StorageLocation(bookStoragePath)
 	content, err := ioutil.ReadFile(bookLocation)
 	utils.CheckError(err)
 	return string(content)
 }
 
-func (book Book) storageLocation(storagePath string) (bookLocation string) {
+func (book Book) StorageLocation(storagePath string) (bookLocation string) {
 	bookLocation = storagePath + "/" + strconv.Itoa(book.Id)
-	if book.Version > 0 { bookLocation += "-v" + strconv.Itoa(book.Version) }
+	if book.Version > 0 {
+		bookLocation += "-v" + strconv.Itoa(book.Version)
+	}
 	bookLocation += ".txt"
 	return
 }
 
 // to string function
 func (book Book) String() string {
-	return book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\n" + 
-			book.Title + "\t" + book.Writer + "\n"+ book.LastUpdate + "\t" + book.LastChapter
+	return book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\n" +
+		book.Title + "\t" + book.Writer + "\n" + book.LastUpdate + "\t" + book.LastChapter
 }
 
-func(book Book) Map() map[string]interface{} {
-	return map[string]interface{} {
-		"site": book.SiteName,
-		"id": book.Id,
-		"version": book.Version,
-		"title": book.Title,
-		"writer": book.Writer,
-		"type": book.Type,
-		"update": book.LastUpdate,
-		"chapter": book.LastChapter,
-		"end": book.EndFlag,
-		"read": book.ReadFlag,
+func (book Book) Map() map[string]interface{} {
+	return map[string]interface{}{
+		"site":     book.SiteName,
+		"id":       book.Id,
+		"version":  book.Version,
+		"title":    book.Title,
+		"writer":   book.Writer,
+		"type":     book.Type,
+		"update":   book.LastUpdate,
+		"chapter":  book.LastChapter,
+		"end":      book.EndFlag,
+		"read":     book.ReadFlag,
 		"download": book.DownloadFlag,
 	}
 }
