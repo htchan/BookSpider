@@ -55,6 +55,30 @@ func LoadSite(siteName string, source map[string]string, metaMap map[string]stri
 	return site, nil
 }
 
+func (site Site) Book(id, version int) (*books.Book, error) {
+	site.OpenDatabase()
+	var rows *sql.Rows
+	var book *books.Book
+	var err error
+	site.bookLoadTx, err = site.database.Begin()
+	utils.CheckError(err)
+	if version >= 0 {
+		rows, err = site.bookQuery(" where site=? and num=? and version=?", site.SiteName, id, version)
+	} else {
+		rows, err = site.bookQuery(" where site=? and num=? group by site, num", site.SiteName, id)
+	}
+	utils.CheckError(err)
+	if rows.Next() {
+		book, err = books.LoadBook(rows, site.meta, site.decoder)
+	} else {
+		err = errors.New("book not found")
+	}
+	utils.CheckError(rows.Close())
+	utils.CheckError(site.bookLoadTx.Rollback())
+	site.CloseDatabase()
+	return book, err
+}
+
 func (site *Site) Info() {
 	site.OpenDatabase()
 	log.Println("Site :\t" + site.SiteName)

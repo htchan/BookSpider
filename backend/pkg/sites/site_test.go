@@ -54,6 +54,10 @@ func TestLoadSite(t *testing.T) {
 	t.Skip("I'm lazy")
 }
 
+func TestBook(t *testing.T) {
+	t.Skip("I'm lazy")
+}
+
 func TestInfo(t *testing.T) {
 	t.Skip("I'm lazy")
 }
