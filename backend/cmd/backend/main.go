@@ -10,14 +10,12 @@ import (
 	"strconv"
 	"net/http"
 	"log"
-	//"encoding/json"
-	//"golang.org/x/text/encoding/traditionalchinese"
-	//"golang.org/x/text/encoding"
+	
 	"encoding/json"
 
-	//"../helper"
-	"github.com/htchan/BookSpider/models"
-	"github.com/htchan/BookSpider/helper"
+	"github.com/htchan/BookSpider/pkg/sites"
+	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/BookSpider/internal/utils"
 )
 
 type Logs struct {
@@ -40,7 +38,7 @@ func (logs *Logs) update() {
 	if fileSize == logs.size { return }
 
 	file, err := os.Open(logs.logLocation)
-	helper.CheckError(err)
+	utils.CheckError(err)
 	defer file.Close()
 	logs.size = fileSize
 	offset := fileSize - readLogLen
@@ -58,7 +56,7 @@ func (logs *Logs) update() {
 
 func response(res http.ResponseWriter, data map[string]interface{}) {
 	dataByte, err := json.Marshal(data)
-	helper.CheckError(err)
+	utils.CheckError(err)
 	fmt.Fprintln(res, string(dataByte))
 }
 func error(res http.ResponseWriter, code int, msg string) {
@@ -107,7 +105,7 @@ func GeneralInfo(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 
 	siteNames := make([]string, 0)
-	for siteName, _ := range sites {
+	for siteName, _ := range siteMap {
 		siteNames = append(siteNames, siteName)
 	}
 	sort.Strings(siteNames)
@@ -123,7 +121,7 @@ func SiteInfo(res http.ResponseWriter, req *http.Request) {
 
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[4]
-	site, ok := sites[siteName]
+	site, ok := siteMap[siteName]
 	if !ok {
 		res.WriteHeader(http.StatusNotFound)
 		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
@@ -142,7 +140,7 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 		error(res, http.StatusBadRequest, "not enough parameter")
 	}
 	siteName := uri[4]
-	site, ok := sites[siteName]
+	site, ok := siteMap[siteName]
 	id, err := strconv.Atoi(uri[5])
 	if !ok {
 		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
@@ -158,8 +156,10 @@ func BookInfo(res http.ResponseWriter, req *http.Request) {
 		if err != nil { version = -1 }
 	}
 
-	book := site.Book(id, version)
-	if (book.Title == "") {
+	book, err := site.Book(id, version)
+	if err != nil {
+		error(res, http.StatusNotFound, err.Error())
+	} else if (book.Title == "") {
 		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
 				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
 	} else {
@@ -175,7 +175,7 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 		error(res, http.StatusBadRequest, "not enough parameter")
 	}
 	siteName := uri[4]
-	site, ok := sites[siteName]
+	site, ok := siteMap[siteName]
 	id, err := strconv.Atoi(uri[5])
 	if !ok {
 		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
@@ -191,8 +191,10 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 			version = -1
 		}
 	}
-	book := site.Book(id, version)
-	if (book.Title == "") {
+	book, err := site.Book(id, version)
+	if err != nil {
+		error(res, http.StatusNotFound, err.Error())
+	} else if (book.Title == "") {
 		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
 				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
 		return
@@ -215,7 +217,7 @@ func BookSearch(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[4]
-	site, ok := sites[siteName]
+	site, ok := siteMap[siteName]
 	title := strings.ReplaceAll(req.URL.Query().Get("title"), "*", "%")
 	writer := strings.ReplaceAll(req.URL.Query().Get("writer"), "*", "%")
 	pageStr := req.URL.Query().Get("page")
@@ -241,7 +243,7 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	uri := strings.Split(req.URL.Path, "/")
 	siteName := uri[4]
-	site, ok := sites[siteName]
+	site, ok := siteMap[siteName]
 	if !ok {
 		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
 		return
@@ -261,24 +263,24 @@ func BookRandom(res http.ResponseWriter, req *http.Request) {
 
 var currentProcess string
 var logs Logs
-var sites map[string]models.Site
+var siteMap map[string]sites.Site
 
 func main() {
 	currentProcess = ""
-	config := models.LoadYaml("./config/config.yaml")
+	config := configs.LoadConfigYaml("./configs/config.yaml")
 	stageFileName = config.Backend.StageFile
 	logs = Logs{
 		logLocation: config.Backend.LogFile, 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}
-	sites = models.LoadSitesYaml(config)
+	siteMap = configs.LoadSitesYaml(config)
 	apiFunc := make(map[string]func())
-	apiFunc["search"] = func() { for name := range sites { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
-	apiFunc["download"] = func() { for name := range sites { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } }
-	apiFunc["siteInfo"] = func() { for name := range sites { http.HandleFunc("/api/novel/sites/"+name, SiteInfo) } }
-	apiFunc["bookInfo"] = func() { for name := range sites { http.HandleFunc("/api/novel/books/"+name+"/", BookInfo) } }
-	apiFunc["random"] = func() { for name := range sites { http.HandleFunc("/api/novel/random/"+name, BookRandom) } }
+	apiFunc["search"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
+	apiFunc["download"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } }
+	apiFunc["siteInfo"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/sites/"+name, SiteInfo) } }
+	apiFunc["bookInfo"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/books/"+name+"/", BookInfo) } }
+	apiFunc["random"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/random/"+name, BookRandom) } }
 	apiFunc["process"] = func() { http.HandleFunc("/api/novel/process", ProcessState) }
 	apiFunc["info"] = func() { http.HandleFunc("/api/novel/info", GeneralInfo) }
 	apiFunc["validate"] = func() { http.HandleFunc("/api/novel/validate", ValidateState) }

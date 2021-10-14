@@ -4,12 +4,14 @@ import (
 	"os"
 	"strings"
 	"log"
-	"github.com/htchan/BookSpider/models"
-	"github.com/htchan/BookSpider/services"
-	"github.com/htchan/BookSpider/helper"
+	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/BookSpider/pkg/sites"
+	"github.com/htchan/BookSpider/pkg/flags"
+	"github.com/htchan/BookSpider/pkg/services"
+	"github.com/htchan/BookSpider/internal/utils"
 	_ "net/http/pprof"
 
-	"flag"
+	// "flag"
 )
 
 var stageFileName string
@@ -29,8 +31,8 @@ func help() {
 	log.Println("\n")
 }
 
-func info(sites map[string]models.Site, flags models.Flags) {
-	for name, site := range sites {
+func info(siteMap map[string]sites.Site, flags flags.Flags) {
+	for name, site := range siteMap {
 		if *flags.Site != "" && name != *flags.Site { continue }
 		log.Println(name + "\tinfo")
 		log.Println(strings.Repeat("- ", 20))
@@ -38,7 +40,7 @@ func info(sites map[string]models.Site, flags models.Flags) {
 		log.Println(strings.Repeat("- ", 20))
 	}
 }
-// func schedule(sites map[string]models.Site, config models.Config, flags models.Flags) {
+// func schedule(siteMap map[string]sites.Site, config configs.Config, flags flags.Flags) {
 // 	validate(sites, config, flags)
 // 	update(sites, config, flags)
 // 	explore(sites, config, flags)
@@ -48,11 +50,11 @@ func info(sites map[string]models.Site, flags models.Flags) {
 // 	checkEnd(sites, config, flags)
 // 	services.Download(sites, flags)
 // }
-func test(sites map[string]models.Site, flags models.Flags) {
-	site := sites["hjwzw"]
+func test(siteMap map[string]sites.Site, flags flags.Flags) {
+	site := siteMap["hjwzw"]
 	log.Println(site.SiteName)
 	log.Println()
-	// book := site.Book(36814, -1)
+	// book := books.NewBook(site.SiteName, 36814, -1, site.meta, site.decoder, site.bookTx)
 	// book.Download("./validate-download/", 1000)
 	site.BackupSql("/backup")
 	//site.Validate()
@@ -69,30 +71,20 @@ func main() {
 		return
 	}
 
-	var flags models.Flags
+	flag := flags.NewFlags()
 
-	flags.Operation = flag.String("operation", "", "the operation to work on")
-	flags.Site = flag.String("site", "", "specific site to operate")
-	flags.Id = flag.Int("id", -1, "specific id to operate")
-	flags.MaxThreads = flag.Int("max-threads", -1, "maximum number of threads to carry the process")
-	flag.Parse()
-	// log.Println(flags.Site, *flags.Site)
+	config := configs.LoadConfigYaml("./configs/config.yaml")
+	siteMap := configs.LoadSitesYaml(config)
 
-	config := models.LoadYaml("./config/config.yaml")
-	sites := models.LoadSitesYaml(config)
+	flag.Load(config.MaxThreads)
 
-	if *flags.MaxThreads <= 0 {
-		*flags.MaxThreads = config.MaxThreads
-	} else if *flags.MaxThreads <= 100 {
-		*flags.MaxThreads = 100
-	}
 
-	helper.StageFileName = config.Backend.StageFile
+	utils.StageFileName = config.Backend.StageFile
 
 	os.Remove(config.Backend.StageFile)
 	os.Create(config.Backend.StageFile)
 
-	functionMap := map[string]func(map[string]models.Site, models.Flags){
+	functionMap := map[string]func(map[string]sites.Site, flags.Flags){
 		"UPDATE": services.Update,
 		"EXPLORE": services.Explore,
 		"DOWNLOAD": services.Download,
@@ -109,11 +101,11 @@ func main() {
 	}
 
 	// function, exist := functionMap[strings.ToUpper(os.Args[1])]
-	function, exist := functionMap[strings.ToUpper(*flags.Operation)]
+	function, exist := functionMap[strings.ToUpper(*flag.Operation)]
 	if !exist {
 		help()
 		log.Println("Invalid rguement")
 	} else {
-		function(sites, flags)
+		function(siteMap, *flag)
 	}
 }
