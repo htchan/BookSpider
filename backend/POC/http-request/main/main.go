@@ -4,7 +4,7 @@ import (
 	"time"
 	"runtime"
 
-	"../helper"
+	"../utils"
 )
 
 func bToMb(b uint64) uint64 {
@@ -22,7 +22,7 @@ func printMemStat() (uint64) {
 func test(f func (int) (int), n int) () {
 	alloc := printMemStat()
 	startTime := time.Now()
-	err := helper.NetLinearRequest(n)
+	err := utils.NetLinearRequest(n)
 	log.Println(time.Since(startTime))
 	newAlloc := printMemStat()
 	log.Println("Alloc = ", (newAlloc - alloc))
@@ -31,17 +31,17 @@ func test(f func (int) (int), n int) () {
 
 func main() () {
 	totalN := 999
-	// go helper.StartServer()
+	// go utils.StartServer()
 
 	log.Println("net - Linear request")
-	test(helper.NetLinearRequest, totalN)
+	test(utils.NetLinearRequest, totalN)
 	
 	log.Println("goreq - Linear request")
-	test(helper.GoreqLinearRequest, totalN)
+	test(utils.GoreqLinearRequest, totalN)
 
 	log.Println("net - go routine request")
-	test(helper.NetGoRequest, totalN)
+	test(utils.NetGoRequest, totalN)
 
 	log.Println("goreq - go routine request")
-	test(helper.GoreqGoRequest, totalN)
+	test(utils.GoreqGoRequest, totalN)
 }

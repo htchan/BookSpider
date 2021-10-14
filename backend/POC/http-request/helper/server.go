@@ -1,5 +1,5 @@
 // create server and return a random 5 char long text as response
-package helper
+package utils
 import (
 	"fmt"
 	"strings"
