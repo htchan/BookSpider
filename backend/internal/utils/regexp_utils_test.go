@@ -14,7 +14,7 @@ func TestMatch(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Match(testcase.input1, testcase.input2)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Match(\"%v\", \"%v\") result gives\n\"%v\", but not\n\"%v\"\n",
+			t.Fatalf("utils.Match(\"%v\", \"%v\") result gives\n\"%v\", but not\n\"%v\"\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 	}
@@ -35,7 +35,7 @@ func TestSearch(t *testing.T) {
 	for _, testcase := range testcases {
 		actualString, actualError := Search(testcase.input1, testcase.input2)
 		if actualString != testcase.expectString || (actualError != nil) != testcase.expectErrorExist {
-			t.Fatalf("helper.Search(\"%v\", \"%v\") result gives\n\"%v\", %v, but not\n\"%v\", %v\n",
+			t.Fatalf("utils.Search(\"%v\", \"%v\") result gives\n\"%v\", %v, but not\n\"%v\", %v\n",
 				testcase.input1, testcase.input2, actualString, actualError,
 				testcase.expectString, testcase.expectErrorExist)
 		}
@@ -53,12 +53,12 @@ func TestSearchAll(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := SearchAll(testcase.input1, testcase.input2)
 		if len(actual) != len(testcase.expected) {
-			t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
+			t.Fatalf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 		for i := range actual {
 			if actual[i] != testcase.expected[i] {
-				t.Fatalf("helper.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
+				t.Fatalf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 					testcase.input1, testcase.input2, actual, testcase.expected)
 			}
 		}
@@ -79,7 +79,7 @@ func TestContains(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Contains(testcase.input1, testcase.input2)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Contains(%v, %v) result gives\n%v, but not\n%v\n",
+			t.Fatalf("utils.Contains(%v, %v) result gives\n%v, but not\n%v\n",
 				testcase.input1, testcase.input2, actual, testcase.expected)
 		}
 	}

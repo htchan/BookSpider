@@ -15,7 +15,7 @@ func TestExist(t *testing.T) {
 	for _, testcase := range testcases {
 		actual := Exists(testcase.input1)
 		if actual != testcase.expected {
-			t.Fatalf("helper.Exist(\"%v\") result gives\n%v, but not\n%v\n",
+			t.Fatalf("utils.Exist(\"%v\") result gives\n%v, but not\n%v\n",
 				testcase.input1, actual, testcase.expected)
 		}
 	}
