@@ -57,7 +57,12 @@ services:
             - test
         command: "go test github.com/htchan/BookSpider/internal/utils \
             github.com/htchan/BookSpider/pkg/books \
-		    github.com/htchan/BookSpider/pkg/flags -v"
+            github.com/htchan/BookSpider/pkg/sites
+            github.com/htchan/BookSpider/pkg/configs
+		    github.com/htchan/BookSpider/pkg/flags
+		    github.com/htchan/BookSpider/pkg/services
+		    github.com/htchan/BookSpider/cmd/backend
+		    github.com/htchan/BookSpider/cmd/controller -v"
 
         # github.com/htchan/BookSpider/pkg/sites \
         # github.com/htchan/BookSpider/pkg/configs \
