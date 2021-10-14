@@ -8,9 +8,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"errors"
 
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+
+	"golang.org/x/text/encoding/traditionalchinese"
 
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/books"
@@ -29,9 +32,27 @@ type Site struct {
 	MAX_THREAD_COUNT                                                 int
 }
 
-func LoadSite(source map[string]interface{}) *Site {
-	//TODO: construct site according to the input source map
-	return nil
+func LoadSite(siteName string, source map[string]string, metaMap map[string]string) (*Site, error) {
+	expectKey := [4]string{ "databaseLocation", "downloadLocation", "threadsCount", "decode" }
+	for _, key := range expectKey {
+		if _, ok := source[key]; !ok {
+			return nil, errors.New("missing key " + key)
+		}
+	}
+	site := new(Site)
+	site.SiteName = siteName
+	site.databaseLocation = source["databseLocation"]
+	site.DownloadLocation = source["downloadLocation"]
+	site.MAX_THREAD_COUNT, _ = strconv.Atoi(source["threadsCount"])
+	if (source["decode"] == "big5") {
+		site.decoder = traditionalchinese.Big5.NewDecoder()
+	}
+	meta, err := books.NewMetaInfo(metaMap)
+	if err != nil {
+		return site, err
+	}
+	site.meta = *meta
+	return site, nil
 }
 
 func (site *Site) Info() {

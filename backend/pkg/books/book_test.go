@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	// "fmt"
 	"testing"
 )
 
@@ -103,23 +104,38 @@ func TestNewBook(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot open transaction for database at %v", databaseLocation)
 	}
+	expectBookMaps := []map[string]interface{} {
+		map[string]interface{} {
+			"site": "ck101", "id": 5, "version": 0,
+			"title": "test", "writer": "test", "type": "test",
+			"update": "2011-11-11", "chapter": "test",
+			"end": true, "download": true, "read": true,
+		},
+		map[string]interface{} {
+			"site": "ck101", "id": 999, "version": -1,
+			"title": "test", "writer": "test", "type": "test",
+			"update": "2011-11-11", "chapter": "test",
+			"end": true, "download": true, "read": true,
+		},
+	}
+	
+	for _, expectBookMap := range expectBookMaps {
+		book := NewBook(
+			expectBookMap["site"].(string),
+			expectBookMap["id"].(int), *metaInfo, nil, tx)
 
-	book, err := NewBook("ck101", 5, -1, *metaInfo, nil, tx)
+		if !mapEqual(book.Map(), expectBookMap) || (err != nil) {
+			t.Fatalf("books.NewBook(\"%v\", %v, %v, %v, %v, %v) returns\n"+
+				"%v\nbut not\n%v", expectBookMap["site"],
+				expectBookMap["id"], expectBookMap["version"],
+				metaInfo, nil, tx, book.Map(), expectBookMap)
+		}
+	}
 
 	tx.Commit()
 	err = database.Close()
 	if err != nil {
 		t.Fatalf("cannot close database at %v", databaseLocation)
-	}
-	expectData := map[string]interface{}{
-		"site": "ck101", "id": 5, "version": 0,
-		"title": "test", "writer": "test", "type": "test",
-		"update": "2011-11-11", "chapter": "test",
-		"end": true, "download": true, "read": true,
-	}
-	if !mapEqual(book.Map(), expectData) || (err != nil) {
-		t.Fatalf("books.NewBook(\"%v\", %v, %v, %v, %v, %v) returns\n"+
-			"%v\nbut not\n%v", "ck101", 5, -1, metaInfo, nil, tx, book.Map(), expectData)
 	}
 }
 
