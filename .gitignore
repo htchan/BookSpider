@@ -4,7 +4,6 @@ Books/__pycache__/*
 .setting
 *.pyc
 bin/
-build/
 backup-bin/
 database/
 .vscode/

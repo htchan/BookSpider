@@ -10,7 +10,7 @@ backend:
 	docker-compose --profile backend up
 
 controller:
-	command=${command} params=${params} docker-compose --profile controller up
+	command=${command} params="${params}" docker-compose --profile controller up
 
 test:
 	docker-compose --profile test up

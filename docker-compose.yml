@@ -15,7 +15,7 @@ services:
             - all
             - backend
             - web
-        command: sh -c "./backend > /log/backend.log"
+        command: sh -c "./backend > /log/backend.log 2>&1"
 
     controller:
         build:
@@ -31,7 +31,7 @@ services:
         profiles:
             - all
             - controller
-        command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log"
+        command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log 2>&1"
 
     frontend:
         build:
