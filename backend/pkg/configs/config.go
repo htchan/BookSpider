@@ -13,6 +13,7 @@ type Config struct {
 	Sites map[string]map[string]string `yaml:"sites"`
 	MaxThreads int `yaml:"maxThreads"`
 	MaxExploreError int `yaml:"maxExploreError"`
+	ConstSleep int `yaml: "constSleep"`
 	Backend struct {
 		Api []string `yaml:"api"`
 		StageFile string `yaml:"stageFile"`

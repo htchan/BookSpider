@@ -16,7 +16,7 @@ func (site *Site) Download() {
 
 	site.PrepareStmt()
 	for rows.Next() {
-		book, err := books.LoadBook(rows, site.meta, site.decoder)
+		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			book.Log(map[string]interface{}{
 				"error": "cannot load books from database", "stage": "downlaod",

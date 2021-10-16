@@ -68,7 +68,8 @@ func TestbookQuery(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Site.bookQuery(\" where num=?\", 5) returns %v", err)
 	}
-	_, err = books.LoadBook(rows, testSite_database_utils.meta, testSite_database_utils.decoder)
+	_, err = books.LoadBook(rows, testSite_database_utils.meta,
+		testSite_database_utils.decoder, testSite_database_utils.CONST_SLEEP)
 	if err != nil {
 		t.Fatalf("books.LoadBook cannot load rows %v", err)
 	}
@@ -91,7 +92,8 @@ func TestbookQueryGroup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Site.bookQuery(\" where id=?\", 5) returns %v", err)
 	}
-	book, err := books.LoadBook(rows, testSite_database_utils.meta, testSite_database_utils.decoder)
+	book, err := books.LoadBook(rows, testSite_database_utils.meta,
+		testSite_database_utils.decoder, testSite_database_utils.CONST_SLEEP)
 	if err != nil {
 		t.Fatalf("books.LoadBook cannot load rows %v", err)
 	}
@@ -223,7 +225,8 @@ func TestInsertBook(t *testing.T) {
 		t.Fatalf("Site.bookQuery(\"where num = ?\", 999) fail %v", err)
 	}
 	if rows.Next() {
-		book, err = books.LoadBook(rows, testSite_database_utils.meta, testSite_database_utils.decoder)
+		book, err = books.LoadBook(rows, testSite_database_utils.meta,
+			testSite_database_utils.decoder, testSite_database_utils.CONST_SLEEP)
 	}
 	if err != nil{
 		t.Fatalf("fail %v", err)
@@ -244,7 +247,8 @@ func TestUpdateBook(t *testing.T) {
 	rows, _ := testSite_database_utils.bookQuery(" where num=?", 999)
 	var book *books.Book
 	if rows.Next() {
-		book, _ = books.LoadBook(rows, testSite_database_utils.meta, testSite_database_utils.decoder)
+		book, _ = books.LoadBook(rows, testSite_database_utils.meta,
+			testSite_database_utils.decoder, testSite_database_utils.CONST_SLEEP)
 	}
 	book.Title = "999_new_title"
 	testSite_database_utils.UpdateBook(*book)
@@ -253,7 +257,8 @@ func TestUpdateBook(t *testing.T) {
 	testSite_database_utils.bookLoadTx, _ = testSite_database_utils.database.Begin()
 	rows, _ = testSite_database_utils.bookQuery(" where num=?", 999)
 	if rows.Next() {
-		book, _ = books.LoadBook(rows, testSite_database_utils.meta, testSite_database_utils.decoder)
+		book, _ = books.LoadBook(rows, testSite_database_utils.meta,
+			testSite_database_utils.decoder, testSite_database_utils.CONST_SLEEP)
 	}
 	if book.Title != "999_new_title" {
 		t.Fatalf("Site.Update fail result %v", book.Map())

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"io/ioutil"
-	"math/rand"
+	// "math/rand"
 	"net/http"
 
 	"golang.org/x/text/encoding"
@@ -30,15 +30,19 @@ func getWeb(url string) string {
 	return string(body)
 }
 
-const MIN_SLEEP_MS_MULTIPLIER = 2000
-const MAX_SLEEP_MS = 30000
+// const MIN_SLEEP_MS_MULTIPLIER = 2000
+// const MAX_SLEEP_MS = 30000
 
-func GetWeb(url string, trial int, decoder *encoding.Decoder) (html string, i int) {
+func GetWeb(url string, trial int, decoder *encoding.Decoder, constSleep int) (html string, i int) {
 	for i = 0; i < 10; i++ {
 		html = getWeb(url)
-		if _, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
-			minSleepMs := i * MIN_SLEEP_MS_MULTIPLIER
-			time.Sleep(time.Duration(rand.Intn(MAX_SLEEP_MS-minSleepMs)+minSleepMs) * time.Millisecond)
+		if statusCode, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
+			// minSleepMs := i * MIN_SLEEP_MS_MULTIPLIER
+			// time.Sleep(time.Duration(rand.Intn(MAX_SLEEP_MS-minSleepMs)+minSleepMs) * time.Millisecond)
+			time.Sleep(time.Duration((i + 1) * constSleep) * time.Millisecond)
+			if statusCode == 503 {
+				time.Sleep(time.Duration((i + 1) * 10) * time.Second)
+			}
 			continue
 		}
 		if decoder != nil {

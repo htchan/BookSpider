@@ -13,6 +13,7 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 
+	"golang.org/x/sync/semaphore"
 	"golang.org/x/text/encoding/traditionalchinese"
 
 	"github.com/htchan/BookSpider/internal/utils"
@@ -30,6 +31,8 @@ type Site struct {
 	bookLoadTx, bookOperateTx                                        *sql.Tx
 	insertBookStmt, updateBookStmt, insertErrorStmt, deleteErrorStmt *sql.Stmt
 	MAX_THREAD_COUNT                                                 int
+	CONST_SLEEP                                                      int
+	semaphore                                                        *semaphore.Weighted
 }
 
 func LoadSite(siteName string, source map[string]string, metaMap map[string]string) (*Site, error) {
@@ -41,7 +44,7 @@ func LoadSite(siteName string, source map[string]string, metaMap map[string]stri
 	}
 	site := new(Site)
 	site.SiteName = siteName
-	site.databaseLocation = source["databseLocation"]
+	site.databaseLocation = source["databaseLocation"]
 	site.DownloadLocation = source["downloadLocation"]
 	site.MAX_THREAD_COUNT, _ = strconv.Atoi(source["threadsCount"])
 	if (source["decode"] == "big5") {
@@ -69,7 +72,7 @@ func (site Site) Book(id, version int) (*books.Book, error) {
 	}
 	utils.CheckError(err)
 	if rows.Next() {
-		book, err = books.LoadBook(rows, site.meta, site.decoder)
+		book, err = books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 	} else {
 		err = errors.New("book not found")
 	}
@@ -107,7 +110,7 @@ func (site *Site) RandomSuggestBook(size int) []*books.Book {
 	utils.CheckError(err)
 	rows, err := site.bookQuery(" where download=? order by random() limit ?", true, size)
 	for i := 0; rows.Next() && i < size; i++ {
-		result[i], err = books.LoadBook(rows, site.meta, site.decoder)
+		result[i], err = books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			result[i].Log(map[string]interface{}{
 				"error": "cannot load book from database", "stage": "random",
@@ -136,7 +139,7 @@ func (site *Site) Search(title, writer string, page int) []*books.Book {
 	utils.CheckError(err)
 	// load the book match search requirements
 	for rows.Next() {
-		book, err := books.LoadBook(rows, site.meta, site.decoder)
+		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			book.Log(map[string]interface{}{
 				"error": err.Error(), "stage": "search",

@@ -11,7 +11,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 	_ "net/http/pprof"
 
-	// "flag"
+	// "runtime"
 )
 
 var stageFileName string
@@ -28,7 +28,7 @@ func help() {
     log.Println("backup" + strings.Repeat(" ", 12) + "backup the current database by the current date and time")
     log.Println("regular" + strings.Repeat(" ", 11) + "do the default operation (explore->update->download->check)")
 	log.Println("fix" + strings.Repeat(" ", 15) + "fix the error in database and storage in the site")
-	log.Println("\n")
+	log.Println()
 }
 
 func info(siteMap map[string]sites.Site, flags flags.Flags) {

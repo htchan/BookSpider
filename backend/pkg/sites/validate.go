@@ -30,7 +30,7 @@ func (site Site) Validate() float64 {
 	for success < 10 && tried < 1000 && rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		book, err := books.LoadBook(rows, site.meta, site.decoder)
+		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			book.Log(map[string]interface{}{
 				"error": "cannot load from database", "stage": "update",
@@ -80,7 +80,7 @@ func (site Site) ValidateDownload() float64 {
 	for success < 2 && tried < 100 && rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		book, err := books.LoadBook(rows, site.meta, site.decoder)
+		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			book.Log(map[string]interface{}{
 				"error": "cannot load book from database", "stage": "validate-download",

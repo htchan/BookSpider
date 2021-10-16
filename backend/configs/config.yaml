@@ -1,33 +1,39 @@
 sites:
     ck101:
         decode : big5
-        configFileLocation : "./config/site-config/ck101-desktop.yaml"
+        configFileLocation : "./configs/site-config/ck101-desktop.yaml"
         databaseLocation : "/database/ck101.db"
         downloadLocation : "/books/ck101/"
-        threadsCount : 200
-    80txt:
-        decode : utf8
-        configFileLocation : "./config/site-config/80txt-desktop.yaml"
-        databaseLocation : "/database/80txt.db"
-        downloadLocation : "/books/80txt/"
-        threadsCount : 200
+        threadsCount : 1000
+        constSleep : 1000
+    # 80txt:
+    #     decode : utf8
+    #     configFileLocation : "./configs/site-config/80txt-desktop.yaml"
+    #     databaseLocation : "/database/80txt.db"
+    #     downloadLocation : "/books/80txt/"
+    #     threadsCount : 1000
+    #     constSleep : 1000
     xqishu:
         decode : utf8
-        configFileLocation : "./config/site-config/xqishu-desktop.yaml"
+        configFileLocation : "./configs/site-config/xqishu-desktop.yaml"
         databaseLocation : "/database/xqishu.db"
         downloadLocation : "/books/xqishu/"
-        threadsCount : 200
+        threadsCount : 2
+        constSleep : 1000
     hjwzw:
         decode : utf8
-        configFileLocation : "./config/site-config/hjwzw-desktop.yaml"
+        configFileLocation : "./configs/site-config/hjwzw-desktop.yaml"
         databaseLocation : "/database/hjwzw.db"
         downloadLocation : "/books/hjwzw/"
-        threadsCount : 200
+        threadsCount : 1000
+        constSleep : 1000
     # bestory:
     #     decode : "big5"
-    #     configFileLocation : "./config/site-config/bestory-desktop.json"
+    #     configFileLocation : "./configs/site-config/bestory-desktop.json"
     #     databaseLocation : "/database/bestory.db"
     #     downloadLocation : "/mnt/addition/download/Book/bestory"
+    #     threadsCount : 1000
+    #     constSleep : 1000
 maxThreads: 1000
 maxExploreError: 1000
 backend:

@@ -7,43 +7,35 @@ import (
 
 func (book *Book) extractInfo() (string, string, string, string, string, error) {
 	// get online resource, try maximum 10 times if it keeps failed
-	html, trial := utils.GetWeb(book.metaInfo.baseUrl, 10, book.decoder)
+	html, trial := utils.GetWeb(book.metaInfo.baseUrl, 10, book.decoder, book.CONST_SLEEP)
 	if _, err := utils.Search(html, book.metaInfo.titleRegex); err != nil || !book.validHTML(html, book.metaInfo.baseUrl, trial) {
 		book.Log(map[string]interface{}{
-			"url": book.metaInfo.baseUrl, "error": "extract base html fail", "stage": "update",
+			"url": book.metaInfo.baseUrl, "error": "extract base html fail",
+			"html": html, "trial": trial, "stage": "update",
 		})
 		return "", "", "", "", "", errors.New("invalid base page html")
 	}
 	// extract info from source
-	var err error
-	title, errTitle := utils.Search(html, book.metaInfo.titleRegex)
-	if errTitle != nil {
-		err = errTitle
+	var err, tempErr error
+	var result [5]string
+	regex := [5]string {
+		book.metaInfo.titleRegex, book.metaInfo.writerRegex, book.metaInfo.typeRegex,
+		book.metaInfo.lastUpdateRegex, book.metaInfo.lastChapterRegex,
 	}
-	writer, errWriter := utils.Search(html, book.metaInfo.writerRegex)
-	if errWriter != nil {
-		err = errWriter
-	}
-	typeName, errTypeName := utils.Search(html, book.metaInfo.typeRegex)
-	if errTypeName != nil {
-		err = errTypeName
-	}
-	lastUpdate, errLastUpdate := utils.Search(html, book.metaInfo.lastUpdateRegex)
-	if errLastUpdate != nil {
-		err = errLastUpdate
-	}
-	lastChapter, errLastChapter := utils.Search(html, book.metaInfo.lastChapterRegex)
-	if errLastChapter != nil {
-		err = errLastChapter
+	for i := 0; i < 5; i++ {
+		result[i], tempErr = utils.Search(html, regex[i])
+		if tempErr != nil {
+			err = tempErr
+		}
 	}
 	if err != nil {
 		book.Log(map[string]interface{}{
-			"title": title, "writer": writer, "type": typeName,
-			"lastUpdate": lastUpdate, "lastChapter": lastChapter,
-			"message": "extract html fail", "stage": "update",
+			"title": result[0], "writer": result[1], "type": result[2],
+			"lastUpdate": result[3], "lastChapter": result[4],
+			"message": "extract html fail", "error": err.Error(), "stage": "update",
 		})
 	}
-	return title, writer, typeName, lastUpdate, lastChapter, err
+	return result[0], result[1], result[2], result[3], result[4], err
 }
 
 func (book *Book) Update() bool {

@@ -19,7 +19,7 @@ type Chapter struct {
 
 func (book Book) getChapterUrlsTitles() ([]string, []string, error) {
 	// get basic info (all chapter url and title)
-	html, trial := utils.GetWeb(book.metaInfo.downloadUrl, 10, book.decoder)
+	html, trial := utils.GetWeb(book.metaInfo.downloadUrl, 10, book.decoder, book.CONST_SLEEP)
 	if !book.validHTML(html, book.metaInfo.downloadUrl, trial) {
 		book.Log(map[string]interface{}{
 			"title": book.Title, "error": "invalid table of contents html", "stage": "download",
@@ -66,7 +66,7 @@ func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted,
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	html, trial := utils.GetWeb(url, 10, book.decoder)
+	html, trial := utils.GetWeb(url, 10, book.decoder, book.CONST_SLEEP)
 	if !book.validHTML(html, url, trial) {
 		ch <- Chapter{Url: url, Title: title, Content: "load html fail"}
 		return

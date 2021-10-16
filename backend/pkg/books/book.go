@@ -57,6 +57,7 @@ type Book struct {
 	EndFlag, DownloadFlag, ReadFlag              bool
 	decoder                                      *encoding.Decoder
 	metaInfo                                     MetaInfo
+	CONST_SLEEP                                  int
 }
 
 func NewBook(siteName string, id int, metaInfo MetaInfo,
@@ -87,10 +88,11 @@ func NewBook(siteName string, id int, metaInfo MetaInfo,
 	return book
 }
 
-func LoadBook(rows *sql.Rows, metaInfo MetaInfo, decoder *encoding.Decoder) (*Book, error) {
+func LoadBook(rows *sql.Rows, metaInfo MetaInfo, decoder *encoding.Decoder, constSleep int) (*Book, error) {
 	book := new(Book)
 	book.decoder = decoder
 	book.metaInfo = metaInfo
+	book.CONST_SLEEP = constSleep
 	err := rows.Scan(&book.SiteName, &book.Id, &book.Version, &book.Title, &book.Writer, &book.Type,
 		&book.LastUpdate, &book.LastChapter, &book.EndFlag, &book.DownloadFlag, &book.ReadFlag)
 	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, book.Id)

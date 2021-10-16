@@ -28,7 +28,7 @@ func (site *Site) fixStroageError(s *semaphore.Weighted) {
 	for rows.Next() {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		book, err := books.LoadBook(rows, site.meta, site.decoder)
+		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
 		if err != nil {
 			book.Log(map[string]interface{}{
 				"error": "cannot load book from database", "stage": "fix",

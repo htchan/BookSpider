@@ -6,6 +6,7 @@ import (
 	"context"
 	"golang.org/x/sync/semaphore"
 	"sync"
+	"time"
 
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/books"
@@ -22,6 +23,7 @@ func (site *Site) Explore(maxError int, s *semaphore.Weighted) {
 	if s == nil {
 		s = semaphore.NewWeighted(int64(maxError))
 	}
+	site.semaphore = semaphore.NewWeighted(int64(maxError))
 	var wg sync.WaitGroup
 
 	maxId := site.maxBookId() + 1
@@ -31,12 +33,16 @@ func (site *Site) Explore(maxError int, s *semaphore.Weighted) {
 	log.Println(maxId)
 	// keep explore until reach max error count
 	errorCount := 0
-	for errorCount < maxError {
+	for i := 0; errorCount < maxError; i++ {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
+		site.semaphore.Acquire(ctx, 1)
 		book := books.NewBook(site.SiteName, maxId, site.meta, site.decoder, site.bookLoadTx)
 		go site.exploreThread(book, &errorCount, s, &wg)
 		maxId += 1
+		if i % 100 == 0 {
+			time.Sleep(time.Duration(100) * time.Millisecond)
+		}
 	}
 	wg.Wait()
 	utils.CheckError(site.bookLoadTx.Rollback())
@@ -48,6 +54,7 @@ func (site *Site) exploreThread(book *books.Book, errorCount *int, s *semaphore.
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer s.Release(1)
+	defer site.semaphore.Release(1)
 	if book.Version >= 0 {
 		//TODO: here break the loop is not the best handling
 		//		the best handling is do the update and update the database
