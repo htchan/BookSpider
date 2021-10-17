@@ -141,10 +141,25 @@ func (site *Site) fixMissingRecordError(s *semaphore.Weighted) {
 	log.Println(site.SiteName, "finish add missing count", len(missingIds))
 }
 
+func (site *Site) fixNullFieldError() {
+	tx, err := site.database.Begin()
+	utils.CheckError(err)
+	_, err = tx.Exec("update books set read=? where read is null", false)
+	utils.CheckError(err)
+	_, err = tx.Exec("update books set download=? where download is null", false)
+	utils.CheckError(err)
+	_, err = tx.Exec("update books set end=? where end is null", false)
+	utils.CheckError(err)
+	err = tx.Commit()
+	utils.CheckError(err)
+}
+
 func (site *Site) Fix(s *semaphore.Weighted) {
 	site.OpenDatabase()
 	log.Println(site.SiteName, "Add Missing Record")
 	site.fixMissingRecordError(s)
+	log.Println(site.SiteName, "Fix Null bool")
+	site.fixNullFieldError()
 	log.Println(site.SiteName, "Fix duplicate record")
 	site.fixDuplicateRecordError()
 	log.Println(site.SiteName, "Fix storage error")
