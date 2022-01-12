@@ -5,8 +5,7 @@ Books/__pycache__/*
 *.pyc
 bin/
 backup-bin/
-database/
+./database/
 .vscode/
 *.log
-*.sql
 temp/

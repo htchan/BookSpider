@@ -4,21 +4,13 @@ import (
 	"testing"
 )
 
-func TestMatch(t *testing.T) {
-	var testcases = []struct {
-		input1, input2 string
-		expected       bool
-	}{
-		{"abc", "(abc)", false},
-	}
-	for _, testcase := range testcases {
-		actual := Match(testcase.input1, testcase.input2)
-		if actual != testcase.expected {
-			t.Fatalf("utils.Match(\"%v\", \"%v\") result gives\n\"%v\", but not\n\"%v\"\n",
-				testcase.input1, testcase.input2, actual, testcase.expected)
+func Test_Utils_Match(t *testing.T) {
+	t.Run("always return false", func(t *testing) {
+		result := Match("abc", "(abc)")
+		if !result {
+			t.Fatalf("Match return true result")
 		}
-	}
-
+	})
 }
 
 func TestSearch(t *testing.T) {

@@ -26,13 +26,14 @@ func TestGetWeb(t *testing.T) {
 		input1    string
 		input2    int
 		input3    *encoding.Decoder
+		input4    int
 		expected1 string
 		expected2 int
 	}{
-		{"https://api.github.com/repos/htchan/Bookspider/downloads", 1, nil, "[]", 0},
+		{"https://api.github.com/repos/htchan/Bookspider/downloads", 1, nil, 100, "[]", 0},
 	}
 	for _, testcase := range testcases {
-		actual1, actual2 := GetWeb(testcase.input1, testcase.input2, testcase.input3)
+		actual1, actual2 := GetWeb(testcase.input1, testcase.input2, testcase.input3, testcase.input4)
 		if actual1 != testcase.expected1 || actual2 != testcase.expected2 {
 			t.Fatalf("utils.GetWeb(\"%v\", %v, %v) result gives\n(\"%v\", %v), "+
 				"but not (\"%v\", %v)\n",

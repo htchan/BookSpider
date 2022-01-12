@@ -1,0 +1,22 @@
+sites:
+    test:
+        decode: big5
+        configFileLocation: "../../assets/test-data/book-config.yml"
+        databaseLocation: "./test.db"
+        downloadDirectory: "../../assets/test-data/storage/"
+        threadsCount: 1000
+        constSleep: 1000
+        maxExploreError: 1000
+maxThreads: 1000
+backend:
+    api:
+        - search
+        - download
+        - bookInfo
+        - siteInfo
+        - random
+        - process
+        - info
+        - validate
+    stageFile: '/log/stage.txt'
+    logFile: '/log/controller.log'
