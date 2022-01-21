@@ -5,9 +5,9 @@ import (
 )
 
 func Test_Utils_Match(t *testing.T) {
-	t.Run("always return false", func(t *testing) {
+	t.Run("always return false", func(t *testing.T) {
 		result := Match("abc", "(abc)")
-		if !result {
+		if result {
 			t.Fatalf("Match return true result")
 		}
 	})
