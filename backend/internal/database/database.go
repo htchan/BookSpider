@@ -1,5 +1,9 @@
 package database
 
+import (
+	"time"
+)
+
 const (
 	BOOK_RECORD_FIELDS = "site, id, hash_code, title, writer_id, type, " +
 		"update_date, update_chapter, status "
@@ -23,6 +27,7 @@ type DB interface {
 	CreateErrorRecord(*ErrorRecord) error
 
 	UpdateBookRecord(*BookRecord) error
+	UpdateErrorRecord(*ErrorRecord) error
 
 	DeleteBookRecord([]BookRecord) error
 	DeleteWriterRecord([]WriterRecord) error
@@ -52,6 +57,7 @@ type Record interface{}
 
 type Rows interface {
 	Scan() (Record, error)
+	ScanCurrent() (Record, error)
 	Next() bool
 	Close() error
 }
@@ -76,4 +82,13 @@ type ErrorRecord struct {
 	Site string
 	Id int
 	Error error
+}
+
+func GenerateHash() int {
+	return int(time.Now().UnixMilli())
+}
+
+func StatustoString(status StatusCode) string {
+	statusList := []string{ "error", "in_progress", "end", "download" }
+	return statusList[status]
 }
