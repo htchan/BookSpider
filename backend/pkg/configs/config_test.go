@@ -27,7 +27,8 @@ func Test_Config_Config_LoadConfigYaml(t *testing.T) {
 		
 		if bookConfig := config.SiteConfigs["test"].BookMeta;
 			bookConfig.CONST_SLEEP != 1000 ||
-			bookConfig.Decoder == nil {
+			bookConfig.Decoder == nil ||
+			bookConfig.StorageDirectory != "../../assets/test-data/storage/" {
 				t.Fatalf("Load wrong book config %v", bookConfig)
 			}
 	})

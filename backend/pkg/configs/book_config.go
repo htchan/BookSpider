@@ -25,6 +25,7 @@ type BookConfig struct {
     ChapterContentRegex string `yaml:"chapterContentRegex"`
 	Decoder *encoding.Decoder
 	CONST_SLEEP int
+	StorageDirectory string
 }
 
 func LoadBookConfigYaml(bookConfigLocation string) (bookConfig *BookConfig) {
@@ -41,9 +42,9 @@ func LoadBookConfigJson(bookConfigLocation string) *BookConfig {
 	return new(BookConfig)
 }
 
-func (config BookConfig)Populate(id int) *BookConfig {
+func (config BookConfig)Populate(id int) BookConfig {
 	config.BaseUrl = fmt.Sprintf(config.BaseUrl, id)
 	config.DownloadUrl = fmt.Sprintf(config.DownloadUrl, id)
 	config.ChapterUrl = fmt.Sprintf(config.ChapterUrl, id)
-	return &config
+	return config
 }

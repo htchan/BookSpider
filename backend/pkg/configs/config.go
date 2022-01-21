@@ -40,10 +40,11 @@ func LoadConfigYaml(configLocation string) (config *Config) {
 	utils.CheckError(yaml.Unmarshal(data, config))
 	for key, value := range config.SiteConfigs {
 		config.SiteConfigs[key].BookMeta = LoadBookConfigYaml(value.BookConfigLocation)
-		config.SiteConfigs[key].BookMeta.CONST_SLEEP = config.SiteConfigs[key].ConstSleep
+		config.SiteConfigs[key].BookMeta.CONST_SLEEP = value.ConstSleep
+		config.SiteConfigs[key].BookMeta.StorageDirectory = value.StorageDirectory
 		if (value.DecoderString == "big5") {
 			config.SiteConfigs[key].Decoder = traditionalchinese.Big5.NewDecoder()
-			config.SiteConfigs[key].BookMeta.Decoder = config.SiteConfigs[key].Decoder
+			config.SiteConfigs[key].BookMeta.Decoder = value.Decoder
 		}
 	}
 	return

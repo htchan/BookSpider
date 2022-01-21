@@ -8,18 +8,18 @@ func Test_Config_BookConfig_LoadBookConfigYaml(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		config := LoadBookConfigYaml("../../assets/test-data/book-config.yml")
 
-		if config.BaseUrl != "https://base-url/%v" ||
+		if config == nil || config.BaseUrl != "https://base-url/%v" ||
 			config.DownloadUrl != "https://download-url/%v" ||
 			config.ChapterUrl != "https://chapter-url/%v" ||
 			config.ChapterUrlPattern != "chapter-url-pattern" ||
-			config.TitleRegex != "title-regex" ||
-			config.WriterRegex != "writer-regex" ||
-			config.TypeRegex != "type-regex" ||
-			config.LastUpdateRegex != "last-update-regex" ||
-			config.LastChapterRegex != "last-chapter-regex" ||
-			config.ChapterUrlRegex != "chapter-url-regex" ||
-			config.ChapterTitleRegex != "chapter-title-regex" ||
-			config.ChapterContentRegex != "chapter-content-regex" {
+			config.TitleRegex != "(title-regex)" ||
+			config.WriterRegex != "(writer-regex)" ||
+			config.TypeRegex != "(type-regex)" ||
+			config.LastUpdateRegex != "(last-update-regex)" ||
+			config.LastChapterRegex != "(last-chapter-regex)" ||
+			config.ChapterUrlRegex != "chapter-url-regex-(\\d)" ||
+			config.ChapterTitleRegex != "chapter-title-regex-(\\d)" ||
+			config.ChapterContentRegex != "chapter-content-(.*)-content-regex" {
 				t.Fatalf("LoadBookConfigYaml return wrong book config: %v", config)
 			}
 	})
