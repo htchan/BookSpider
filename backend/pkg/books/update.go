@@ -1,73 +1,74 @@
 package books
 
 import (
-	"errors"
+	// "errors"
 	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/database"
 )
 
-func (book *Book) extractInfo() (string, string, string, string, string, error) {
-	// get online resource, try maximum 10 times if it keeps failed
-	html, trial := utils.GetWeb(book.metaInfo.baseUrl, 10, book.decoder, book.CONST_SLEEP)
-	if _, err := utils.Search(html, book.metaInfo.titleRegex); err != nil || !book.validHTML(html, book.metaInfo.baseUrl, trial) {
-		book.Log(map[string]interface{}{
-			"url": book.metaInfo.baseUrl, "error": "extract base html fail",
-			"html": html, "trial": trial, "stage": "update",
-		})
-		return "", "", "", "", "", errors.New("invalid base page html")
+var getWeb = utils.GetWeb
+
+func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChapter string, err error) {
+	operation := [5]struct{
+		regex string
+		result *string
+	} {
+		{book.config.TitleRegex, &title},
+		{book.config.WriterRegex, &writer},
+		{book.config.TypeRegex, &typeString},
+		{book.config.LastUpdateRegex, &updateDate},
+		{book.config.LastChapterRegex, &updateChapter},
 	}
-	// extract info from source
-	var err, tempErr error
-	var result [5]string
-	regex := [5]string {
-		book.metaInfo.titleRegex, book.metaInfo.writerRegex, book.metaInfo.typeRegex,
-		book.metaInfo.lastUpdateRegex, book.metaInfo.lastChapterRegex,
-	}
-	for i := 0; i < 5; i++ {
-		result[i], tempErr = utils.Search(html, regex[i])
-		if tempErr != nil {
-			err = tempErr
+	defer utils.Recover(func() {
+		for i := 0; i < 5; i++ {
+			*operation[i].result = ""
 		}
+	})
+	// get online resource, try maximum 10 times if it keeps failed
+	html, _ := getWeb(
+		book.config.BaseUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	err = book.validHTML(html)
+	utils.CheckError(err)
+	
+	// extract info from source
+	var result string
+	for i := 0; i < 5; i++ {
+		result, err = utils.Search(html, operation[i].regex)
+		utils.CheckError(err)
+		*operation[i].result = result
 	}
-	if err != nil {
-		book.Log(map[string]interface{}{
-			"title": result[0], "writer": result[1], "type": result[2],
-			"lastUpdate": result[3], "lastChapter": result[4],
-			"message": "extract html fail", "error": err.Error(), "stage": "update",
-		})
-	}
-	return result[0], result[1], result[2], result[3], result[4], err
+	return
 }
 
 func (book *Book) Update() bool {
-	title, writer, typeName, lastUpdate, lastChapter, err := book.extractInfo()
+	title, writer, typeString, updateDate, updateChapter, err := book.fetchInfo()
 	if err != nil {
+		if book.GetStatus() == database.Error {
+			book.SetError(err)
+		}
 		return false
 	}
 	// check difference
 	update := false
-	if lastUpdate != book.LastUpdate || lastChapter != book.LastChapter {
+	if title != book.GetTitle() || writer != book.GetWriter() || typeString != book.GetType() {
 		update = true
-	}
-	if title != book.Title || writer != book.Writer || typeName != book.Type {
-		update = true
-		if book.DownloadFlag {
-			book.Log(map[string]interface{}{
-				"old": map[string]interface{}{
-					"title": book.Title, "writer": book.Writer, "type": book.Type,
-				},
-				"new": map[string]interface{}{
-					"title": title, "writer": writer, "type": typeName,
-				},
-				"message": "already download", "stage": "update",
-			})
+		if book.GetStatus() != database.Error {
+			book.bookRecord.HashCode = database.GenerateHash()
 		}
-		book.Version++
-		book.EndFlag, book.DownloadFlag, book.ReadFlag = false, false, false
+		book.SetStatus(database.InProgress)
+		book.SetError(nil)
+	} else if updateDate != book.GetUpdateDate() || updateChapter != book.GetUpdateChapter() {
+		update = true
+		book.SetStatus(database.InProgress)
+		book.SetError(nil)
 	}
 	if update {
 		// sync with online info
-		book.Title, book.Writer, book.Type = title, writer, typeName
-		book.LastUpdate, book.LastChapter = lastUpdate, lastChapter
+		book.SetTitle(title)
+		book.SetWriter(writer)
+		book.SetType(typeString)
+		book.SetUpdateDate(updateDate)
+		book.SetUpdateChapter(updateChapter)
 	}
 	return update
 }

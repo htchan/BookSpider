@@ -1,157 +1,196 @@
 package books
 
 import (
-	"context"
-	"github.com/htchan/BookSpider/internal/utils"
-	"golang.org/x/sync/semaphore"
-	"golang.org/x/text/encoding/traditionalchinese"
-	"io/ioutil"
-	"log"
-	"os"
-	"strings"
-	"sync"
 	"testing"
+	"github.com/htchan/BookSpider/internal/mock"
+	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/pkg/configs"
+
+	"golang.org/x/sync/semaphore"
+	"sync"
+	"context"
+	"os"
+	"strconv"
 )
 
-func init() {
-	log.SetOutput(ioutil.Discard)
-}
+var downloadConfig = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
 
-var testBook_Save = Book{
-	SiteName:     "ck101",
-	Id:           5,
-	Version:      -1,
-	EndFlag:      false,
-	DownloadFlag: false,
-	ReadFlag:     false,
-	decoder:      traditionalchinese.Big5.NewDecoder(),
-	metaInfo: MetaInfo{
-		baseUrl:             "https://www.ck101.org/book/5.html",
-		downloadUrl:         "https://www.ck101.org/0/5/",
-		chapterUrl:          "https://www.ck101.org%v",
-		chapterUrlPattern:   "/.*?\\.html",
-		titleRegex:          "<h1><a.*?>(.*?)</a></h1>",
-		writerRegex:         "作者︰<a.*?>(.*?)</a>",
-		typeRegex:           " &gt; (.*?) &gt; ",
-		lastUpdateRegex:     "最新章節\\((\\d{4}-\\d{2}-\\d{2})\\)",
-		lastChapterRegex:    "<a.*?id=\"newchapter\".*>(.*?)./a>",
-		chapterUrlRegex:     "<dd><a href=\"(.*?)\">.*?</a></dd>",
-		chapterTitleRegex:   "<dd><a href.*?>(.*?)</a></dd>",
-		chapterContentRegex: "(?s)<div.*?yuedu_zhengwen.*?>(.*?)</div>",
-	},
-}
+func Test_Books_Book_getEmptyChapters(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebSuccess
+		book := NewBook("test", 1, -1, downloadConfig)
 
-func Test_saveBook(t *testing.T) {
-	var testcase = struct {
-		expected     int
-		expectedData string
-	}{0, "神經病戀愛指南\n小貓一尾\n--------------------\n\ntitle\n--------------------\ncontent\n\n"}
-	testBook_Save.Update()
-	urls := []string{"test"}
-	chapters := []Chapter{Chapter{"test", "title", "content"}}
-	actual := testBook_Save.saveBook("../../test/model-test-data/save-book-5.txt", urls, chapters)
-	actualData, err := ioutil.ReadFile("../../test/model-test-data/save-book-5-test.txt")
-	utils.CheckError(err)
-	os.Remove("../../test/model-test-data/save-book-5.txt")
-	if actual != testcase.expected || string(actualData) != testcase.expectedData {
-		t.Fatalf("Book.saveBook() result gives\n(%v, %v),\nbut not\n(%v, %v)\n",
-			actual, string(actualData), testcase.expected, testcase.expectedData)
-	}
-}
-
-func TestDownload(t *testing.T) {
-	var testcase = struct {
-		expected         bool
-		expectedFileName string
-	}{true, "../../test/model-test-data/ck101-test.txt"}
-	actual := testBook_Save.Download("../../test/model-test-data", 1000)
-	actualData, err := ioutil.ReadFile("../../test/model-test-data/5.txt")
-	utils.CheckError(err)
-	expectedData, err := ioutil.ReadFile(testcase.expectedFileName)
-	utils.CheckError(err)
-	result := len(actualData) - len(expectedData)
-	if result < 0 {
-		result = -result
-	}
-	os.Remove("../../test/model-test-data/5.txt")
-	if actual != testcase.expected || result > 10 {
-		t.Fatalf("Book.validateHTML() result gives\n(%v),\nbut not\n(%v)\nlength diff: %v",
-			actual, testcase.expected, result)
-	}
-}
-
-func Test_optimizeContent(t *testing.T) {
-	var testcase = struct {
-		input, expected string
-	}{"<br />&nbsp;<b></b><p></p>                <p/>", "\n"}
-	actual := testBook_Save.optimizeContent(testcase.input)
-	if actual != testcase.expected {
-		t.Fatalf("Book.optimizeContent(\"%v\") result gives\n\"%v\",\nbut not\n\"%v\"",
-			testcase.input, actual, testcase.expected)
-	}
-}
-
-func Test_downloadChapters(t *testing.T) {
-	var testcase = struct {
-		input1, input2   []string
-		input3           int
-		expectedChapters []Chapter
-	}{
-		[]string{"/0/5/772.html"}, []string{"第1章"}, 100,
-		[]Chapter{
-			Chapter{"https://www.ck101.org/0/5/772.html", "第1章", strings.Repeat(" ", 15060)},
-		},
-	}
-	actualChapters := testBook_Save.downloadChapters(testcase.input1, testcase.input2, testcase.input3)
-	if len(actualChapters) != len(testcase.expectedChapters) {
-		t.Fatalf("Book.downloadAllChapter(%v, %v, %v) result gives\nlength = %v,\nbut not\nlength = %v",
-			testcase.input1, testcase.input2, testcase.input3,
-			len(actualChapters), len(testcase.expectedChapters))
-	}
-	for i := range actualChapters {
-		result := 0
-		if len(actualChapters[i].Content) > len(testcase.expectedChapters[i].Content) {
-			result = len(actualChapters[i].Content) - len(testcase.expectedChapters[i].Content)
-		} else {
-			result = len(testcase.expectedChapters[i].Content) - len(actualChapters[i].Content)
+		chapters, err := book.getEmptyChapters()
+		if err != nil || len(chapters) != 4 {
+			t.Fatalf("book getEmptyChapters return err: %v, chapters: %v", err, chapters)
 		}
-		if result > 10 {
-			t.Fatalf("Book.downloadAllChapter(%v, %v, %v) result[%v] gives\nlength %v,\nbut not\nlength %v",
-				testcase.input1, testcase.input2, testcase.input3,
-				i, len(actualChapters[i].Content), len(testcase.expectedChapters[i].Content))
+
+		for i, chapter := range chapters {
+			s := strconv.Itoa(i + 1)
+			if chapter.Url != book.config.DownloadUrl + s || chapter.Title != s {
+				t.Fatalf("book getEmptyChapters return wrong result at position %v, chatper: %v", i, chapter)
+			}
 		}
-	}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebImbalanceUrlTitle
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		_, err := book.getEmptyChapters()
+		if err == nil {
+			t.Fatalf("book getEmptyChapters return nil error for not balance url and title")
+		}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebEmpty
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		_, err := book.getEmptyChapters()
+		if err == nil {
+			t.Fatalf("book getEmptyChapters return nil error for invalid response")
+		}
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebNoUrl
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		_, err := book.getEmptyChapters()
+		if err == nil {
+			t.Fatalf("book getEmptyChapters return nil error for invalid response")
+		}
+	})
 }
 
-func Test_downloadChapter(t *testing.T) {
-	ctx := context.Background()
+func Test_Books_Book_downloadChapter(t *testing.T) {
+	var s = semaphore.NewWeighted(5)
 	var wg sync.WaitGroup
-	var testcase = struct {
-		input1, input2 string
-		input3         *semaphore.Weighted
-		input4         *sync.WaitGroup
-		input5         chan Chapter
-		expected       Chapter
-	}{
-		"https://www.ck101.org/0/5/772.html", "第1章",
-		semaphore.NewWeighted(int64(1)), &wg,
-		make(chan Chapter, 1),
-		Chapter{"https://www.ck101.org/0/5/772.html", "第1章", strings.Repeat(" ", 15059)},
-	}
-	testcase.input4.Add(1)
-	testcase.input3.Acquire(ctx, 1)
-	testBook_Save.downloadChapter(testcase.input1, testcase.input2, testcase.input3,
-		testcase.input4, testcase.input5)
-	actual := <-testcase.input5
-	result := 0
-	if len(actual.Content) > len(testcase.expected.Content) {
-		result = len(actual.Content) - len(testcase.expected.Content)
-	} else {
-		result = len(testcase.expected.Content) - len(actual.Content)
-	}
-	if result > 10 {
-		t.Fatalf("Book.downloadAllChapter(%v, %v, s, wg, ch) channel gives result\n"+
-			"length %v,\nbut not\nlength %v",
-			testcase.input1, testcase.input2, len(actual.Content), len(testcase.expected.Content))
-	}
+	ctx := context.Background()
+
+	t.Run("success with replace", func(t *testing.T) {
+		getWeb = mock.ChapterGetWebSuccess
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		s.Acquire(ctx, 1)
+		wg.Add(1)
+		ch := make(chan Chapter, 1)
+		book.downloadChapter(0, "url-hello<br />", "title", s, &wg, ch)
+
+		chapter, ok := <-ch
+		if !ok || chapter.Index != 0 || chapter.Title != "title" ||
+			chapter.Url != "url-hello<br />" || chapter.Content != "url-hello" {
+				t.Fatalf("download chapter fail: %v", chapter)
+		}
+	})
+
+	t.Run("fail if response is empty", func(t *testing.T) {
+		getWeb = mock.ChapterGetWebInvalid
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		s.Acquire(ctx, 1)
+		wg.Add(1)
+		ch := make(chan Chapter, 1)
+		book.downloadChapter(0, "url-hello", "title", s, &wg, ch)
+
+		chapter, ok := <-ch
+		if !ok || chapter.Index != 0 || chapter.Title != "title" ||
+			chapter.Url != "url-hello" || chapter.Content != "load html fail" {
+				t.Fatalf("download chapter success in empty response: %v", chapter)
+		}
+	})
+
+	t.Run("fail if no content found", func(t *testing.T) {
+		getWeb = mock.ChapterGetWebNoContent
+		book := NewBook("test", 1, -1, downloadConfig)
+
+		s.Acquire(ctx, 1)
+		wg.Add(1)
+		ch := make(chan Chapter, 1)
+		book.downloadChapter(0, "url-hello", "title", s, &wg, ch)
+
+		chapter, ok := <-ch
+		if !ok || chapter.Index != 0 || chapter.Title != "title" ||
+			chapter.Url != "url-hello" ||
+			chapter.Content != "recognize html fail\nhello" {
+				t.Fatalf("download chapter success without content: %v", chapter)
+		}
+	})
+}
+
+func Test_Books_Book_downloadChapters(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		getWeb = mock.ChapterGetWebSuccess
+		book := NewBook("test", 1, -1, downloadConfig)
+		urls := []string { "1", "2", "3" }
+		titles := []string { "title-1", "title-2", "title-3" }
+		chapters := []Chapter{
+			NewChapter(1, urls[0], titles[0], &book.config),
+			NewChapter(2, urls[1], titles[1], &book.config),
+			NewChapter(3, urls[2], titles[2], &book.config),
+		}
+
+		result := book.downloadChapters(chapters, 1)
+
+		if len(result) != 3 {
+			t.Fatalf("book download Chapters has wrong chapter count: %v", len(result))
+		}
+
+		for i, chapter := range result {
+			if chapter.Url != book.config.DownloadUrl + urls[i] || 
+				chapter.Title != titles[i] ||
+				chapter.Content != chapter.Url {
+					t.Fatalf("result at position %v incorrect: %v", chapter.Index, chapter)
+			}
+		} 
+	})
+}
+
+func Test_Books_Book_saveContent(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebSuccess
+		book := NewBook("test", 1, 1, downloadConfig)
+		book.SetTitle("book-title")
+		book.SetWriter("book-writer")
+
+		chapters := []Chapter{
+			Chapter{ Index: 2, Title: "title-2", Url: "url-2", Content: "content-2" },
+			Chapter{ Index: 1, Title: "title-1", Url: "url-1", Content: "content-1" },
+			Chapter{ Index: 3, Title: "title-3", Url: "url-3", Content: "content-3" },
+		}
+		book.saveContent(chapters)
+
+		b, err := os.ReadFile("../../assets/test-data/storage/1-v1.txt")
+		utils.CheckError(err)
+		reference, err := os.ReadFile("../../assets/test-data/storage/1-v1-reference.txt")
+		utils.CheckError(err)
+
+		if string(b) != string(reference){
+			t.Fatalf("book saveContent save such content: %v", string(b))
+		}
+	})
+}
+
+func Test_Books_Book_Download(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		getWeb = mock.DownloadGetWebFullSuccess
+		book := NewBook("test", 1, 10, downloadConfig)
+		book.SetTitle("book-title")
+		book.SetWriter("book-writer")
+		result := book.Download(10)
+
+		if !result {
+			t.Fatalf("book download failed")
+		}
+
+		b, err := os.ReadFile("../../assets/test-data/storage/1-v10.txt")
+		utils.CheckError(err)
+		reference, err := os.ReadFile("../../assets/test-data/storage/1-v10-reference.txt")
+		utils.CheckError(err)
+
+		if string(b) != string(reference){
+			t.Fatalf("book saveContent save such content: %v", string(b))
+		}
+	})
 }

@@ -5,177 +5,113 @@ import (
 	"errors"
 	"fmt"
 	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/database"
 	"golang.org/x/sync/semaphore"
-	"log"
+	// "log"
 	"os"
-	"strconv"
+	// "strconv"
 	"strings"
 	"sync"
 )
 
-type Chapter struct {
-	Url, Title, Content string
-}
-
-func (book Book) getChapterUrlsTitles() ([]string, []string, error) {
+func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 	// get basic info (all chapter url and title)
-	html, trial := utils.GetWeb(book.metaInfo.downloadUrl, 10, book.decoder, book.CONST_SLEEP)
-	if !book.validHTML(html, book.metaInfo.downloadUrl, trial) {
-		book.Log(map[string]interface{}{
-			"title": book.Title, "error": "invalid table of contents html", "stage": "download",
-		})
-		return nil, nil, errors.New("invalid table of content html")
+	html, _ := getWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	if err = book.validHTML(html); err != nil {
+		err = errors.New(fmt.Sprintf("invalid table of content html: %v", html))
+		return
 	}
-	urls := utils.SearchAll(html, book.metaInfo.chapterUrlRegex)
-	titles := utils.SearchAll(html, book.metaInfo.chapterTitleRegex)
+	urls := utils.SearchAll(html, book.config.ChapterUrlRegex)
+	titles := utils.SearchAll(html, book.config.ChapterTitleRegex)
 	// if length are difference, return error
 	if len(urls) != len(titles) {
-		book.Log(map[string]interface{}{
-			"chapterCount": len(urls), "titleCount": len(titles),
-			"error": "title and url have different length", "stage": "download",
-		})
-		return nil, nil, errors.New("title and url have different length")
+		err = errors.New("title and url have different length")
+		return
 	} else if len(urls) == 0 {
-		book.Log(map[string]interface{}{
-			"title": book.Title, "error": "no chapter found", "stage": "download",
-		})
-		return nil, nil, errors.New("no chapter found")
+		err = errors.New("no chapter found")
+		return
 	}
-	return urls, titles, nil
+	chapters = make([]Chapter, len(urls))
+	for i := 0; i < len(urls); i++ {
+		chapters[i] = NewChapter(i, urls[i], titles[i], &book.config)
+	}
+	return
 }
 
-func (book Book) optimizeContent(content string) string {
-	removeList := [][2]string{
-		[2]string{"<br />", ""},
-		[2]string{"&nbsp;", ""},
-		[2]string{"<b>", ""},
-		[2]string{"</b>", ""},
-		[2]string{"<p>", ""},
-		[2]string{"</p>", ""},
-		[2]string{"                ", ""},
-		[2]string{"<p/>", "\n"},
-	}
-	for _, removeItem := range removeList {
-		content = strings.ReplaceAll(content, removeItem[0], removeItem[1])
-	}
-	return content
-}
-
-func (book *Book) downloadChapter(url, title string, s *semaphore.Weighted,
+func (book *Book) downloadChapter(i int, url, title string, s *semaphore.Weighted,
 	wg *sync.WaitGroup, ch chan<- Chapter) {
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	html, trial := utils.GetWeb(url, 10, book.decoder, book.CONST_SLEEP)
-	if !book.validHTML(html, url, trial) {
-		ch <- Chapter{Url: url, Title: title, Content: "load html fail"}
+	html, _ := getWeb(url, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	chapter := Chapter{Url: url, Title: title}
+	// chapter.generateIndex()
+	chapter.Index = i
+	if err := book.validHTML(html); err != nil {
+		chapter.Content = "load html fail"
+		ch <- chapter
 		return
 	}
 	// extract chapter
-	chapterContent, err := utils.Search(html, book.metaInfo.chapterContentRegex)
+	content, err := utils.Search(html, book.config.ChapterContentRegex)
 	if err != nil {
-		book.Log(map[string]interface{}{
-			"retry": trial, "url": url, "error": "recognize html fail", "stage": "download",
-		})
-		ch <- Chapter{Url: url, Title: title, Content: "recognize html fail\n" + html}
+		chapter.Content = "recognize html fail\n" + html
+		ch <- chapter
 	} else {
-		chapterContent = book.optimizeContent(chapterContent)
-		book.Log(map[string]interface{}{
-			"chapter": title, "url": url, "message": "download success", "stage": "download",
-		})
-		ch <- Chapter{Url: url, Title: title, Content: chapterContent}
+		chapter.Content = content
+		chapter.optimizeContent()
+		ch <- chapter
 	}
 }
-func (book Book) downloadChapters(urls []string, titles []string, MAX_THREAD int) (results []Chapter) {
+func (book Book) downloadChapters(chapters []Chapter, MAX_THREAD int) []Chapter {
 	ctx := context.Background()
 	var s = semaphore.NewWeighted(int64(MAX_THREAD))
 	var wg sync.WaitGroup
-	ch := make(chan Chapter, 100)
-	results = make([]Chapter, len(urls))
-	var i int
-	for i = range urls {
+
+	for i, _ := range chapters {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		//TODO: check the reason of adding the http here
-		if strings.HasPrefix(urls[i], "/") || strings.HasPrefix(urls[i], "http") {
-			urls[i] = fmt.Sprintf(book.metaInfo.chapterUrl, urls[i])
-		} else {
-			urls[i] = book.metaInfo.downloadUrl + urls[i]
-		}
-		go book.downloadChapter(urls[i], titles[i], s, &wg, ch)
-		// read channel (pipe) when it should be full
-		if i%100 == 0 && i > 0 {
-			for j := 0; j < 100; j++ {
-				results[i-100+j] = <-ch
-				log.Println(j, results[i-100+j].Title)
-			}
-		}
-	}
-	// read remaining objects in channel (pipe)
-	offset := i % 100
-	for j := 0; j <= offset; j++ {
-		results[i-offset+j] = <-ch
-		log.Println(j, results[i-offset+j].Title)
+		go func(wg *sync.WaitGroup, s *semaphore.Weighted, i int) {
+			defer wg.Done()
+			defer s.Release(1)
+			chapters[i].Download(&book.config, book.validHTML)
+		}(&wg, s, i)
 	}
 	wg.Wait()
-	book.Log(map[string]interface{}{
-		"title": book.Title, "message": "all chapter download", "stage": "download",
-	})
-	return
+	return chapters
 }
 
-func (book Book) saveBook(path string, urls []string, chapters []Chapter) int {
+func (book Book) saveContent(chapters []Chapter) int {
 	errorChapterCount := 0
-	f, err := os.Create(path)
+	f, err := os.Create(book.getContentLocation())
 	utils.CheckError(err)
-	f.WriteString(book.Title + "\n" + book.Writer + "\n" + strings.Repeat("-", 20) + "\n\n")
-	for _, url := range urls {
-		found := false
-		for _, chapter := range chapters {
-			if url == chapter.Url {
-				if chapter.Content == "error" {
-					errorChapterCount += 1
-				}
-				_, err = f.WriteString(chapter.Title + "\n" + strings.Repeat("-", 20) + "\n" +
-					chapter.Content + strings.Repeat("\n", 2))
-				utils.CheckError(err)
-				found = true
-				break
-			}
-		}
-		if !found {
-			book.Log(map[string]interface{}{
-				"title": book.Title, "url": url, "error": "no chapter found", "stage": "save book",
-			})
-		}
+	f.WriteString(book.GetTitle() + "\n" + book.GetWriter() + "\n" + strings.Repeat("-", 20) + "\n\n")
+	sortChapters(chapters)
+	for _, chapter := range chapters {
+		_, err = f.WriteString(chapter.Title + "\n" + strings.Repeat("-", 20) + "\n" +
+		chapter.Content + strings.Repeat("\n", 2))
+		utils.CheckError(err)
 	}
 	f.Close()
 	return errorChapterCount
 }
 
-func (book *Book) Download(storagePath string, MAX_THREAD int) bool {
-	urls, titles, err := book.getChapterUrlsTitles()
-	book.DownloadFlag = false
+func (book *Book) Download(MAX_THREAD int) bool {
+	chapters, err := book.getEmptyChapters()
 	if err != nil {
-		return book.DownloadFlag
+		return false
 	}
-	book.DownloadFlag = true
-	results := book.downloadChapters(urls, titles, MAX_THREAD)
+	results := book.downloadChapters(chapters, MAX_THREAD)
 	// save the content to target path
-	bookLocation := book.StorageLocation(storagePath)
-	errorCount := book.saveBook(bookLocation, urls, results)
+	errorCount := book.saveContent(results)
 	maxErrorChapterCount := 50
 	if int(float64(len(results))*0.1) < 50 {
 		maxErrorChapterCount = int(float64(len(results)) * 0.1)
 	}
 	if errorCount > maxErrorChapterCount {
-		book.Log(map[string]interface{}{
-			"title": book.Title,
-			"error": "download cancel due to more than " + strconv.Itoa(maxErrorChapterCount) +
-				" chapters loss", "stage": "download",
-		})
-		utils.CheckError(os.Remove(bookLocation))
-		book.DownloadFlag = false
+		utils.CheckError(os.Remove(book.getContentLocation()))
+		return false
 	}
-	return book.DownloadFlag
+	book.SetStatus(database.Download)
+	return true
 }

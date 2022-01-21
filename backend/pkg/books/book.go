@@ -1,168 +1,209 @@
 package books
 
 import (
-	"encoding/json"
 	"github.com/htchan/BookSpider/internal/utils"
-	"golang.org/x/text/encoding"
-	"io/ioutil"
-	"log"
+	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/pkg/configs"
 	"strconv"
-
+	"io/ioutil"
 	"errors"
-	"fmt"
-
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 )
 
-const BOOK_MAX_THREAD = 1000
-
-type MetaInfo struct {
-	baseUrl, downloadUrl, chapterUrl, chapterUrlPattern                   string
-	titleRegex, writerRegex, typeRegex, lastUpdateRegex, lastChapterRegex string
-	chapterUrlRegex, chapterTitleRegex, chapterContentRegex               string
-}
-
-func NewMetaInfo(info map[string]string) (*MetaInfo, error) {
-	metaInfo := new(MetaInfo)
-	expectKey := [12]string{
-		"baseUrl", "downloadUrl", "chapterUrl", "chapterUrlPattern",
-		"titleRegex", "writerRegex", "typeRegex", "lastUpdateRegex",
-		"lastChapterRegex", "chapterUrlRegex", "chapterTitleRegex", "chapterContentRegex"}
-	for _, key := range expectKey {
-		_, ok := info[key]
-		if !ok {
-			return nil, errors.New("missing key " + key)
-		}
-	}
-	metaInfo.baseUrl = info["baseUrl"]
-	metaInfo.downloadUrl = info["downloadUrl"]
-	metaInfo.chapterUrl = info["chapterUrl"]
-	metaInfo.chapterUrlPattern = info["chapterUrlPattern"]
-	metaInfo.titleRegex = info["titleRegex"]
-	metaInfo.writerRegex = info["writerRegex"]
-	metaInfo.typeRegex = info["typeRegex"]
-	metaInfo.lastUpdateRegex = info["lastUpdateRegex"]
-	metaInfo.lastChapterRegex = info["lastChapterRegex"]
-	metaInfo.chapterUrlRegex = info["chapterUrlRegex"]
-	metaInfo.chapterTitleRegex = info["chapterTitleRegex"]
-	metaInfo.chapterContentRegex = info["chapterContentRegex"]
-	return metaInfo, nil
-}
-
 type Book struct {
-	SiteName                                     string
-	Id, Version                                  int
-	Title, Writer, Type, LastUpdate, LastChapter string
-	EndFlag, DownloadFlag, ReadFlag              bool
-	decoder                                      *encoding.Decoder
-	metaInfo                                     MetaInfo
-	CONST_SLEEP                                  int
+    bookRecord *database.BookRecord
+    writerRecord *database.WriterRecord
+    errorRecord *database.ErrorRecord
+    config configs.BookConfig
 }
 
-func NewBook(siteName string, id int, metaInfo MetaInfo,
-	decoder *encoding.Decoder, tx *sql.Tx) *Book {
-	book := new(Book)
-	book.SiteName = siteName
-	book.Id = id
-	book.Version = -1
-	book.decoder = decoder
-	book.metaInfo = metaInfo
-	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, id)
-	book.metaInfo.downloadUrl = fmt.Sprintf(metaInfo.downloadUrl, id)
-	var rows *sql.Rows
-	var err error
-	for i := 0; i < 2; i++ {
-		rows, err = tx.Query("select max(version) from books where "+
-			"site=? and num=?", siteName, id)
-		if err != nil {
-			if i == 1 {
-				panic(err)
-			}
-			continue
-		} else if rows.Next() {
-			rows.Scan(&book.Version)
-		}
+func NewBook(site string, id int, hash int, config *configs.BookConfig) (book *Book) {
+	if hash == -1 {
+		hash = database.GenerateHash()
 	}
-	rows.Close()
-	return book
+	return &Book{
+		config: config.Populate(id),
+		bookRecord: &database.BookRecord{
+			Site: site,
+			Id: id,
+			HashCode: hash,
+		},
+		writerRecord: &database.WriterRecord{
+			Id: 0,
+			Name: "",
+		},
+	}
 }
 
-func LoadBook(rows *sql.Rows, metaInfo MetaInfo, decoder *encoding.Decoder, constSleep int) (*Book, error) {
-	book := new(Book)
-	book.decoder = decoder
-	book.metaInfo = metaInfo
-	book.CONST_SLEEP = constSleep
-	err := rows.Scan(&book.SiteName, &book.Id, &book.Version, &book.Title, &book.Writer, &book.Type,
-		&book.LastUpdate, &book.LastChapter, &book.EndFlag, &book.DownloadFlag, &book.ReadFlag)
-	book.metaInfo.baseUrl = fmt.Sprintf(metaInfo.baseUrl, book.Id)
-	book.metaInfo.downloadUrl = fmt.Sprintf(metaInfo.downloadUrl, book.Id)
-	return book, err
-}
+func LoadBook(db database.DB, site string, id int, hash int, config *configs.BookConfig) (book *Book) {
+	defer utils.Recover(func() { book = nil })
+	book = new(Book)
+	book.config = config.Populate(id)
 
-func (book Book) Log(info map[string]interface{}) {
-	info["site"], info["id"], info["version"] = book.SiteName, book.Id, book.Version
-	outputByte, err := json.Marshal(info)
+	query := db.QueryBookBySiteIdHash(site, id, hash)
+	record, err := query.Scan()
 	utils.CheckError(err)
-	log.Println(string(outputByte))
-}
+	book.bookRecord = record.(*database.BookRecord)
+	query.Close()
 
-func (book *Book) validHTML(html string, url string, trial int) bool {
-	if len(html) == 0 {
-		book.Log(map[string]interface{}{
-			"retry": trial, "url": url, "message": "load html fail - zero length",
-		})
-		return false
-	} else if _, err := strconv.Atoi(html); err == nil {
-		book.Log(map[string]interface{}{
-			"retry": trial, "url": url, "message": "load html fail - code " + html,
-		})
-		return false
-	} else {
-		book.Log(map[string]interface{}{
-			"retry": trial, "url": url, "message": "load html success",
-		})
-	}
-	return true
-}
-
-func (book Book) Content(bookStoragePath string) string {
-	if book.Title == "" || !book.DownloadFlag {
-		return ""
-	}
-	bookLocation := book.StorageLocation(bookStoragePath)
-	content, err := ioutil.ReadFile(bookLocation)
+	query = db.QueryWriterById(book.bookRecord.WriterId)
+	record, err = query.Scan()
 	utils.CheckError(err)
-	return string(content)
-}
-
-func (book Book) StorageLocation(storagePath string) (bookLocation string) {
-	bookLocation = storagePath + "/" + strconv.Itoa(book.Id)
-	if book.Version > 0 {
-		bookLocation += "-v" + strconv.Itoa(book.Version)
+	book.writerRecord = record.(*database.WriterRecord)
+	query.Close()
+	
+	query = db.QueryErrorBySiteId(site, id)
+	if query.Next() {
+		record, err = query.ScanCurrent()
+		utils.CheckError(err)
+		book.errorRecord = record.(*database.ErrorRecord)
 	}
-	bookLocation += ".txt"
+	query.Close()
 	return
 }
 
-// to string function
-func (book Book) String() string {
-	return book.SiteName + "\t" + strconv.Itoa(book.Id) + "\t" + strconv.Itoa(book.Version) + "\n" +
-		book.Title + "\t" + book.Writer + "\n" + book.LastUpdate + "\t" + book.LastChapter
+func (book *Book)saveWriterRecord(db database.DB) {
+	if book.writerRecord.Id < 0 {
+		query := db.QueryWriterByName(book.writerRecord.Name)
+		defer query.Close()
+		record, err := query.Scan()
+		if err != nil {
+			utils.CheckError(db.CreateWriterRecord(book.writerRecord))
+			book.bookRecord.WriterId = book.writerRecord.Id
+		} else {
+			book.writerRecord.Id = record.(*database.WriterRecord).Id
+			book.bookRecord.WriterId = record.(*database.WriterRecord).Id
+		}
+	}
 }
 
-func (book Book) Map() map[string]interface{} {
-	return map[string]interface{}{
-		"site":     book.SiteName,
-		"id":       book.Id,
-		"version":  book.Version,
-		"title":    book.Title,
-		"writer":   book.Writer,
-		"type":     book.Type,
-		"update":   book.LastUpdate,
-		"chapter":  book.LastChapter,
-		"end":      book.EndFlag,
-		"read":     book.ReadFlag,
-		"download": book.DownloadFlag,
+func (book *Book)saveBookRecord(db database.DB) {
+	query := db.QueryBookBySiteIdHash(
+		book.bookRecord.Site,
+		book.bookRecord.Id,
+		book.bookRecord.HashCode)
+	exist := query.Next()
+	query.Close()
+	if exist {
+		utils.CheckError(db.UpdateBookRecord(book.bookRecord))
+	} else {
+		utils.CheckError(db.CreateBookRecord(book.bookRecord))
+	}
+}
+
+func (book *Book)saveErrorRecord(db database.DB) {
+	query := db.QueryErrorBySiteId(
+		book.bookRecord.Site, 
+		book.bookRecord.Id)
+	errorRecord, err := query.Scan()
+	query.Close()
+	
+	if book.bookRecord.Status != database.Error && err == nil {
+		utils.CheckError(
+			db.DeleteErrorRecord(
+				[]database.ErrorRecord {*errorRecord.(*database.ErrorRecord) } ))
+	} else if book.bookRecord.Status == database.Error && err == nil {
+		utils.CheckError(db.UpdateErrorRecord(book.errorRecord))
+	} else if book.bookRecord.Status == database.Error && err != nil {
+		utils.CheckError(db.CreateErrorRecord(book.errorRecord))
+	}
+}
+
+func (book *Book)Save(db database.DB) (result bool) {
+	result = true
+	// defer utils.Recover(func() { result = false })
+	book.saveWriterRecord(db)
+	book.saveBookRecord(db)
+	book.saveErrorRecord(db)
+	return
+}
+
+func (book *Book)GetInfo() (string, int, int) {
+	return book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode
+}
+
+func (book *Book)GetTitle() string { return book.bookRecord.Title }
+func (book *Book)SetTitle(title string) { book.bookRecord.Title = title }
+
+func (book *Book)GetWriter() string { return book.writerRecord.Name }
+func (book *Book)SetWriter(name string) {
+	book.bookRecord.WriterId = -1
+	book.writerRecord.Id = -1
+	book.writerRecord.Name = name
+}
+
+func (book *Book)GetType() string { return book.bookRecord.Type }
+func (book *Book)SetType(typeString string) { book.bookRecord.Type = typeString }
+
+func (book *Book)GetUpdateDate() string { return book.bookRecord.UpdateDate }
+func (book *Book)SetUpdateDate(date string) { book.bookRecord.UpdateDate = date }
+
+func (book *Book)GetUpdateChapter() string { return book.bookRecord.UpdateChapter }
+func (book *Book)SetUpdateChapter(chapter string) { book.bookRecord.UpdateChapter = chapter }
+
+func (book *Book)GetStatus() database.StatusCode { return book.bookRecord.Status }
+func (book *Book)SetStatus(status database.StatusCode) { book.bookRecord.Status = status }
+
+func (book *Book)GetError() error {
+	if book.errorRecord == nil {
+		return nil
+	}
+	return book.errorRecord.Error
+}
+func (book *Book)SetError(err error) {
+	if err == nil {
+		book.errorRecord = nil
+		return
+	}
+	if book.errorRecord == nil {
+		book.errorRecord = new(database.ErrorRecord)
+		book.errorRecord.Site = book.bookRecord.Site
+		book.errorRecord.Id = book.bookRecord.Id
+	}
+	book.errorRecord.Error = err
+}
+
+func (book *Book)getContentLocation() (location string) {
+	location = book.config.StorageDirectory + strconv.Itoa(book.bookRecord.Id)
+	if book.bookRecord.HashCode != 0 {
+		location += "-v" + strconv.Itoa(book.bookRecord.HashCode)
+	}
+	location += ".txt"
+	return
+}
+func (book *Book)HasContent() bool {
+	return utils.Exists(book.getContentLocation())
+}
+func (book *Book)GetContent() (content string) {
+	// defer utils.Recover(func() {})
+	if !book.HasContent() {
+		return 
+	}
+	contentBytes, err := ioutil.ReadFile(book.getContentLocation())
+	utils.CheckError(err)
+	content = string(contentBytes)
+	return
+}
+
+func (book *Book)validHTML(html string) error {
+	if len(html) == 0 {
+		return errors.New("load html fail - zero length")
+	} else if _, err := strconv.Atoi(html); err == nil {
+		return errors.New("load html fail - code " + html)
+	}
+	return nil
+}
+
+func (book *Book)Map() map[string]interface{} {
+	site, id, hash := book.GetInfo()
+	return map[string]interface{} {
+		"site": site,
+		"id": id,
+		"hash": strconv.FormatInt(int64(hash), 36),
+		"title": book.GetTitle(),
+		"writer": book.GetWriter(),
+		"type": book.GetType(),
+		"updateDate": book.GetUpdateDate(),
+		"updateChapter": book.GetUpdateChapter(),
+		"status": database.StatustoString(book.GetStatus()),
 	}
 }

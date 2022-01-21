@@ -1,229 +1,442 @@
 package books
 
 import (
-	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/text/encoding/traditionalchinese"
-	"io/ioutil"
-	"log"
 	"os"
-	// "fmt"
+	"io"
 	"testing"
+	"errors"
+	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/internal/database/sqlite"
 )
 
 func init() {
-	log.SetOutput(ioutil.Discard)
+	source, err := os.Open("../../assets/test-data/internal_database_sqlite.db")
+	utils.CheckError(err)
+	destination, err := os.Create("./book_test.db")
+	utils.CheckError(err)
+	io.Copy(destination, source)
+	source.Close()
+	destination.Close()
 }
 
-func mapEqual(map1, map2 map[string]interface{}) bool {
-	for key := range map1 {
-		if _, exist := map2[key]; !exist {
-			return false
+var config = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
+
+func Test_Books_Book_Constructor_NewBook(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		book := NewBook("test", 1, 500, config)
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 1 || book.bookRecord.HashCode != 500 ||
+			book.bookRecord.Title != "" || book.bookRecord.WriterId != 0 ||
+			book.bookRecord.Type != "" ||
+			book.bookRecord.UpdateDate != "" || book.bookRecord.UpdateChapter != "" ||
+			book.bookRecord.Status != database.Error {
+				t.Fatalf("book.bookRecord init wrong record: %v", book.bookRecord)
 		}
-	}
-	for key := range map2 {
-		if val, exist := map2[key]; !exist || val != map2[key] {
-			return false
+		if book.writerRecord == nil ||
+			book.writerRecord.Id != 0 || book.writerRecord.Name != "" {
+				t.Fatalf("book.writerRecord init wrong record: %v", book.writerRecord)
 		}
-	}
-	return true
-}
+		if book.errorRecord != nil {
+			t.Fatalf("book.errorRecord was initialized error: %v", book.errorRecord)
+		}
 
-var testBook = Book{
-	SiteName:     "ck101",
-	Id:           5,
-	Version:      -1,
-	EndFlag:      false,
-	DownloadFlag: false,
-	ReadFlag:     false,
-	decoder:      traditionalchinese.Big5.NewDecoder(),
-	metaInfo: MetaInfo{
-		baseUrl:             "https://www.ck101.org/book/5.html",
-		downloadUrl:         "https://www.ck101.org/0/5/",
-		chapterUrl:          "https://www.ck101.org%v",
-		chapterUrlPattern:   "/.*?\\.html",
-		titleRegex:          "<h1><a.*?>(.*?)</a></h1>",
-		writerRegex:         "作者︰<a.*?>(.*?)</a>",
-		typeRegex:           " &gt; (.*?) &gt; ",
-		lastUpdateRegex:     "最新章節\\((\\d{4}-\\d{2}-\\d{2})\\)",
-		lastChapterRegex:    "<a.*?id=\"newchapter\".*>(.*?)./a>",
-		chapterUrlRegex:     "<dd><a href=\"(.*?)\">.*?</a></dd>",
-		chapterTitleRegex:   "<dd><a href.*?>(.*?)</a></dd>",
-		chapterContentRegex: "(?s)<div.*?yuedu_zhengwen.*?>(.*?)</div>",
-	},
-}
-
-func TestNewMetaInfo(t *testing.T) {
-	//TODO: add fail case
-	metaInfo, err := NewMetaInfo(map[string]string{
-		"baseUrl":             "https://www.ck101.org/book/%v.html",
-		"downloadUrl":         "https://www.ck101.org/0/%v/",
-		"chapterUrl":          "https://www.ck101.org%v",
-		"chapterUrlPattern":   "/.*?\\.html",
-		"titleRegex":          "<h1><a.*?>(.*?)</a></h1>",
-		"writerRegex":         "作者︰<a.*?>(.*?)</a>",
-		"typeRegex":           " &gt; (.*?) &gt; ",
-		"lastUpdateRegex":     "最新章節\\((\\d{4}-\\d{2}-\\d{2})\\)",
-		"lastChapterRegex":    "<a.*?id=\"newchapter\".*>(.*?)./a>",
-		"chapterUrlRegex":     "<dd><a href=\"(.*?)\">.*?</a></dd>",
-		"chapterTitleRegex":   "<dd><a href.*?>(.*?)</a></dd>",
-		"chapterContentRegex": "(?s)<div.*?yuedu_zhengwen.*?>(.*?)</div>",
+		if book.config.BaseUrl != "https://base-url/1" ||
+			book.config.DownloadUrl != "https://download-url/1" ||
+			book.config.ChapterUrl != "https://chapter-url/1" ||
+			book.config.ChapterUrlPattern != "chapter-url-pattern" ||
+			book.config.TitleRegex != "(title-regex)" ||
+			book.config.WriterRegex != "(writer-regex)" ||
+			book.config.TypeRegex != "(type-regex)" ||
+			book.config.LastUpdateRegex != "(last-update-regex)" ||
+			book.config.LastChapterRegex != "(last-chapter-regex)" ||
+			book.config.ChapterUrlRegex != "chapter-url-regex-(\\d)" ||
+			book.config.ChapterTitleRegex != "chapter-title-regex-(\\d)" ||
+			book.config.ChapterContentRegex != "chapter-content-(.*)-content-regex" ||
+			book.config.Decoder == nil ||
+			book.config.CONST_SLEEP != 1000 ||
+			book.config.StorageDirectory != "../../assets/test-data/storage/" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
 	})
-	if metaInfo.baseUrl == "" || metaInfo.downloadUrl == "" || metaInfo.chapterUrl == "" ||
-		metaInfo.chapterUrlPattern == "" || metaInfo.titleRegex == "" || metaInfo.writerRegex == "" ||
-		metaInfo.typeRegex == "" || metaInfo.lastUpdateRegex == "" || metaInfo.lastChapterRegex == "" ||
-		metaInfo.chapterUrlRegex == "" || metaInfo.chapterTitleRegex == "" ||
-		metaInfo.chapterContentRegex == "" || err != nil {
-		t.Fatalf("metaInfo contains empty field after construction %v", metaInfo)
-	}
 }
 
-func TestNewBook(t *testing.T) {
-	databaseLocation := "../../test/model-test-data/ck101.db"
-	metaInfo, err := NewMetaInfo(map[string]string{
-		"baseUrl":             "https://www.ck101.org/book/%v.html",
-		"downloadUrl":         "https://www.ck101.org/0/%v/",
-		"chapterUrl":          "https://www.ck101.org%v",
-		"chapterUrlPattern":   "/.*?\\.html",
-		"titleRegex":          "<h1><a.*?>(.*?)</a></h1>",
-		"writerRegex":         "作者︰<a.*?>(.*?)</a>",
-		"typeRegex":           " &gt; (.*?) &gt; ",
-		"lastUpdateRegex":     "最新章節\\((\\d{4}-\\d{2}-\\d{2})\\)",
-		"lastChapterRegex":    "<a.*?id=\"newchapter\".*>(.*?)./a>",
-		"chapterUrlRegex":     "<dd><a href=\"(.*?)\">.*?</a></dd>",
-		"chapterTitleRegex":   "<dd><a href.*?>(.*?)</a></dd>",
-		"chapterContentRegex": "(?s)<div.*?yuedu_zhengwen.*?>(.*?)</div>",
+func Test_Books_Book_Constructor_LoadBook(t *testing.T) {
+	db := sqlite.NewSqliteDB("./book_test.db")
+	defer db.Close()
+
+	t.Run("success with hash code > 1", func(t *testing.T) {
+		book := LoadBook(db, "test", 3, 102, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 3 || book.bookRecord.HashCode != 102 ||
+			book.bookRecord.Title != "title-3" || book.bookRecord.WriterId != 2 ||
+			book.bookRecord.Type != "type-3" ||
+			book.bookRecord.UpdateDate != "100" || book.bookRecord.UpdateChapter != "chapter-3" ||
+			book.bookRecord.Status != database.Download {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+		}
+
+		if book.writerRecord == nil || book.writerRecord.Id != 2 ||
+			book.writerRecord.Name != "writer-2" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+		}
+
+		if book.errorRecord != nil {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/3" ||
+			book.config.DownloadUrl != "https://download-url/3" ||
+			book.config.ChapterUrl != "https://chapter-url/3" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
 	})
 
-	database, err := sql.Open("sqlite3", databaseLocation)
-	if err != nil {
-		t.Fatalf("cannot open database at %v", databaseLocation)
-	}
-
-	tx, err := database.Begin()
-	if err != nil {
-		t.Fatalf("cannot open transaction for database at %v", databaseLocation)
-	}
-	expectBookMaps := []map[string]interface{} {
-		map[string]interface{} {
-			"site": "ck101", "id": 5, "version": 0,
-			"title": "test", "writer": "test", "type": "test",
-			"update": "2011-11-11", "chapter": "test",
-			"end": true, "download": true, "read": true,
-		},
-		map[string]interface{} {
-			"site": "ck101", "id": 999, "version": -1,
-			"title": "test", "writer": "test", "type": "test",
-			"update": "2011-11-11", "chapter": "test",
-			"end": true, "download": true, "read": true,
-		},
-	}
-	
-	for _, expectBookMap := range expectBookMaps {
-		book := NewBook(
-			expectBookMap["site"].(string),
-			expectBookMap["id"].(int), *metaInfo, nil, tx)
-
-		if !mapEqual(book.Map(), expectBookMap) || (err != nil) {
-			t.Fatalf("books.NewBook(\"%v\", %v, %v, %v, %v, %v) returns\n"+
-				"%v\nbut not\n%v", expectBookMap["site"],
-				expectBookMap["id"], expectBookMap["version"],
-				metaInfo, nil, tx, book.Map(), expectBookMap)
+	t.Run("success for getting latest book", func(t *testing.T) {
+		book := LoadBook(db, "test", 3, -1, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 3 || book.bookRecord.HashCode != 200 ||
+			book.bookRecord.Title != "title-3-new" || book.bookRecord.WriterId != 3 ||
+			book.bookRecord.Type != "type-3-new" ||
+			book.bookRecord.UpdateDate != "100" || book.bookRecord.UpdateChapter != "chapter-3-new" ||
+			book.bookRecord.Status != database.End {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
 		}
-	}
 
-	tx.Commit()
-	err = database.Close()
-	if err != nil {
-		t.Fatalf("cannot close database at %v", databaseLocation)
-	}
-}
-
-func TestLog(t *testing.T) {
-	testBook.Log(map[string]interface{}{"test": "test"})
-}
-
-func Test_validHTML(t *testing.T) {
-	var testcases = []struct {
-		input    string
-		expected bool
-	}{
-		{"", false},
-		{"http://www.google.com/", true},
-		{"404", false},
-	}
-	for _, testcase := range testcases {
-		actual := testBook.validHTML(testcase.input, "", 0)
-		if actual != testcase.expected {
-			t.Fatalf("Book.validateHTML(\"%v\", \"\",, 0) result gives \"%v\", but not \"%v\"\n",
-				testcase.input, actual, testcase.expected)
+		if book.writerRecord == nil || book.writerRecord.Id != 3 ||
+			book.writerRecord.Name != "writer-3" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
 		}
-	}
+
+		if book.errorRecord != nil {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/3" ||
+			book.config.DownloadUrl != "https://download-url/3" ||
+			book.config.ChapterUrl != "https://chapter-url/3" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
+	})
+
+	t.Run("success for getting book with error", func(t *testing.T) {
+		book := LoadBook(db, "test", 2, 101, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 2 || book.bookRecord.HashCode != 101 ||
+			book.bookRecord.Title != "" || book.bookRecord.WriterId != 0 ||
+			book.bookRecord.Type != "" ||
+			book.bookRecord.UpdateDate != "" || book.bookRecord.UpdateChapter != "" ||
+			book.bookRecord.Status != database.Error {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+		}
+
+		if book.writerRecord == nil || book.writerRecord.Id != 0 ||
+			book.writerRecord.Name != "" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+		}
+
+		if book.errorRecord == nil || book.errorRecord.Site != "test" ||
+			book.errorRecord.Id != 2 || book.errorRecord.Error.Error() != "error-2" {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/2" ||
+			book.config.DownloadUrl != "https://download-url/2" ||
+			book.config.ChapterUrl != "https://chapter-url/2" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
+	})
+
+	t.Run("Fail if book not exist", func(t *testing.T) {
+		book := LoadBook(db, "not-exist", 1, -1, config)
+
+		if book != nil {
+			t.Fatalf(
+				"LoadBook load sth when book not exist\nbook: %v\nwriter: %v\nerror: %v",
+				book.bookRecord, book.writerRecord, book.errorRecord)
+		}
+	})
 }
 
-func TestContent(t *testing.T) {
-	var testcase = struct {
-		input    string
-		expected string
-	}{"../../test/model-test-data/", ""}
-	testBook.Update()
-	actual := testBook.Content(testcase.input)
-	if actual != testcase.expected {
-		t.Fatalf("Book.Content(\"%v\") channel gives result\n %v,\nbut not\n %v",
-			"../../test/model-test-data/", actual, testcase.expected)
-	}
-	tempBookName, tempDownloadFlag := testBook.Title, testBook.DownloadFlag
-	testBook.Title, testBook.DownloadFlag = "", false
-	testcase.expected = "hello"
-	ioutil.WriteFile("../../test/model-test-data/5.txt", []byte(testcase.expected), 0644)
-	testBook.Title, testBook.DownloadFlag = tempBookName, true
-	actual = testBook.Content(testcase.input)
-	testBook.DownloadFlag = tempDownloadFlag
-	if actual != testcase.expected {
-		t.Fatalf("Book.Content(\"%v\") channel gives result\n%v,\nbut not\n%v",
-			testcase.input, actual, testcase.expected)
-	}
-	os.Remove("../../test/model-test-data/5.txt")
+func assertWriterIdNotNegative(book *Book) bool {
+	return book.bookRecord.WriterId == -1 || book.writerRecord.Id == -1 ||
+		book.bookRecord.WriterId != book.writerRecord.Id
 }
 
-func TestStorageLocation(t *testing.T) {
-	var testcase = struct {
-		input, expected string
-	}{"../../test/model-test-data", "../../test/model-test-data/5.txt"}
-	actual := testBook.StorageLocation(testcase.input)
-	if actual != testcase.expected {
-		t.Fatalf("Book.StorageContent(\"%v\") channel gives result\n %v,\nbut not\n %v",
-			testcase.input, actual, testcase.expected)
-	}
+func Test_Books_Book_Save(t *testing.T) {
+	db := sqlite.NewSqliteDB("./book_test.db")
+	defer db.Close()
+
+	t.Run("success to create a completely new book with writer", func(t *testing.T) {
+		book := NewBook("test", 1000, -1, config)
+		book.SetWriter("new-writer")
+		book.SetStatus(database.InProgress)
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+				t.Fatalf("writer id not update after save - writer id: %v", book.bookRecord.WriterId)
+		}
+
+		query := db.QueryWriterByName("new-writer")
+		record, err := query.Scan()
+		if err != nil ||
+			record.(*database.WriterRecord).Id != book.bookRecord.WriterId ||
+			record.(*database.WriterRecord).Name != book.GetWriter() {
+				t.Fatalf(
+					"Save does not create not exist writer: %v, err: %v",
+					record, err)
+		}
+		query.Close()
+
+		query = db.QueryBookBySiteIdHash("test", 1000, -1)
+		record, err = query.Scan()
+		if err != nil ||
+			*(record.(*database.BookRecord)) != *book.bookRecord {
+				t.Fatalf(
+					"Save does not create not exist book: %v, err: %v",
+					record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1000)
+		if query.Next() {
+				t.Fatalf(
+					"Save create error: %v, err: %v",
+					record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to create a completely new book with existing writer", func(t *testing.T) {
+		book := NewBook("test", 1001, -1, config)
+		book.SetWriter("writer-1")
+		book.SetStatus(database.InProgress)
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+				t.Fatalf("not update to target writer id after save - writer id: %v", book.bookRecord.WriterId)
+		}
+
+		query := db.QueryWriterByName("writer-1")
+		record, _ := query.Scan()
+		_, err := query.Scan()
+		if err == nil || *(record.(*database.WriterRecord)) != *book.writerRecord {
+				t.Fatalf(
+					"Save create new writer in book: %v, writer in db: %v, err: %v",
+					book.writerRecord, record, err)
+		}
+		query.Close()
+
+		query = db.QueryBookBySiteIdHash("test", 1001, -1)
+		record, err = query.Scan()
+		if err != nil ||
+			*(record.(*database.BookRecord)) != *book.bookRecord {
+				t.Fatalf(
+					"Save does not create not exist book: %v, book in db: %v, err: %v",
+					book.bookRecord, record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 100)
+		if query.Next() {
+				t.Fatalf(
+					"Save create error: %v, err: %v",
+					record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to create a new book with error", func(t *testing.T) {
+		book := NewBook("test", 1002, -1, config)
+		book.SetError(errors.New("test error"))
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		query := db.QueryBookBySiteIdHash("test", 1002, -1)
+		record, err := query.Scan()
+		if err != nil ||
+			*(record.(*database.BookRecord)) != *book.bookRecord {
+				t.Fatalf(
+					"Save does not create not exist book: %v, book in db: %v, err: %v",
+					book.bookRecord, record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1002)
+		record, err = query.Scan()
+		if err != nil || record.(*database.ErrorRecord).Site != book.errorRecord.Site ||
+			record.(*database.ErrorRecord).Id != book.errorRecord.Id ||
+			record.(*database.ErrorRecord).Error.Error() != book.errorRecord.Error.Error() {
+				t.Fatalf(
+					"Save does not create error in book: %v, error in db: %v, err: %v",
+					book.errorRecord, record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to update an existing book", func(t *testing.T) {
+		book := LoadBook(db, "test", 1000, -1, config)
+		book.SetTitle("title-1-new")
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+			t.Fatalf(
+				"writer id not update after save - writer id: %v",
+				book.bookRecord.WriterId)
+		}
+
+		query := db.QueryBookBySiteIdHash("test", 1000, -1)
+		record, err := query.Scan()
+		if err != nil || *(record.(*database.BookRecord)) != *book.bookRecord {
+			t.Fatalf(
+				"Save does not create not exist book: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1000)
+		if query.Next() {
+			t.Fatalf( "Save create error: %v, err: %v", record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to update an existing book from error to in progress", func(t *testing.T) {
+		book := LoadBook(db, "test", 1002, -1, config)
+		book.SetStatus(database.InProgress)
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+			t.Fatalf("writer id not update after save - writer id: %v", book.bookRecord.WriterId)
+		}
+
+		query := db.QueryBookBySiteIdHash("test", 1002, -1)
+		record, err := query.Scan()
+		if err != nil || *(record.(*database.BookRecord)) != *book.bookRecord {
+			t.Fatalf(
+				"Save does not create not exist book: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1002)
+		if query.Next() {
+			t.Fatalf(
+				"Save does not remove error: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to update an existing book with new writer", func(t *testing.T) {
+		book := LoadBook(db, "test", 1000, -1, config)
+		book.SetWriter("new-writer-2")
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+			t.Fatalf("writer id not update after save - writer id: %v", book.bookRecord.WriterId)
+		}
+
+		query := db.QueryWriterByName("new-writer-2")
+		record, err := query.Scan()
+		if err != nil || *(record.(*database.WriterRecord)) != *book.writerRecord {
+			t.Fatalf(
+				"Save does not create not exist writer: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+
+		query = db.QueryBookBySiteIdHash("test", 1000, -1)
+		record, err = query.Scan()
+		if err != nil || *(record.(*database.BookRecord)) != *book.bookRecord {
+			t.Fatalf(
+				"Save does not create not exist book: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1002)
+		if query.Next() {
+			t.Fatalf("Save create error: %v, err: %v", record, err)
+		}
+		query.Close()
+	})
+
+	t.Run("success to create new book with existing same site and id, but different hash", func(t *testing.T) {
+		book := NewBook("test", 1000, -1, config)
+		book.SetWriter("new-title-2")
+		book.SetStatus(database.InProgress)
+		result := book.Save(db)
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		if assertWriterIdNotNegative(book) {
+			t.Fatalf("writer id not update after save - writer id: %v", book.bookRecord.WriterId)
+		}
+
+		query := db.QueryBookBySiteIdHash("test", 1000, -1)
+		record, _ := query.Scan()
+		_, err := query.Scan()
+		if err != nil || *(record.(*database.BookRecord)) != *book.bookRecord {
+			t.Fatalf(
+				"Save does not create book: %v, book in db: %v, err: %v",
+				book.bookRecord, record, err)
+		}
+		query.Close()
+
+		query = db.QueryErrorBySiteId("test", 1002)
+		if query.Next() {
+			t.Fatalf(
+				"Save create error: %v, err: %v",
+				record, err)
+		}
+		query.Close()
+	})
 }
 
-func TestString(t *testing.T) {
-	var testcase = struct {
-		expected string
-	}{"ck101\t5\t0\n神經病戀愛指南\t小貓一尾\n2016-10-09\t第89章"}
-	testBook.Update()
-	actual := testBook.String()
-	if actual != testcase.expected {
-		t.Fatalf("Book.String() result gives\n\"%v\",\nbut not\n\"%v\"",
-			actual, testcase.expected)
-	}
-}
+func Test_Books_Book_validHTML(t *testing.T) {
+	book := NewBook("test", 1, 500, config)
 
-func TestMap(t *testing.T) {
-	var testcase = struct {
-		expected map[string]interface{}
-	}{
-		map[string]interface{}{
-			"site": "ck101", "id": 5, "version": 0,
-			"title": "神經病戀愛指南", "writer": "小貓一尾",
-			"chapter": "第89章", "update": "2016-10-09", "type": "言情小說",
-			"download": false, "end": false, "read": false,
-		},
-	}
-	testBook.Update()
-	actual := testBook.Map()
-	if !mapEqual(actual, testcase.expected) {
-		t.Fatalf("Book.Map() result gives\n\"%v\",\nbut not\n\"%v\"",
-			actual, testcase.expected)
-	}
+	t.Run("success", func(t *testing.T) {
+		err := book.validHTML("hello")
+		if err != nil {
+			t.Fatalf("validate normal string as html return err: %v", err)
+		}
+	})
+
+	t.Run("fail if input html is empty", func(t *testing.T) {
+		err := book.validHTML("")
+		if err == nil {
+			t.Fatalf("valid empty string as html not return error")
+		}
+	})
+
+	t.Run("fail if input html is number", func(t *testing.T) {
+		err := book.validHTML("200")
+		if err == nil {
+			t.Fatalf("valid number string as html not return error")
+		}
+	})
 }
