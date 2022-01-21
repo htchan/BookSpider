@@ -24,6 +24,22 @@ func (rows SqliteBookRows) Scan() (database.Record, error) {
 	if rows._rows == nil {
 		return nil, errors.New("empty rows")
 	}
+
+	var record database.Record
+	var err error
+	if rows.Next() {
+		return rows.ScanCurrent()
+	} else {
+		record = nil
+		err = errors.New("running out of rows")
+	}
+	return record, err
+}
+
+func (rows SqliteBookRows) ScanCurrent() (database.Record, error) {
+	if rows._rows == nil {
+		return nil, errors.New("empty rows")
+	}
 	record := new(database.BookRecord)
 	err := rows._rows.Scan(
 		&record.Site, &record.Id, &record.HashCode,
@@ -57,6 +73,21 @@ func (rows *SqliteWriterRows) Scan() (database.Record, error) {
 	if rows._rows == nil {
 		return nil, errors.New("empty rows")
 	}
+	var record database.Record
+	var err error
+	if rows.Next() {
+		return rows.ScanCurrent()
+	} else {
+		record = nil
+		err = errors.New("running out of rows")
+	}
+	return record, err
+}
+
+func (rows *SqliteWriterRows) ScanCurrent() (database.Record, error) {
+	if rows._rows == nil {
+		return nil, errors.New("empty rows")
+	}
 	record := new(database.WriterRecord)
 	err := rows._rows.Scan(&record.Id, &record.Name)
 	return record, err
@@ -86,9 +117,25 @@ func (rows *SqliteErrorRows) Scan() (database.Record, error) {
 	if rows._rows == nil {
 		return nil, errors.New("empty rows")
 	}
+	var record database.Record
+	var err error
+	if rows.Next() {
+		return rows.ScanCurrent()
+	} else {
+		record = nil
+		err = errors.New("running out of rows")
+	}
+	return record, err
+}
+
+func (rows *SqliteErrorRows) ScanCurrent() (database.Record, error) {
+	if rows._rows == nil {
+		return nil, errors.New("empty rows")
+	}
 	record := new(database.ErrorRecord)
+	var err error
 	var errorString string
-	err := rows._rows.Scan(&record.Site, &record.Id, &errorString)
+	err = rows._rows.Scan(&record.Site, &record.Id, &errorString)
 	record.Error = errors.New(errorString)
 	return record, err
 }

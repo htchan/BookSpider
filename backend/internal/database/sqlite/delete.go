@@ -1,6 +1,8 @@
 package sqlite
 
 import (
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"fmt"
@@ -17,7 +19,10 @@ func (db *SqliteDB) DeleteWriterRecord(records []database.WriterRecord) error {
 }
 
 func (db *SqliteDB) DeleteErrorRecord(records []database.ErrorRecord) (err error) {
-	defer utils.Recover(func() {})
+	var tx *sql.Tx
+	defer utils.Recover(func() {
+		if tx != nil { tx.Rollback() }
+	})
 	if len(records) == 0 {
 		err = errors.New("nil error record in creating error")
 		panic(err)
@@ -26,7 +31,7 @@ func (db *SqliteDB) DeleteErrorRecord(records []database.ErrorRecord) (err error
 	for i, record := range records {
 		results[i] = fmt.Sprintf("%v-%v", record.Site, record.Id)
 	}
-	tx, err := db._db.Begin()
+	tx, err = db._db.Begin()
 	utils.CheckError(err)
 	_, err = tx.Exec(
 		"delete from errors " +

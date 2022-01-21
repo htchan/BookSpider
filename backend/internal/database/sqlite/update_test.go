@@ -4,6 +4,7 @@ import (
 	"testing"
 	"os"
 	"io"
+	"errors"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/utils"
 )
@@ -21,8 +22,6 @@ func init() {
 func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 	db := NewSqliteDB("./rows_test.db")
 	defer db.Close()
-	query := db.QueryErrorBySiteId("test", 2)
-	defer query.Close()
 
 	t.Run("success", func(t *testing.T) {
 		bookRecord := &database.BookRecord{
@@ -43,7 +42,7 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 
 		query := db.QueryBooksByTitle("title-1-new")
 		defer query.Close()
-		query.Next()
+		// query.Next()
 		record, err := query.Scan()
 		bookRecord = record.(*database.BookRecord)
 		if err != nil || bookRecord.Site != "test" ||
@@ -85,10 +84,68 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 
 		query := db.QueryBooksByTitle("title-1-ultra-new")
 		defer query.Close()
-		if query.Next() {
-			record, err := query.Scan()
+		record, err := query.Scan()
+		if err == nil {
 			t.Fatalf(
 				"Some record is being updated to title-1-ultra-new record: %v, err: %v",
+				record, err)
+		}
+	})
+}
+
+func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
+	db := NewSqliteDB("./rows_test.db")
+	defer db.Close()
+
+	t.Run("success", func(t *testing.T) {
+		errorRecord := &database.ErrorRecord{
+			Site: "test",
+			Id: 2,
+			Error: errors.New("error-2-new")}
+		err := db.UpdateErrorRecord(errorRecord)
+		
+		if err != nil {
+			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
+		}
+
+		query := db.QueryErrorBySiteId("test", 2)
+		defer query.Close()
+		// query.Next()
+		record, err := query.Scan()
+		errorRecord = record.(*database.ErrorRecord)
+		if err != nil || errorRecord.Site != "test" ||
+			errorRecord.Id != 2 || errorRecord.Error.Error() != "error-2-new" {
+				t.Fatalf(
+					"DB.UpdateErrorRecord does not change record in database record: %v, err: %v",
+					errorRecord, err)
+			}
+	})
+
+	t.Run("fail if input Error Record is nil", func(t *testing.T) {
+		err := db.UpdateErrorRecord(nil)
+		
+		if err == nil {
+			t.Fatalf("DB.UpdateErrorRecord success with nil err: %v", err)
+		}
+	})
+
+	t.Run("pass but not create anything if site id not exist", func(t *testing.T) {
+		errorRecord := &database.ErrorRecord{
+			Site: "test",
+			Id: -1,
+			Error: errors.New("error-not-exist-new")}
+		err := db.UpdateErrorRecord(errorRecord)
+		
+		if err != nil {
+			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
+		}
+
+		query := db.QueryErrorBySiteId("test", -1)
+		defer query.Close()
+		record, err := query.Scan()
+		if err == nil {
+			t.Fatalf(
+				"error of site: test id: -f is created record: %v, err: %v",
 				record, err)
 		}
 	})

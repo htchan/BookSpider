@@ -10,13 +10,15 @@ import (
 )
 
 func (db *SqliteDB) CreateBookRecord(record *database.BookRecord) (err error) {
-	defer utils.Recover(func() {})
+	var tx *sql.Tx
+	defer utils.Recover(func() {
+		if tx != nil { tx.Rollback() }
+	})
 	if record == nil {
 		err = errors.New("nil error record in creating book")
 		panic(err)
 	}
-	tx, err := db._db.Begin()
-	defer tx.Commit()
+	tx, err = db._db.Begin()
 	utils.CheckError(err)
 	_, err = tx.Exec(
 		"insert into books " +
@@ -32,13 +34,15 @@ func (db *SqliteDB) CreateBookRecord(record *database.BookRecord) (err error) {
 }
 
 func (db *SqliteDB) CreateWriterRecord(record *database.WriterRecord) (err error) {
-	defer utils.Recover(func() {})
+	var tx *sql.Tx
+	defer utils.Recover(func() {
+		if tx != nil { tx.Rollback() }
+	})
 	if record == nil {
 		err = errors.New("nil error record in creating writer")
 		panic(err)
 	}
-	tx, err := db._db.Begin()
-	defer tx.Commit()
+	tx, err = db._db.Begin()
 	utils.CheckError(err)
 	if record.Id < 0 {
 		var result sql.Result
@@ -57,13 +61,15 @@ func (db *SqliteDB) CreateWriterRecord(record *database.WriterRecord) (err error
 }
 
 func (db *SqliteDB) CreateErrorRecord(record *database.ErrorRecord) (err error) {
-	defer utils.Recover(func() {})
+	var tx *sql.Tx
+	defer utils.Recover(func() {
+		if tx != nil { tx.Rollback() }
+	})
 	if record == nil {
 		err = errors.New("nil error record in creating error")
 		panic(err)
 	}
-	tx, err := db._db.Begin()
-	defer tx.Commit()
+	tx, err = db._db.Begin()
 	utils.CheckError(err)
 	_, err = tx.Exec(
 		"insert into errors (" + database.ERROR_RECORD_FIELDS + ") values (?, ?, ?)",

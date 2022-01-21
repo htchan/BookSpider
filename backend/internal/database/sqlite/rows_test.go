@@ -23,8 +23,6 @@ func Test_Sqlite_BooksRow_Scan(t *testing.T) {
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 	defer query.Close()
-	query.Next()
-
 
 	t.Run("success", func(t *testing.T) {
 		record, err := query.Scan()
@@ -40,8 +38,49 @@ func Test_Sqlite_BooksRow_Scan(t *testing.T) {
 	})
 
 	t.Run("fail after Next return nil", func(t *testing.T) {
-		query.Next()
 		record, err := query.Scan()
+
+		if err == nil {
+			t.Fatalf(
+				"BookRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+}
+
+func Test_Sqlite_BooksRow_ScanCurrent(t *testing.T) {
+	db := NewSqliteDB("./rows_test.db")
+	defer db.Close()
+	query := db.QueryBookBySiteIdHash("test", 1, 100)
+	defer query.Close()
+
+	t.Run("fail before calling Next", func(t *testing.T) {
+		record, err := query.ScanCurrent()
+
+		if err == nil {
+			t.Fatalf(
+				"BookRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		query.Next()
+		record, err := query.ScanCurrent()
+		bookRecord := record.(*database.BookRecord)
+		if err != nil || bookRecord.Site != "test" ||
+			bookRecord.Id != 1 || bookRecord.HashCode != 100 ||
+			bookRecord.Title != "title-1" || bookRecord.WriterId != 1 ||
+			bookRecord.Type != "type-1" ||
+			bookRecord.UpdateDate != "100" || bookRecord.UpdateChapter != "chapter-1" ||
+			bookRecord.Status != database.InProgress {
+				t.Fatalf("BookRows.Scan return bookRecord: %v, err: %v", bookRecord, err)
+			}
+	})
+
+	t.Run("fail after Next return nil", func(t *testing.T) {
+		query.Next()
+		record, err := query.ScanCurrent()
 
 		if err == nil {
 			t.Fatalf(
@@ -118,24 +157,58 @@ func Test_Sqlite_WriterRows_Scan(t *testing.T) {
 	defer db.Close()
 	query := db.QueryWriterById(1)
 	defer query.Close()
-	query.Next()
-
 
 	t.Run("success", func(t *testing.T) {
 		record, err := query.Scan()
 		writerRecord := record.(*database.WriterRecord)
 		if err != nil || writerRecord.Id != 1 || writerRecord.Name != "writer-1" {
-				t.Fatalf("BookRows.Scan return writerRecord: %v, err: %v", writerRecord, err)
+				t.Fatalf("WriterRows.Scan return writerRecord: %v, err: %v", writerRecord, err)
+			}
+	})
+
+	t.Run("fail after Next return nil", func(t *testing.T) {
+		record, err := query.Scan()
+
+		if err == nil {
+			t.Fatalf(
+				"WriterRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+}
+
+func Test_Sqlite_WriterRows_ScanCurrent(t *testing.T) {
+	db := NewSqliteDB("./rows_test.db")
+	defer db.Close()
+	query := db.QueryWriterById(1)
+	defer query.Close()
+
+	t.Run("fail before calling Next", func(t *testing.T) {
+		record, err := query.ScanCurrent()
+
+		if err == nil {
+			t.Fatalf(
+				"WriterRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		query.Next()
+		record, err := query.ScanCurrent()
+		writerRecord := record.(*database.WriterRecord)
+		if err != nil || writerRecord.Id != 1 || writerRecord.Name != "writer-1" {
+				t.Fatalf("WriterRows.Scan return writerRecord: %v, err: %v", writerRecord, err)
 			}
 	})
 
 	t.Run("fail after Next return nil", func(t *testing.T) {
 		query.Next()
-		record, err := query.Scan()
+		record, err := query.ScanCurrent()
 
 		if err == nil {
 			t.Fatalf(
-				"BookRows.Scan running out of record return record: %v, err: %v",
+				"WriterRows.Scan running out of record return record: %v, err: %v",
 				record, err)
 		}
 	})
@@ -208,8 +281,6 @@ func Test_Sqlite_ErrorRows_Scan(t *testing.T) {
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 	defer query.Close()
-	query.Next()
-
 
 	t.Run("success", func(t *testing.T) {
 		record, err := query.Scan()
@@ -221,8 +292,45 @@ func Test_Sqlite_ErrorRows_Scan(t *testing.T) {
 	})
 
 	t.Run("fail after Next return nil", func(t *testing.T) {
-		query.Next()
 		record, err := query.Scan()
+
+		if err == nil {
+			t.Fatalf(
+				"ErrorRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+}
+
+func Test_Sqlite_ErrorRows_ScanCurrent(t *testing.T) {
+	db := NewSqliteDB("./rows_test.db")
+	defer db.Close()
+	query := db.QueryErrorBySiteId("test", 2)
+	defer query.Close()
+
+	t.Run("fail before calling Next", func(t *testing.T) {
+		record, err := query.ScanCurrent()
+
+		if err == nil {
+			t.Fatalf(
+				"ErrorRows.Scan running out of record return record: %v, err: %v",
+				record, err)
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		query.Next()
+		record, err := query.ScanCurrent()
+		errorRecord := record.(*database.ErrorRecord)
+		if err != nil || errorRecord.Site != "test" || errorRecord.Id != 2 ||
+			errorRecord.Error.Error() != "error-2" {
+				t.Fatalf("ErrorRows.Scan return errorRecord: %v, err: %v", errorRecord, err)
+			}
+	})
+
+	t.Run("fail after Next return nil", func(t *testing.T) {
+		query.Next()
+		record, err := query.ScanCurrent()
 
 		if err == nil {
 			t.Fatalf(
