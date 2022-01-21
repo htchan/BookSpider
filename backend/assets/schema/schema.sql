@@ -16,7 +16,7 @@ create index books_writer on books(writer_id);
 create index books_status on books(status);
 
 create table writers (
-    id integer auto increment,
+    id integer primary key AUTOINCREMENT,
     name text
 );
 
