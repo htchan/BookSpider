@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestLoad(t *testing.T) {
+func Test_Flags_Flags_Load(t *testing.T) {
 	type Inputs struct {
 		operation, site, id, maxThreads string
 	}
@@ -63,4 +63,135 @@ func TestLoad(t *testing.T) {
 				testcase.expect.Id, testcase.expect.MaxThreads)
 		}
 	}
+}
+
+func Test_Flags_Flags_IsBook(t *testing.T) {
+	flagSite, flagId, flagHashCode := "test", 123, "abc"
+
+	t.Run("true if it provide site, id, hash", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
+		if !f.IsBook() {
+			t.Fatalf("flags IsBook return false for site, id, hash")
+		}
+	})
+
+	t.Run("true if it provide site, id", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId }
+		if !f.IsBook() {
+			t.Fatalf("flags IsBook return false for site, id")
+		}
+	})
+
+	t.Run("false if missing site", func(t *testing.T) {
+		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
+		if f.IsBook() {
+			t.Fatalf("flags IsBook return true for missing site")
+		}
+	})
+
+	t.Run("false if missing id", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
+		if f.IsBook() {
+			t.Fatalf("flags IsBook return true for missing id")
+		}
+	})
+}
+
+func Test_Flags_Flags_IsSite(t *testing.T) {
+	flagSite, flagId, flagHashCode := "test", 123, "abc"
+	t.Run("true if it only provide site", func(t *testing.T) {
+		f := Flags{ Site: &flagSite }
+		if !f.IsSite() {
+			t.Fatalf("flags IsSite return false for only site")
+		}
+	})
+
+	t.Run("false if site not provide", func(t *testing.T) {
+		f := Flags{}
+		if f.IsSite() {
+			t.Fatalf("flags IsSite return true for empty flag")
+		}
+	})
+
+	t.Run("false if id provided", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId }
+		if f.IsSite() {
+			t.Fatalf("flags IsBook return true for site with id")
+		}
+	})
+
+	t.Run("false if hash code provided", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
+		if f.IsSite() {
+			t.Fatalf("flags IsBook return true for site with hash code")
+		}
+	})
+}
+
+func Test_Flags_Flags_GetBookInfo(t *testing.T) {
+	flagSite, flagId, flagHashCode := "test", 123, "abc"
+	t.Run("success if it provide site, id, hash", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
+		site, id, hash := f.GetBookInfo()
+		if site != "test" || id != 123 || hash != 13368 {
+			t.Fatalf(
+				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
+				site, id, hash)
+		}
+	})
+
+	t.Run("success if it provide site, id", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId }
+		site, id, hash := f.GetBookInfo()
+		if site != "test" || id != 123 || hash != -1 {
+			t.Fatalf(
+				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
+				site, id, hash)
+		}
+	})
+
+	t.Run("invalid data if missing site", func(t *testing.T) {
+		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
+		site, id, hash := f.GetBookInfo()
+		if site != "" || id != 123 || hash != 13368 {
+			t.Fatalf(
+				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
+				site, id, hash)
+		}
+	})
+
+	t.Run("invalid data if missing id", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
+		site, id, hash := f.GetBookInfo()
+		if site != "test" || id != -1 || hash != 13368 {
+			t.Fatalf(
+				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
+				site, id, hash)
+		}
+	})
+}
+
+func Test_Flags_Flags_Valid(t *testing.T) {
+	flagSite, flagId, flagHashCode := "test", 123, "abc"
+
+	t.Run("true for valid book", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
+		if !f.Valid() {
+			t.Fatalf("flags Valid return false for valid book")
+		}
+	})
+
+	t.Run("true for valid site", func(t *testing.T) {
+		f := Flags{ Site: &flagSite }
+		if !f.Valid() {
+			t.Fatalf("flags Valid return false for valid site")
+		}
+	})
+
+	t.Run("return false", func(t *testing.T) {
+		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
+		if f.Valid() {
+			t.Fatalf("flags Valid return true for invalid arguments")
+		}
+	})
 }
