@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	source, err := os.Open("../../../assets/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") +  "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./rows_test.db")
 	utils.CheckError(err)
@@ -31,7 +31,7 @@ func Test_Sqlite_BooksRow_Scan(t *testing.T) {
 			bookRecord.Id != 1 || bookRecord.HashCode != 100 ||
 			bookRecord.Title != "title-1" || bookRecord.WriterId != 1 ||
 			bookRecord.Type != "type-1" ||
-			bookRecord.UpdateDate != "100" || bookRecord.UpdateChapter != "chapter-1" ||
+			bookRecord.UpdateDate != "104" || bookRecord.UpdateChapter != "chapter-1" ||
 			bookRecord.Status != database.InProgress {
 				t.Fatalf("BookRows.Scan return bookRecord: %v, err: %v", bookRecord, err)
 			}
@@ -72,7 +72,7 @@ func Test_Sqlite_BooksRow_ScanCurrent(t *testing.T) {
 			bookRecord.Id != 1 || bookRecord.HashCode != 100 ||
 			bookRecord.Title != "title-1" || bookRecord.WriterId != 1 ||
 			bookRecord.Type != "type-1" ||
-			bookRecord.UpdateDate != "100" || bookRecord.UpdateChapter != "chapter-1" ||
+			bookRecord.UpdateDate != "104" || bookRecord.UpdateChapter != "chapter-1" ||
 			bookRecord.Status != database.InProgress {
 				t.Fatalf("BookRows.Scan return bookRecord: %v, err: %v", bookRecord, err)
 			}

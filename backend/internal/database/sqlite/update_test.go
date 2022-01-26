@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	source, err := os.Open("../../../assets/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") +  "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./update_test.db")
 	utils.CheckError(err)
@@ -40,7 +40,7 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
 		}
 
-		query := db.QueryBooksByTitle("title-1-new")
+		query := db.QueryBookBySiteIdHash("test", 1, 100)
 		defer query.Close()
 		// query.Next()
 		record, err := query.Scan()
@@ -82,7 +82,9 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
 		}
 
-		query := db.QueryBooksByTitle("title-1-ultra-new")
+		titles := []string { "title-1-ultra-new" }
+		writers := []int {}
+		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 		defer query.Close()
 		record, err := query.Scan()
 		if err == nil {

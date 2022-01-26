@@ -6,12 +6,13 @@ import (
 	"testing"
 	"errors"
 	"sync"
+	"runtime"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 )
 
 func init() {
-	source, err := os.Open("../../../assets/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./create_test.db")
 	utils.CheckError(err)
@@ -78,7 +79,7 @@ func Test_Sqlite_DB_CreateWriterRecord(t *testing.T) {
 		}
 
 		err := db.CreateWriterRecord(writerRecord)
-		rows := db.QueryWriterByName("writer-10")
+		rows := db.QueryWriterById(writerRecord.Id)
 		defer rows.Close()
 
 		if err != nil || writerRecord.Id == -1 || !rows.Next() {
@@ -154,7 +155,6 @@ func Test_Sqlite_DB_CreateErrorRecord(t *testing.T) {
 
 func test_concurrent_create(db database.DB, n int, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
-		n := 10
 		var wg sync.WaitGroup
 		for i := 0; i < n; i++ {
 			wg.Add(1)
@@ -186,8 +186,13 @@ func Test_Sqlite_DB_ConcrrentCreate(t *testing.T) {
 	db := NewSqliteDB("./create_test.db")
 	defer db.Close()
 
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	t.Run("10 create concurrent", test_concurrent_create(db, 10, 20))
+	runtime.GC()
 	t.Run("100 create concurrent", test_concurrent_create(db, 100, 30))
+	runtime.GC()
 	t.Run("1000 create concurrent", test_concurrent_create(db, 1000, 130))
+	runtime.GC()
 	t.Run("10000 create concurrent", test_concurrent_create(db, 10000, 1130))
 }

@@ -21,25 +21,33 @@ func (db *SqliteDB) QueryBookBySiteIdHash(site string, id int, hashCode int) dat
 	return rows
 }
 
-func (db *SqliteDB) QueryBooksByTitle(title string) database.Rows {
+func (db *SqliteDB) QueryBooksByPartialTitleAndWriter(titles []string, writers []int) database.Rows {
 	rows := new(SqliteBookRows)
-	rows._rows, _ = db._db.Query(
-		"select " + database.BOOK_RECORD_FIELDS + " from books " +
-		"where title=? group by site, id",
-		title)
-	return rows
-}
-
-func (db *SqliteDB) QueryBooksByPartialTitle(titles []string) database.Rows {
-	rows := new(SqliteBookRows)
-	arguments := make([]interface{}, len(titles))
-	for i := range titles {
-		arguments[i] = "%" + titles[i] + "%"
+	statement := ""
+	if len(titles) > 0 {
+		statement += "title like ?" + strings.Repeat(" or title like ?", len(titles) - 1)
 	}
-	rows._rows, _ = db._db.Query(
-		"select " + database.BOOK_RECORD_FIELDS + " from books " +
-		"where title like ?" + strings.Repeat(" or title like ?", len(titles) - 1),
-		arguments...)
+	if len(writers) > 0 {
+		if len(statement) > 0 {
+			statement += " or "
+		}
+		statement += "writer_id in (?" + strings.Repeat(", ?", len(writers) - 1) + ")"
+	}
+	if statement != "" {
+		statement = "select " + database.BOOK_RECORD_FIELDS + " from books " +
+			"where " + statement
+	} else {
+		rows._rows = nil
+		return rows
+	}
+	arguments := make([]interface{}, len(titles) + len(writers))
+	for i, title := range titles {
+		arguments[i] = "%" + title + "%"
+	}
+	for i, writer := range writers {
+		arguments[len(titles) + i] = writer
+	}
+	rows._rows, _ = db._db.Query(statement, arguments...)
 	return rows
 }
 
@@ -81,6 +89,10 @@ func (db *SqliteDB) QueryWriterByName(name string)  database.Rows {
 
 func (db *SqliteDB) QueryWritersByPartialName(names []string) database.Rows {
 	rows := new(SqliteWriterRows)
+	if len(names) == 0 {
+		rows._rows = nil
+		return rows
+	}
 	arguments := make([]interface{}, len(names))
 	for i := range names {
 		arguments[i] = "%" + names[i] + "%"
@@ -98,5 +110,29 @@ func (db *SqliteDB) QueryErrorBySiteId(site string, id int) database.Rows {
 		"select " + database.ERROR_RECORD_FIELDS + " from errors " +
 		"where site=? and id=?",
 		site, id)
+	return rows
+}
+
+func (db *SqliteDB) QueryBooksOrderByUpdateDate() database.Rows {
+	rows := new(SqliteBookRows)
+	rows._rows, _ = db._db.Query(
+		"select " + database.BOOK_RECORD_FIELDS + " from books " +
+		"where status != ?" +
+		"order by update_date desc", database.Error)
+	return rows
+}
+
+func (db *SqliteDB) QueryBooksWithRandomOrder(n int, status database.StatusCode) database.Rows {
+	rows := new(SqliteBookRows)
+	if status == database.Error {
+		rows._rows, _ = db._db.Query(
+			"select " + database.BOOK_RECORD_FIELDS + " from books " +
+			"order by random() limit ?", n)
+	} else {
+		rows._rows, _ = db._db.Query(
+			"select " + database.BOOK_RECORD_FIELDS + " from books " +
+			"where status=?" +
+			"order by random() limit ?", status, n)
+	}
 	return rows
 }

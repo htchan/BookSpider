@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	source, err := os.Open("../../../assets/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") +  "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./query_test.db")
 	utils.CheckError(err)
@@ -62,84 +62,68 @@ func Test_Sqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksByTitle(t *testing.T) {
+func Test_Sqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
-	t.Run("success if title match", func(t *testing.T) {
-		query := db.QueryBooksByTitle("title-1")
+	t.Run("return result match any title or writer", func(t *testing.T) {
+		titles := []string{ "-new", "-3" }
+		writers := []int { 1, 5 }
+		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByTitle(\"title-1\") returns no record")
-		}
-
-		n := 1
-		for ; query.Next(); n++ {}
-
-		if n != 1 {
-			t.Fatalf("QueryBooksByTitle(\"title-1\") return %v records", n)
-		}
-	})
-
-	t.Run("fail even partial title match", func(t *testing.T) {
-		query := db.QueryBooksByTitle("title-")
-
-		if query.Next() {
-			t.Fatalf("QueryBooksByTitle(\"title-\") returns no record")
-		}
-	})
-
-	t.Run("success if title not match", func(t *testing.T) {
-		query := db.QueryBooksByTitle("-writer")
-
-		if query.Next() {
-			t.Fatalf("QueryBooksByTitle(\"title-\") returns record")
-		}
-	})
-}
-
-func Test_Sqlite_DB_QueryBooksByPartialTitle(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
-	defer db.Close()
-
-	t.Run("success if title match", func(t *testing.T) {
-		titles := []string{ "title-1" }
-		query := db.QueryBooksByPartialTitle(titles)
-
-		if !query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle(\"title-1\") returns no record")
-		}
-
-		n := 1
-		for ; query.Next(); n++ {}
-
-		if n != 1 {
-			t.Fatalf("QueryBooksByPartialTitle(\"title-1\") return %v records", n)
-		}
-	})
-
-	t.Run("success if partial title match", func(t *testing.T) {
-		titles := []string{ "-1", "-3" }
-		query := db.QueryBooksByPartialTitle(titles)
-
-		if !query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle(\"-1\", \"-3\") returns no record")
+			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 3 {
-			t.Fatalf("QueryBooksByPartialTitle(\"-1\", \"-3\") return %v records", n)
+			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) return %v records", n)
 		}
 	})
 
-	t.Run("success if title not match", func(t *testing.T) {
+	t.Run("return result match any title", func(t *testing.T) {
+		titles := []string{ "-new", "-3" }
+		writers := []int {}
+		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
+
+		if !query.Next() {
+			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) returns no record")
+		}
+
+		n := 1
+		for ; query.Next(); n++ {}
+
+		if n != 2 {
+			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) return %v records", n)
+		}
+	})
+
+	t.Run("return result match any writer", func(t *testing.T) {
+		titles := []string{}
+		writers := []int { 1, 5 }
+		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
+
+		if !query.Next() {
+			t.Fatalf("QueryBooksByPartialTitle([], [1, 5]) returns no record")
+		}
+
+		n := 1
+		for ; query.Next(); n++ {}
+
+		if n != 1 {
+			t.Fatalf("QueryBooksByPartialTitle([], [1, 5]) return %v records", n)
+		}
+	})
+
+	t.Run("return no result if no title or writer match", func(t *testing.T) {
 		titles := []string{ "-writer" }
-		query := db.QueryBooksByPartialTitle(titles)
+		writers := []int{ 5 }
+		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle(\"title-\") returns record")
+			t.Fatalf("QueryBooksByPartialTitleAndWriter(\"-writer\", 5) returns record")
 		}
 	})
 }
@@ -325,6 +309,53 @@ func Test_Sqlite_DB_QueryErrorBySiteId(t *testing.T) {
 
 		if query.Next() {
 			t.Fatalf("QueryErrorBySiteId(\"test\", 1) returns  record")
+		}
+	})
+}
+
+func Test_Sqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
+	db := NewSqliteDB("./query_test.db")
+	defer db.Close()
+
+	t.Run("success with desc order update date", func(t *testing.T) {
+		rows := db.QueryBooksOrderByUpdateDate()
+		n := 0
+		expectTitle := []string { "title-1", "title-3", "title-3-new" }
+		for ; rows.Next(); n++ {
+			record, err := rows.ScanCurrent()
+			if err != nil || record.(*database.BookRecord).Title != expectTitle[n] {
+				t.Logf("invalid result at position %v: record: %v, err: %v", n, record, err)
+				defer t.Fatal()
+			}
+		}
+	})
+}
+
+func Test_Sqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
+	db := NewSqliteDB("./query_test.db")
+	defer db.Close()
+
+	t.Run("success query all books with status = error", func(t *testing.T) {
+		rows := db.QueryBooksWithRandomOrder(4, database.Error)
+		n := 0
+		for ; rows.Next(); n++ {}
+		if n != 4 {
+			t.Fatalf("invalid count: n: %v", n)
+		}
+	})
+	t.Run("success query specific in progress books", func(t *testing.T) {
+		rows := db.QueryBooksWithRandomOrder(1, database.InProgress)
+		record, err := rows.Scan()
+		if err != nil || record.(*database.BookRecord).Title != "title-1" || rows.Next() {
+			t.Fatalf("invalid result: result: %v, err: %v", record, err)
+		}
+	})
+	t.Run("success query books even n > total books in db", func(t *testing.T) {
+		rows := db.QueryBooksWithRandomOrder(10, database.Error)
+		n := 0
+		for ; rows.Next(); n++ {}
+		if n != 6 {
+			t.Fatalf("invalid count: n: %v", n)
 		}
 	})
 }

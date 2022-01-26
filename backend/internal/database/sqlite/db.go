@@ -15,20 +15,19 @@ type SqliteDB struct {
 
 const (
 	SQLITE_MAX_IDLE_CONN = 10
-	SQLITE_MAX_OPEN_CONN = 99999
+	SQLITE_MAX_OPEN_CONN = 1
 )
 
 func NewSqliteDB(location string) (db *SqliteDB) {
 	var err error
 	db = new(SqliteDB)
-	db._db, err = sql.Open("sqlite3", location)
+	db._db, err = sql.Open("sqlite3", location + "?cache=shared")
 	utils.CheckError(err)
 	db._db.SetMaxIdleConns(SQLITE_MAX_IDLE_CONN)
 	db._db.SetMaxOpenConns(SQLITE_MAX_OPEN_CONN)
 	return
 }
 
-//TODO
 func (db *SqliteDB) Summary(site string) (record database.SummaryRecord) {
 	defer utils.Recover(func() {})
 	// select count(*), count(distinct (site||id)), max(id) from books where site=?
