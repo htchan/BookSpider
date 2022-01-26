@@ -2,11 +2,12 @@ package configs
 
 import (
 	"testing"
+	"os"
 )
 
 func Test_Config_BookConfig_LoadBookConfigYaml(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		config := LoadBookConfigYaml("../../assets/test-data/book-config.yml")
+		config := LoadBookConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/book-config.yml")
 
 		if config == nil || config.BaseUrl != "https://base-url/%v" ||
 			config.DownloadUrl != "https://download-url/%v" ||
@@ -25,7 +26,7 @@ func Test_Config_BookConfig_LoadBookConfigYaml(t *testing.T) {
 	})
 
 	t.Run("fail if location not exist", func(t *testing.T) {
-		config := LoadBookConfigYaml("../../assets/test-data/not-exist-condig.yml")
+		config := LoadBookConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/not-exist-condig.yml")
 
 		if config != nil {
 			t.Fatalf("LoadBookConfigYaml for not exist file return non null value: %v", config)
@@ -35,7 +36,7 @@ func Test_Config_BookConfig_LoadBookConfigYaml(t *testing.T) {
 
 func Test_Config_BookConfig_Populate(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		config := LoadBookConfigYaml("../../assets/test-data/book-config.yml")
+		config := LoadBookConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/book-config.yml")
 
 		populatedConfig := config.Populate(1)
 

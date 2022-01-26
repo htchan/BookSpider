@@ -65,6 +65,38 @@ func Test_Flags_Flags_Load(t *testing.T) {
 	}
 }
 
+func Test_Flags_Flags_IsEverything(t *testing.T) {
+	flagOperation, flagSite, flagId := "operation", "test", 123
+
+	t.Run("true if it is empty", func(t *testing.T) {
+		f := Flags{}
+		if !f.IsEverything() {
+			t.Fatalf("flags IsEverything return false for empty")
+		}
+	})
+
+	t.Run("true if it provides operation", func(t *testing.T) {
+		f := Flags{ Operation: &flagOperation }
+		if !f.IsEverything() {
+			t.Fatalf("flags IsEverything return false for empty")
+		}
+	})
+
+	t.Run("false if providing site, id", func(t *testing.T) {
+		f := Flags{ Site: &flagSite, Id: &flagId }
+		if f.IsEverything() {
+			t.Fatalf("flags IsEverything return true for providing site, id")
+		}
+	})
+
+	t.Run("false if providing site", func(t *testing.T) {
+		f := Flags{ Site: &flagSite }
+		if f.IsEverything() {
+			t.Fatalf("flags IsEverything return true for providing site")
+		}
+	})
+}
+
 func Test_Flags_Flags_IsBook(t *testing.T) {
 	flagSite, flagId, flagHashCode := "test", 123, "abc"
 

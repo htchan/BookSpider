@@ -34,6 +34,15 @@ func (f *Flags) Load(maxThreadsConfig int) {
 	}
 }
 
+func (f *Flags) IsEverything() bool {
+	if f.Site == nil { site := "" ; f.Site = &site }
+	if f.Id == nil { id := -1 ; f.Id = &id }
+	if f.HashCode == nil { hash := "" ; f.HashCode = &hash }
+	if f.MaxThreads == nil { maxThreads := -1 ; f.MaxThreads = &maxThreads }
+	return *f.Site == "" && *f.Id == -1 &&
+		*f.HashCode == "" && *f.MaxThreads == -1
+}
+
 func (f *Flags) IsBook() bool {
 	if f.Site == nil { site := "" ; f.Site = &site }
 	if f.Id == nil { id := -1 ; f.Id = &id }

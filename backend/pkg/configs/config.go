@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/traditionalchinese"
+	"os"
 
 	"github.com/htchan/BookSpider/internal/utils"
 )
@@ -13,13 +14,15 @@ import (
 type SiteConfig struct {
     BookMeta *BookConfig
 	ThreadsCount int `yaml:"threadsCount"`
-	MAX_THREAD_COUNT int `yaml:"maxExploreError"`
+	MaxExploreError int `yaml:"maxExploreError"`
 	ConstSleep int `yaml:"constSleep"`
 	Decoder *encoding.Decoder
+	DatabaseEngine string `yaml:"databaseEngine"`
     DatabaseLocation string `yaml:"databaseLocation"`
 	StorageDirectory string `yaml:"downloadDirectory"`
 	DecoderString string `yaml:"decode"`
 	BookConfigLocation string `yaml:"configFileLocation"`
+	BackupDirectory string `yaml:"backupDirectory"`
 }
 
 type Config struct {
@@ -39,7 +42,7 @@ func LoadConfigYaml(configLocation string) (config *Config) {
 	utils.CheckError(err)
 	utils.CheckError(yaml.Unmarshal(data, config))
 	for key, value := range config.SiteConfigs {
-		config.SiteConfigs[key].BookMeta = LoadBookConfigYaml(value.BookConfigLocation)
+		config.SiteConfigs[key].BookMeta = LoadBookConfigYaml(os.Getenv("ASSETS_LOCATION") + value.BookConfigLocation)
 		config.SiteConfigs[key].BookMeta.CONST_SLEEP = value.ConstSleep
 		config.SiteConfigs[key].BookMeta.StorageDirectory = value.StorageDirectory
 		if (value.DecoderString == "big5") {
