@@ -1,12 +1,14 @@
 sites:
     test:
         decode: big5
-        configFileLocation: "../../assets/test-data/book-config.yml"
+        configFileLocation: "/test-data/book-config.yml"
+        databaseEngine: "sqlite3"
         databaseLocation: "./test.db"
-        downloadDirectory: "../../assets/test-data/storage/"
+        downloadDirectory: "/test-data/storage/"
         threadsCount: 1000
         constSleep: 1000
         maxExploreError: 1000
+        backupDirectory: "/test-data/"
 maxThreads: 1000
 backend:
     api:

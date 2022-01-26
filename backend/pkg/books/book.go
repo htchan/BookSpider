@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"errors"
+	"os"
 )
 
 type Book struct {
@@ -52,6 +53,29 @@ func LoadBook(db database.DB, site string, id int, hash int, config *configs.Boo
 	query.Close()
 	
 	query = db.QueryErrorBySiteId(site, id)
+	if query.Next() {
+		record, err = query.ScanCurrent()
+		utils.CheckError(err)
+		book.errorRecord = record.(*database.ErrorRecord)
+	}
+	query.Close()
+	return
+}
+
+func LoadBookByRecord(db database.DB, bookRecord *database.BookRecord, config *configs.BookConfig) (book *Book) {
+	defer utils.Recover(func() { book = nil })
+	book = new(Book)
+	book.config = config.Populate(bookRecord.Id)
+
+	book.bookRecord = bookRecord
+
+	query := db.QueryWriterById(book.bookRecord.WriterId)
+	record, err := query.Scan()
+	utils.CheckError(err)
+	book.writerRecord = record.(*database.WriterRecord)
+	query.Close()
+	
+	query = db.QueryErrorBySiteId(bookRecord.Site, bookRecord.Id)
 	if query.Next() {
 		record, err = query.ScanCurrent()
 		utils.CheckError(err)
@@ -163,7 +187,7 @@ func (book *Book)SetError(err error) {
 }
 
 func (book *Book)getContentLocation() (location string) {
-	location = book.config.StorageDirectory + strconv.Itoa(book.bookRecord.Id)
+	location = os.Getenv("ASSETS_LOCATION") + book.config.StorageDirectory + strconv.Itoa(book.bookRecord.Id)
 	if book.bookRecord.HashCode != 0 {
 		location += "-v" + strconv.Itoa(book.bookRecord.HashCode)
 	}

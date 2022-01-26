@@ -2,13 +2,14 @@ package books
 
 import (
 	"testing"
+	"os"
 	"errors"
 	"github.com/htchan/BookSpider/internal/mock"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/pkg/configs"
 )
 
-var updateConfig = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
+var updateConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
 
 func Test_Books_Book_fetchInfo(t *testing.T) {
 	book := NewBook("test", 1, -1, updateConfig)

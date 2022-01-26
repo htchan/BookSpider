@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	source, err := os.Open("../../assets/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./book_test.db")
 	utils.CheckError(err)
@@ -21,7 +21,7 @@ func init() {
 	destination.Close()
 }
 
-var config = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
+var config = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
 
 func Test_Books_Book_Constructor_NewBook(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -56,7 +56,7 @@ func Test_Books_Book_Constructor_NewBook(t *testing.T) {
 			book.config.ChapterContentRegex != "chapter-content-(.*)-content-regex" ||
 			book.config.Decoder == nil ||
 			book.config.CONST_SLEEP != 1000 ||
-			book.config.StorageDirectory != "../../assets/test-data/storage/" {
+			book.config.StorageDirectory != "/test-data/storage/" {
 			t.Fatalf("book.config init wrongly config: %v", book.config)
 		}
 	})
@@ -73,7 +73,7 @@ func Test_Books_Book_Constructor_LoadBook(t *testing.T) {
 			book.bookRecord.Id != 3 || book.bookRecord.HashCode != 102 ||
 			book.bookRecord.Title != "title-3" || book.bookRecord.WriterId != 2 ||
 			book.bookRecord.Type != "type-3" ||
-			book.bookRecord.UpdateDate != "100" || book.bookRecord.UpdateChapter != "chapter-3" ||
+			book.bookRecord.UpdateDate != "102" || book.bookRecord.UpdateChapter != "chapter-3" ||
 			book.bookRecord.Status != database.Download {
 			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
 		}
@@ -158,6 +158,99 @@ func Test_Books_Book_Constructor_LoadBook(t *testing.T) {
 			t.Fatalf(
 				"LoadBook load sth when book not exist\nbook: %v\nwriter: %v\nerror: %v",
 				book.bookRecord, book.writerRecord, book.errorRecord)
+		}
+	})
+}
+
+func Test_Books_Book_Constructor_LoadBookByRecord(t *testing.T) {
+	db := sqlite.NewSqliteDB("./book_test.db")
+	defer db.Close()
+
+	t.Run("success with some record", func(t *testing.T) {
+		record := &database.BookRecord{ Site: "test", Id: 3, HashCode: 102, WriterId: 2 }
+		book := LoadBookByRecord(db, record, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 3 || book.bookRecord.HashCode != 102 ||
+			book.bookRecord.Title != "" || book.bookRecord.WriterId != 2 ||
+			book.bookRecord.Type != "" ||
+			book.bookRecord.UpdateDate != "" || book.bookRecord.UpdateChapter != "" ||
+			book.bookRecord.Status != database.Error {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+		}
+
+		if book.writerRecord == nil || book.writerRecord.Id != 2 ||
+			book.writerRecord.Name != "writer-2" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+		}
+
+		if book.errorRecord != nil {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/3" ||
+			book.config.DownloadUrl != "https://download-url/3" ||
+			book.config.ChapterUrl != "https://chapter-url/3" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
+	})
+
+	t.Run("success for getting book with error", func(t *testing.T) {
+		record := &database.BookRecord{ Site: "test", Id: 2, HashCode: 101, Title: "hello" }
+		book := LoadBookByRecord(db, record, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "test" ||
+			book.bookRecord.Id != 2 || book.bookRecord.HashCode != 101 ||
+			book.bookRecord.Title != "hello" || book.bookRecord.WriterId != 0 ||
+			book.bookRecord.Type != "" ||
+			book.bookRecord.UpdateDate != "" || book.bookRecord.UpdateChapter != "" ||
+			book.bookRecord.Status != database.Error {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+		}
+
+		if book.writerRecord == nil || book.writerRecord.Id != 0 ||
+			book.writerRecord.Name != "" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+		}
+
+		if book.errorRecord == nil || book.errorRecord.Site != "test" ||
+			book.errorRecord.Id != 2 || book.errorRecord.Error.Error() != "error-2" {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/2" ||
+			book.config.DownloadUrl != "https://download-url/2" ||
+			book.config.ChapterUrl != "https://chapter-url/2" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
+		}
+	})
+
+	t.Run("success even if book not exist", func(t *testing.T) {
+		record := &database.BookRecord{ Site: "not-exist", Id: 3, HashCode: 102 }
+		book := LoadBookByRecord(db, record, config)
+		
+		if book.bookRecord == nil || book.bookRecord.Site != "not-exist" ||
+			book.bookRecord.Id != 3 || book.bookRecord.HashCode != 102 ||
+			book.bookRecord.Title != "" || book.bookRecord.WriterId != 0 ||
+			book.bookRecord.Type != "" ||
+			book.bookRecord.UpdateDate != "" || book.bookRecord.UpdateChapter != "" ||
+			book.bookRecord.Status != database.Error {
+			t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+		}
+
+		if book.writerRecord == nil || book.writerRecord.Id != 0 ||
+			book.writerRecord.Name != "" {
+			t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+		}
+
+		if book.errorRecord != nil {
+			t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+		}
+
+		if book.config.BaseUrl != "https://base-url/3" ||
+			book.config.DownloadUrl != "https://download-url/3" ||
+			book.config.ChapterUrl != "https://chapter-url/3" {
+			t.Fatalf("book.config init wrongly config: %v", book.config)
 		}
 	})
 }

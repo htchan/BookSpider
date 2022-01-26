@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-var downloadConfig = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
+var downloadConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
 
 func Test_Books_Book_getEmptyChapters(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -161,9 +161,9 @@ func Test_Books_Book_saveContent(t *testing.T) {
 		}
 		book.saveContent(chapters)
 
-		b, err := os.ReadFile("../../assets/test-data/storage/1-v1.txt")
+		b, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v1.txt")
 		utils.CheckError(err)
-		reference, err := os.ReadFile("../../assets/test-data/storage/1-v1-reference.txt")
+		reference, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v1-reference.txt")
 		utils.CheckError(err)
 
 		if string(b) != string(reference){
@@ -184,9 +184,9 @@ func Test_Books_Book_Download(t *testing.T) {
 			t.Fatalf("book download failed")
 		}
 
-		b, err := os.ReadFile("../../assets/test-data/storage/1-v10.txt")
+		b, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v10.txt")
 		utils.CheckError(err)
-		reference, err := os.ReadFile("../../assets/test-data/storage/1-v10-reference.txt")
+		reference, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v10-reference.txt")
 		utils.CheckError(err)
 
 		if string(b) != string(reference){

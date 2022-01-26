@@ -1,7 +1,7 @@
 package books
 
 import (
-	// "os"
+	"os"
 	// "io"
 	"testing"
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/htchan/BookSpider/internal/database/sqlite"
 )
 
-var accessorConfig = configs.LoadConfigYaml("../../assets/test-data/config.yml").SiteConfigs["test"].BookMeta
+var accessorConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
 
 func Test_Books_Book_GetInfo(t *testing.T) {
 	db := sqlite.NewSqliteDB("./book_test.db")
@@ -105,7 +105,7 @@ func Test_Books_Book_GetUpdateDate(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		book := LoadBook(db, "test", 1, 100, accessorConfig)
 		updateDate := book.GetUpdateDate()
-		if updateDate != "100" {
+		if updateDate != "104" {
 			t.Fatalf("book.GetUpdateDate return wrong value: %v", updateDate)
 		}
 	})
@@ -206,7 +206,7 @@ func Test_Books_Book_getContentLocation(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		book := LoadBook(db, "test", 1, 100, accessorConfig)
 		contentLocation := book.getContentLocation()
-		if contentLocation != "../../assets/test-data/storage/1-v100.txt" {
+		if contentLocation != os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v100.txt" {
 			t.Fatalf("book.getContentLocation return wrong value: %v", contentLocation)
 		}
 	})
