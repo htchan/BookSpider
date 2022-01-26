@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	source, err := os.Open(os.Getenv("ASSETS_LOCATION") +  "/test-data/internal_database_sqlite.db")
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./update_test.db")
 	utils.CheckError(err)

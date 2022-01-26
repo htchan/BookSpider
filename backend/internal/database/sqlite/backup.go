@@ -10,7 +10,7 @@ import (
 
 func (db *SqliteDB) BackupSchema(f *os.File) (err error) {
 	defer utils.Recover(func() {})
-	data, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") +  "/schema/schema.sql")
+	data, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/schema/schema.sql")
 	utils.CheckError(err)
 	
 	f.Write(data)
