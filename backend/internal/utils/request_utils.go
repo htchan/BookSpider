@@ -13,7 +13,7 @@ import (
 )
 
 func getWeb(url string) string {
-	client := http.Client{Timeout: 30 * time.Second}
+	client := http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
 		return ""
@@ -34,15 +34,21 @@ func getWeb(url string) string {
 // const MAX_SLEEP_MS = 30000
 
 func GetWeb(url string, trial int, decoder *encoding.Decoder, constSleep int) (html string, i int) {
-	for i = 0; i < 10; i++ {
+	for i = 0; true; i++ {
 		html = getWeb(url)
 		if statusCode, err := strconv.Atoi(html); err == nil || (len(html) == 0) {
-			// minSleepMs := i * MIN_SLEEP_MS_MULTIPLIER
-			// time.Sleep(time.Duration(rand.Intn(MAX_SLEEP_MS-minSleepMs)+minSleepMs) * time.Millisecond)
-			time.Sleep(time.Duration((i + 1) * constSleep) * time.Millisecond)
 			if statusCode == 503 {
-				time.Sleep(time.Duration((i + 1) * 10) * time.Second)
+				if i >= 100 { return }
+				time.Sleep(time.Duration(i) * time.Second)
+			} else {
+				if i >= 10 { return }
+				time.Sleep(time.Duration((i + 1) * constSleep) * time.Millisecond)
 			}
+			continue
+		}
+		if (len(html) == 0) {
+			if i >= 10 { return }
+			time.Sleep(time.Duration((i + 1) * constSleep) * time.Millisecond)
 			continue
 		}
 		if decoder != nil {
