@@ -1,18 +1,20 @@
 package mock
 
 import (
-	"golang.org/x/text/encoding"
 	"fmt"
+	"net/http/httptest"
+	"net/http"
 )
 
-func ChapterGetWebSuccess(url string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return fmt.Sprintf("chapter-content-%v-content-regex", url), 0
-}
-
-func ChapterGetWebInvalid(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "", 0
-}
-
-func ChapterGetWebNoContent(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "hello", 0
+func ChapterServer() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			if req.URL.Path == "/unrecognize" {
+				fmt.Fprintf(res, "hello")
+			} else if req.URL.Path == "/invalid" {
+				fmt.Fprintf(res, "")
+			} else {
+				fmt.Fprintf(res, "chapter-content-success-content-regex")
+			}
+		}))
 }

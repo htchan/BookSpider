@@ -6,8 +6,6 @@ import (
 	"github.com/htchan/BookSpider/internal/database"
 )
 
-var getWeb = utils.GetWeb
-
 func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChapter string, err error) {
 	operation := [5]struct{
 		regex string
@@ -25,7 +23,7 @@ func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChap
 		}
 	})
 	// get online resource, try maximum 10 times if it keeps failed
-	html, _ := getWeb(
+	html, _ := utils.GetWeb(
 		book.config.BaseUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
 	err = book.validHTML(html)
 	utils.CheckError(err)

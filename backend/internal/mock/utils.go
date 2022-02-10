@@ -11,7 +11,6 @@ import (
 func UtilsServer(expectResponse string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {
-			// panic(req.URL.Path)
 			if (req.URL.Path == "/error") {
 				res.WriteHeader(400)
 			} else {
@@ -31,5 +30,4 @@ func UtilsEncoderServer(expectResponse string) *httptest.Server {
 				fmt.Fprintf(res, response)
 			}
 		}))
-	
 }

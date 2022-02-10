@@ -16,7 +16,7 @@ import (
 
 func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 	// get basic info (all chapter url and title)
-	html, _ := getWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	html, _ := utils.GetWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
 	if err = book.validHTML(html); err != nil {
 		err = errors.New(fmt.Sprintf("invalid table of content html: %v", html))
 		return
@@ -43,7 +43,7 @@ func (book *Book) downloadChapter(i int, url, title string, s *semaphore.Weighte
 	defer wg.Done()
 	defer s.Release(1)
 	// get chapter resource
-	html, _ := getWeb(url, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	html, _ := utils.GetWeb(url, 10, book.config.Decoder, book.config.CONST_SLEEP)
 	chapter := Chapter{Url: url, Title: title}
 	// chapter.generateIndex()
 	chapter.Index = i

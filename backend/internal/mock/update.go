@@ -1,23 +1,23 @@
 package mock
 
 import (
-
-	"golang.org/x/text/encoding"
+	"fmt"
+	"net/http/httptest"
+	"net/http"
 )
 
-func UpdateGetWebSuccess(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "title-regex writer-regex type-regex last-update-regex " +
-		"last-chapter-regex", 0
-}
-
-func UpdateGetWebPartialFail(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "title-regex writer-regex type-regex last-update-regex ", 0
-}
-
-func UpdateGetWebEmpty(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "", 10
-}
-
-func UpdateGetWebNumber(_ string, _ int, _ *encoding.Decoder, _ int) (html string, i int) {
-	return "200", 10
+func UpdateServer() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			if (req.URL.Path == "/partial_fail") {
+				fmt.Fprintf(res, "title-regex writer-regex type-regex last-update-regex ")
+			} else if (req.URL.Path == "/empty") {
+				fmt.Fprintf(res, "")
+			} else if (req.URL.Path == "/number") {
+				fmt.Fprintf(res, "200")
+			} else {
+				fmt.Fprintf(res, "title-regex writer-regex type-regex last-update-regex " +
+				"last-chapter-regex")
+			}
+		}))
 }

@@ -102,7 +102,7 @@ func optimizeChapters(chapters []Chapter) {
 
 func (chapter *Chapter)Download(config *configs.BookConfig, validHTML func(string)error) {
 	// get chapter resource
-	html, _ := getWeb(chapter.Url, 10, config.Decoder, config.CONST_SLEEP)
+	html, _ := utils.GetWeb(chapter.Url, 10, config.Decoder, config.CONST_SLEEP)
 	if err := validHTML(html); err != nil {
 		chapter.Content = "load html fail"
 		return

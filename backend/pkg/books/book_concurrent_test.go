@@ -12,7 +12,7 @@ import (
 	"github.com/htchan/BookSpider/internal/database/sqlite"
 )
 
-func init() {
+func initConcurrentTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./book_concurrent_test.db")
@@ -20,6 +20,10 @@ func init() {
 	io.Copy(destination, source)
 	source.Close()
 	destination.Close()
+}
+
+func cleanupConcurrentTest() {
+	os.Remove("./book_concurrent_test.db")
 }
 
 func test_concurrent_create(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
@@ -38,20 +42,19 @@ func test_concurrent_create(db database.DB, config *configs.BookConfig, n, offse
 			}(i)
 		}
 		wg.Wait()
-		t.Logf("create %v finish", n)
+		db.Commit()
+		for i := 0; i < n; i++ {
+			book := LoadBook(db, "test", i + offset, -1, config)
+			if book == nil {
+				t.Fatalf("book.Save does not create test-%v", i + offset)
+			}
+			if book.bookRecord.Site != "test" || book.bookRecord.Id != i + offset ||
+				book.GetStatus() != database.InProgress || book.GetTitle() != "" ||
+				book.bookRecord.WriterId != 0 {
+					t.Fatalf("book.Save for test-%v save wrong book data: %v", i + offset, book)
+				}
+		}
 	}
-}
-
-func Test_Books_Book_Concurrent_Save(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_concurrent_test.db")
-	defer db.Close()
-	t.Run("success with 10 multi thread", test_concurrent_create(db, config, 10, 10))
-	runtime.GC()
-	t.Run("success with 100 multi thread", test_concurrent_create(db, config, 100, 100))
-	runtime.GC()
-	t.Run("success with 1000 multi thread", test_concurrent_create(db, config, 1000, 1000))
-	runtime.GC()
-	t.Run("success with 10000 multi thread", test_concurrent_create(db, config, 10000, 10000))
 }
 
 func test_concurrent_load_book(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
@@ -62,6 +65,9 @@ func test_concurrent_load_book(db database.DB, config *configs.BookConfig, n, of
 			go func(i int) {
 				defer wg.Done()
 				book := LoadBook(db, "test", i + offset, -1, config)
+				if book == nil {
+					t.Fatalf("fail to load test-%v from db", i + offset)
+				}
 				if site, id, _ := book.GetInfo();
 					site != "test" || id != i + offset {
 					t.Fatalf("concurrent load book failed at %v times trial, book: %v", i, book.bookRecord)
@@ -69,20 +75,7 @@ func test_concurrent_load_book(db database.DB, config *configs.BookConfig, n, of
 			}(i)
 		}
 		wg.Wait()
-		t.Logf("create %v finish", n)
 	}
-}
-
-func Test_Books_Book_Concurrent_LoadBook(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_concurrent_test.db")
-	defer db.Close()
-	t.Run("success with 10 multi thread", test_concurrent_load_book(db, config, 10, 10))
-	runtime.GC()
-	t.Run("success with 100 multi thread", test_concurrent_load_book(db, config, 100, 100))
-	runtime.GC()
-	t.Run("success with 1000 multi thread", test_concurrent_load_book(db, config, 1000, 1000))
-	runtime.GC()
-	t.Run("success with 10000 multi thread", test_concurrent_load_book(db, config, 10000, 10000))
 }
 
 func test_concurrent_load_book_by_record(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
@@ -108,20 +101,6 @@ func test_concurrent_load_book_by_record(db database.DB, config *configs.BookCon
 	}
 }
 
-func Test_Books_Book_Concurrent_LoadBookByRecord(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_concurrent_test.db")
-	defer db.Close()
-	t.Run("success with 10 multi thread", test_concurrent_load_book_by_record(db, config, 10, 10))
-	runtime.GC()
-	t.Run("success with 100 multi thread", test_concurrent_load_book_by_record(db, config, 100, 100))
-	runtime.GC()
-	t.Run("success with 1000 multi thread", test_concurrent_load_book_by_record(db, config, 1000, 1000))
-	runtime.GC()
-	t.Run("success with 10000 multi thread", test_concurrent_load_book_by_record(db, config, 10000, 10000))
-}
-
-
-
 func test_concurrent_update_book(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
 		var wg sync.WaitGroup
@@ -138,18 +117,65 @@ func test_concurrent_update_book(db database.DB, config *configs.BookConfig, n, 
 			}(i)
 		}
 		wg.Wait()
-		t.Logf("create %v finish", n)
+		db.Commit()
+		for i := 0; i < n; i++ {
+			rows := db.QueryBookBySiteIdHash("test", i + offset, -1)
+			record, err := rows.Scan()
+			if err != nil {
+				t.Fatalf("book.Save does not create test-%v, err: %v", i + offset, err)
+			}
+			rows.Close()
+			actualRecord := record.(*database.BookRecord)
+			if actualRecord.Site != "test" || actualRecord.Id != i + offset ||
+				actualRecord.Status != database.InProgress || actualRecord.Title != "-new" ||
+				actualRecord.WriterId != 0 {
+					t.Fatalf("book.Save for test-%v save wrong book data: %v", i + offset, actualRecord)
+				}
+		}
 	}
 }
 
-func Test_Books_Book_Concurrent_Update(t *testing.T) {
+func TestBooks_Book_Concurrent(t *testing.T) {
 	db := sqlite.NewSqliteDB("./book_concurrent_test.db")
 	defer db.Close()
-	t.Run("success with 10 multi thread", test_concurrent_update_book(db, config, 10, 10))
-	runtime.GC()
-	t.Run("success with 100 multi thread", test_concurrent_update_book(db, config, 100, 100))
-	runtime.GC()
-	t.Run("success with 1000 multi thread", test_concurrent_update_book(db, config, 1000, 1000))
-	runtime.GC()
-	t.Run("success with 10000 multi thread", test_concurrent_update_book(db, config, 10000, 10000))
+
+	t.Run("func Save", func(t *testing.T) {
+		t.Run("success with 10 threads", test_concurrent_create(db, config, 10, 10))
+		runtime.GC()
+		t.Run("success with 100 threads", test_concurrent_create(db, config, 100, 100))
+		runtime.GC()
+		t.Run("success with 1000 threads", test_concurrent_create(db, config, 1000, 1000))
+		runtime.GC()
+		t.Run("success with 10000 threads", test_concurrent_create(db, config, 10000, 10000))
+	})
+
+	t.Run("func LoadBook", func(t *testing.T) {
+		t.Run("success with 10 threads", test_concurrent_load_book(db, config, 10, 10))
+		runtime.GC()
+		t.Run("success with 100 threads", test_concurrent_load_book(db, config, 100, 100))
+		runtime.GC()
+		t.Run("success with 1000 threads", test_concurrent_load_book(db, config, 1000, 1000))
+		runtime.GC()
+		t.Run("success with 10000 threads", test_concurrent_load_book(db, config, 10000, 10000))
+	})
+
+	t.Run("func LoadBookByRecord", func(t *testing.T) {
+		t.Run("success with 10 threads", test_concurrent_load_book_by_record(db, config, 10, 10))
+		runtime.GC()
+		t.Run("success with 100 threads", test_concurrent_load_book_by_record(db, config, 100, 100))
+		runtime.GC()
+		t.Run("success with 1000 threads", test_concurrent_load_book_by_record(db, config, 1000, 1000))
+		runtime.GC()
+		t.Run("success with 10000 threads", test_concurrent_load_book_by_record(db, config, 10000, 10000))
+	})
+
+	t.Run("func Update", func(t *testing.T) {
+		t.Run("success with 10 threads", test_concurrent_update_book(db, config, 10, 10))
+		runtime.GC()
+		t.Run("success with 100 threads", test_concurrent_update_book(db, config, 100, 100))
+		runtime.GC()
+		t.Run("success with 1000 threads", test_concurrent_update_book(db, config, 1000, 1000))
+		runtime.GC()
+		t.Run("success with 10000 threads", test_concurrent_update_book(db, config, 10000, 10000))
+	})
 }

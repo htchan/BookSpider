@@ -8,8 +8,8 @@ import (
 )
 
 func Test_Books_NewChapter(t *testing.T) {
+	config := configs.BookConfig{ DownloadUrl: "test/", ChapterUrl: "test%v" }
 	t.Run("success with appending download url", func(t *testing.T) {
-		config := configs.BookConfig{ DownloadUrl: "test/" }
 		chapter := NewChapter(0, "0", "title-0", &config)
 		if chapter.Index != 0 || chapter.Url != "test/0" ||
 			chapter.Title != "title-0" || chapter.Content != "" {
@@ -18,7 +18,6 @@ func Test_Books_NewChapter(t *testing.T) {
 	})
 
 	t.Run("success with formating download url", func(t *testing.T) {
-		config := configs.BookConfig{ ChapterUrl: "test%v" }
 		chapter := NewChapter(0, "/0", "title-0", &config)
 		if chapter.Index != 0 || chapter.Url != "test/0" ||
 			chapter.Title != "title-0" || chapter.Content != "" {
@@ -134,51 +133,45 @@ func Test_Books_Chapter_sortChapters(t *testing.T) {
 }
 
 func Test_Books_Chapter_OptimizeChapters(t *testing.T) {
-
+	t.Skip("feature available in future")
 }
 
 func Test_Books_Chatper_Download(t *testing.T) {
+	server := mock.ChapterServer()
+	defer server.Close()
+
+	config := configs.BookConfig{
+		DownloadUrl: "",
+		ChapterContentRegex: "chapter-content-(.*)-content-regex",
+	}
+	chapter := NewChapter(0, "0", "title-0", &config)
+	validHTML := func(_ string)error { return nil }
+
 	t.Run("success", func(t *testing.T) {
-		getWeb = mock.ChapterGetWebSuccess
-		config := configs.BookConfig{
-			DownloadUrl: "",
-			ChapterContentRegex: "chapter-content-(\\d)-content-regex",
-		}
-		chapter := NewChapter(0, "0", "title-0", &config)
-		validHTML := func(_ string)error { return nil }
+		chapter.Url = server.URL + "/success"
 		chapter.Download(&config, validHTML)
 
-		if chapter.Content != "0" {
-			t.Fatalf("chapter Download fail with content: %v", chapter.Content)
+		if chapter.Content != "success" {
+			t.Fatalf("chapter Download fail with content: %v", chapter)
 		}
 	})
 
 	t.Run("fail with invalid HTML", func(t *testing.T) {
-		getWeb = mock.ChapterGetWebSuccess
-		config := configs.BookConfig{
-			DownloadUrl: "",
-			ChapterContentRegex: "chapter-content-(\\d)-content-regex",
-		}
-		chapter := NewChapter(0, "0", "title-0", &config)
+		chapter.Url = server.URL + "/invalid"
 		validHTML := func(_ string)error { return errors.New("test error") }
 		chapter.Download(&config, validHTML)
 
 		if chapter.Content != "load html fail" {
-			t.Fatalf("chapter Download fail with content: %v", chapter.Content)
+			t.Fatalf("chapter Download fail with content: %v", chapter)
 		}
 	})
 
 	t.Run("fail with not recognized HTML", func(t *testing.T) {
-		getWeb = mock.ChapterGetWebSuccess
-		config := configs.BookConfig{
-			DownloadUrl: "",
-		}
-		chapter := NewChapter(0, "0", "title-0", &config)
-		validHTML := func(_ string)error { return nil }
+		chapter.Url = server.URL + "/unrecognize"
 		chapter.Download(&config, validHTML)
 
-		if chapter.Content != "recognize html fail\nchapter-content-0-content-regex" {
-			t.Fatalf("chapter Download fail with content: %v", chapter.Content)
+		if chapter.Content != "recognize html fail\nhello" {
+			t.Fatalf("chapter Download fail with content: %v", chapter)
 		}
 	})
 }

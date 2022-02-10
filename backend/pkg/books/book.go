@@ -108,9 +108,9 @@ func (book *Book)saveBookRecord(db database.DB) {
 	exist := query.Next()
 	query.Close()
 	if exist {
-		utils.CheckError(db.UpdateBookRecord(book.bookRecord))
+		utils.CheckError(db.UpdateBookRecord(book.bookRecord, book.writerRecord))
 	} else {
-		utils.CheckError(db.CreateBookRecord(book.bookRecord))
+		utils.CheckError(db.CreateBookRecord(book.bookRecord, book.writerRecord))
 	}
 }
 
@@ -123,7 +123,7 @@ func (book *Book)saveErrorRecord(db database.DB) {
 	
 	if book.bookRecord.Status != database.Error && err == nil {
 		utils.CheckError(
-			db.DeleteErrorRecord(
+			db.DeleteErrorRecords(
 				[]database.ErrorRecord {*errorRecord.(*database.ErrorRecord) } ))
 	} else if book.bookRecord.Status == database.Error && err == nil {
 		utils.CheckError(db.UpdateErrorRecord(book.errorRecord))
