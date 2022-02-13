@@ -68,5 +68,5 @@ func (f *Flags) IsSite() bool {
 }
 
 func (f *Flags) Valid() bool {
-	return f.IsBook() || f.IsSite()
+	return f.IsBook() || f.IsSite() || f.IsEverything()
 }
