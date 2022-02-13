@@ -11,11 +11,14 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"fmt"
 )
 
 var downloadConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
 
 func TestBooks_Book_Download(t *testing.T) {
+	downloadConfig.CONST_SLEEP = 0
+	downloadConfig.ChapterUrlRegex = "chapter-url-regex-(.*?) "
 	server := mock.DownloadServer()
 	defer server.Close()
 
@@ -23,7 +26,7 @@ func TestBooks_Book_Download(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, -1, downloadConfig)
-			book.config.DownloadUrl = server.URL + "/content/success"
+			book.config.DownloadUrl = server.URL + "/content/success/1"
 
 			chapters, err := book.getEmptyChapters()
 			if err != nil || len(chapters) != 4 {
@@ -32,7 +35,7 @@ func TestBooks_Book_Download(t *testing.T) {
 
 			for i, chapter := range chapters {
 				s := strconv.Itoa(i + 1)
-				if chapter.Url != book.config.DownloadUrl + s || chapter.Title != s {
+				if chapter.Url != fmt.Sprintf(book.config.ChapterUrl, "/" + s) || chapter.Title != s {
 					t.Fatalf("book getEmptyChapters return wrong result at position %v, chatper: %v", i, chapter)
 				}
 			}
@@ -41,7 +44,7 @@ func TestBooks_Book_Download(t *testing.T) {
 		t.Run("fail when length of url found != length of title found", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, -1, downloadConfig)
-			book.config.DownloadUrl = server.URL + "/content/imbalance_url_title"
+			book.config.DownloadUrl = server.URL + "/content/imbalance_url_title/1"
 
 			_, err := book.getEmptyChapters()
 			if err == nil {
@@ -189,7 +192,8 @@ func TestBooks_Book_Download(t *testing.T) {
 	t.Run("func Download", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			book := NewBook("test", 1, 10, downloadConfig)
-			book.config.DownloadUrl = server.URL + "/content/success"
+			book.config.DownloadUrl = server.URL + "/content/success/1"
+			book.config.ChapterUrl = server.URL + "/chapter/success/%v"
 			book.config.CONST_SLEEP = 0
 			book.SetTitle("book-title")
 			book.SetWriter("book-writer")

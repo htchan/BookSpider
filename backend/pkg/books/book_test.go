@@ -60,7 +60,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 
 			if book.config.BaseUrl != "https://base-url/1" ||
 				book.config.DownloadUrl != "https://download-url/1" ||
-				book.config.ChapterUrl != "https://chapter-url/1" ||
+				book.config.ChapterUrl != "https://chapter-url/%v" ||
 				book.config.ChapterUrlPattern != "chapter-url-pattern" ||
 				book.config.TitleRegex != "(title-regex)" ||
 				book.config.WriterRegex != "(writer-regex)" ||
@@ -99,8 +99,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
-				book.config.DownloadUrl != "https://download-url/3" ||
-				book.config.ChapterUrl != "https://chapter-url/3" {
+				book.config.DownloadUrl != "https://download-url/3" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -125,8 +124,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
-				book.config.DownloadUrl != "https://download-url/3" ||
-				book.config.ChapterUrl != "https://chapter-url/3" {
+				book.config.DownloadUrl != "https://download-url/3" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -151,8 +149,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/2" ||
-				book.config.DownloadUrl != "https://download-url/2" ||
-				book.config.ChapterUrl != "https://chapter-url/2" {
+				book.config.DownloadUrl != "https://download-url/2" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -190,8 +187,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
-				book.config.DownloadUrl != "https://download-url/3" ||
-				book.config.ChapterUrl != "https://chapter-url/3" {
+				book.config.DownloadUrl != "https://download-url/3" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -217,8 +213,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/2" ||
-				book.config.DownloadUrl != "https://download-url/2" ||
-				book.config.ChapterUrl != "https://chapter-url/2" {
+				book.config.DownloadUrl != "https://download-url/2" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -243,8 +238,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
-				book.config.DownloadUrl != "https://download-url/3" ||
-				book.config.ChapterUrl != "https://chapter-url/3" {
+				book.config.DownloadUrl != "https://download-url/3" {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
