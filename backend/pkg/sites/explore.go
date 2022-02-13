@@ -1,85 +1,98 @@
 package sites
 
 import (
-	"log"
-
+	"github.com/htchan/BookSpider/pkg/flags"
+	"github.com/htchan/BookSpider/pkg/books"
+	"errors"
+	"fmt"
+	"sync"
 	"context"
 	"golang.org/x/sync/semaphore"
-	"sync"
-	"time"
-
-	"github.com/htchan/BookSpider/internal/utils"
-	"github.com/htchan/BookSpider/pkg/books"
 )
 
-func (site *Site) Explore(maxError int, s *semaphore.Weighted) {
-	// init concurrent variable
-	site.OpenDatabase()
-	ctx := context.Background()
-	var err error
-	site.bookLoadTx, err = site.database.Begin()
-	utils.CheckError(err)
-	site.PrepareStmt()
-	if s == nil {
-		s = semaphore.NewWeighted(int64(maxError))
+func (site *Site) exploreOldBook(id int, count *int) error {
+	book := books.LoadBook(site.database, site.Name, id, -1, site.config.BookMeta)
+	if book == nil { return errors.New(fmt.Sprintf(
+		"[explore] load book %v-%v fail", site.Name, id))
 	}
-	site.semaphore = semaphore.NewWeighted(int64(maxError))
-	var wg sync.WaitGroup
-
-	maxId := site.maxBookId() + 1
-	if maxId == 0 {
-		maxId++
+	if book.GetError() == nil { return errors.New(fmt.Sprintf(
+		"[explore] load book %v-%v return status %v", site.Name, id, book.GetStatus()))
 	}
-	log.Println(maxId)
-	// keep explore until reach max error count
-	errorCount := 0
-	for i := 0; errorCount < maxError; i++ {
-		wg.Add(1)
-		s.Acquire(ctx, 1)
-		site.semaphore.Acquire(ctx, 1)
-		book := books.NewBook(site.SiteName, maxId, site.meta, site.decoder, site.bookLoadTx)
-		go site.exploreThread(book, &errorCount, s, &wg)
-		maxId += 1
-		if i % 100 == 0 {
-			time.Sleep(time.Duration(100) * time.Millisecond)
-		}
+	if book.Update() {
+		book.Save(site.database)
+		*count = 0
+	} else {
+		(*count)++
 	}
-	wg.Wait()
-	utils.CheckError(site.bookLoadTx.Rollback())
-	site.CloseStmt()
-	site.CloseDatabase()
+	return nil
 }
 
-func (site *Site) exploreThread(book *books.Book, errorCount *int, s *semaphore.Weighted,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer s.Release(1)
-	defer site.semaphore.Release(1)
-	if book.Version >= 0 {
-		//TODO: here break the loop is not the best handling
-		//		the best handling is do the update and update the database
-		book.Log(map[string]interface{}{
-			"error": "books already in database", "stage": "explore",
-		})
-		*errorCount = 0
-		return
+func (site *Site) exploreNewBook(id int, count *int) error {
+	book := books.NewBook(site.Name, id, -1, site.config.BookMeta)
+	updateSuccess := book.Update() 
+	book.Save(site.database)
+	if updateSuccess {
+		*count = 0
+	} else {
+		(*count)++
 	}
-	updated := book.Update()
-	// if updated, save in books table, else, save in error table and **reset error count**
-	if updated {
-		site.InsertBook(*book)
-		site.DeleteError(*book)
-		book.Log(map[string]interface{}{
-			"title": book.Title, "writer": book.Writer, "type": book.Type,
-			"lastUpdate": book.LastUpdate, "lastChapter": book.LastChapter,
-			"message": "explored", "stage": "explore",
-		})
-		*errorCount = 0
-	} else { // increase error Count
-		site.InsertError(*book)
-		book.Log(map[string]interface{}{
-			"message": "no such book", "stage": "explore",
-		})
-		*errorCount++
+	return nil
+}
+
+// mark books to end status after finish update
+func (site *Site) explore() (err error) {
+	summary := site.database.Summary(site.Name)
+	ctx := context.Background()
+	var wg sync.WaitGroup
+	i := summary.LatestSuccessId + 1
+	errorCount := 0
+	// loop latest continuous error books in database
+	for ; i <= summary.MaxBookId; i++ {
+		if errorCount >= site.config.MaxExploreError {
+			return nil
+		}
+		site.semaphore.Acquire(ctx, 1)
+		wg.Add(1)
+		go func (s *semaphore.Weighted, wg *sync.WaitGroup, id int, errorCount *int) {
+			defer s.Release(1)
+			defer wg.Done()
+			err := site.exploreOldBook(id, errorCount)
+			if err != nil {
+				// TODO: try to log the error
+			}
+		} (site.semaphore, &wg, i, &errorCount)
 	}
+	// loop books not in database
+	for ; errorCount < site.config.MaxExploreError; i++ {
+		site.semaphore.Acquire(ctx, 1)
+		wg.Add(1)
+		go func (s *semaphore.Weighted, wg *sync.WaitGroup, id int, errorCount *int) {
+			defer s.Release(1)
+			defer wg.Done()
+			err := site.exploreNewBook(id, errorCount)
+			if err != nil {
+				// TODO: try to log the error
+			}
+		} (site.semaphore, &wg, i, &errorCount)
+	}
+	wg.Wait()
+	return
+}
+
+func (site *Site) Explore(args *flags.Flags) (err error) {
+	if !args.Valid() { return errors.New("invalid arguments") }
+	if args.IsBook() && *args.Site == site.Name {
+		if *args.Site != site.Name { return nil }
+		siteName, id, hash := args.GetBookInfo()
+		book := books.LoadBook(site.database, siteName, id, hash, site.config.BookMeta)
+		if book != nil {
+			book = books.NewBook(siteName, id, hash, site.config.BookMeta)
+		}
+		book.Update()
+		book.Save(site.database)
+		return nil
+	} else if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {
+		return site.explore()
+	}
+	return nil
 }

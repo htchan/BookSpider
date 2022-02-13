@@ -32,6 +32,8 @@ type DB interface {
 	UpdateBookRecord(*BookRecord, *WriterRecord) error
 	UpdateErrorRecord(*ErrorRecord) error
 
+	UpdateBookRecordsStatusByChapter() error
+
 	DeleteBookRecords([]BookRecord) error
 	DeleteWriterRecords([]WriterRecord) error
 	DeleteErrorRecords([]ErrorRecord) error

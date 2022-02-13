@@ -2,41 +2,90 @@ package sites
 
 import (
 	"testing"
-	"os"
 	"io"
-
-	"golang.org/x/text/encoding/traditionalchinese"
+	"os"
 	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/BookSpider/pkg/books"
+	"github.com/htchan/BookSpider/pkg/flags"
+	"fmt"
 )
 
-func init() {
-	source, err := os.Open("../../test/site-test-data/ck101_template.db")
+func initCheckTest() {
+	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
-	destination, err := os.Create("../../test/site-test-data/ck101_check.db")
+	destination, err := os.Create("./check_test.db")
 	utils.CheckError(err)
 	io.Copy(destination, source)
 	source.Close()
 	destination.Close()
 }
 
-var testSite_check = Site{
-	SiteName: "ck101",
-	database: nil,
-	meta: *meta,
-	decoder: traditionalchinese.Big5.NewDecoder(),
-	databaseLocation: "../../test/site-test-data/ck101_check.db",
-	DownloadLocation: "./test_res/site-test-data/",
-	MAX_THREAD_COUNT: 100,
+func cleanupCheckTest() {
+	os.Remove("./check_test.db")
 }
 
-func TestCheckEnd(t *testing.T) {
-	testSite_check.CheckEnd()
-	testSite_check.OpenDatabase()
-	defer testSite_check.CloseDatabase()
-	distinctEndCount, endCount := testSite_check.endCount()
-	if distinctEndCount != 1 || endCount != 2 {
-		t.Fatalf("Site.CheckEnd() make final results (%v, %v) but not (1, 2)",
-			distinctEndCount, endCount)
-	}
+var checkConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+
+func Test_Sites_Site_Check(t *testing.T) {
+	checkConfig.DatabaseLocation = "./check_test.db"
+	site := NewSite("test", checkConfig)
+	site.OpenDatabase()
+	defer site.database.Close()
+
+	t.Run("func Check", func(t *testing.T) {
+		t.Run("success for full site", func(t *testing.T) {
+			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			book.SetUpdateChapter("后记abcdef")
+			book.Save(site.database)
+			site.database.Commit()
+
+			f := &flags.Flags{}
+			err := site.Check(f)
+			fmt.Println("database", site.database)
+			site.database.Commit()
+			if err != nil {
+				t.Fatalf("site Check return error for full site - error: %v", err)
+			}
+			book = books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			if book.GetStatus() != database.End {
+				t.Fatalf("site.Check does not update the record status to end")
+			}
+			summary := site.database.Summary(site.Name)
+			if summary.BookCount != 6 || summary.ErrorCount != 3 ||
+				summary.WriterCount != 3 || summary.UniqueBookCount != 5 ||
+				summary.MaxBookId != 5 || summary.LatestSuccessId != 3 ||
+				summary.StatusCount[database.Error] != 3 ||
+				summary.StatusCount[database.InProgress] != 0 ||
+				summary.StatusCount[database.End] != 2 ||
+				summary.StatusCount[database.Download] != 1 {
+					t.Fatalf("before book update generate wrong summary: %v", summary)
+				}
+		})
+
+		t.Run("fail for invalid arguements", func(t *testing.T) {
+			flagId := 123
+			f := &flags.Flags{
+				Id: &flagId,
+			}
+
+			err := site.Check(f)
+			if err == nil {
+				t.Fatalf("site Check not return error for invalid arguments")
+			}
+		})
+
+		t.Run("skip if arguments provide mismatch site name", func(t *testing.T) {
+			flagSite := "others"
+			f := &flags.Flags{
+				Site: &flagSite,
+			}
+
+			err := site.Check(f)
+			if err != nil {
+				t.Fatalf("site Check return error for not matching site name- error: %v", err)
+			}
+		})
+	})
 }
-// As function used in Site.Check is just logging, here will not have any test for them

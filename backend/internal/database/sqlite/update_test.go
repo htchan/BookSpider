@@ -24,7 +24,7 @@ func cleanupDbUpdateTest() {
 }
 
 func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./update_test.db")
 	defer db.Close()
 
 	writerRecord := &database.WriterRecord{
@@ -86,7 +86,7 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 }
 
 func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./update_test.db")
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -127,5 +127,39 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 			db.statements[1] != ErrorUpdateStatement(errorRecord) {
 				t.Fatalf("DB.UpdateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
+	})
+}
+
+func Test_Sqlite_DB_UpdateBookRecordsStatusByChapter(t *testing.T) {
+	db := NewSqliteDB("./update_test.db")
+	defer db.Close()
+
+	t.Run("update books if they stuck at same update date long enough", func(t *testing.T) {
+		summary := db.Summary("test")
+		if summary.BookCount != 6 || summary.ErrorCount != 3 ||
+			summary.WriterCount != 3 || summary.UniqueBookCount != 5 ||
+			summary.MaxBookId != 5 || summary.LatestSuccessId != 3 ||
+			summary.StatusCount[database.Error] != 3 ||
+			summary.StatusCount[database.InProgress] != 1 ||
+			summary.StatusCount[database.End] != 1 ||
+			summary.StatusCount[database.Download] != 1 {
+				t.Fatalf("before book update generate wrong summary: %v", summary)
+			}
+		err := db.UpdateBookRecordsStatusByChapter()
+		db.Commit()
+		if err != nil {
+			t.Fatalf("db.UpdateBookRecordsStatusByChapter return error: %v", err)
+		}
+
+		summary = db.Summary("test")
+		if summary.BookCount != 6 || summary.ErrorCount != 3 ||
+			summary.WriterCount != 3 || summary.UniqueBookCount != 5 ||
+			summary.MaxBookId != 5 || summary.LatestSuccessId != 3 ||
+			summary.StatusCount[database.Error] != 3 ||
+			summary.StatusCount[database.InProgress] != 0 ||
+			summary.StatusCount[database.End] != 2 ||
+			summary.StatusCount[database.Download] != 1 {
+				t.Fatalf("before book update generate wrong summary: %v", summary)
+			}
 	})
 }

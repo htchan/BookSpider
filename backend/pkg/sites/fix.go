@@ -1,169 +1,121 @@
 package sites
 
 import (
-	"log"
-	"strconv"
-
-	"context"
-	"golang.org/x/sync/semaphore"
-	"sync"
-
-	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/pkg/books"
+	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/database"
+	"errors"
+	"sync"
+	"golang.org/x/sync/semaphore"
+	"context"
+	"strings"
+	"strconv"
+	"os"
+	// "path/filepath"
+	// "time"
+	// "fmt"
 )
 
-func (site *Site) fixStroageError(s *semaphore.Weighted) {
-	// init var for concurrency
-	ctx := context.Background()
-	if s == nil {
-		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
-	}
+func (site *Site) addMissingRecords() (err error) {
+	// fix missing record
+	summary := site.database.Summary(site.Name)
 	var wg sync.WaitGroup
-	var err error
-	site.bookLoadTx, err = site.database.Begin()
-	utils.CheckError(err)
-	site.PrepareStmt()
-	rows, err := site.bookQuery("")
-	// loop all book
-	for rows.Next() {
+	ctx := context.Background()
+	for i := 1; i <= summary.MaxBookId; i++ {
 		wg.Add(1)
-		s.Acquire(ctx, 1)
-		book, err := books.LoadBook(rows, site.meta, site.decoder, site.CONST_SLEEP)
-		if err != nil {
-			book.Log(map[string]interface{}{
-				"error": "cannot load book from database", "stage": "fix",
-			})
-			continue
-		}
-		go site.CheckDownloadExistThread(book, s, &wg)
+		site.semaphore.Acquire(ctx, 1)
+		go func(s *semaphore.Weighted, wg *sync.WaitGroup, i int) {
+			defer s.Release(1)
+			defer wg.Done()
+			book := books.LoadBook(site.database, site.Name, i, -1, site.config.BookMeta)
+			if book == nil {
+				book = books.NewBook(site.Name, i, -1, site.config.BookMeta)
+				book.Update()
+				book.Save(site.database)
+			}
+		}(site.semaphore, &wg, i)
 	}
 	wg.Wait()
-	// commit changes to database
-	utils.CheckError(rows.Close())
-	utils.CheckError(site.bookLoadTx.Rollback())
-	site.CloseStmt()
-	site.bookLoadTx = nil
+	return nil
 }
 
-func (site *Site) CheckDownloadExistThread(book *books.Book, s *semaphore.Weighted,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer s.Release(1)
-	bookLocation := book.StorageLocation(site.DownloadLocation)
-	// check book file exist
-	exist := utils.Exists(bookLocation)
-	if exist && !book.DownloadFlag {
-		// if book mark as not download, but it exist, mark as download
-		book.EndFlag = true
-		book.DownloadFlag = true
-		site.UpdateBook(*book)
-		book.Log(map[string]interface{}{
-			"message": "mark to download", "stage": "fix",
-		})
-	} else if !exist && book.DownloadFlag {
-		// if book mark as download, but not exist, mark as not download
-		book.DownloadFlag = false
-		site.UpdateBook(*book)
-		book.Log(map[string]interface{}{
-			"message": "mark to not download yet", "stage": "fix",
-		})
-	}
+func (site *Site) printPotentialDuplicatedRecords() (err error) {
+	// todo: print the site num version of two books
+	// 	     if site num are equal and version smaller than specific number
+	return nil
 }
 
-//TODO: break it into delete duplicated book, delete duplicated error and delete cross table duplicated
-func (site *Site) fixDuplicateRecordError() {
-	// init variable
-	var bookId, bookVersion, bookCount, errorCount int
-	rows, tx := site.query("select num, version from books group by num, version having count(*) > 1")
-	for rows.Next() {
-		rows.Scan(&bookId, &bookVersion)
-		log.Println(site.SiteName, "("+strconv.Itoa(bookId)+", "+strconv.Itoa(bookVersion)+")")
-		bookCount += 1
-	}
-	log.Println(site.SiteName, "duplicate book count : "+strconv.Itoa(bookCount))
-	// delete duplicate record in book
-	deleteStmt, err := tx.Prepare("delete from books where rowid not in " +
-		"(select min(rowid) from books group by num, version)")
-	utils.CheckError(err)
-	_, err = deleteStmt.Exec()
-	utils.CheckError(err)
-	utils.CheckError(deleteStmt.Close())
-	closeQuery(rows, tx)
-	// check any duplicate record in error table and show them
-	rows, tx = site.query("select num from error group by num having count(*) > 1")
-	for rows.Next() {
-		rows.Scan(&bookId)
-		log.Println(site.SiteName, "("+strconv.Itoa(bookId)+")")
-	}
-	log.Println(site.SiteName, "duplicate error count : "+strconv.Itoa(errorCount))
-	// delete duplicate record
-	deleteStmt, err = tx.Prepare("delete from error where rowid not in " +
-		"(select min(rowid) from books group by site, num)")
-	utils.CheckError(err)
-	_, err = deleteStmt.Exec()
-	utils.CheckError(err)
-	utils.CheckError(deleteStmt.Close())
-	// check if any record in book table duplicate in error table
-	log.Println(site.SiteName, "duplicate cross - - - - - - - - - -")
-	deleteStmt, err = tx.Prepare("delete from error where num in (select distinct num from books)")
-	utils.CheckError(err)
-	tx.Stmt(deleteStmt).Exec()
-	utils.CheckError(deleteStmt.Close())
-	closeQuery(rows, tx)
-}
-
-func (site *Site) fixMissingRecordError(s *semaphore.Weighted) {
-	// init variable
-	missingIds := site.missingIds()
-	// insert missing record by thread
-	var err error
-	site.bookLoadTx, err = site.database.Begin()
-	utils.CheckError(err)
-	if s == nil {
-		s = semaphore.NewWeighted(int64(site.MAX_THREAD_COUNT))
-	}
-	ctx := context.Background()
+func (site *Site) updateBooksByStorage() (err error) {
+	// fix storage error (update database status <download> and <end> according to storage)
+	defer utils.Recover(func() {})
 	var wg sync.WaitGroup
-	var errorCount int
-	site.PrepareStmt()
-	log.Println(site.SiteName, "missing count : "+strconv.Itoa(len(missingIds)))
-	for _, bookId := range missingIds {
-		log.Println(site.SiteName, bookId)
+	ctx := context.Background()
+	// loop all download book to ensure they have txt download else turn them to end
+	rows := site.database.QueryBooksByStatus(database.Download)
+	defer rows.Close()
+	for rows.Next() {
 		wg.Add(1)
-		s.Acquire(ctx, 1)
-		book := books.NewBook(site.SiteName, bookId, site.meta, site.decoder, site.bookLoadTx)
-		go site.exploreThread(book, &errorCount, s, &wg)
+		site.semaphore.Acquire(ctx, 1)
+		record, err := rows.ScanCurrent()
+		utils.CheckError(err)
+		go func(s *semaphore.Weighted, wg *sync.WaitGroup, record *database.BookRecord) {
+			defer s.Release(1)
+			defer wg.Done()
+			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
+			// ensure the storage exist
+			if !book.HasContent() {
+				book.SetStatus(database.End)
+				book.Save(site.database)
+			}
+		}(site.semaphore, &wg, record.(*database.BookRecord))
 	}
 	wg.Wait()
-	utils.CheckError(site.bookLoadTx.Rollback())
-	site.CloseStmt()
-	// print missing record count
-	log.Println(site.SiteName, "finish add missing count", len(missingIds))
+	// loop all storage to ensure all storage can find a mapped download record
+	storageList, err := os.ReadDir(os.Getenv("ASSETS_LOCATION") + site.config.StorageDirectory)
+	utils.CheckError(err)
+	for _, file := range storageList {
+		if file.IsDir() { continue }
+		wg.Add(1)
+		site.semaphore.Acquire(ctx, 1)
+		go func(s *semaphore.Weighted, wg *sync.WaitGroup, filename string) {
+			defer s.Release(1)
+			defer wg.Done()
+			if filename[len(filename) - 3:] != "txt" { return }
+			info := strings.Split(strings.ReplaceAll(filename, ".txt", ""), "-v")
+			i, _ := strconv.Atoi(info[0])
+			hashCode := 0
+			if len(info) == 2 {
+				hashCode, err = strconv.Atoi(info[1])
+				if err != nil { return }
+			}
+			book := books.LoadBook(site.database, site.Name, i, hashCode, site.config.BookMeta)
+			if book!= nil && book.GetStatus() != database.Download {
+				book.SetStatus(database.Download)
+				book.Save(site.database)
+			}
+		}(site.semaphore, &wg, file.Name())
+	}
+	wg.Wait()
+	return nil
 }
 
-func (site *Site) fixNullFieldError() {
-	tx, err := site.database.Begin()
+func (site *Site) fix() (err error) {
+	defer utils.Recover(func() {})
+	err = site.addMissingRecords()
 	utils.CheckError(err)
-	_, err = tx.Exec("update books set read=? where read is null", false)
+	err = site.printPotentialDuplicatedRecords()
 	utils.CheckError(err)
-	_, err = tx.Exec("update books set download=? where download is null", false)
-	utils.CheckError(err)
-	_, err = tx.Exec("update books set end=? where end is null", false)
-	utils.CheckError(err)
-	err = tx.Commit()
-	utils.CheckError(err)
+	return site.updateBooksByStorage()
 }
 
-func (site *Site) Fix(s *semaphore.Weighted) {
-	site.OpenDatabase()
-	log.Println(site.SiteName, "Add Missing Record")
-	site.fixMissingRecordError(s)
-	log.Println(site.SiteName, "Fix Null bool")
-	site.fixNullFieldError()
-	log.Println(site.SiteName, "Fix duplicate record")
-	site.fixDuplicateRecordError()
-	log.Println(site.SiteName, "Fix storage error")
-	site.fixStroageError(s)
-	log.Println()
-	site.CloseDatabase()
+func (site *Site) Fix(args *flags.Flags) (err error) {
+	if !args.Valid() || args.IsBook() {
+		err = errors.New("invalid arguments")
+		return
+	}
+	if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {
+		return site.fix()
+	}
+	return nil
 }
