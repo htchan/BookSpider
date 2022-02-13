@@ -7,14 +7,53 @@ import (
 	"io/ioutil"
 	// "math/rand"
 	"net/http"
+	"net/url"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
 )
 
+var currencClient = 0
+var currencClientPointer = &currencClient
+
+var client = basicClient
+
+func basicClient() *http.Client {
+	return &http.Client{
+		Timeout: 5 * time.Second,
+	}
+}
+
+func proxyClient() *http.Client {
+	*currencClientPointer = (*currencClientPointer + 1) % PROXY_URLS_COUNT
+	proxyUrl, err := url.Parse(proxyUrls[*currencClientPointer])
+	CheckError(err)
+	return &http.Client{
+		Transport: &http.Transport{ Proxy: http.ProxyURL(proxyUrl) },
+		Timeout: 60 * time.Second,
+	}
+}
+
+type ClientType int
+
+const (
+	BasicClient = iota
+	ProxyClient
+)
+
+func UseClient(clientType ClientType) {
+	if clientType == BasicClient{
+		client = basicClient
+	} else if clientType == ProxyClient {
+		client = proxyClient
+	} else {
+		client = nil
+	}
+}
+
 func getWeb(url string) string {
-	client := http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(url)
+	c := client()
+	resp, err := c.Get(url)
 	if err != nil {
 		return ""
 	}
@@ -26,7 +65,7 @@ func getWeb(url string) string {
 		return ""
 	}
 	resp.Body.Close()
-	client.CloseIdleConnections()
+	c.CloseIdleConnections()
 	return string(body)
 }
 
