@@ -2,21 +2,22 @@ package sqlite
 
 import (
 	"strings"
+	"html"
 	"github.com/htchan/BookSpider/internal/database"
 )
 
 func (db *SqliteDB) QueryBookBySiteIdHash(site string, id int, hashCode int) database.Rows {
 	rows := new(SqliteBookRows)
-	if hashCode > 0 {
+	if hashCode >= 0 {
 		rows._rows, _ = db._db.Query(
 			"select " + database.BOOK_RECORD_FIELDS + " from books " +
 			"where site=? and id=? and hash_code=?",
-			site, id, hashCode)
+			html.EscapeString(site), id, hashCode)
 	} else {
 		rows._rows, _ = db._db.Query(
 			"select " + database.BOOK_RECORD_FIELDS + " from books " +
 			"where site=? and id=? order by hash_code desc",
-			site, id)
+			html.EscapeString(site), id)
 	}
 	return rows
 }
@@ -42,7 +43,7 @@ func (db *SqliteDB) QueryBooksByPartialTitleAndWriter(titles []string, writers [
 	}
 	arguments := make([]interface{}, len(titles) + len(writers))
 	for i, title := range titles {
-		arguments[i] = "%" + title + "%"
+		arguments[i] = "%" + html.EscapeString(title) + "%"
 	}
 	for i, writer := range writers {
 		arguments[len(titles) + i] = writer
@@ -83,7 +84,7 @@ func (db *SqliteDB) QueryWriterByName(name string)  database.Rows {
 	rows._rows, _ = db._db.Query(
 		"select " + database.WRITER_RECORD_FIELDS + " from writers " +
 		"where name=?",
-		name)
+		html.EscapeString(name))
 	return rows
 }
 
@@ -95,7 +96,7 @@ func (db *SqliteDB) QueryWritersByPartialName(names []string) database.Rows {
 	}
 	arguments := make([]interface{}, len(names))
 	for i := range names {
-		arguments[i] = "%" + names[i] + "%"
+		arguments[i] = "%" + html.EscapeString(names[i]) + "%"
 	}
 	rows._rows, _ = db._db.Query(
 		"select " + database.WRITER_RECORD_FIELDS + " from writers " +
@@ -109,7 +110,7 @@ func (db *SqliteDB) QueryErrorBySiteId(site string, id int) database.Rows {
 	rows._rows, _ = db._db.Query(
 		"select " + database.ERROR_RECORD_FIELDS + " from errors " +
 		"where site=? and id=?",
-		site, id)
+		html.EscapeString(site), id)
 	return rows
 }
 
@@ -117,8 +118,8 @@ func (db *SqliteDB) QueryBooksOrderByUpdateDate() database.Rows {
 	rows := new(SqliteBookRows)
 	rows._rows, _ = db._db.Query(
 		"select " + database.BOOK_RECORD_FIELDS + " from books " +
-		"where status != ?" +
-		"order by update_date desc", database.Error)
+		"where status != ? group by site, id " +
+		"order by max(update_date) desc", database.Error)
 	return rows
 }
 

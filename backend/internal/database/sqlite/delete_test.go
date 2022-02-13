@@ -8,7 +8,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 )
 
-func init() {
+func initDbDeleteTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./delete_test.db")
@@ -18,7 +18,11 @@ func init() {
 	destination.Close()
 }
 
-func Test_Sqlite_DB_DeleteBookRecord(t *testing.T) {
+func cleanupDbDeleteTest() {
+	os.Remove("./delete_test.db")
+}
+
+func TestSqlite_DB_DeleteBookRecords(t *testing.T) {
 	db := NewSqliteDB("./delete_test.db")
 	defer db.Close()
 	
@@ -31,17 +35,15 @@ func Test_Sqlite_DB_DeleteBookRecord(t *testing.T) {
 			},
 		}
 
-		err := db.DeleteBookRecord(record)
-		rows := db.QueryBookBySiteIdHash("test", 1, 100)
-		defer rows.Close()
-
-		if err == nil || !rows.Next() {
-			t.Fatalf("DB success in deleting book record")
+		err := db.DeleteBookRecords(record)
+		
+		if err == nil || db.statementCount != 0 {
+			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 }
 
-func Test_Sqlite_DB_DeleteWriterRecord(t *testing.T) {
+func TestSqlite_DB_DeleteWriterRecords(t *testing.T) {
 	db := NewSqliteDB("./delete_test.db")
 	defer db.Close()
 	
@@ -52,49 +54,45 @@ func Test_Sqlite_DB_DeleteWriterRecord(t *testing.T) {
 			},
 		}
 
-		err := db.DeleteWriterRecord(record)
-		rows := db.QueryWriterById(1)
-		defer rows.Close()
+		err := db.DeleteWriterRecords(record)
 
-		if err == nil || !rows.Next() {
-			t.Fatalf("DB success in deleting book record")
+		if err == nil || db.statementCount != 0 {
+			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 }
 
-func Test_Sqlite_DB_DeleteErrorRecord(t *testing.T) {
+func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
 	db := NewSqliteDB("./delete_test.db")
 	defer db.Close()
 	
 	t.Run("success only providing site and id", func(t *testing.T) {
-		record := []database.ErrorRecord {
+		records := []database.ErrorRecord {
 			database.ErrorRecord{
 				Site: "test",
 				Id: 1,
 			},
 		}
 
-		err := db.DeleteErrorRecord(record)
-		rows := db.QueryErrorBySiteId("test", 1)
-		defer rows.Close()
-
-		if err != nil || rows.Next() {
-			t.Fatalf("DB fail in deleting error record err: %v", err)
+		err := db.DeleteErrorRecords(records)
+		
+		if err != nil || db.statementCount != 1 || db.statements[0] != ErrorDeleteStatement(&records[0]) {
+			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 
 	t.Run("success even site id not exist", func(t *testing.T) {
-		record := []database.ErrorRecord {
+		records := []database.ErrorRecord {
 			database.ErrorRecord{
 				Site: "not-exist-site",
 				Id: 1,
 			},
 		}
 
-		err := db.DeleteErrorRecord(record)
-
-		if err != nil {
-			t.Fatalf("DB fail in deleting not exist error record err: %v", err)
+		err := db.DeleteErrorRecords(records)
+		
+		if err != nil || db.statementCount != 2 || db.statements[1] != ErrorDeleteStatement(&records[0]) {
+			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 }

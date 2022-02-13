@@ -16,6 +16,7 @@ type DB interface {
 	QueryBooksByPartialTitleAndWriter(titles []string, writers []int) Rows
 	QueryBooksByWriterId(int) Rows
 	QueryBooksByStatus(StatusCode) Rows
+	// QueryBooksPotentialDuplicated() Rows
 	QueryWriterById(int) Rows
 	QueryWriterByName(string) Rows
 	QueryWritersByPartialName([]string) Rows
@@ -24,20 +25,21 @@ type DB interface {
 	QueryBooksOrderByUpdateDate() Rows
 	QueryBooksWithRandomOrder(n int, status StatusCode) Rows
 
-	CreateBookRecord(*BookRecord) error
+	CreateBookRecord(*BookRecord, *WriterRecord) error
 	CreateWriterRecord(*WriterRecord) error
 	CreateErrorRecord(*ErrorRecord) error
 
-	UpdateBookRecord(*BookRecord) error
+	UpdateBookRecord(*BookRecord, *WriterRecord) error
 	UpdateErrorRecord(*ErrorRecord) error
 
-	DeleteBookRecord([]BookRecord) error
-	DeleteWriterRecord([]WriterRecord) error
-	DeleteErrorRecord([]ErrorRecord) error
+	DeleteBookRecords([]BookRecord) error
+	DeleteWriterRecords([]WriterRecord) error
+	DeleteErrorRecords([]ErrorRecord) error
 
 	Summary(siteName string) SummaryRecord
 	Backup(directory, filename string) error
 
+	Commit() error
 	Close() error
 }
 

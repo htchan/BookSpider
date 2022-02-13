@@ -7,7 +7,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 )
 
-func init() {
+func initDbBackupTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./backup_test.db")
@@ -17,7 +17,11 @@ func init() {
 	destination.Close()
 }
 
-func Test_Sqlite_DB_Backup(t *testing.T) {
+func cleanupDbBackupTest() {
+	os.Remove("./backup_test.db")
+}
+
+func TestSqlite_DB_Backup(t *testing.T) {
 	db := NewSqliteDB("./backup_test.db")
 	defer db.Close()
 

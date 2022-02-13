@@ -8,7 +8,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 )
 
-func init() {
+func initDbQueryTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./query_test.db")
@@ -18,7 +18,11 @@ func init() {
 	destination.Close()
 }
 
-func Test_Sqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
+func cleanupDbQueryTest() {
+	os.Remove("./query_test.db")
+}
+
+func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -62,7 +66,7 @@ func Test_Sqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
+func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -128,7 +132,7 @@ func Test_Sqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksByWriterId(t *testing.T) {
+func TestSqlite_DB_QueryBooksByWriterId(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -156,7 +160,7 @@ func Test_Sqlite_DB_QueryBooksByWriterId(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksByStatus(t *testing.T) {
+func TestSqlite_DB_QueryBooksByStatus(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -176,7 +180,7 @@ func Test_Sqlite_DB_QueryBooksByStatus(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryWriterById(t *testing.T) {
+func TestSqlite_DB_QueryWriterById(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -204,7 +208,7 @@ func Test_Sqlite_DB_QueryWriterById(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryWriterByName(t *testing.T) {
+func TestSqlite_DB_QueryWriterByName(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -240,7 +244,7 @@ func Test_Sqlite_DB_QueryWriterByName(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryWriterByPartialName(t *testing.T) {
+func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -285,7 +289,7 @@ func Test_Sqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		}
 	})}
 
-func Test_Sqlite_DB_QueryErrorBySiteId(t *testing.T) {
+func TestSqlite_DB_QueryErrorBySiteId(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -313,7 +317,7 @@ func Test_Sqlite_DB_QueryErrorBySiteId(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
+func TestSqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 
@@ -331,7 +335,7 @@ func Test_Sqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
 	})
 }
 
-func Test_Sqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
+func TestSqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
 	db := NewSqliteDB("./query_test.db")
 	defer db.Close()
 

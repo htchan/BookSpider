@@ -8,7 +8,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 )
 
-func init() {
+func initRowTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./rows_test.db")
@@ -16,6 +16,10 @@ func init() {
 	io.Copy(destination, source)
 	source.Close()
 	destination.Close()
+}
+
+func cleanupRowTest() {
+	os.Remove("./rows_test.db")
 }
 
 func Test_Sqlite_BooksRow_Scan(t *testing.T) {

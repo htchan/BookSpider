@@ -4,18 +4,22 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 
+	"sync"
+
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 )
 
 type SqliteDB struct {
 	_db *sql.DB
-	queryTx *sql.Tx
+	statements map[int]string
+	statementCount int
+	lock sync.Mutex
 }
 
 const (
 	SQLITE_MAX_IDLE_CONN = 10
-	SQLITE_MAX_OPEN_CONN = 1
+	SQLITE_MAX_OPEN_CONN = 10000
 )
 
 func NewSqliteDB(location string) (db *SqliteDB) {
@@ -25,7 +29,57 @@ func NewSqliteDB(location string) (db *SqliteDB) {
 	utils.CheckError(err)
 	db._db.SetMaxIdleConns(SQLITE_MAX_IDLE_CONN)
 	db._db.SetMaxOpenConns(SQLITE_MAX_OPEN_CONN)
+	db.statements = make(map[int]string)
+	db.statementCount = 0
 	return
+}
+
+func (db *SqliteDB) execute(statement string) {
+	db.lock.Lock()
+	defer db.lock.Unlock()
+	db.statements[db.statementCount] = statement
+	db.statementCount++
+}
+
+func contains(array []string, target string) bool {
+	if target == "" {
+		return true
+	}
+	for _, item := range array {
+		if item == "" {
+			break
+		}
+		if item == target {
+			return true
+		}
+	}
+	return false
+}
+
+func (db *SqliteDB) Commit() (err error) {
+	var tx *sql.Tx
+	defer utils.Recover(func() {
+		if tx != nil { tx.Rollback() }
+		// write all statement to file (eg. error log) if it fails
+		// file format: yyyy-mm-ddTHH:MM:SS-commit.sql
+	})
+	db.lock.Lock()
+	tx, err = db._db.Begin()
+	utils.CheckError(err)
+	defer db.lock.Unlock()
+	executedStatements := make([]string, db.statementCount)
+	executedCount := 0
+	for i := 0; i < db.statementCount; i++ {
+		// it will skip repeated statement
+		if contains(executedStatements, db.statements[i]) { continue }
+		executedStatements[executedCount] = db.statements[i]
+		executedCount++
+		_, err = tx.Exec(db.statements[i])
+		utils.CheckError(err)
+	}
+	db.statements = make(map[int]string)
+	db.statementCount = 0
+	return tx.Commit()
 }
 
 func (db *SqliteDB) Summary(site string) (record database.SummaryRecord) {

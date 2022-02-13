@@ -9,7 +9,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 )
 
-func init() {
+func initDbUpdateTest() {
 	source, err := os.Open(os.Getenv("ASSETS_LOCATION") + "/test-data/internal_database_sqlite.db")
 	utils.CheckError(err)
 	destination, err := os.Create("./update_test.db")
@@ -19,9 +19,18 @@ func init() {
 	destination.Close()
 }
 
+func cleanupDbUpdateTest() {
+	os.Remove("./update_test.db")
+}
+
 func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 	db := NewSqliteDB("./rows_test.db")
 	defer db.Close()
+
+	writerRecord := &database.WriterRecord{
+		Id: 1,
+		Name: "writer-1",
+	}
 
 	t.Run("success", func(t *testing.T) {
 		bookRecord := &database.BookRecord{
@@ -34,33 +43,21 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 			UpdateDate: "200",
 			UpdateChapter: "chapter-1-new",
 			Status: database.InProgress}
-		err := db.UpdateBookRecord(bookRecord)
+		err := db.UpdateBookRecord(bookRecord, writerRecord)
 		
 		if err != nil {
 			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
 		}
-
-		query := db.QueryBookBySiteIdHash("test", 1, 100)
-		defer query.Close()
-		// query.Next()
-		record, err := query.Scan()
-		bookRecord = record.(*database.BookRecord)
-		if err != nil || bookRecord.Site != "test" ||
-			bookRecord.Id != 1 || bookRecord.HashCode != 100 ||
-			bookRecord.Title != "title-1-new" || bookRecord.WriterId != 1 ||
-			bookRecord.Type != "type-1-new" ||
-			bookRecord.UpdateDate != "200" || bookRecord.UpdateChapter != "chapter-1-new" ||
-			bookRecord.Status != database.InProgress {
-				t.Fatalf(
-					"DB.UpdateBookRecord does not change record in database record: %v, err: %v",
-					bookRecord, err)
-			}
+		if db.statementCount != 1 ||
+			db.statements[0] != BookUpdateStatement(bookRecord, "") {
+				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+		}
 	})
 
 	t.Run("fail if input Book Record is nil", func(t *testing.T) {
-		err := db.UpdateBookRecord(nil)
+		err := db.UpdateBookRecord(nil, nil)
 		
-		if err == nil {
+		if err == nil || db.statementCount != 1 {
 			t.Fatalf("DB.UpdateBookRecord success with nil err: %v", err)
 		}
 	})
@@ -76,21 +73,14 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 			UpdateDate: "300",
 			UpdateChapter: "chapter-1-ultra-new",
 			Status: database.InProgress}
-		err := db.UpdateBookRecord(bookRecord)
+		err := db.UpdateBookRecord(bookRecord, writerRecord)
 		
 		if err != nil {
 			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
 		}
-
-		titles := []string { "title-1-ultra-new" }
-		writers := []int {}
-		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
-		defer query.Close()
-		record, err := query.Scan()
-		if err == nil {
-			t.Fatalf(
-				"Some record is being updated to title-1-ultra-new record: %v, err: %v",
-				record, err)
+		if db.statementCount != 2 ||
+			db.statements[1] != BookUpdateStatement(bookRecord, "") {
+				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -109,24 +99,16 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 		if err != nil {
 			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
 		}
-
-		query := db.QueryErrorBySiteId("test", 2)
-		defer query.Close()
-		// query.Next()
-		record, err := query.Scan()
-		errorRecord = record.(*database.ErrorRecord)
-		if err != nil || errorRecord.Site != "test" ||
-			errorRecord.Id != 2 || errorRecord.Error.Error() != "error-2-new" {
-				t.Fatalf(
-					"DB.UpdateErrorRecord does not change record in database record: %v, err: %v",
-					errorRecord, err)
-			}
+		if db.statementCount != 1 ||
+			db.statements[0] != ErrorUpdateStatement(errorRecord) {
+				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+		}
 	})
 
 	t.Run("fail if input Error Record is nil", func(t *testing.T) {
 		err := db.UpdateErrorRecord(nil)
 		
-		if err == nil {
+		if err == nil || db.statementCount != 1 {
 			t.Fatalf("DB.UpdateErrorRecord success with nil err: %v", err)
 		}
 	})
@@ -141,14 +123,9 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 		if err != nil {
 			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
 		}
-
-		query := db.QueryErrorBySiteId("test", -1)
-		defer query.Close()
-		record, err := query.Scan()
-		if err == nil {
-			t.Fatalf(
-				"error of site: test id: -f is created record: %v, err: %v",
-				record, err)
+		if db.statementCount != 2 ||
+			db.statements[1] != ErrorUpdateStatement(errorRecord) {
+				t.Fatalf("DB.UpdateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 }
