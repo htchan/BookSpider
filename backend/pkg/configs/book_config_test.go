@@ -45,13 +45,11 @@ func TestConfig_BookConfig(t *testing.T) {
 			populatedConfig := config.Populate(1)
 
 			if config.BaseUrl != "https://base-url/%v" ||
-				config.DownloadUrl != "https://download-url/%v" ||
-				config.ChapterUrl != "https://chapter-url/%v" {
+				config.DownloadUrl != "https://download-url/%v" {
 					t.Fatalf("config populate update existing config")
 				}
 			if populatedConfig.BaseUrl != "https://base-url/1" ||
-				populatedConfig.DownloadUrl != "https://download-url/1" ||
-				populatedConfig.ChapterUrl != "https://chapter-url/1" {
+				populatedConfig.DownloadUrl != "https://download-url/1" {
 					t.Fatalf("config populate fail to update url")
 				}
 		})

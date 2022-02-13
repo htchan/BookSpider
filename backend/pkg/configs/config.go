@@ -13,6 +13,7 @@ import (
 
 type SiteConfig struct {
     BookMeta *BookConfig
+	DownloadThreadsCount int `yaml:"downloadThreadsCount"`
 	ThreadsCount int `yaml:"threadsCount"`
 	MaxExploreError int `yaml:"maxExploreError"`
 	ConstSleep int `yaml:"constSleep"`

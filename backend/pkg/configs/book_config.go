@@ -45,6 +45,5 @@ func LoadBookConfigJson(bookConfigLocation string) *BookConfig {
 func (config BookConfig)Populate(id int) BookConfig {
 	config.BaseUrl = fmt.Sprintf(config.BaseUrl, id)
 	config.DownloadUrl = fmt.Sprintf(config.DownloadUrl, id)
-	config.ChapterUrl = fmt.Sprintf(config.ChapterUrl, id)
 	return config
 }
