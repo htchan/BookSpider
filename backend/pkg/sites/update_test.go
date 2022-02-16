@@ -38,7 +38,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 	updateConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
 	site := NewSite("test", updateConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	server := mock.UpdateServer()
 	defer server.Close()
@@ -53,7 +53,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 		book.SetUpdateDate("last-update-regex")
 		book.SetUpdateChapter("last-chapter-regex")
 		book.Save(site.database)
-		site.database.Commit()
+		site.CommitDatabase()
 
 		t.Run("do nothing if books does not get updated", func(t *testing.T) {
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
@@ -65,7 +65,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			}
 			rows.Close()
 			err = site.updateBook(record.(*database.BookRecord))
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site updateBook return error: %v", err)
 			}
@@ -88,7 +88,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 			book.SetUpdateChapter("hello")
 			book.Save(site.database)
-			site.database.Commit()
+			site.CommitDatabase()
 			rows := site.database.QueryBookBySiteIdHash("test", 1, -1)
 			record, err := rows.Scan()
 			if err != nil {
@@ -96,7 +96,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			}
 			rows.Close()
 			err = site.updateBook(record.(*database.BookRecord))
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site updateBook return error: %v", err)
 			}
@@ -124,7 +124,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				WriterId: 100,
 			}
 			err := site.updateBook(record)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err == nil {
 				t.Fatalf("site updateBook not return error when record not exist: %v", err)
 			}
@@ -185,7 +185,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 	
 	t.Run("func Update", func(t *testing.T) {
 		site.OpenDatabase()
-		defer site.database.Close()
+		defer site.CloseDatabase()
 
 		t.Run("success for full site update", func(t *testing.T) {
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"

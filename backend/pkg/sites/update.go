@@ -48,7 +48,6 @@ func (site *Site) update() (err error) {
 	}
 	wg.Wait()
 	rows.Close()
-	utils.CheckError(site.database.Commit())
 	return
 }
 
@@ -63,7 +62,6 @@ func (site *Site) Update(args *flags.Flags) (err error) {
 		}
 		if book.Update() {
 			book.Save(site.database)
-			site.database.Commit()
 		}
 		return nil
 	} else if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {

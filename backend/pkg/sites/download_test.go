@@ -33,7 +33,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 	downloadConfig.DatabaseLocation = "./download_test.db"
 	site := NewSite("test", downloadConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	server := mock.DownloadServer()
 	defer server.Close()
@@ -49,7 +49,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 				MaxThreads: &flagThreads,
 			}
 			err := site.Download(f)
-			utils.CheckError(site.database.Commit())
+			utils.CheckError(site.CommitDatabase())
 			if err != nil {
 				t.Fatalf("site Download return error for specific book: %v", err)
 			}
@@ -63,7 +63,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 			
 			f := &flags.Flags{}
 			err := site.Download(f)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Download return error for specific book: %v", err)
 			}

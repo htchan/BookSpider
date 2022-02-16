@@ -33,7 +33,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	fixConfig.DatabaseLocation = "./fix_test.db"
 	site := NewSite("test", fixConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	server := mock.UpdateServer()
 	defer server.Close()
@@ -42,7 +42,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 			book := books.NewBook("test", 7, 300, site.config.BookMeta)
 			book.SetError(errors.New("test"))
 			book.Save(site.database)
-			site.database.Commit()
+			site.CommitDatabase()
 			summary := site.database.Summary(site.Name)
 			if summary.BookCount != 7 || summary.ErrorCount != 4 ||
 				summary.WriterCount != 3 || summary.UniqueBookCount != 6 ||
@@ -55,7 +55,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				}
 			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.addMissingRecords()
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.addMissingRecords return error: %v", err)
 			}
@@ -75,7 +75,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 			book := books.NewBook("test", 9, 300, site.config.BookMeta)
 			book.SetError(errors.New("test"))
 			book.Save(site.database)
-			site.database.Commit()
+			site.CommitDatabase()
 			summary := site.database.Summary(site.Name)
 			if summary.BookCount != 9 || summary.ErrorCount != 6 ||
 				summary.WriterCount != 3 || summary.UniqueBookCount != 8 ||
@@ -88,7 +88,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				}
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 			err := site.addMissingRecords()
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.addMissingRecords return error: %v", err)
 			}
@@ -106,7 +106,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 
 		t.Run("do nothing if nothing missed", func(t *testing.T) {
 			err := site.addMissingRecords()
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.addMissingRecords return error: %v", err)
 			}
@@ -126,7 +126,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	t.Run("func updateBooksByStorage", func(t *testing.T) {
 		site.config.BookMeta.BaseUrl = server.URL + ""
 		site.updateBooksByStorage()
-		site.database.Commit()
+		site.CommitDatabase()
 
 		t.Run("success update book with storage", func(t *testing.T) {
 			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
@@ -147,12 +147,12 @@ func Test_Sites_Site_Fix(t *testing.T) {
 		book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
 		book.SetStatus(database.InProgress)
 		book.Save(site.database)
-		site.database.Commit()
+		site.CommitDatabase()
 
 		t.Run("success for full site", func(t *testing.T) {
 			f := &flags.Flags{}
 			err := site.Fix(f)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Fix return error for full site - error: %v", err)
 			}

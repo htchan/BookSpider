@@ -29,9 +29,12 @@ var backupConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-
 
 func Test_Sites_Site_Backup(t *testing.T) {
 	backupConfig.DatabaseLocation = "./query.db"
+	site := NewSite("test", backupConfig)
+	site.OpenDatabase()
+	defer site.CloseDatabase()
+
 	t.Run("success for specific site", func(t *testing.T) {
 		flagSite := "test"
-		site := NewSite("test", backupConfig)
 		backupLocation := filepath.Join(os.Getenv("ASSETS_LOCATION") + site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 
 		err := site.Backup(flags.Flags{Site: &flagSite})
@@ -53,7 +56,6 @@ func Test_Sites_Site_Backup(t *testing.T) {
 	})
 
 	t.Run("success for all site", func(t *testing.T) {
-		site := NewSite("test", backupConfig)
 		backupLocation := filepath.Join(os.Getenv("ASSETS_LOCATION") + site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 
 		err := site.Backup(flags.Flags{})
@@ -76,7 +78,6 @@ func Test_Sites_Site_Backup(t *testing.T) {
 
 	t.Run("skip if not", func(t *testing.T) {
 		flagSite := "not-test"
-		site := NewSite("test", siteConfig)
 		backupLocation := filepath.Join(site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 		err := site.Backup(flags.Flags{Site: &flagSite})
 

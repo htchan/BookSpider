@@ -14,9 +14,6 @@ func (site *Site) Backup(args flags.Flags) (err error) {
 		return
 	}
 	if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {
-		site.OpenDatabase()
-		defer site.database.Close()
-
 		backupDirectory := filepath.Join(site.config.BackupDirectory, time.Now().Format("2006-01-02"))
 		return site.database.Backup(os.Getenv("ASSETS_LOCATION") + backupDirectory, site.Name + ".sql")
 	}

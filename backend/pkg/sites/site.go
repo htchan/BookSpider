@@ -27,11 +27,27 @@ func NewSite(name string, config *configs.SiteConfig) (site *Site) {
 }
 
 func (site *Site)OpenDatabase() (err error) {
+	if site.database != nil { return }
 	switch strings.ToUpper(site.config.DatabaseEngine) {
 	case "SQLITE3":
 		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation)
 	default:
 		err = errors.New("invalid database engine")
+	}
+	return
+}
+
+func (site *Site)CloseDatabase() (err error) {
+	if site.database != nil {
+		err = site.database.Close()
+		site.database = nil
+	}
+	return
+}
+
+func (site *Site)CommitDatabase() (err error) {
+	if site.database != nil {
+		err = site.database.Commit()
 	}
 	return
 }
@@ -54,9 +70,6 @@ func (site *Site)Map() (result map[string]interface{}) {
 			},
 		}
 	})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
 	summary := site.database.Summary(site.Name)
 	result = map[string]interface{} {
 		"name": site.Name,

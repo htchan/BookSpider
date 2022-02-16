@@ -38,7 +38,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	exploreConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
 	site := NewSite("test", exploreConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	server := mock.UpdateServer()
 	defer server.Close()
@@ -47,7 +47,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 1
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 			err := site.exploreOldBook(2, &count)
-			site.database.Commit()
+			site.CommitDatabase()
 			if count != 0 {
 				t.Fatalf("site.exploreOldBook not reset count: %v", count)
 			}
@@ -66,7 +66,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 0
 			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreOldBook(4, &count)
-			site.database.Commit()
+			site.CommitDatabase()
 			if count != 1 {
 				t.Fatalf("site.exploreOldBook not update count: %v", count)
 			}
@@ -103,7 +103,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 1
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 			err := site.exploreNewBook(6, &count)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.updateNewBook return error: %v", err)
 			}
@@ -121,7 +121,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 0
 			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreNewBook(7, &count)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.updateNewBook return error: %v", err)
 			}
@@ -139,7 +139,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 0
 			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreNewBook(1, &count)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.updateNewBook return error: %v", err)
 			}
@@ -173,7 +173,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
 				}
 			err := site.explore()
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.explore return error: %v", err)
 			}
@@ -200,7 +200,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
 				}
 			err := site.explore()
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site.explore return error: %v", err)
 			}

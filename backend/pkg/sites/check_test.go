@@ -32,19 +32,19 @@ func Test_Sites_Site_Check(t *testing.T) {
 	checkConfig.DatabaseLocation = "./check_test.db"
 	site := NewSite("test", checkConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	t.Run("func Check", func(t *testing.T) {
 		t.Run("success for full site", func(t *testing.T) {
 			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
 			book.SetUpdateChapter("后记abcdef")
 			book.Save(site.database)
-			site.database.Commit()
+			site.CommitDatabase()
 
 			f := &flags.Flags{}
 			err := site.Check(f)
 			fmt.Println("database", site.database)
-			site.database.Commit()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Check return error for full site - error: %v", err)
 			}

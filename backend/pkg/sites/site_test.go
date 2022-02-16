@@ -41,7 +41,7 @@ func Test_Sites_Site_OpenDatabase(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		site := NewSite("test", siteConfig)
 		err := site.OpenDatabase()
-		defer site.database.Close()
+		defer site.CloseDatabase()
 		if err != nil {
 			t.Fatalf("site OpenDatabase return error: %v", err)
 		}
@@ -61,6 +61,8 @@ func Test_Sites_Site_OpenDatabase(t *testing.T) {
 func Test_Sites_Site_Map(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		site := NewSite("test", siteConfig)
+		site.OpenDatabase()
+		defer site.CloseDatabase()
 		siteMap := site.Map()
 		if siteMap["name"] != "test" || siteMap["bookCount"] != 6 ||
 			siteMap["uniqueBookCount"] != 5 || siteMap["writerCount"] != 3 || 
@@ -78,6 +80,8 @@ func Test_Sites_Site_Map(t *testing.T) {
 		tempConfig := *siteConfig
 		tempConfig.DatabaseEngine = "unknown"
 		site := NewSite("test", &tempConfig)
+		site.OpenDatabase()
+		defer site.CloseDatabase()
 		siteMap := site.Map()
 		if siteMap["name"] != "test" || siteMap["bookCount"] != 0 ||
 			siteMap["uniqueBookCount"] != 0 || siteMap["writerCount"] != 0 || 

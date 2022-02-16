@@ -29,7 +29,7 @@ func Test_Sites_Site_Query(t *testing.T) {
 	queryConfig.DatabaseLocation = "./query.db"
 	site := NewSite("test", queryConfig)
 	site.OpenDatabase()
-	defer site.database.Close()
+	defer site.CloseDatabase()
 
 	t.Run("func SearchByIdHash", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
@@ -63,7 +63,7 @@ func Test_Sites_Site_Query(t *testing.T) {
 		queryConfig.DatabaseLocation = "./query.db"
 		site := NewSite("test", queryConfig)
 		site.OpenDatabase()
-		defer site.database.Close()
+		defer site.CloseDatabase()
 
 		t.Run("success", func(t *testing.T) {
 			books := site.SearchByWriterId(1)

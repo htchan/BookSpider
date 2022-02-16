@@ -20,11 +20,6 @@ func (site *Site)rowsToRecords(rows database.Rows) (records []database.Record) {
 }
 
 func (site *Site)SearchByIdHash(id int, hash string) (book *books.Book) {
-	defer utils.Recover(func() {})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
-
 	hashCode, err := strconv.ParseInt(hash, 36, 64)
 	if err != nil {
 		hashCode = -1
@@ -35,11 +30,6 @@ func (site *Site)SearchByIdHash(id int, hash string) (book *books.Book) {
 }
 
 func (site *Site)SearchByWriterId(writerId int) (bookArray []*books.Book) {
-	// defer utils.Recover(func() {})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
-	
 	rows := site.database.QueryBooksByWriterId(writerId)
 	bookArray = make([]*books.Book, 0)
 
@@ -52,12 +42,7 @@ func (site *Site)SearchByWriterId(writerId int) (bookArray []*books.Book) {
 	return
 }
 
-func (site *Site)SearchByStatus(status database.StatusCode) (bookArray []*books.Book) {
-	defer utils.Recover(func() {})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
-	
+func (site *Site)SearchByStatus(status database.StatusCode) (bookArray []*books.Book) {	
 	rows := site.database.QueryBooksByStatus(status)
 	bookArray = make([]*books.Book, 0)
 
@@ -70,12 +55,7 @@ func (site *Site)SearchByStatus(status database.StatusCode) (bookArray []*books.
 	return
 }
 
-func (site *Site)SearchByTitleWriter(titleSearch string, writerSearch string) (bookArray []*books.Book) {
-	defer utils.Recover(func() {})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
-	var titles, writerNames []string
+func (site *Site)SearchByTitleWriter(titleSearch string, writerSearch string) (bookArray []*books.Book) {	var titles, writerNames []string
 	if titleSearch != "" {
 		titles = strings.Split(titleSearch, " ")
 	}
@@ -103,10 +83,7 @@ func (site *Site)SearchByTitleWriter(titleSearch string, writerSearch string) (b
 	return
 }
 
-func (site *Site) RandomSuggestBook(n int, status database.StatusCode) (bookArray []*books.Book) {defer utils.Recover(func() {})
-	err := site.OpenDatabase()
-	utils.CheckError(err)
-	defer site.database.Close()
+func (site *Site) RandomSuggestBook(n int, status database.StatusCode) (bookArray []*books.Book) {
 	rows := site.database.QueryBooksWithRandomOrder(n, status)
 	bookArray = make([]*books.Book, 0)
 
