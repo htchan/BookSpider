@@ -2,20 +2,18 @@ package main
 
 import (
 	"os"
-	"fmt"
 	"time"
-	"sort"
 	"io/ioutil"
 	"strings"
-	"strconv"
 	"net/http"
-	"log"
+	// "log"
 	
 	"encoding/json"
 
 	"github.com/htchan/BookSpider/pkg/sites"
 	"github.com/htchan/BookSpider/pkg/configs"
 	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/logging"
 )
 
 type Logs struct {
@@ -27,6 +25,18 @@ type Logs struct {
 
 var stageFileName string
 const readLogLen int64 = 10000
+const RECORD_PER_PAGE = 50
+var apiFunc = map[string]func() {
+	"info": func() { http.HandleFunc("/api/novel/info", GeneralInfo) },
+	"siteInfo": func() { http.HandleFunc("/api/novel/sites/", SiteInfo) },
+	"bookInfo": func() { http.HandleFunc("/api/novel/books/", BookInfo) },
+
+	"download": func() { for name := range siteMap { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } },
+	"search": func() { for name := range siteMap { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } },
+	"random": func() { for name := range siteMap { http.HandleFunc("/api/novel/random/"+name, BookRandom) } },
+
+	"process": func() { http.HandleFunc("/api/novel/process", ProcessState) },
+}
 
 func (logs *Logs) update() {
 	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 { return }
@@ -53,11 +63,13 @@ func (logs *Logs) update() {
 	}
 	logs.MemoryLastUpdate = time.Now()
 }
-
+func setHeader(res http.ResponseWriter) {
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+}
 func response(res http.ResponseWriter, data map[string]interface{}) {
-	dataByte, err := json.Marshal(data)
-	utils.CheckError(err)
-	fmt.Fprintln(res, string(dataByte))
+	encoder := json.NewEncoder(res)
+	utils.CheckError(encoder.Encode(data))
 }
 func error(res http.ResponseWriter, code int, msg string) {
 	res.WriteHeader(code)
@@ -66,7 +78,7 @@ func error(res http.ResponseWriter, code int, msg string) {
 		"message": msg,
 	})
 }
-
+//TODO
 func ProcessState(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
@@ -87,207 +99,36 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
-func ValidateState(res http.ResponseWriter, req *http.Request) {
-	//TODO: conside to turn this json to a yaml array to show what site is working
-	//TODO: maybe also put it into config.yaml
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	b, err := ioutil.ReadFile("./validate.json")
-	if err != nil {
-		fmt.Fprintf(res, "{}")
-		return
-	}
-	fmt.Fprintf(res, string(b))
-}
-
-func GeneralInfo(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-
-	siteNames := make([]string, 0)
-	for siteName, _ := range siteMap {
-		siteNames = append(siteNames, siteName)
-	}
-	sort.Strings(siteNames)
-
-	response(res, map[string]interface{} {
-		"siteNames": siteNames,
-	})
-}
-
-func SiteInfo(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-
-	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[4]
-	site, ok := siteMap[siteName]
-	if !ok {
-		res.WriteHeader(http.StatusNotFound)
-		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
-		return
-	}
-
-	response(res, site.Map())
-}
-
-func BookInfo(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-
-	uri := strings.Split(req.URL.Path, "/")
-	if len(uri) < 6 {
-		error(res, http.StatusBadRequest, "not enough parameter")
-	}
-	siteName := uri[4]
-	site, ok := siteMap[siteName]
-	id, err := strconv.Atoi(uri[5])
-	if !ok {
-		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
-		return
-	} else if err != nil {
-		error(res, http.StatusBadRequest, "id <" + uri[5] + "> is not a number")
-		return
-	}
-
-	version := -1;
-	if len(uri) > 6 {
-		version, err = strconv.Atoi(uri[6])
-		if err != nil { version = -1 }
-	}
-
-	book, err := site.Book(id, version)
-	if err != nil {
-		error(res, http.StatusNotFound, err.Error())
-	} else if (book.Title == "") {
-		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
-				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
-	} else {
-		response(res, book.Map())
-	}
-}
-
-func BookDownload(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	uri := strings.Split(req.URL.Path, "/")
-	if len(uri) < 6 {
-		error(res, http.StatusBadRequest, "not enough parameter")
-	}
-	siteName := uri[4]
-	site, ok := siteMap[siteName]
-	id, err := strconv.Atoi(uri[5])
-	if !ok {
-		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
-		return
-	} else if err != nil {
-		error(res, http.StatusBadRequest, "id <" + uri[5] + "> is not a number")
-		return
-	}
-	version := -1;
-	if len(uri) > 6 {
-		version, err = strconv.Atoi(uri[6])
-		if err != nil {
-			version = -1
-		}
-	}
-	book, err := site.Book(id, version)
-	if err != nil {
-		error(res, http.StatusNotFound, err.Error())
-	} else if (book.Title == "") {
-		error(res, http.StatusNotFound, "book <" + strconv.Itoa(id) + ">, " +
-				"version <" + strconv.Itoa(version) + "> in site <" + siteName + "> not found")
-		return
-	} else if !book.DownloadFlag {
-		error(res, http.StatusNotAcceptable, "book <" + uri[5] + "> not download yet")
-		return
-	}
-	fileName := book.Title + "-" + book.Writer
-	if book.Version > 0 {
-		fileName += "-v" + strconv.Itoa(book.Version)
-	}
-	content := book.Content(site.DownloadLocation)
-	res.Header().Set("Content-Type", "text/txt; charset=utf-8")
-	res.Header().Set("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"")
-	fmt.Fprintf(res, content)
-}
-
-func BookSearch(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[4]
-	site, ok := siteMap[siteName]
-	title := strings.ReplaceAll(req.URL.Query().Get("title"), "*", "%")
-	writer := strings.ReplaceAll(req.URL.Query().Get("writer"), "*", "%")
-	pageStr := req.URL.Query().Get("page")
-	page, err := strconv.Atoi(pageStr)
-	if !ok {
-		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
-		return
-	} else if err != nil {
-		page = 0
-	}
-	books := site.Search(title, writer, page)
-	booksArray := make([]map[string]interface{}, 0)
-	for _, book := range books {
-		booksArray = append(booksArray, book.Map())
-	}
-	response(res, map[string]interface{} {
-		"books": booksArray,
-	})
-}
-
-func BookRandom(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	uri := strings.Split(req.URL.Path, "/")
-	siteName := uri[4]
-	site, ok := siteMap[siteName]
-	if !ok {
-		error(res, http.StatusNotFound, "site <" + siteName + "> not found")
-		return
-	}
-	num, err := strconv.Atoi(req.URL.Query().Get("num"))
-	if (err != nil) { num = 20 }
-	if (num > 50) { num = 50 }
-	books := site.RandomSuggestBook(num)
-	booksArray := make([]map[string]interface{}, 0)
-	for _, book := range books {
-		booksArray = append(booksArray, book.Map())
-	}
-	response(res, map[string]interface{} {
-		"books": booksArray,
-	})
-}
-
 var currentProcess string
 var logs Logs
-var siteMap map[string]sites.Site
+var config *configs.Config
+var siteMap map[string]*sites.Site
 
-func main() {
+func setup(configFileLocation string) {
 	currentProcess = ""
-	config := configs.LoadConfigYaml("./configs/config.yaml")
+	config = configs.LoadConfigYaml(configFileLocation)
 	stageFileName = config.Backend.StageFile
+	siteMap = make(map[string]*sites.Site)
+	for key, siteConfig := range config.SiteConfigs {
+		siteMap[key] = sites.NewSite(key, siteConfig)
+		siteMap[key].OpenDatabase()
+		//TODO: deploy a thread to close the database if it is not opened
+	}
+}
+func startServer(addr string) {
+	for _, api := range config.Backend.Api { apiFunc[api]() }
+	logging.Info("started")
+	logging.Error("%v", http.ListenAndServe(addr, nil))
+}
+func main() {
+	setup("./configs/config.yaml")
 	logs = Logs{
 		logLocation: config.Backend.LogFile, 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}
-	siteMap = configs.LoadSitesYaml(config)
-	apiFunc := make(map[string]func())
-	apiFunc["search"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } }
-	apiFunc["download"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } }
-	apiFunc["siteInfo"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/sites/"+name, SiteInfo) } }
-	apiFunc["bookInfo"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/books/"+name+"/", BookInfo) } }
-	apiFunc["random"] = func() { for name := range siteMap { http.HandleFunc("/api/novel/random/"+name, BookRandom) } }
-	apiFunc["process"] = func() { http.HandleFunc("/api/novel/process", ProcessState) }
-	apiFunc["info"] = func() { http.HandleFunc("/api/novel/info", GeneralInfo) }
-	apiFunc["validate"] = func() { http.HandleFunc("/api/novel/validate", ValidateState) }
 
-	for _, api := range config.Backend.Api { apiFunc[api]() }
-	log.Println("started")
-	log.Fatal(http.ListenAndServe(":9427", nil))
+	startServer(":9427")
 }
 
 /*
