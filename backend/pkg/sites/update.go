@@ -24,10 +24,15 @@ func (site *Site) updateBook(record *database.BookRecord) error {
 }
 
 // update / create books
-func (site *Site) update() (err error) {
+func (site *Site) update(errorFocus bool) (err error) {
 	// loop all books in site db
 	ctx := context.Background()
-	rows := site.database.QueryBooksOrderByUpdateDate()
+	var rows database.Rows
+	if errorFocus {
+		rows = site.database.QueryBooksByStatus(database.Error)
+	} else {
+		rows = site.database.QueryBooksOrderByUpdateDate()
+	}
 	var wg sync.WaitGroup
 	for rows.Next() {
 		record, err := rows.ScanCurrent()
@@ -64,7 +69,17 @@ func Update(site *Site, args *flags.Flags) (err error) {
 		}
 		return nil
 	} else if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {
-		return site.update()
+		return site.update(false)
+	}
+	return nil
+}
+
+func UpdateError(site *Site, args *flags.Flags) (err error) {
+	if !args.Valid() { return errors.New("invalid arguments") }
+	if args.IsBook() && *args.Site == site.Name {
+		return errors.New("use Update instead of UpdateError")
+	} else if args.IsEverything() || (args.IsSite() && *args.Site == site.Name) {
+		return site.update(true)
 	}
 	return nil
 }

@@ -149,7 +149,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
 				}
 
-			err := site.update()
+			err := site.update(false)
 			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site update() return error: %v", err)
@@ -185,6 +185,42 @@ func Test_Sites_Site_Update(t *testing.T) {
 					t.Fatalf("book update generate wrong summary: %v", summary)
 				}
 		})
+
+		t.Run("loop add the books in database (error focus)", func(t *testing.T) {
+			summary := site.database.Summary(site.Name)
+			if summary.BookCount != 7 || summary.ErrorCount != 3 ||
+				summary.WriterCount != 4 || summary.UniqueBookCount != 5 ||
+				summary.MaxBookId != 5 || summary.LatestSuccessId != 3 ||
+				summary.StatusCount[database.Error] != 3 ||
+				summary.StatusCount[database.InProgress] != 2 ||
+				summary.StatusCount[database.End] != 1 ||
+				summary.StatusCount[database.Download] != 1 {
+					t.Fatalf("before book update generate wrong summary: %v", summary)
+				}
+
+			err := site.update(true)
+			site.CommitDatabase()
+			if err != nil {
+				t.Fatalf("site update() return error: %v", err)
+			}
+
+			// error book will be touched
+			book := books.LoadBook(site.database, "test", 2, -1, site.config.BookMeta)
+			if book == nil || book.GetStatus() == database.Error {
+				t.Fatalf("cannot query %v-%v", "test", 2)
+			}
+
+			summary = site.database.Summary(site.Name)
+			if summary.BookCount != 7 || summary.ErrorCount != 0 ||
+				summary.WriterCount != 4 || summary.UniqueBookCount != 5 ||
+				summary.MaxBookId != 5 || summary.LatestSuccessId != 5 ||
+				summary.StatusCount[database.Error] != 0 ||
+				summary.StatusCount[database.InProgress] != 5 ||
+				summary.StatusCount[database.End] != 1 ||
+				summary.StatusCount[database.Download] != 1 {
+					t.Fatalf("book update generate wrong summary: %v", summary)
+				}
+		})
 	})
 	
 	t.Run("func Update", func(t *testing.T) {
@@ -202,11 +238,11 @@ func Test_Sites_Site_Update(t *testing.T) {
 			}
 
 			summary := site.database.Summary(site.Name)
-			if summary.BookCount != 7 || summary.ErrorCount != 3 ||
+			if summary.BookCount != 7 || summary.ErrorCount != 0 ||
 				summary.WriterCount != 4 || summary.UniqueBookCount != 5 ||
-				summary.MaxBookId != 5 || summary.LatestSuccessId != 3 ||
-				summary.StatusCount[database.Error] != 3 ||
-				summary.StatusCount[database.InProgress] != 2 ||
+				summary.MaxBookId != 5 || summary.LatestSuccessId != 5 ||
+				summary.StatusCount[database.Error] != 0 ||
+				summary.StatusCount[database.InProgress] != 5 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
 					t.Fatalf("book update generate wrong summary: %v", summary)
@@ -234,6 +270,89 @@ func Test_Sites_Site_Update(t *testing.T) {
 			if book == nil || book.GetUpdateDate() != "104" ||
 				book.GetUpdateChapter() != "chapter-1" || summary.BookCount != 7 {
 					t.Fatalf("wrong result: book count: %v, book: %v", summary.BookCount, book.GetUpdateChapter())
+			}
+		})
+
+		t.Run("fail for invalid arguments", func(t *testing.T) {
+			flagId := 123
+			f := &flags.Flags{
+				Id: &flagId,
+			}
+
+			err := operation(site, f)
+			if err == nil {
+				t.Fatalf("site Update not return error for invalid arguments")
+			}
+		})
+
+		t.Run("skip if arguments provide site name but not matched", func(t *testing.T) {
+			flagSite := "others"
+			f := &flags.Flags{
+				Site: &flagSite,
+			}
+
+			err := operation(site, f)
+			if err != nil {
+				t.Fatalf("site Update return error for not matching site name- error: %v", err)
+			}
+		})
+	})
+}
+
+func Test_Sites_Site_UpdateError(t *testing.T) {
+	updateConfig.DatabaseLocation = "./update_test.db"
+	updateConfig.BookMeta.TitleRegex = "(title-.*?) "
+	updateConfig.BookMeta.WriterRegex = "(writer-.*?) "
+	updateConfig.BookMeta.TypeRegex = "(type-.*?) "
+	updateConfig.BookMeta.LastUpdateRegex = " (last-update-.*?) "
+	updateConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
+	site := NewSite("test", updateConfig)
+	site.OpenDatabase()
+	defer site.CloseDatabase()
+
+	server := mock.UpdateServer()
+	defer server.Close()
+
+	var operation SiteOperation
+	operation = UpdateError
+	
+	t.Run("func UpdateError", func(t *testing.T) {
+		site.OpenDatabase()
+		defer site.CloseDatabase()
+
+		t.Run("success for full site update", func(t *testing.T) {
+			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+
+			f := &flags.Flags{}
+			err := operation(site, f)
+			site.CommitDatabase()
+			if err != nil {
+				t.Fatalf("site Update return error for specific book - error: %v", err)
+			}
+
+			summary := site.database.Summary(site.Name)
+			if summary.BookCount != 7 || summary.ErrorCount != 0 ||
+				summary.WriterCount != 4 || summary.UniqueBookCount != 5 ||
+				summary.MaxBookId != 5 || summary.LatestSuccessId != 5 ||
+				summary.StatusCount[database.Error] != 0 ||
+				summary.StatusCount[database.InProgress] != 5 ||
+				summary.StatusCount[database.End] != 1 ||
+				summary.StatusCount[database.Download] != 1 {
+					t.Fatalf("book update generate wrong summary: %v", summary)
+				}
+		})
+
+		t.Run("fail for specific book", func(t *testing.T) {
+			flagSite, flagId, flagHash := "test", 1, "-1"
+			f := &flags.Flags{
+				Site: &flagSite,
+				Id: &flagId,
+				HashCode: &flagHash,
+			}
+
+			err := operation(site, f)
+			if err == nil {
+				t.Fatalf("site Update not return error for invalid arguments")
 			}
 		})
 
