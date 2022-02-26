@@ -33,6 +33,8 @@ func Test_Sites_Site_Check(t *testing.T) {
 	site := NewSite("test", checkConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
+	var operation SiteOperation
+	operation = Check
 
 	t.Run("func Check", func(t *testing.T) {
 		t.Run("success for full site", func(t *testing.T) {
@@ -41,8 +43,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 			book.Save(site.database)
 			site.CommitDatabase()
 
-			f := &flags.Flags{}
-			err := site.Check(f)
+			err := operation(site, &flags.Flags{})
 			fmt.Println("database", site.database)
 			site.CommitDatabase()
 			if err != nil {
@@ -66,11 +67,8 @@ func Test_Sites_Site_Check(t *testing.T) {
 
 		t.Run("fail for invalid arguements", func(t *testing.T) {
 			flagId := 123
-			f := &flags.Flags{
-				Id: &flagId,
-			}
 
-			err := site.Check(f)
+			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
 				t.Fatalf("site Check not return error for invalid arguments")
 			}
@@ -78,11 +76,8 @@ func Test_Sites_Site_Check(t *testing.T) {
 
 		t.Run("skip if arguments provide mismatch site name", func(t *testing.T) {
 			flagSite := "others"
-			f := &flags.Flags{
-				Site: &flagSite,
-			}
 
-			err := site.Check(f)
+			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
 				t.Fatalf("site Check return error for not matching site name- error: %v", err)
 			}

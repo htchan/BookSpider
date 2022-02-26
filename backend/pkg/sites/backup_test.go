@@ -32,12 +32,14 @@ func Test_Sites_Site_Backup(t *testing.T) {
 	site := NewSite("test", backupConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
+	var operation SiteOperation
+	operation = Backup
 
 	t.Run("success for specific site", func(t *testing.T) {
 		flagSite := "test"
 		backupLocation := filepath.Join(os.Getenv("ASSETS_LOCATION") + site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 
-		err := site.Backup(flags.Flags{Site: &flagSite})
+		err := operation(site, &flags.Flags{Site: &flagSite})
 
 		if err != nil {
 			t.Fatalf("site Backup return error: %v", err)
@@ -58,7 +60,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 	t.Run("success for all site", func(t *testing.T) {
 		backupLocation := filepath.Join(os.Getenv("ASSETS_LOCATION") + site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 
-		err := site.Backup(flags.Flags{})
+		err := operation(site, &flags.Flags{})
 
 		if err != nil {
 			t.Fatalf("site Backup return error: %v", err)
@@ -79,7 +81,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 	t.Run("skip if not", func(t *testing.T) {
 		flagSite := "not-test"
 		backupLocation := filepath.Join(site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
-		err := site.Backup(flags.Flags{Site: &flagSite})
+		err := operation(site, &flags.Flags{Site: &flagSite})
 
 		if err != nil {
 			t.Fatalf("site Backup return error: %v", err)

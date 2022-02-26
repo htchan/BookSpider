@@ -79,7 +79,7 @@ func (site *Site) explore() (err error) {
 	return
 }
 
-func (site *Site) Explore(args *flags.Flags) (err error) {
+func Explore(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() { return errors.New("invalid arguments") }
 	if args.IsBook() && *args.Site == site.Name {
 		if *args.Site != site.Name { return nil }

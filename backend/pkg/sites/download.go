@@ -38,7 +38,7 @@ func (site *Site) download() (err error) {
 	return nil
 }
 
-func (site *Site)Download(args *flags.Flags) (err error) {
+func Download(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() { return errors.New("invalid arguments") }
 	if args.IsBook() && *args.Site == site.Name {
 		siteName, id, hash := args.GetBookInfo()

@@ -5,10 +5,13 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/database/sqlite"
+	"github.com/htchan/BookSpider/pkg/flags"
 	"golang.org/x/sync/semaphore"
 	"strings"
 	"errors"
 )
+
+type SiteOperation func(*Site, *flags.Flags) error
 
 type Site struct {
 	Name string

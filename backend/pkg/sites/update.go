@@ -3,7 +3,6 @@ package sites
 import (
 	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/pkg/books"
-	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"errors"
 	"context"
@@ -51,7 +50,7 @@ func (site *Site) update() (err error) {
 	return
 }
 
-func (site *Site) Update(args *flags.Flags) (err error) {
+func Update(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() { return errors.New("invalid arguments") }
 	if args.IsBook() && *args.Site == site.Name {
 		if *args.Site != site.Name { return nil }

@@ -43,6 +43,9 @@ func Test_Sites_Site_Update(t *testing.T) {
 	server := mock.UpdateServer()
 	defer server.Close()
 
+	var operation SiteOperation
+	operation = Update
+
 	t.Run("func updateBook", func(t *testing.T) {
 		site.config.BookMeta.CONST_SLEEP = 0
 
@@ -147,6 +150,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				}
 
 			err := site.update()
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site update() return error: %v", err)
 			}
@@ -191,7 +195,8 @@ func Test_Sites_Site_Update(t *testing.T) {
 			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 
 			f := &flags.Flags{}
-			err := site.Update(f)
+			err := operation(site, f)
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Update return error for specific book - error: %v", err)
 			}
@@ -219,7 +224,8 @@ func Test_Sites_Site_Update(t *testing.T) {
 				HashCode: &flagHash,
 			}
 
-			err := site.Update(f)
+			err := operation(site, f)
+			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Update return error for specific book - error: %v", err)
 			}
@@ -237,7 +243,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				Id: &flagId,
 			}
 
-			err := site.Update(f)
+			err := operation(site, f)
 			if err == nil {
 				t.Fatalf("site Update not return error for invalid arguments")
 			}
@@ -249,7 +255,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				Site: &flagSite,
 			}
 
-			err := site.Update(f)
+			err := operation(site, f)
 			if err != nil {
 				t.Fatalf("site Update return error for not matching site name- error: %v", err)
 			}

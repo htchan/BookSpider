@@ -109,7 +109,7 @@ func (site *Site) fix() (err error) {
 	return site.updateBooksByStorage()
 }
 
-func (site *Site) Fix(args *flags.Flags) (err error) {
+func Fix(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() || args.IsBook() {
 		err = errors.New("invalid arguments")
 		return

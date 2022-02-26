@@ -42,6 +42,10 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 	server := mock.UpdateServer()
 	defer server.Close()
+
+	var operation SiteOperation
+	operation = Explore
+	
 	t.Run("func exploreOldBook", func(t *testing.T) {
 		t.Run("update if book exist in db and updated in web", func(t *testing.T) {
 			count := 1
@@ -220,8 +224,8 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	t.Run("func Explore", func(t *testing.T) {
 		t.Run("success for full site", func(t *testing.T) {
 			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
-			f := &flags.Flags{}
-			err := site.Explore(f)
+
+			err := operation(site, &flags.Flags{})
 			if err != nil {
 				t.Fatalf("site Explore return error for full site - error: %v", err)
 			}
@@ -240,11 +244,8 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 		t.Run("fail for invalid arguements", func(t *testing.T) {
 			flagId := 123
-			f := &flags.Flags{
-				Id: &flagId,
-			}
 
-			err := site.Explore(f)
+			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
 				t.Fatalf("site Explore not return error for invalid arguments")
 			}
@@ -252,11 +253,8 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 		t.Run("skip if arguments provide mismatch site name", func(t *testing.T) {
 			flagSite := "others"
-			f := &flags.Flags{
-				Site: &flagSite,
-			}
 
-			err := site.Explore(f)
+			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
 				t.Fatalf("site Explore return error for not matching site name- error: %v", err)
 			}

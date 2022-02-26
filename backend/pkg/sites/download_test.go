@@ -34,6 +34,8 @@ func Test_Sites_Site_Download(t *testing.T) {
 	site := NewSite("test", downloadConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
+	var operation SiteOperation
+	operation = Download
 
 	server := mock.DownloadServer()
 	defer server.Close()
@@ -48,7 +50,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 				Id: &flagId,
 				MaxThreads: &flagThreads,
 			}
-			err := site.Download(f)
+			err := operation(site, f)
 			utils.CheckError(site.CommitDatabase())
 			if err != nil {
 				t.Fatalf("site Download return error for specific book: %v", err)
@@ -60,9 +62,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 		})
 
 		t.Run("success for all site", func(t *testing.T) {
-			
-			f := &flags.Flags{}
-			err := site.Download(f)
+			err := operation(site, &flags.Flags{})
 			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Download return error for specific book: %v", err)
@@ -71,11 +71,8 @@ func Test_Sites_Site_Download(t *testing.T) {
 
 		t.Run("fail for invalid arguements", func(t *testing.T) {
 			flagId := 123
-			f := &flags.Flags{
-				Id: &flagId,
-			}
 
-			err := site.Download(f)
+			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
 				t.Fatalf("site Download not return error for invalid arguments")
 			}
@@ -83,11 +80,8 @@ func Test_Sites_Site_Download(t *testing.T) {
 
 		t.Run("skip if arguments provide mismatch site name", func(t *testing.T) {
 			flagSite := "others"
-			f := &flags.Flags{
-				Site: &flagSite,
-			}
 
-			err := site.Download(f)
+			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
 				t.Fatalf("site Download return error for not matching site name- error: %v", err)
 			}

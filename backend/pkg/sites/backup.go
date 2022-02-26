@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func (site *Site) Backup(args flags.Flags) (err error) {
+func Backup(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() || args.IsBook() {
 		err = errors.New("invalid arguments")
 		return

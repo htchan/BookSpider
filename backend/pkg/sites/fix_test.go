@@ -35,6 +35,9 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	site.OpenDatabase()
 	defer site.CloseDatabase()
 
+	var operation SiteOperation
+	operation = Fix
+
 	server := mock.UpdateServer()
 	defer server.Close()
 	t.Run("func addMissingRecords", func(t *testing.T) {
@@ -150,8 +153,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 		site.CommitDatabase()
 
 		t.Run("success for full site", func(t *testing.T) {
-			f := &flags.Flags{}
-			err := site.Fix(f)
+			err := operation(site, &flags.Flags{})
 			site.CommitDatabase()
 			if err != nil {
 				t.Fatalf("site Fix return error for full site - error: %v", err)
@@ -164,11 +166,8 @@ func Test_Sites_Site_Fix(t *testing.T) {
 
 		t.Run("fail for invalid arguements", func(t *testing.T) {
 			flagId := 123
-			f := &flags.Flags{
-				Id: &flagId,
-			}
 
-			err := site.Fix(f)
+			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
 				t.Fatalf("site Fix not return error for invalid arguments")
 			}
@@ -176,11 +175,8 @@ func Test_Sites_Site_Fix(t *testing.T) {
 
 		t.Run("skip if arguments provide mismatch site name", func(t *testing.T) {
 			flagSite := "others"
-			f := &flags.Flags{
-				Site: &flagSite,
-			}
 
-			err := site.Fix(f)
+			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
 				t.Fatalf("site Fix return error for not matching site name- error: %v", err)
 			}

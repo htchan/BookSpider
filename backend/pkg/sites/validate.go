@@ -16,7 +16,7 @@ func (site *Site) validate() (err error) {
 	return
 }
 
-func (site *Site) Validate(args flags.Flags) (err error) {
+func Validate(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() || args.IsBook() {
 		err = errors.New("invalid arguments")
 		return
