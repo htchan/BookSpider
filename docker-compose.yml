@@ -69,6 +69,14 @@ services:
                 go test github.com/htchan/BookSpider/cmd/backend
                 go test github.com/htchan/BookSpider/cmd/controller
             "
+    temp:
+        image: alpine:latest
+        profiles:
+            - temp
+        volumes:
+            - ./bin/log:/log
+        command: sh -c 'cp /log/test.txt /log/$$(date +"%Y-%m-%d--%T").log'
+
 
 volumes:
     frontend_volume:

@@ -9,7 +9,6 @@ import (
 	"golang.org/x/sync/semaphore"
 	"strings"
 	"errors"
-	"os"
 )
 
 type SiteOperation func(*Site, *flags.Flags) error
@@ -34,7 +33,7 @@ func (site *Site)OpenDatabase() (err error) {
 	if site.database != nil { return }
 	switch strings.ToUpper(site.config.DatabaseEngine) {
 	case "SQLITE3":
-		site.database = sqlite.NewSqliteDB(os.Getenv("ASSETS_LOCATION") + site.config.DatabaseLocation)
+		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation)
 	default:
 		err = errors.New("invalid database engine")
 	}

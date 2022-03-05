@@ -88,7 +88,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 		t.Run("return error if book not found", func(t *testing.T) {
 			count := 0
 			err := site.exploreOldBook(999, &count)
-			if err == nil || err.Error() != "[explore] load book test-999 fail"{
+			if err == nil || err.Error() != "load book test-999 fail"{
 				t.Fatalf("site.exploreOldBook return %v", err)
 			}
 		})
@@ -96,7 +96,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 		t.Run("return error if book is not in error status", func(t *testing.T) {
 			count := 0
 			err := site.exploreOldBook(1, &count)
-			if err == nil || err.Error() != "[explore] load book test-1 return status 1"{
+			if err == nil || err.Error() != "load book test-1 return status 1"{
 				t.Fatalf("site.exploreOldBook return %v", err)
 			}
 		})

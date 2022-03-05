@@ -19,6 +19,7 @@ func initDbBackupTest() {
 
 func cleanupDbBackupTest() {
 	os.Remove("./backup_test.db")
+	os.Remove(os.Getenv("ASSETS_LOCATION") + "/test-data/" + "db-backup.sql")
 }
 
 func TestSqlite_DB_Backup(t *testing.T) {

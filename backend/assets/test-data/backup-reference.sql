@@ -22,6 +22,7 @@ create table writers (
 
 create unique index writers_id on writers(id);
 create unique index writers_name on writers(name);
+insert into writers (id, name) values (0, '');
 
 create table errors (
     site varchar(15),

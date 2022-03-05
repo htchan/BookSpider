@@ -9,9 +9,7 @@ RUN apk add gcc musl-dev libc-dev
 RUN go mod download
 
 COPY ./internal ./internal
-COPY ./pkg/books ./pkg/books
-COPY ./pkg/sites ./pkg/sites
-COPY ./pkg/configs ./pkg/configs
+COPY ./pkg ./pkg
 COPY ./cmd/backend ./cmd/backend
 
 RUN go build -v github.com/htchan/BookSpider/cmd/backend

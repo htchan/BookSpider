@@ -28,7 +28,7 @@ func cleanupBackupTest() {
 var backupConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
 
 func Test_Sites_Site_Backup(t *testing.T) {
-	backupConfig.DatabaseLocation = "./query.db"
+	backupConfig.DatabaseLocation = "./backup.db"
 	site := NewSite("test", backupConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
