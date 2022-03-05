@@ -4,6 +4,7 @@ import (
 	// "errors"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/internal/logging"
 )
 
 func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChapter string, err error) {
@@ -44,6 +45,7 @@ func (book *Book) Update() bool {
 		if book.GetStatus() == database.Error {
 			book.SetError(err)
 		}
+		logging.Info("Book %v-%v-%v fetch fail: %v", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode, err)
 		return false
 	}
 	// check difference
@@ -52,6 +54,7 @@ func (book *Book) Update() bool {
 		update = true
 		if book.GetStatus() != database.Error {
 			book.bookRecord.HashCode = database.GenerateHash()
+			logging.Info("Book %v-%v-%v Update: new record created", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode)
 		}
 		book.SetStatus(database.InProgress)
 		book.SetError(nil)
@@ -67,6 +70,7 @@ func (book *Book) Update() bool {
 		book.SetType(typeString)
 		book.SetUpdateDate(updateDate)
 		book.SetUpdateChapter(updateChapter)
+		logging.Info("Book %v-%v-%v Update: success", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode)
 	}
 	return update
 }

@@ -28,6 +28,7 @@ type SiteConfig struct {
 
 type Config struct {
     SiteConfigs map[string]*SiteConfig `yaml:"sites"`
+	MaxThreads int `yaml:"maxThreads"`
 	Backend struct {
 		Api []string `yaml:"api"`
 		StageFile string `yaml:"stageFile"`

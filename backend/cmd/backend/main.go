@@ -121,7 +121,7 @@ func startServer(addr string) {
 	logging.Error("%v", http.ListenAndServe(addr, nil))
 }
 func main() {
-	setup("./configs/config.yaml")
+	setup(os.Getenv("ASSETS_LOCATION") + "/configs/config.yaml")
 	logs = Logs{
 		logLocation: config.Backend.LogFile, 
 		Logs: make([]string, 100), 

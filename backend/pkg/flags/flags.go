@@ -39,8 +39,7 @@ func (f *Flags) IsEverything() bool {
 	if f.Id == nil { id := -1 ; f.Id = &id }
 	if f.HashCode == nil { hash := "" ; f.HashCode = &hash }
 	if f.MaxThreads == nil { maxThreads := -1 ; f.MaxThreads = &maxThreads }
-	return *f.Site == "" && *f.Id == -1 &&
-		*f.HashCode == "" && *f.MaxThreads == -1
+	return *f.Site == "" && *f.Id == -1 && *f.HashCode == ""
 }
 
 func (f *Flags) IsBook() bool {

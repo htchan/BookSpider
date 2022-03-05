@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/internal/logging"
 	"golang.org/x/sync/semaphore"
 	// "log"
 	"os"
@@ -99,6 +100,7 @@ func (book Book) saveContent(chapters []Chapter) int {
 func (book *Book) Download(MAX_THREAD int) bool {
 	chapters, err := book.getEmptyChapters()
 	if err != nil {
+		logging.Info("Book %v-%v-%v Download fail: %v", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode, err)
 		return false
 	}
 	results := book.downloadChapters(chapters, MAX_THREAD)
@@ -109,6 +111,7 @@ func (book *Book) Download(MAX_THREAD int) bool {
 		maxErrorChapterCount = int(float64(len(results)) * 0.1)
 	}
 	if errorCount > maxErrorChapterCount {
+		logging.Info("Book %v-%v-%v Download fail: too much chapters return error", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode)
 		utils.CheckError(os.Remove(book.getContentLocation()))
 		return false
 	}

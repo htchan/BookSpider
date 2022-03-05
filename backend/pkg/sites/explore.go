@@ -1,6 +1,7 @@
 package sites
 
 import (
+	"github.com/htchan/BookSpider/internal/logging"
 	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/pkg/books"
 	"errors"
@@ -12,11 +13,13 @@ import (
 
 func (site *Site) exploreOldBook(id int, count *int) error {
 	book := books.LoadBook(site.database, site.Name, id, -1, site.config.BookMeta)
-	if book == nil { return errors.New(fmt.Sprintf(
-		"[explore] load book %v-%v fail", site.Name, id))
+	if book == nil {
+		return errors.New(fmt.Sprintf(
+		"load book %v-%v fail", site.Name, id))
 	}
-	if book.GetError() == nil { return errors.New(fmt.Sprintf(
-		"[explore] load book %v-%v return status %v", site.Name, id, book.GetStatus()))
+	if book.GetError() == nil {
+		return errors.New(fmt.Sprintf(
+		"load book %v-%v return status %v", site.Name, id, book.GetStatus()))
 	}
 	if book.Update() {
 		book.Save(site.database)
@@ -58,7 +61,9 @@ func (site *Site) explore() (err error) {
 			defer wg.Done()
 			err := site.exploreOldBook(id, errorCount)
 			if err != nil {
-				// TODO: try to log the error
+				logging.Info("Book %v-%v explore failed: %v", site.Name, id, err)
+			} else {
+				logging.Info("Book %v-%v explore complete", site.Name, id)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
 	}
@@ -71,7 +76,9 @@ func (site *Site) explore() (err error) {
 			defer wg.Done()
 			err := site.exploreNewBook(id, errorCount)
 			if err != nil {
-				// TODO: try to log the error
+				logging.Info("Book %v-%v explore failed: %v", site.Name, id, err)
+			} else {
+				logging.Info("Book %v-%v explore complete", site.Name, id)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
 	}

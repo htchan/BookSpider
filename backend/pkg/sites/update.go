@@ -4,6 +4,7 @@ import (
 	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/pkg/books"
 	"github.com/htchan/BookSpider/internal/database"
+	"github.com/htchan/BookSpider/internal/logging"
 	"errors"
 	"context"
 	"sync"
@@ -19,6 +20,9 @@ func (site *Site) updateBook(record *database.BookRecord) error {
 	}
 	if book.Update() {
 		book.Save(site.database)
+		logging.Info("book %v-%v-%v updated", record.Site, record.Id, record.HashCode)
+	} else {
+		logging.Info("book %v-%v-%v unchange", record.Site, record.Id, record.HashCode)
 	}
 	return nil
 }
@@ -37,6 +41,7 @@ func (site *Site) update(errorFocus bool) (err error) {
 	for rows.Next() {
 		record, err := rows.ScanCurrent()
 		if err != nil {
+			logging.Info("load record fail: %v", err)
 			return err
 		}
 		site.semaphore.Acquire(ctx, 1)
@@ -46,7 +51,7 @@ func (site *Site) update(errorFocus bool) (err error) {
 			defer wg.Done()
 			err := site.updateBook(record)
 			if err != nil {
-				// TODO: log the error
+				logging.Info("Book %v-%v-%v update fail: %v", record.Site, record.Id, record.HashCode, err)
 			}
 		} (site.semaphore, &wg, record.(*database.BookRecord))
 	}

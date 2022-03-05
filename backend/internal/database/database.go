@@ -53,10 +53,12 @@ const (
 	End
 	Download
 )
+var StatusCodeMap = map[string]StatusCode{ "ERROR": Error, "INPROGRESS": InProgress, "END": End, "DOWNLOAD": Download }
 
 type SummaryRecord struct {
 	BookCount, ErrorCount, WriterCount, UniqueBookCount int
-	MaxBookId, LatestSuccessId int
+	MaxBookId int
+	LatestSuccessId int `json:"latestSuccessBookId"`
 	StatusCount map[StatusCode]int
 }
 

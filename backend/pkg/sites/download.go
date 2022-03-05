@@ -1,6 +1,7 @@
 package sites
 
 import (
+	"github.com/htchan/BookSpider/internal/logging"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/flags"
@@ -25,6 +26,7 @@ func (site *Site) download() (err error) {
 		wg.Add(1)
 		s.Acquire(ctx, 1)
 		go func(s *semaphore.Weighted, wg *sync.WaitGroup, record *database.BookRecord) {
+			logging.Info("Book %v-%v-%v start Download", record.Site, record.Id, record.HashCode)
 			defer s.Release(1)
 			defer wg.Done()
 			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
@@ -32,6 +34,7 @@ func (site *Site) download() (err error) {
 			if book.Download(site.config.ThreadsCount) {
 				book.Save(site.database)
 			}
+			logging.Info("Book %v-%v-%v complete Download", record.Site, record.Id, record.HashCode)
 		}(s, &wg, record.(*database.BookRecord))
 	}
 	wg.Wait()

@@ -13,7 +13,7 @@ func Test_Config_Config(t *testing.T) {
 
 			if config.Backend.StageFile != "/log/stage.txt" ||
 				config.Backend.LogFile != "/log/controller.log" ||
-				len(config.Backend.Api) != 8 {
+				len(config.Backend.Api) != 7 {
 					t.Fatalf("Load wrong backend config %v", config.Backend)
 				}
 			
