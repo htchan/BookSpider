@@ -11,7 +11,6 @@ values
 insert into writers
 (id, name)
 values
-(0, ''),
 (1, 'writer-1'),
 (2, 'writer-2'),
 (3, 'writer-3');

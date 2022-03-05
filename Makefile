@@ -1,7 +1,6 @@
 .PHONY: frontend backend controller build
 
 build:
-	docker build -f ./frontend/Dockerfile.flutter -t flutter ./frontend
 	docker-compose --profile all build ${service}
 
 frontend:

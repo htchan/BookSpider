@@ -20,6 +20,5 @@ backend:
         - random
         - process
         - info
-        - validate
     stageFile: '/log/stage.txt'
     logFile: '/log/controller.log'

@@ -1,6 +1,6 @@
 baseUrl : "http://www.aidusk.com/txt%v/"
 downloadUrl : "http://www.aidusk.com/t/%v/"
-chapterUrl : "http://www.aidusk.com/t/%v"
+chapterUrl : "http://www.aidusk.com%v"
 chapterUrlPattern : "/t/.*?\\.html"
 titleRegex : "<div class=\"tit1\"><h1>(.*?)</h1>"
 writerRegex : "<span>小说作者：(.*?)</span>"

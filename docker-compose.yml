@@ -26,6 +26,9 @@ services:
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
             - ./bin/backup:/backup
+            - ./bin/config:/config
+        environment:
+            - ASSETS_LOCATION=""
         networks:
             - router
         profiles:
@@ -34,9 +37,6 @@ services:
         command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log 2>&1"
 
     frontend:
-        # build:
-        #     context: ./frontend
-        #     dockerfile: Dockerfile.flutter
         image: "flutter:latest"
         volumes:
             - frontend_volume:/build/web
@@ -56,17 +56,19 @@ services:
         profiles:
             - all
             - test
-        command: "go test github.com/htchan/BookSpider/internal/utils \
-            github.com/htchan/BookSpider/pkg/books \
-            github.com/htchan/BookSpider/pkg/sites
-            github.com/htchan/BookSpider/pkg/configs
-		    github.com/htchan/BookSpider/pkg/flags
-		    github.com/htchan/BookSpider/pkg/services
-		    github.com/htchan/BookSpider/cmd/backend
-		    github.com/htchan/BookSpider/cmd/controller -v"
-
-        # github.com/htchan/BookSpider/pkg/sites \
-        # github.com/htchan/BookSpider/pkg/configs \
+        command: >
+            sh -c "
+                go test github.com/htchan/BookSpider/internal/logging
+                go test github.com/htchan/BookSpider/internal/database
+                go test github.com/htchan/BookSpider/internal/database/sqlite
+                go test github.com/htchan/BookSpider/internal/utils
+                go test github.com/htchan/BookSpider/pkg/configs
+                go test github.com/htchan/BookSpider/pkg/books
+                go test github.com/htchan/BookSpider/pkg/flags
+                go test github.com/htchan/BookSpider/pkg/sites
+                go test github.com/htchan/BookSpider/cmd/backend
+                go test github.com/htchan/BookSpider/cmd/controller
+            "
 
 volumes:
     frontend_volume:
