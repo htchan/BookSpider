@@ -24,19 +24,19 @@ func (site *Site) addMissingRecords() (err error) {
 	var wg sync.WaitGroup
 	ctx := context.Background()
 	for i := 1; i <= summary.MaxBookId; i++ {
-		book := books.LoadBook(site.database, site.Name, i, -1, site.config.BookMeta)
-		if book == nil {
-			wg.Add(1)
-			site.semaphore.Acquire(ctx, 1)
-			go func(s *semaphore.Weighted, wg *sync.WaitGroup, i int) {
-				defer s.Release(1)
-				defer wg.Done()
+		wg.Add(1)
+		site.semaphore.Acquire(ctx, 1)
+		go func(s *semaphore.Weighted, wg *sync.WaitGroup, i int) {
+			defer s.Release(1)
+			defer wg.Done()
+			book := books.LoadBook(site.database, site.Name, i, -1, site.config.BookMeta)
+			if book == nil {
 				book = books.NewBook(site.Name, i, -1, site.config.BookMeta)
 				book.Update()
 				book.Save(site.database)
 				logging.Info("missing record %v-%v added", site.Name, i)
-			}(site.semaphore, &wg, i)
-		}
+			}
+		}(site.semaphore, &wg, i)
 	}
 	wg.Wait()
 	return nil
