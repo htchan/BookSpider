@@ -9,6 +9,9 @@ services:
             - ./bin/database:/database
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
+            - ./bin/configs:/configs
+        environment:
+            - ASSETS_LOCATION=
         networks:
             - router
         profiles:
@@ -26,9 +29,9 @@ services:
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
             - ./bin/backup:/backup
-            - ./bin/config:/config
+            - ./bin/configs:/configs
         environment:
-            - ASSETS_LOCATION=""
+            - ASSETS_LOCATION=
         networks:
             - router
         profiles:
