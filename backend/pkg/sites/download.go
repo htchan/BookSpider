@@ -16,6 +16,7 @@ func (site *Site) download() (err error) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
 	s := semaphore.NewWeighted(int64(site.config.DownloadThreadsCount))
+	var loadContentMutex sync.Mutex
 	// query all end book
 	rows := site.database.QueryBooksByStatus(database.End)
 	defer rows.Close()
@@ -25,17 +26,19 @@ func (site *Site) download() (err error) {
 		utils.CheckError(err)
 		wg.Add(1)
 		s.Acquire(ctx, 1)
-		go func(s *semaphore.Weighted, wg *sync.WaitGroup, record *database.BookRecord) {
+		loadContentMutex.Lock()
+		go func(s *semaphore.Weighted, mutex *sync.Mutex, wg *sync.WaitGroup, record *database.BookRecord) {
 			logging.Info("Book %v-%v-%v start Download", record.Site, record.Id, record.HashCode)
 			defer s.Release(1)
 			defer wg.Done()
 			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
 			// call book.download with thread, wait group and semaphore
-			if book.Download(site.config.ThreadsCount) {
+			if book.Download(site.config.ThreadsCount, mutex) {
 				book.Save(site.database)
 			}
 			logging.Info("Book %v-%v-%v complete Download", record.Site, record.Id, record.HashCode)
-		}(s, &wg, record.(*database.BookRecord))
+		}(s, &loadContentMutex, &wg, record.(*database.BookRecord))
+		loadContentMutex.Unlock()
 	}
 	wg.Wait()
 	return nil
@@ -51,7 +54,8 @@ func Download(site *Site, args *flags.Flags) (err error) {
 			if maxThreads <= 0 {
 				maxThreads = site.config.ThreadsCount
 			}
-			if book.Download(maxThreads) {
+			var mutex sync.Mutex
+			if book.Download(maxThreads, &mutex) {
 				book.Save(site.database)
 			}
 			return nil

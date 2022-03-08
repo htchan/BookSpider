@@ -97,12 +97,14 @@ func (book Book) saveContent(chapters []Chapter) int {
 	return errorChapterCount
 }
 
-func (book *Book) Download(MAX_THREAD int) bool {
+func (book *Book) Download(MAX_THREAD int, loadContentMutex *sync.Mutex) bool {
 	chapters, err := book.getEmptyChapters()
 	if err != nil {
 		logging.Info("Book %v-%v-%v Download fail: %v", book.bookRecord.Site, book.bookRecord.Id, book.bookRecord.HashCode, err)
 		return false
 	}
+	loadContentMutex.Lock()
+	defer loadContentMutex.Unlock()
 	results := book.downloadChapters(chapters, MAX_THREAD)
 	// save the content to target path
 	errorCount := book.saveContent(results)

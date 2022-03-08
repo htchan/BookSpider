@@ -190,6 +190,8 @@ func TestBooks_Book_Download(t *testing.T) {
 	})
 	
 	t.Run("func Download", func(t *testing.T) {
+		var mutex sync.Mutex
+
 		t.Run("success", func(t *testing.T) {
 			book := NewBook("test", 1, 10, downloadConfig)
 			book.config.DownloadUrl = server.URL + "/content/success/1"
@@ -197,7 +199,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			book.config.CONST_SLEEP = 0
 			book.SetTitle("book-title")
 			book.SetWriter("book-writer")
-			result := book.Download(10)
+			result := book.Download(10, &mutex)
 
 			if !result {
 				t.Fatalf("book download failed")
