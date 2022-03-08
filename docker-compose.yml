@@ -9,7 +9,7 @@ services:
             - ./bin/database:/database
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
-            - ./bin/configs:/configs
+            - ./backend/assets/configs:/configs
         environment:
             - ASSETS_LOCATION=
         networks:
@@ -29,7 +29,8 @@ services:
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
             - ./bin/backup:/backup
-            - ./bin/configs:/configs
+            - ./backend/assets/configs:/configs
+            - ./backend/assets/schema:/schema
         environment:
             - ASSETS_LOCATION=
         networks:

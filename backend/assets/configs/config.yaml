@@ -6,7 +6,7 @@ sites:
         databaseLocation : "/database/ck101.db"
         downloadDirectory : "/books/ck101/"
         threadsCount : 1000
-        downloadThreadsCount: 5
+        downloadThreadsCount: 1000
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -17,7 +17,7 @@ sites:
     #     databaseLocation : "/database/80txt.db"
     #     downloadDirectory : "/books/80txt/"
     #     threadsCount : 1000
-    #     downloadThreadsCount: 5
+    #     downloadThreadsCount: 1000
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"
@@ -28,7 +28,7 @@ sites:
         databaseLocation : "/database/xqishu.db"
         downloadDirectory : "/books/xqishu/"
         threadsCount : 2
-        downloadThreadsCount: 5
+        downloadThreadsCount: 2
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -39,7 +39,7 @@ sites:
         databaseLocation : "/database/hjwzw.db"
         downloadDirectory : "/books/hjwzw/"
         threadsCount : 1000
-        downloadThreadsCount: 5
+        downloadThreadsCount: 1000
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -50,7 +50,7 @@ sites:
     #     databaseLocation : "/database/bestory.db"
     #     downloadDirectory : "/mnt/addition/download/Book/bestory"
     #     threadsCount : 1000
-    #     downloadThreadsCount: 5
+    #     downloadThreadsCount: 1000
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"
