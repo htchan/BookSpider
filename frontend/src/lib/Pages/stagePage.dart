@@ -32,8 +32,7 @@ class _StagePageState extends State<StagePage> {
           jsonDecode(response.body.replaceAll(String.fromCharCode(9), " "))
         );
         info['logs'] = List<String>.from(info['logs'])
-          .where( (s) => s.contains('{') && s.contains('}') && s.contains('"') && s.contains(':') )
-          .map( (s) => s.replaceAll('\\\"', '\"'));
+          .where( (s) => s.length > 20 );
         setState((){
           _stage = _renderStage(info);
           _subStage = _renderSubStage(info);
