@@ -26,6 +26,7 @@ type BookConfig struct {
 	Decoder *encoding.Decoder
 	CONST_SLEEP int
 	StorageDirectory string
+	UseRequestInterval bool
 }
 
 func LoadBookConfigYaml(bookConfigLocation string) (bookConfig *BookConfig) {

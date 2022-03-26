@@ -13,7 +13,6 @@ func TestUtils_Request_getWeb(t *testing.T) {
 	defer encodeServer.Close()
 
 	t.Run("func getWeb", func(t *testing.T) {
-		UseClient(BasicClient)
 		t.Run("success", func(t *testing.T) {
 			response := getWeb(server.URL + "/testing")
 			if response != "stub utils server" {
@@ -30,7 +29,6 @@ func TestUtils_Request_getWeb(t *testing.T) {
 	})
 	
 	t.Run("func GetWeb", func(t *testing.T) {
-		UseClient(BasicClient)
 		t.Run("success", func(t *testing.T) {
 			response, trial := GetWeb(server.URL + "/testing", 1, nil, 0)
 			if response != "stub utils server" || trial != 0 {

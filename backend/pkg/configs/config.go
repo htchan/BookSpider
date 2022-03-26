@@ -24,6 +24,7 @@ type SiteConfig struct {
 	DecoderString string `yaml:"decode"`
 	BookConfigLocation string `yaml:"configFileLocation"`
 	BackupDirectory string `yaml:"backupDirectory"`
+	UseRequestInterval bool `yaml:"useRequestInterval"`
 }
 
 type Config struct {
@@ -45,6 +46,7 @@ func LoadConfigYaml(configLocation string) (config *Config) {
 	utils.CheckError(yaml.Unmarshal(data, config))
 	for key, value := range config.SiteConfigs {
 		config.SiteConfigs[key].BookMeta = LoadBookConfigYaml(os.Getenv("ASSETS_LOCATION") + value.BookConfigLocation)
+		config.SiteConfigs[key].BookMeta.UseRequestInterval = value.UseRequestInterval
 		config.SiteConfigs[key].BookMeta.CONST_SLEEP = value.ConstSleep
 		config.SiteConfigs[key].BookMeta.StorageDirectory = value.StorageDirectory
 		if (value.DecoderString == "big5") {

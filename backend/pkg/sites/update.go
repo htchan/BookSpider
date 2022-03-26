@@ -5,6 +5,7 @@ import (
 	"github.com/htchan/BookSpider/pkg/books"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/BookSpider/internal/utils"
 	"errors"
 	"context"
 	"sync"
@@ -54,6 +55,7 @@ func (site *Site) update(errorFocus bool) (err error) {
 				logging.Info("Book %v-%v-%v update fail: %v", record.Site, record.Id, record.HashCode, err)
 			}
 		} (site.semaphore, &wg, record.(*database.BookRecord))
+		if site.config.UseRequestInterval { utils.RequestInterval() }
 	}
 	wg.Wait()
 	rows.Close()

@@ -10,6 +10,7 @@ sites:
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
+        useRequestInterval: false
     # 80txt:
     #     decode : utf8
     #     configFileLocation : "/configs/site-config/80txt-desktop.yaml"
@@ -21,17 +22,19 @@ sites:
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"
+    #     useRequestInterval: false
     xqishu:
         decode : utf8
         configFileLocation : "/configs/site-config/xqishu-desktop.yaml"
         databaseEngine: "sqlite3"
         databaseLocation : "/database/xqishu.db"
         downloadDirectory : "/books/xqishu/"
-        threadsCount : 2
-        downloadThreadsCount: 2
+        threadsCount : 10
+        downloadThreadsCount: 10
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
+        useRequestInterval: true
     hjwzw:
         decode : utf8
         configFileLocation : "/configs/site-config/hjwzw-desktop.yaml"
@@ -43,6 +46,7 @@ sites:
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
+        useRequestInterval: false
     # bestory:
     #     decode : "big5"
     #     configFileLocation : "/configs/site-config/bestory-desktop.json"
@@ -54,6 +58,7 @@ sites:
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"
+    #     useRequestInterval: false
 maxThreads: 1000
 backend:
     api:

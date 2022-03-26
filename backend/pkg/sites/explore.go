@@ -2,6 +2,7 @@ package sites
 
 import (
 	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/pkg/books"
 	"errors"
@@ -81,6 +82,7 @@ func (site *Site) explore() (err error) {
 				logging.Info("Book %v-%v explore complete", site.Name, id)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
+		if site.config.UseRequestInterval { utils.RequestInterval() }
 	}
 	wg.Wait()
 	return

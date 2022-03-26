@@ -25,12 +25,13 @@ func Test_Config_Config(t *testing.T) {
 				site.StorageDirectory != "/test-data/storage/" ||
 				site.DownloadThreadsCount != 5 ||
 				site.ThreadsCount != 1000 || site.ConstSleep != 1000 ||
-				site.MaxExploreError != 1000 ||
+				site.MaxExploreError != 1000 || site.UseRequestInterval != true ||
 				site.Decoder == nil || site.BookMeta == nil {
-					t.Fatalf("Load wrong site config %v", site.DownloadThreadsCount)
+					t.Fatalf("Load wrong site config %v", site.UseRequestInterval)
 				}
 			
 			if bookConfig := config.SiteConfigs["test"].BookMeta;
+				bookConfig.UseRequestInterval != true ||
 				bookConfig.CONST_SLEEP != 1000 ||
 				bookConfig.Decoder == nil ||
 				bookConfig.StorageDirectory != "/test-data/storage/" {

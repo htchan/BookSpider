@@ -10,6 +10,7 @@ sites:
         constSleep: 1000
         maxExploreError: 1000
         backupDirectory: "/test-data/"
+        useRequestInterval: true
 maxThreads: 1000
 backend:
     api:

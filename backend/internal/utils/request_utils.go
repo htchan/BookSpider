@@ -7,52 +7,15 @@ import (
 	"io/ioutil"
 	// "math/rand"
 	"net/http"
-	"net/url"
 
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
 )
 
-var currencClient = 0
-var currencClientPointer = &currencClient
-
-var client = basicClient
-
-func basicClient() *http.Client {
-	return &http.Client{
-		Timeout: 5 * time.Second,
-	}
-}
-
-func proxyClient() *http.Client {
-	*currencClientPointer = (*currencClientPointer + 1) % PROXY_URLS_COUNT
-	proxyUrl, err := url.Parse(proxyUrls[*currencClientPointer])
-	CheckError(err)
-	return &http.Client{
-		Transport: &http.Transport{ Proxy: http.ProxyURL(proxyUrl) },
-		Timeout: 60 * time.Second,
-	}
-}
-
-type ClientType int
-
-const (
-	BasicClient = iota
-	ProxyClient
-)
-
-func UseClient(clientType ClientType) {
-	if clientType == BasicClient{
-		client = basicClient
-	} else if clientType == ProxyClient {
-		client = proxyClient
-	} else {
-		client = nil
-	}
-}
+var SlowRequest = false
 
 func getWeb(url string) string {
-	c := client()
+	c := &http.Client{ Timeout: 5 * time.Second }
 	resp, err := c.Get(url)
 	if err != nil {
 		return ""
@@ -79,6 +42,11 @@ func GetWeb(url string, trial int, decoder *encoding.Decoder, constSleep int) (h
 			if statusCode == 503 {
 				if i >= 100 { return }
 				time.Sleep(time.Duration(i) * time.Second)
+				go func() {
+					SlowRequest = true
+					time.Sleep(10 * time.Second)
+					SlowRequest = false
+				}()
 			} else {
 				if i >= 10 { return }
 				time.Sleep(time.Duration((i + 1) * constSleep) * time.Millisecond)
@@ -96,4 +64,10 @@ func GetWeb(url string, trial int, decoder *encoding.Decoder, constSleep int) (h
 		break
 	}
 	return
+}
+
+func RequestInterval() {
+	if SlowRequest {
+		time.Sleep(1 * time.Second)
+	}
 }

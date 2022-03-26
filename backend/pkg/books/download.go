@@ -77,6 +77,7 @@ func (book Book) downloadChapters(chapters []Chapter, MAX_THREAD int) []Chapter 
 			defer s.Release(1)
 			chapters[i].Download(&book.config, book.validHTML)
 		}(&wg, s, i)
+		if book.config.UseRequestInterval { utils.RequestInterval() }
 	}
 	wg.Wait()
 	return chapters
