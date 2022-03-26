@@ -21,10 +21,13 @@ class _StagePageState extends State<StagePage> {
 
   _StagePageState(this.url) {
     // call backend api
-    String dataUrl = '$url/process';
     _stage = Center(child: Text('Loading Stage...'));
     _subStage = Center(child: Text('Loading Sub-Stage...'));
     _logs = Center(child: Text('Loading Logs...'));
+    loadStage();
+  }
+  void loadStage() {
+    String dataUrl = '$url/process';
     http.get(Uri.parse(dataUrl))
     .then( (response) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -111,7 +114,20 @@ class _StagePageState extends State<StagePage> {
   Widget build(BuildContext context) {
     // show the content
     return Scaffold(
-      appBar: AppBar(title: Text('Stage')),
+      appBar: AppBar(
+        title: Text('Stage'),
+        actions:<Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              loadStage();
+            }
+          )
+        ]
+      ),
       key: scaffoldKey,
       body: Container(
         child: Column(
