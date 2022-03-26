@@ -42,14 +42,14 @@ class _BookPageState extends State<BookPage> {
   
   Widget _renderBookContent(Map<String, dynamic> info) {
     List<Widget> rows = [
-      Text('ID: ${info['id']} - ${info['version']}'),
+      Text('ID: ${info['id']} - ${info['hash']}'),
       Text('Title: ${info['title']}'),
       Text('Writer: ${info['writer']}'),
       Text('Type: ${info['type']}'),
-      Text('Last Update: ${info['update']}'),
-      Text('Last Chapter: ${info['chapter']}')
+      Text('Last Update: ${info['updateDate']}'),
+      Text('Last Chapter: ${info['updateChapter']}')
     ];
-    if (info['download']) {
+    if (info['status'] == 'download') {
       rows.add(RaisedButton(
         child: Text('Download'),
         onPressed: () => js.context.callMethod('open', ['$url/download/$siteName/$bookId']),

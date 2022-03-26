@@ -12,13 +12,17 @@ class SiteChartPanel extends StatelessWidget {
   List<Data> data;
   int maxId;
 
+
   SiteChartPanel(this.scaffoldKey, info) {
+    var downloadCount = info['statusCount']['3'];
+    var errorCount = info['errorCount'];
+    var bookCount = info['bookCount'] - errorCount - downloadCount;
     data = [
-      Data('Download', info['downloadCount']),
-      Data('Book', info['bookCount'] - info['downloadCount']),
-      Data('error', info['errorCount'])
+      Data('Download', downloadCount),
+      Data('Book', bookCount),
+      Data('error', errorCount)
     ];
-    maxId = info['maxid'];
+    maxId = info['latestSuccessBookId'];
   }
 
   List<charts.Series<Data, String>> _formatData() {

@@ -30,6 +30,7 @@ class _SitePageState extends State<SitePage> with SingleTickerProviderStateMixin
     .then( (response) {
       if (response.statusCode != 404) {
         Map<String, dynamic> info = Map<String, dynamic>.from(jsonDecode(response.body));
+        print("from response ${response.body}\n$info");
         setState((){
           _chartPanel = SiteChartPanel(scaffoldKey, info);
           _dataPanel = SiteInfoPanel(scaffoldKey, info);

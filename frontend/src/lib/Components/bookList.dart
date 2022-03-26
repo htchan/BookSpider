@@ -19,7 +19,7 @@ class BookList extends StatelessWidget {
     if (firstButton != null) { list.add(firstButton(scrollController)); }
     list.addAll(books.map( (book) => ListTile(
       title: Text('${book['title']} - ${book['writer']}'),
-      subtitle: Text('${book['update']} - ${book['chapter']}'),
+      subtitle: Text('${book['updateDate']} - ${book['updateChapter']}'),
       onTap: () {
         Navigator.pushNamed(
           this.scaffoldKey.currentContext,
