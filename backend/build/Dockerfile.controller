@@ -12,7 +12,8 @@ COPY ./internal ./internal
 COPY ./pkg ./pkg
 COPY ./cmd/controller ./cmd/controller
 
-RUN go build -v github.com/htchan/BookSpider/cmd/controller
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -v github.com/htchan/BookSpider/cmd/controller
 
 
 FROM golang:1.17.6-alpine3.14

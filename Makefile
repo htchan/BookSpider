@@ -1,7 +1,7 @@
 .PHONY: frontend backend controller build
 
 build:
-	docker-compose --profile all build ${service}
+	DOCKER_BUILDKIT=1 docker-compose --profile all build ${service}
 
 frontend:
 	docker-compose --profile frontend up
