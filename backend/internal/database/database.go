@@ -2,6 +2,8 @@ package database
 
 import (
 	"time"
+	"fmt"
+	"strconv"
 )
 
 const (
@@ -94,6 +96,13 @@ func (record *BookRecord) Parameters() (parameters []interface{}) {
 	parameters[7] = record.UpdateChapter
 	parameters[8] = record.Status
 	return
+}
+func (record *BookRecord) String() string {
+	return fmt.Sprintf(
+		"%v-%v-%v",
+		record.Site,
+		strconv.Itoa(record.Id),
+		strconv.FormatInt(int64(record.HashCode), 36))
 }
 
 type WriterRecord struct {

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"errors"
 	"os"
+	"fmt"
 )
 
 type Book struct {
@@ -230,4 +231,12 @@ func (book *Book)Map() map[string]interface{} {
 		"updateChapter": book.GetUpdateChapter(),
 		"status": database.StatustoString(book.GetStatus()),
 	}
+}
+
+func (book *Book)String() string {
+	return fmt.Sprintf(
+		"%v-%v-%v",
+		book.bookRecord.Site,
+		strconv.Itoa(book.bookRecord.Id),
+		strconv.FormatInt(int64(book.bookRecord.HashCode), 36))
 }

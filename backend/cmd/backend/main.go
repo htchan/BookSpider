@@ -117,8 +117,8 @@ func setup(configFileLocation string) {
 }
 func startServer(addr string) {
 	for _, api := range config.Backend.Api { apiFunc[api]() }
-	logging.Info("started")
-	logging.Error("%v", http.ListenAndServe(addr, nil))
+	logging.LogEvent("server", "start", nil)
+	logging.LogEvent("server", "error", http.ListenAndServe(addr, nil))
 }
 func main() {
 	setup(os.Getenv("ASSETS_LOCATION") + "/configs/config.yaml")

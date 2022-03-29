@@ -28,7 +28,7 @@ func (site *Site) download() (err error) {
 		s.Acquire(ctx, 1)
 		loadContentMutex.Lock()
 		go func(s *semaphore.Weighted, mutex *sync.Mutex, wg *sync.WaitGroup, record *database.BookRecord) {
-			logging.Info("Book %v-%v-%v start Download", record.Site, record.Id, record.HashCode)
+			logging.LogBookEvent(record.String(), "download", "start", nil)
 			defer s.Release(1)
 			defer wg.Done()
 			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
@@ -36,7 +36,7 @@ func (site *Site) download() (err error) {
 			if book.Download(site.config.ThreadsCount, mutex) {
 				book.Save(site.database)
 			}
-			logging.Info("Book %v-%v-%v complete Download", record.Site, record.Id, record.HashCode)
+			logging.LogBookEvent(book.String(), "download", "completed", nil)
 		}(s, &loadContentMutex, &wg, record.(*database.BookRecord))
 		loadContentMutex.Unlock()
 	}

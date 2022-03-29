@@ -34,7 +34,7 @@ func (site *Site) addMissingRecords() (err error) {
 				book = books.NewBook(site.Name, i, -1, site.config.BookMeta)
 				book.Update()
 				book.Save(site.database)
-				logging.Info("missing record %v-%v added", site.Name, i)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(i), "fix", "add-missing-record", nil)
 			}
 		}(site.semaphore, &wg, i)
 	}
@@ -69,7 +69,7 @@ func (site *Site) updateBooksByStorage() (err error) {
 			if !book.HasContent() {
 				book.SetStatus(database.End)
 				book.Save(site.database)
-				logging.Info("Book %v-%v-%v status update to End", record.Site, record.Id, record.HashCode)
+				logging.LogBookEvent(record.String(), "fix", "update-to-end", nil)
 			}
 		}(site.semaphore, &wg, record.(*database.BookRecord))
 	}
@@ -96,7 +96,7 @@ func (site *Site) updateBooksByStorage() (err error) {
 			if book!= nil && book.GetStatus() != database.Download {
 				book.SetStatus(database.Download)
 				book.Save(site.database)
-				logging.Info("Book %v-%v-%v status update to Download", site.Name, i, hashCode)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(i) + "-" + info[0], "fix", "update-to-download", nil)
 			}
 		}(site.semaphore, &wg, file.Name())
 	}

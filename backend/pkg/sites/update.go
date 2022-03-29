@@ -21,9 +21,9 @@ func (site *Site) updateBook(record *database.BookRecord) error {
 	}
 	if book.Update() {
 		book.Save(site.database)
-		logging.Info("book %v-%v-%v updated", record.Site, record.Id, record.HashCode)
+		logging.LogSiteEvent(site.Name, "updated", "changed", record.String())
 	} else {
-		logging.Info("book %v-%v-%v unchange", record.Site, record.Id, record.HashCode)
+		logging.LogSiteEvent(site.Name, "updated", "not-changed", record.String())
 	}
 	return nil
 }
@@ -42,7 +42,7 @@ func (site *Site) update(errorFocus bool) (err error) {
 	for rows.Next() {
 		record, err := rows.ScanCurrent()
 		if err != nil {
-			logging.Info("load record fail: %v", err)
+			logging.LogSiteEvent(site.Name, "updated", "db-fail", err)
 			return err
 		}
 		site.semaphore.Acquire(ctx, 1)
@@ -52,7 +52,7 @@ func (site *Site) update(errorFocus bool) (err error) {
 			defer wg.Done()
 			err := site.updateBook(record)
 			if err != nil {
-				logging.Info("Book %v-%v-%v update fail: %v", record.Site, record.Id, record.HashCode, err)
+			logging.LogSiteEvent(site.Name, "updated", "update-failed", record.String() + err.Error())
 			}
 		} (site.semaphore, &wg, record.(*database.BookRecord))
 		if site.config.UseRequestInterval { utils.RequestInterval() }

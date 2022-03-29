@@ -7,6 +7,7 @@ import (
 	"github.com/htchan/BookSpider/pkg/books"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"context"
 	"golang.org/x/sync/semaphore"
@@ -62,9 +63,9 @@ func (site *Site) explore() (err error) {
 			defer wg.Done()
 			err := site.exploreOldBook(id, errorCount)
 			if err != nil {
-				logging.Info("Book %v-%v explore failed: %v", site.Name, id, err)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(id), "explore", "failed", err)
 			} else {
-				logging.Info("Book %v-%v explore complete", site.Name, id)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(id), "explore", "success", nil)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
 	}
@@ -77,9 +78,9 @@ func (site *Site) explore() (err error) {
 			defer wg.Done()
 			err := site.exploreNewBook(id, errorCount)
 			if err != nil {
-				logging.Info("Book %v-%v explore failed: %v", site.Name, id, err)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(id), "explore", "failed", err)
 			} else {
-				logging.Info("Book %v-%v explore complete", site.Name, id)
+				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(id), "explore", "success", nil)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
 		if site.config.UseRequestInterval { utils.RequestInterval() }
