@@ -73,6 +73,26 @@ services:
                 go test github.com/htchan/BookSpider/cmd/backend
                 go test github.com/htchan/BookSpider/cmd/controller
             "
+    
+    batch:
+        build: 
+            context: ./backend
+            dockerfile: ./build/Dockerfile.batch
+        volumes:
+            - ./bin/database:/database
+            - ./bin/log:/log
+            - /mnt/addition/download/Books:/books
+            - ./backend/assets/configs:/configs
+            - /etc/timezone:/etc/timezone:ro
+        environment:
+            - ASSETS_LOCATION=
+        networks:
+            - router
+        profiles:
+            - all
+            - batch
+        command: sh -c "crond && tail -f /dev/null"
+
     temp:
         image: alpine:latest
         profiles:

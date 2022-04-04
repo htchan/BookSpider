@@ -12,5 +12,8 @@ backend:
 controller:
 	command=${command} params="${params}" docker-compose --profile controller up
 
+batch:
+	docker-compose --profile batch up -d
+
 test:
 	docker-compose --profile test up
