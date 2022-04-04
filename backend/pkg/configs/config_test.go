@@ -23,8 +23,8 @@ func Test_Config_Config(t *testing.T) {
 				site.DatabaseEngine != "sqlite3" ||
 				site.DatabaseLocation != "./test.db" ||
 				site.StorageDirectory != "/test-data/storage/" ||
-				site.DownloadThreadsCount != 5 ||
-				site.ThreadsCount != 1000 || site.ConstSleep != 1000 ||
+				site.DownloadBookThreads != 5 ||
+				site.Threads != 1000 || site.ConstSleep != 1000 ||
 				site.MaxExploreError != 1000 || site.UseRequestInterval != true ||
 				site.Decoder == nil || site.BookMeta == nil {
 					t.Fatalf("Load wrong site config %v", site.UseRequestInterval)

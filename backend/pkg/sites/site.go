@@ -25,7 +25,7 @@ func NewSite(name string, config *configs.SiteConfig) (site *Site) {
 	site.Name = name
 	site.database = nil
 	site.config = config
-	site.semaphore = semaphore.NewWeighted(int64(config.ThreadsCount))
+	site.semaphore = semaphore.NewWeighted(int64(config.Threads))
 	return
 }
 

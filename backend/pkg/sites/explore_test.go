@@ -162,8 +162,8 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	t.Run("func explore", func(t *testing.T) {
 		site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
 		site.config.BookMeta.CONST_SLEEP = 0
-		site.config.ThreadsCount = 2
-		site.semaphore = semaphore.NewWeighted(int64(site.config.ThreadsCount))
+		site.config.Threads = 2
+		site.semaphore = semaphore.NewWeighted(int64(site.config.Threads))
 		site.config.MaxExploreError = 3
 		t.Run("success for adding new books", func(t *testing.T) {
 			summary := site.database.Summary(site.Name)

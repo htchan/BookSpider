@@ -5,8 +5,8 @@ sites:
         databaseEngine: "sqlite3"
         databaseLocation : "/database/ck101.db"
         downloadDirectory : "/books/ck101/"
-        threadsCount : 1000
-        downloadThreadsCount: 1000
+        threads : 1000
+        downloadBookThreads: 1000
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -17,8 +17,8 @@ sites:
     #     databaseEngine: "sqlite3"
     #     databaseLocation : "/database/80txt.db"
     #     downloadDirectory : "/books/80txt/"
-    #     threadsCount : 1000
-    #     downloadThreadsCount: 1000
+    #     threads : 1000
+    #     downloadBookThreads: 1000
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"
@@ -29,8 +29,8 @@ sites:
         databaseEngine: "sqlite3"
         databaseLocation : "/database/xqishu.db"
         downloadDirectory : "/books/xqishu/"
-        threadsCount : 10
-        downloadThreadsCount: 10
+        threads : 10
+        downloadBookThreads: 10
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -41,8 +41,8 @@ sites:
         databaseEngine: "sqlite3"
         databaseLocation : "/database/hjwzw.db"
         downloadDirectory : "/books/hjwzw/"
-        threadsCount : 1000
-        downloadThreadsCount: 1000
+        threads : 1000
+        downloadBookThreads: 1000
         constSleep : 1000
         maxExploreError: 1000
         backupDirectory: "/backup/"
@@ -53,8 +53,8 @@ sites:
     #     databaseEngine: "sqlite3"
     #     databaseLocation : "/database/bestory.db"
     #     downloadDirectory : "/mnt/addition/download/Book/bestory"
-    #     threadsCount : 1000
-    #     downloadThreadsCount: 1000
+    #     threads : 1000
+    #     downloadBookThreads: 1000
     #     constSleep : 1000
     #     maxExploreError: 1000
     #     backupDirectory: "/backup/"

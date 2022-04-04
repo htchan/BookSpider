@@ -5,8 +5,8 @@ sites:
         databaseEngine: "sqlite3"
         databaseLocation: "./test.db"
         downloadDirectory: "/test-data/storage/"
-        threadsCount: 1000
-        downloadThreadsCount: 5
+        threads: 1000
+        downloadBookThreads: 5
         constSleep: 1000
         maxExploreError: 1000
         backupDirectory: "/test-data/"
