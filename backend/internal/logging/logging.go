@@ -14,11 +14,11 @@ func logInfo(header string, data interface{}) {
 }
 
 func LogBookEvent(book, action, event string, data interface{}) {
-	logInfo(fmt.Sprintf("book-spider.site.%v.%v.%v", book, action, event), data)
+	logInfo(fmt.Sprintf("book-spider.book.%v.%v.%v", book, action, event), data)
 }
 
 func LogSiteEvent(site, action, event string, data interface{}) {
-	logInfo(fmt.Sprintf("book-spider.book.%v.%v.%v", site, action, event), data)
+	logInfo(fmt.Sprintf("book-spider.site.%v.%v.%v", site, action, event), data)
 }
 
 func LogRequestEvent(action, event string, data interface{}) {
