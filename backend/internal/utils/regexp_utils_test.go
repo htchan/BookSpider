@@ -16,7 +16,6 @@ func TestUtils_Regexp(t *testing.T) {
 	})
 
 	t.Run("func Search", func(t *testing.T) {
-
 		var testcases = []struct {
 			input1, input2, expectString string
 			expectErrorExist             bool
@@ -25,11 +24,11 @@ func TestUtils_Regexp(t *testing.T) {
 			{"abc", "(a.c)", "abc", false},
 			{"abc", "(.*c)", "abc", false},
 			{"abc", "(a)", "a", false},
+			{"abc", "(\\w)", "a", false},
 			{"abc", "(def)", "", true},
 		}
 		for i, testcase := range testcases {
 			t.Run(fmt.Sprintf("case %v", i), func(t *testing.T) {
-				t.Parallel()
 				actualString, actualError := Search(testcase.input1, testcase.input2)
 				if actualString != testcase.expectString || (actualError != nil) != testcase.expectErrorExist {
 					t.Fatalf("utils.Search(\"%v\", \"%v\") result gives\n\"%v\", %v, but not\n\"%v\", %v\n",
@@ -79,7 +78,6 @@ func TestUtils_Regexp(t *testing.T) {
 		}
 		for i, testcase := range testcases {
 			t.Run(fmt.Sprintf("case %v", i), func(t *testing.T) {
-				t.Parallel()
 				actual := Contains(testcase.input1, testcase.input2)
 				if actual != testcase.expected {
 					t.Fatalf("utils.Contains(%v, %v) result gives\n%v, but not\n%v\n",

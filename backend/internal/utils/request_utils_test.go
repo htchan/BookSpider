@@ -2,6 +2,7 @@ package utils
 
 import (
 	"testing"
+	"time"
 	"github.com/htchan/BookSpider/internal/mock"
 	"golang.org/x/text/encoding/traditionalchinese"
 )
@@ -51,6 +52,28 @@ func TestUtils_Request_getWeb(t *testing.T) {
 			if response == "一二三" || trial != 0 {
 				t.Fatalf("utils.GetWeb return \"%v\", %v for success case",
 					response, trial)
+			}
+		})
+	})
+
+	t.Run("func RequestInterval", func(t *testing.T) {
+		t.Run("success to wait 1 second", func(t *testing.T) {
+			SlowRequest = true
+			before := time.Now().Unix()
+			RequestInterval()
+			after := time.Now().Unix()
+			if after - before < 1 {
+				t.Fatalf("it wait for %v unix", after - before)
+			}
+		})
+
+		t.Run("not wait any time if SlowRequest is false", func(t *testing.T) {
+			SlowRequest = false
+			before := time.Now().Unix()
+			RequestInterval()
+			after := time.Now().Unix()
+			if after - before > 0 {
+				t.Fatalf("it wait for %v unix", after - before)
 			}
 		})
 	})
