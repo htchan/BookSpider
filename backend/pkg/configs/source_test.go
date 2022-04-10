@@ -6,10 +6,10 @@ import (
 )
 
 func Test_SourceConfig(t *testing.T) {
-	sourceConfigLocation := os.Getenv("ASSETS_LOCATION") + "/configs/source_config.yaml"
+	sourceConfigDirectory := os.Getenv("ASSETS_LOCATION") + "/configs"
 	t.Run("func LoadSourceConfigs", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			result := LoadSourceConfigs(sourceConfigLocation)
+			result := LoadSourceConfigs(sourceConfigDirectory)
 			if result == nil || len(result) != 6 {
 				t.Fatalf("result: %v", result)
 			}
@@ -31,7 +31,7 @@ func Test_SourceConfig(t *testing.T) {
 		})
 
 		t.Run("return nil config if file not exist", func(t *testing.T) {
-			result := LoadSourceConfigs(sourceConfigLocation + "abc")
+			result := LoadSourceConfigs(sourceConfigDirectory + "abc")
 			if result != nil {
 				t.Fatalf("result: %v", result)
 			}
@@ -40,7 +40,7 @@ func Test_SourceConfig(t *testing.T) {
 
 	t.Run("func Populate", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			config := LoadSourceConfigs(sourceConfigLocation)
+			config := LoadSourceConfigs(sourceConfigDirectory)
 	
 			sourceConfig := config["ck101-desktop"]
 

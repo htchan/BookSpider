@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 	// "encoding/json"
 	"io/ioutil"
+	"path/filepath"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/traditionalchinese"
 	"fmt"
@@ -26,10 +27,10 @@ type SourceConfig struct {
 	Decoder *encoding.Decoder
 }
 
-func LoadSourceConfigs(sourceConfigLocation string) (config map[string]SourceConfig) {
+func LoadSourceConfigs(configDirectory string) (config map[string]SourceConfig) {
 	defer utils.Recover(func() { config = nil })
 
-	data, err := ioutil.ReadFile(sourceConfigLocation)
+	data, err := ioutil.ReadFile(filepath.Join(configDirectory, "source_config.yaml"))
 	utils.CheckError(err)
 	utils.CheckError(yaml.Unmarshal(data, &config))
 	for key, value := range config {
