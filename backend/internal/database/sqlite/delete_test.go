@@ -23,7 +23,7 @@ func cleanupDbDeleteTest() {
 }
 
 func TestSqlite_DB_DeleteBookRecords(t *testing.T) {
-	db := NewSqliteDB("./delete_test.db")
+	db := NewSqliteDB("./delete_test.db", 100)
 	defer db.Close()
 	
 	t.Run("fail", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestSqlite_DB_DeleteBookRecords(t *testing.T) {
 }
 
 func TestSqlite_DB_DeleteWriterRecords(t *testing.T) {
-	db := NewSqliteDB("./delete_test.db")
+	db := NewSqliteDB("./delete_test.db", 100)
 	defer db.Close()
 	
 	t.Run("fail", func(t *testing.T) {
@@ -63,7 +63,7 @@ func TestSqlite_DB_DeleteWriterRecords(t *testing.T) {
 }
 
 func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
-	db := NewSqliteDB("./delete_test.db")
+	db := NewSqliteDB("./delete_test.db", 100)
 	defer db.Close()
 	
 	t.Run("success only providing site and id", func(t *testing.T) {
@@ -93,6 +93,14 @@ func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
 		
 		if err != nil || db.statementCount != 2 || db.statements[1] != ErrorDeleteStatement(&records[0]) {
 			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
+		}
+	})
+
+	t.Run("return error if input records is empty", func(t *testing.T) {
+		err := db.DeleteErrorRecords([]database.ErrorRecord{})
+		
+		if err == nil {
+			t.Fatalf("DB.DeleteWriterRecord does not throw error")
 		}
 	})
 }

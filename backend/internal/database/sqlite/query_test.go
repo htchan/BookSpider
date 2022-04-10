@@ -23,7 +23,7 @@ func cleanupDbQueryTest() {
 }
 
 func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success with specific hash", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("return result match any title or writer", func(t *testing.T) {
@@ -130,10 +130,18 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 			t.Fatalf("QueryBooksByPartialTitleAndWriter(\"-writer\", 5) returns record")
 		}
 	})
+
+	t.Run("return empry row if no title and writer provided", func(t *testing.T) {
+		query := db.QueryBooksByPartialTitleAndWriter([]string{}, []int{})
+
+		if query.Next() {
+			t.Fatalf("QueryBooksByPartialTitleAndWriter([], []) returns record")
+		}
+	})
 }
 
 func TestSqlite_DB_QueryBooksByWriterId(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -161,7 +169,7 @@ func TestSqlite_DB_QueryBooksByWriterId(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryBooksByStatus(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -181,7 +189,7 @@ func TestSqlite_DB_QueryBooksByStatus(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryWriterById(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -209,7 +217,7 @@ func TestSqlite_DB_QueryWriterById(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryWriterByName(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -245,7 +253,7 @@ func TestSqlite_DB_QueryWriterByName(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success if full match", func(t *testing.T) {
@@ -287,10 +295,19 @@ func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		if query.Next() {
 			t.Fatalf("QueryWritersByPartialName(\"title\") returns record")
 		}
-	})}
+	})
+
+	t.Run("return empty result if input is empty", func(t *testing.T) {
+		query := db.QueryWritersByPartialName([]string{})
+
+		if query.Next() {
+			t.Fatalf("QueryWritersByPartialName(\"title\") returns record")
+		}
+	})
+}
 
 func TestSqlite_DB_QueryErrorBySiteId(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -318,7 +335,7 @@ func TestSqlite_DB_QueryErrorBySiteId(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success with desc order update date", func(t *testing.T) {
@@ -336,7 +353,7 @@ func TestSqlite_DB_QueryBooksOrderByUpdateDate(t *testing.T) {
 }
 
 func TestSqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
-	db := NewSqliteDB("./query_test.db")
+	db := NewSqliteDB("./query_test.db", 100)
 	defer db.Close()
 
 	t.Run("success query all books with status = error", func(t *testing.T) {

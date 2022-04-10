@@ -26,7 +26,7 @@ func cleanupDbCreateTest() {
 }
 
 func TestSqlite_DB_CreateBookRecord(t *testing.T) {
-	db := NewSqliteDB("./create_test.db")
+	db := NewSqliteDB("./create_test.db", 1000)
 	defer db.Close()
 	writerRecord := &database.WriterRecord{
 		Id: 1,
@@ -101,10 +101,21 @@ func TestSqlite_DB_CreateBookRecord(t *testing.T) {
 			t.Fatalf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
+
+	t.Run("return error if book record is nil", func(t *testing.T) {
+		err := db.CreateBookRecord(nil, writerRecord)
+
+		if err == nil {
+			t.Fatalf("DB does not create book record - err: %v", err)
+		}
+		if db.statementCount != 3 {
+			t.Fatalf("DB.CreateBookRecord add record to statement - count: %v", db.statementCount)
+		}
+	})
 }
 
 func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
-	db := NewSqliteDB("./create_test.db")
+	db := NewSqliteDB("./create_test.db", 100)
 	defer db.Close()
 
 	t.Run("success with updated id", func(t *testing.T) {
@@ -154,10 +165,21 @@ func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
 			t.Fatalf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
+
+	t.Run("return nil if writer record is nil", func(t *testing.T) {
+		err := db.CreateWriterRecord(nil)
+
+		if err == nil {
+			t.Fatalf("DB does not throw error in create writer record")
+		}
+		if db.statementCount != 3 {
+			t.Fatalf("DB.CreateWriterRecord add record to statement - count: %v", db.statementCount)
+		}
+	})
 }
 
 func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
-	db := NewSqliteDB("./create_test.db")
+	db := NewSqliteDB("./create_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -177,7 +199,7 @@ func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
 		}
 	})
 
-	t.Run("fail if create with existing site id", func(t *testing.T) {
+	t.Run("add statement with existing site id", func(t *testing.T) {
 		errorRecord := &database.ErrorRecord{
 			Site: "test",
 			Id: 10,
@@ -191,6 +213,17 @@ func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
 		}
 		if db.statementCount != 2 || db.statements[0] != ErrorInsertStatement(errorRecord) {
 			t.Fatalf("DB.CreateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+		}
+	})
+
+	t.Run("return error if record is nil", func(t *testing.T) {
+		err := db.CreateErrorRecord(nil)
+
+		if err == nil {
+			t.Fatalf("DB does not throw error in create error record ")
+		}
+		if db.statementCount != 2 {
+			t.Fatalf("DB.CreateErrorRecord add record to statement - count: %v", db.statementCount)
 		}
 	})
 }
@@ -227,7 +260,7 @@ func test_concurrent_create(db database.DB, n int, offset int) func(t *testing.T
 }
 
 func TestSqlite_DB_ConcrrentCreate(t *testing.T) {
-	db := NewSqliteDB("./create_test.db")
+	db := NewSqliteDB("./create_test.db", 100000)
 	defer db.Close()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())

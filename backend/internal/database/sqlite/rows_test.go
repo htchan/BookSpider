@@ -23,7 +23,7 @@ func cleanupRowTest() {
 }
 
 func Test_Sqlite_BooksRow_Scan(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 	defer query.Close()
@@ -53,7 +53,7 @@ func Test_Sqlite_BooksRow_Scan(t *testing.T) {
 }
 
 func Test_Sqlite_BooksRow_ScanCurrent(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 	defer query.Close()
@@ -95,7 +95,7 @@ func Test_Sqlite_BooksRow_ScanCurrent(t *testing.T) {
 }
 
 func Test_Sqlite_BooksRow_Next(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 	defer query.Close()
@@ -125,7 +125,7 @@ func Test_Sqlite_BooksRow_Next(t *testing.T) {
 }
 
 func Test_Sqlite_BooksRow_Close(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 
@@ -157,7 +157,7 @@ func Test_Sqlite_BooksRow_Close(t *testing.T) {
 }
 
 func Test_Sqlite_WriterRows_Scan(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryWriterById(1)
 	defer query.Close()
@@ -182,7 +182,7 @@ func Test_Sqlite_WriterRows_Scan(t *testing.T) {
 }
 
 func Test_Sqlite_WriterRows_ScanCurrent(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryWriterById(1)
 	defer query.Close()
@@ -219,7 +219,7 @@ func Test_Sqlite_WriterRows_ScanCurrent(t *testing.T) {
 }
 
 func Test_Sqlite_WriterRows_Next(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryWriterById(1)
 	defer query.Close()
@@ -249,7 +249,7 @@ func Test_Sqlite_WriterRows_Next(t *testing.T) {
 }
 
 func Test_Sqlite_WriterRows_Close(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryWriterById(1)
 
@@ -281,7 +281,7 @@ func Test_Sqlite_WriterRows_Close(t *testing.T) {
 }
 
 func Test_Sqlite_ErrorRows_Scan(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 	defer query.Close()
@@ -307,7 +307,7 @@ func Test_Sqlite_ErrorRows_Scan(t *testing.T) {
 }
 
 func Test_Sqlite_ErrorRows_ScanCurrent(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 	defer query.Close()
@@ -345,7 +345,7 @@ func Test_Sqlite_ErrorRows_ScanCurrent(t *testing.T) {
 }
 
 func Test_Sqlite_ErrorRows_Next(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 	defer query.Close()
@@ -375,7 +375,7 @@ func Test_Sqlite_ErrorRows_Next(t *testing.T) {
 }
 
 func Test_Sqlite_ErrorRows_Close(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 
@@ -407,7 +407,7 @@ func Test_Sqlite_ErrorRows_Close(t *testing.T) {
 }
 
 func Test_Sqlite_BookRows_interface(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryBookBySiteIdHash("test", 1, 100)
 	defer query.Close()
@@ -422,7 +422,7 @@ func Test_Sqlite_BookRows_interface(t *testing.T) {
 }
 
 func Test_Sqlite_WriterRows_interface(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryWriterById(1)
 	defer query.Close()
@@ -437,7 +437,7 @@ func Test_Sqlite_WriterRows_interface(t *testing.T) {
 }
 
 func Test_Sqlite_ErrorRows_interface(t *testing.T) {
-	db := NewSqliteDB("./rows_test.db")
+	db := NewSqliteDB("./rows_test.db", 100)
 	defer db.Close()
 	query := db.QueryErrorBySiteId("test", 2)
 	defer query.Close()

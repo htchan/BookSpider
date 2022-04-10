@@ -25,7 +25,7 @@ func cleanupDbTest() {
 
 func TestSqlite_DB_Constructor(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		db := NewSqliteDB("./db_test.db")
+		db := NewSqliteDB("./db_test.db", 100)
 		defer db.Close()
 
 		if db._db == nil {
@@ -35,7 +35,7 @@ func TestSqlite_DB_Constructor(t *testing.T) {
 }
 
 func TestSqlite_DB_Summary(t *testing.T) {
-	db := NewSqliteDB("./db_test.db")
+	db := NewSqliteDB("./db_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -53,10 +53,29 @@ func TestSqlite_DB_Summary(t *testing.T) {
 				actual)
 		}
 	})
+
+	t.Run("return all 0 when failed", func(t *testing.T) {
+		db := NewSqliteDB("./unknown.db", 100)
+		defer db.Close()
+
+		actual := db.Summary("test")
+	
+		if actual.BookCount != 0 || actual.WriterCount != 0 ||
+			actual.ErrorCount != 0 || actual.UniqueBookCount != 0 ||
+			actual.MaxBookId != 0 || actual.LatestSuccessId != 0 ||
+			actual.StatusCount[database.Error] != 0 ||
+			actual.StatusCount[database.InProgress] != 0 ||
+			actual.StatusCount[database.End] != 0 ||
+			actual.StatusCount[database.Download] != 0 {
+			t.Fatalf(
+				"DB Summary() failed\nactual: %v",
+				actual)
+		}
+	})
 }
 
 func TestSqlite_DB_execute(t *testing.T) {
-	db := NewSqliteDB("./db_test.db")
+	db := NewSqliteDB("./db_test.db", 2)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -65,10 +84,17 @@ func TestSqlite_DB_execute(t *testing.T) {
 			t.Fatalf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
+
+	t.Run("commit when it reach the max statements", func(t *testing.T) {
+		db.execute("abc")
+		if db.statementCount != 0 {
+			t.Fatalf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
+		}
+	})
 }
 
 func TestSqlite_DB_Commit(t *testing.T) {
-	db := NewSqliteDB("./db_test.db")
+	db := NewSqliteDB("./db_test.db", 100)
 	defer db.Close()
 
 	t.Run("success for insert normal book record", func(t *testing.T) {
@@ -449,7 +475,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 
 func TestSqlite_DB_Close(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		db := NewSqliteDB("./db_test.db")
+		db := NewSqliteDB("./db_test.db", 100)
 		db.Close()
 		if db._db != nil {
 			t.Fatalf("DB Close() failed")
@@ -459,7 +485,7 @@ func TestSqlite_DB_Close(t *testing.T) {
 
 func TestSqlite_DB_interface(t *testing.T) {
 	var db database.DB
-	db = NewSqliteDB("./db_test.db")
+	db = NewSqliteDB("./db_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {

@@ -24,7 +24,7 @@ func cleanupDbUpdateTest() {
 }
 
 func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
-	db := NewSqliteDB("./update_test.db")
+	db := NewSqliteDB("./update_test.db", 100)
 	defer db.Close()
 
 	writerRecord := &database.WriterRecord{
@@ -86,7 +86,7 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 }
 
 func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
-	db := NewSqliteDB("./update_test.db")
+	db := NewSqliteDB("./update_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
@@ -131,7 +131,7 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 }
 
 func Test_Sqlite_DB_UpdateBookRecordsStatusByChapter(t *testing.T) {
-	db := NewSqliteDB("./update_test.db")
+	db := NewSqliteDB("./update_test.db", 100)
 	defer db.Close()
 
 	t.Run("update books if they stuck at same update date long enough", func(t *testing.T) {

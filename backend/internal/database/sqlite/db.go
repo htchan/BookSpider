@@ -15,6 +15,7 @@ type SqliteDB struct {
 	statements map[int]string
 	statementCount int
 	lock sync.Mutex
+	maxStatements int
 }
 
 const (
@@ -22,7 +23,7 @@ const (
 	SQLITE_MAX_OPEN_CONN = 10000
 )
 
-func NewSqliteDB(location string) (db *SqliteDB) {
+func NewSqliteDB(location string, maxStatements int) (db *SqliteDB) {
 	var err error
 	db = new(SqliteDB)
 	db._db, err = sql.Open("sqlite3", location + "?cache=shared")
@@ -31,6 +32,7 @@ func NewSqliteDB(location string) (db *SqliteDB) {
 	db._db.SetMaxOpenConns(SQLITE_MAX_OPEN_CONN)
 	db.statements = make(map[int]string)
 	db.statementCount = 0
+	db.maxStatements = maxStatements
 	return
 }
 
@@ -39,6 +41,10 @@ func (db *SqliteDB) execute(statement string) {
 	defer db.lock.Unlock()
 	db.statements[db.statementCount] = statement
 	db.statementCount++
+	if db.statementCount >= db.maxStatements {
+		db.commit()
+		db.statementCount = 0
+	}
 }
 
 func contains(array []string, target string) bool {
@@ -56,17 +62,16 @@ func contains(array []string, target string) bool {
 	return false
 }
 
-func (db *SqliteDB) Commit() (err error) {
+func (db *SqliteDB) commit() (err error) {
 	var tx *sql.Tx
 	defer utils.Recover(func() {
 		if tx != nil { tx.Rollback() }
 		// write all statement to file (eg. error log) if it fails
 		// file format: yyyy-mm-ddTHH:MM:SS-commit.sql
 	})
-	db.lock.Lock()
+
 	tx, err = db._db.Begin()
 	utils.CheckError(err)
-	defer db.lock.Unlock()
 	executedStatements := make([]string, db.statementCount)
 	executedCount := 0
 	for i := 0; i < db.statementCount; i++ {
@@ -80,6 +85,12 @@ func (db *SqliteDB) Commit() (err error) {
 	db.statements = make(map[int]string)
 	db.statementCount = 0
 	return tx.Commit()
+}
+
+func (db *SqliteDB) Commit() (err error) {
+	db.lock.Lock()
+	defer db.lock.Unlock()
+	return db.commit()
 }
 
 func (db *SqliteDB) Summary(site string) (record database.SummaryRecord) {

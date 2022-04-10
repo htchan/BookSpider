@@ -23,7 +23,7 @@ func cleanupDbBackupTest() {
 }
 
 func TestSqlite_DB_Backup(t *testing.T) {
-	db := NewSqliteDB("./backup_test.db")
+	db := NewSqliteDB("./backup_test.db", 100)
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
