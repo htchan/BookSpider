@@ -9,16 +9,17 @@ import (
 	"errors"
 	"os"
 	"fmt"
+	"path/filepath"
 )
 
 type Book struct {
     bookRecord *database.BookRecord
     writerRecord *database.WriterRecord
     errorRecord *database.ErrorRecord
-    config configs.BookConfig
+    config configs.SourceConfig
 }
 
-func NewBook(site string, id int, hash int, config *configs.BookConfig) (book *Book) {
+func NewBook(site string, id int, hash int, config *configs.SourceConfig) (book *Book) {
 	if hash == -1 {
 		hash = database.GenerateHash()
 	}
@@ -36,7 +37,7 @@ func NewBook(site string, id int, hash int, config *configs.BookConfig) (book *B
 	}
 }
 
-func LoadBook(db database.DB, site string, id int, hash int, config *configs.BookConfig) (book *Book) {
+func LoadBook(db database.DB, site string, id int, hash int, config *configs.SourceConfig) (book *Book) {
 	defer utils.Recover(func() { book = nil })
 	book = new(Book)
 	book.config = config.Populate(id)
@@ -63,7 +64,7 @@ func LoadBook(db database.DB, site string, id int, hash int, config *configs.Boo
 	return
 }
 
-func LoadBookByRecord(db database.DB, bookRecord *database.BookRecord, config *configs.BookConfig) (book *Book) {
+func LoadBookByRecord(db database.DB, bookRecord *database.BookRecord, config *configs.SourceConfig) (book *Book) {
 	defer utils.Recover(func() { book = nil })
 	book = new(Book)
 	book.config = config.Populate(bookRecord.Id)
@@ -121,14 +122,15 @@ func (book *Book)saveErrorRecord(db database.DB) {
 		book.bookRecord.Id)
 	errorRecord, err := query.Scan()
 	query.Close()
+	errorExist := err == nil
 	
-	if book.bookRecord.Status != database.Error && err == nil {
+	if book.bookRecord.Status != database.Error && errorExist {
 		utils.CheckError(
 			db.DeleteErrorRecords(
 				[]database.ErrorRecord {*errorRecord.(*database.ErrorRecord) } ))
-	} else if book.bookRecord.Status == database.Error && err == nil {
+	} else if book.bookRecord.Status == database.Error && errorExist {
 		utils.CheckError(db.UpdateErrorRecord(book.errorRecord))
-	} else if book.bookRecord.Status == database.Error && err != nil {
+	} else if book.bookRecord.Status == database.Error && !errorExist {
 		utils.CheckError(db.CreateErrorRecord(book.errorRecord))
 	}
 }
@@ -187,23 +189,23 @@ func (book *Book)SetError(err error) {
 	book.errorRecord.Error = err
 }
 
-func (book *Book)getContentLocation() (location string) {
-	location = os.Getenv("ASSETS_LOCATION") + book.config.StorageDirectory + strconv.Itoa(book.bookRecord.Id)
+func (book *Book)getContentLocation(storageDirectory string) (location string) {
+	location = filepath.Join(os.Getenv("ASSETS_LOCATION"), storageDirectory, strconv.Itoa(book.bookRecord.Id))
 	if book.bookRecord.HashCode != 0 {
 		location += "-v" + strconv.Itoa(book.bookRecord.HashCode)
 	}
 	location += ".txt"
 	return
 }
-func (book *Book)HasContent() bool {
-	return utils.Exists(book.getContentLocation())
+func (book *Book)HasContent(storageDirectory string) bool {
+	return utils.Exists(book.getContentLocation(storageDirectory))
 }
-func (book *Book)GetContent() (content string) {
-	// defer utils.Recover(func() {})
-	if !book.HasContent() {
+func (book *Book)GetContent(storageDirectory string) (content string) {
+	defer utils.Recover(func() {})
+	if !book.HasContent(storageDirectory) {
 		return 
 	}
-	contentBytes, err := ioutil.ReadFile(book.getContentLocation())
+	contentBytes, err := ioutil.ReadFile(book.getContentLocation(storageDirectory))
 	utils.CheckError(err)
 	content = string(contentBytes)
 	return

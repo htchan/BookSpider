@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Books_NewChapter(t *testing.T) {
-	config := configs.BookConfig{ DownloadUrl: "test/", ChapterUrl: "test%v" }
+	config := configs.SourceConfig{ DownloadUrl: "test/", ChapterUrl: "test%v" }
 	t.Run("success with appending download url", func(t *testing.T) {
 		chapter := NewChapter(0, "0", "title-0", &config)
 		if chapter.Index != 0 || chapter.Url != "test/0" ||
@@ -72,6 +72,22 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter.generateIndex()
 		if chapter.Index != 4212 {
 			t.Fatalf("chapter generate index is %v, not 4212", chapter.Index)
+		}
+	})
+
+	t.Run("success with 中 in title", func(t *testing.T) {
+		chapter := Chapter{ Title: "abc肆佰貳拾壹def中" }
+		chapter.generateIndex()
+		if chapter.Index != 4215 {
+			t.Fatalf("chapter generate index is %v, not 4215", chapter.Index)
+		}
+	})
+
+	t.Run("success with 下 in title", func(t *testing.T) {
+		chapter := Chapter{ Title: "abc肆佰貳拾壹def下" }
+		chapter.generateIndex()
+		if chapter.Index != 4218 {
+			t.Fatalf("chapter generate index is %v, not 4218", chapter.Index)
 		}
 	})
 
@@ -140,9 +156,9 @@ func Test_Books_Chatper_Download(t *testing.T) {
 	server := mock.ChapterServer()
 	defer server.Close()
 
-	config := configs.BookConfig{
+	config := configs.SourceConfig{
 		DownloadUrl: "",
-		ChapterContentRegex: "chapter-content-(.*)-content-regex",
+		SourceKey: "test_source_key",
 	}
 	chapter := NewChapter(0, "0", "title-0", &config)
 	validHTML := func(_ string)error { return nil }

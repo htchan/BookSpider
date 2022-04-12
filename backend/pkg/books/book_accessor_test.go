@@ -2,16 +2,13 @@ package books
 
 import (
 	"os"
-	// "io"
 	"testing"
 	"errors"
-	// "github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/configs"
 	"github.com/htchan/BookSpider/internal/database"
-	// "github.com/htchan/BookSpider/internal/database/sqlite"
 )
 
-var accessorConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
+var accessorConfig = configs.LoadSourceConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test_source_key"]
 
 func TestBooks_Book_Accessor(t *testing.T) {
 	book := Book{
@@ -147,12 +144,22 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		}
 	})
 
-	t.Run("func GetError/success", func(t *testing.T) {
+	t.Run("func GetError", func(t *testing.T) {
 		t.Parallel()
-		err := book.GetError()
-		if err != nil {
-			t.Fatalf("book.GetError return wrong value: %v", err)
-		}
+		t.Run("success for nil error", func(t *testing.T) {
+			err := book.GetError()
+			if err != nil {
+				t.Fatalf("book.GetError return wrong value: %v", err)
+			}
+		})
+
+		t.Run("success for existing error", func(t *testing.T) {
+			book.errorRecord = &database.ErrorRecord{Error: errors.New("testing")}
+			err := book.GetError()
+			if err == nil || err.Error() != "testing" {
+				t.Fatalf("book.GetError return wrong value: %v", err)
+			}
+		})
 	})
 
 	t.Run("func SetError", func(t *testing.T) {
@@ -180,7 +187,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 
 	t.Run("func getContentLocation/success", func(t *testing.T) {
 		t.Parallel()
-		contentLocation := book.getContentLocation()
+		contentLocation := book.getContentLocation("/test-data/storage")
 		if contentLocation != os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v100.txt" {
 			t.Fatalf("book.getContentLocation return wrong value: %v", contentLocation)
 		}
@@ -191,7 +198,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Run("return true because path exist", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, 100, accessorConfig)
-			result := book.HasContent()
+			result := book.HasContent("/test-data/storage")
 
 			if !result {
 				t.Fatalf("book does not have content for exist file")
@@ -201,7 +208,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Run("return false because path not exist", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, 200, accessorConfig)
-			result := book.HasContent()
+			result := book.HasContent("/test-data/storage")
 
 			if result {
 				t.Fatalf("book has content for not exist file")
@@ -213,7 +220,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		t.Run("success", func(t *testing.T) {
 			t.Parallel()
-			content := book.GetContent()
+			content := book.GetContent("/test-data/storage")
 			if content != "hello" {
 				t.Fatalf("book.GetContent return wrong value: %v", content)
 			}
@@ -222,10 +229,34 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Run("return empty string if book has no content", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, 200, accessorConfig)
-			content := book.GetContent()
+			content := book.GetContent("/test-data/storage")
 			if content != "" {
 				t.Fatalf("non download book GetContent return some value: %v", content)
 			}
 		})
+	})
+
+	t.Run("func Map/success", func(t *testing.T) {
+		result := book.Map()
+
+		if result["site"] != "test" ||
+			result["id"] != 1 ||
+			result["hash"] != "2s" ||
+			result["status"] != "in_progress" ||
+			result["title"] != "title-1" ||
+			result["writer"] != "writer-1" ||
+			result["type"] != "type-1" ||
+			result["updateChapter"] != "chapter-1" ||
+			result["updateDate"] != "104" {
+			t.Fatalf("wrong map: %v", result)
+		}
+	})
+
+	t.Run("func String", func(t *testing.T) {
+		result := book.String()
+
+		if result != "test-1-2s" {
+			t.Fatalf("wrong string: %v", result)
+		}
 	})
 }

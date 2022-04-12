@@ -7,6 +7,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/ApiParser"
 	"golang.org/x/sync/semaphore"
 	// "log"
 	"os"
@@ -17,18 +18,24 @@ import (
 
 func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 	// get basic info (all chapter url and title)
-	html, _ := utils.GetWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
+	html, _ := utils.GetWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.ConstSleep)
 	if err = book.validHTML(html); err != nil {
 		err = errors.New(fmt.Sprintf("invalid table of content html: %v", html))
 		return
 	}
-	urls := utils.SearchAll(html, book.config.ChapterUrlRegex)
-	titles := utils.SearchAll(html, book.config.ChapterTitleRegex)
-	// if length are difference, return error
-	if len(urls) != len(titles) {
-		err = errors.New("title and url have different length")
-		return
-	} else if len(urls) == 0 {
+
+	responseApi := ApiParser.Parse(html, book.config.SourceKey + ".info")
+	urls, titles := make([]string, len(responseApi.Items)), make([]string, len(responseApi.Items))
+	for i, item := range responseApi.Items {
+		urls[i] = item["ChapterUrl"]
+		titles[i] = item["ChapterTitle"]
+	}
+	// // if length are difference, return error
+	// if len(urls) != len(titles) {
+	// 	err = errors.New("title and url have different length")
+	// 	return
+	// } else 
+	if len(urls) == 0 {
 		err = errors.New("no chapter found")
 		return
 	}
@@ -39,31 +46,6 @@ func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 	return
 }
 
-func (book *Book) downloadChapter(i int, url, title string, s *semaphore.Weighted,
-	wg *sync.WaitGroup, ch chan<- Chapter) {
-	defer wg.Done()
-	defer s.Release(1)
-	// get chapter resource
-	html, _ := utils.GetWeb(url, 10, book.config.Decoder, book.config.CONST_SLEEP)
-	chapter := Chapter{Url: url, Title: title}
-	// chapter.generateIndex()
-	chapter.Index = i
-	if err := book.validHTML(html); err != nil {
-		chapter.Content = "load html fail"
-		ch <- chapter
-		return
-	}
-	// extract chapter
-	content, err := utils.Search(html, book.config.ChapterContentRegex)
-	if err != nil {
-		chapter.Content = "recognize html fail\n" + html
-		ch <- chapter
-	} else {
-		chapter.Content = content
-		chapter.optimizeContent()
-		ch <- chapter
-	}
-}
 func (book Book) downloadChapters(chapters []Chapter, MAX_THREAD int) []Chapter {
 	ctx := context.Background()
 	var s = semaphore.NewWeighted(int64(MAX_THREAD))
@@ -83,9 +65,9 @@ func (book Book) downloadChapters(chapters []Chapter, MAX_THREAD int) []Chapter 
 	return chapters
 }
 
-func (book Book) saveContent(chapters []Chapter) int {
+func (book Book) saveContent(storageDirectory string, chapters []Chapter) int {
 	errorChapterCount := 0
-	f, err := os.Create(book.getContentLocation())
+	f, err := os.Create(book.getContentLocation(storageDirectory))
 	utils.CheckError(err)
 	f.WriteString(book.GetTitle() + "\n" + book.GetWriter() + "\n" + strings.Repeat("-", 20) + "\n\n")
 	sortChapters(chapters)
@@ -93,12 +75,15 @@ func (book Book) saveContent(chapters []Chapter) int {
 		_, err = f.WriteString(chapter.Title + "\n" + strings.Repeat("-", 20) + "\n" +
 		chapter.Content + strings.Repeat("\n", 2))
 		utils.CheckError(err)
+		if strings.Contains(chapter.Content, "fail") {
+			errorChapterCount += 1
+		}
 	}
 	f.Close()
 	return errorChapterCount
 }
 
-func (book *Book) Download(MAX_THREAD int, loadContentMutex *sync.Mutex) bool {
+func (book *Book) Download(storageDirectory string, MAX_THREAD int, loadContentMutex *sync.Mutex) bool {
 	chapters, err := book.getEmptyChapters()
 	if err != nil {
 		logging.LogBookEvent(book.String(), "download", "fail", err)
@@ -108,14 +93,14 @@ func (book *Book) Download(MAX_THREAD int, loadContentMutex *sync.Mutex) bool {
 	defer loadContentMutex.Unlock()
 	results := book.downloadChapters(chapters, MAX_THREAD)
 	// save the content to target path
-	errorCount := book.saveContent(results)
+	errorCount := book.saveContent(storageDirectory, results)
 	maxErrorChapterCount := 50
 	if int(float64(len(results))*0.1) < 50 {
 		maxErrorChapterCount = int(float64(len(results)) * 0.1)
 	}
 	if errorCount > maxErrorChapterCount {
 		logging.LogBookEvent(book.String(), "download", "fail", "too much chapters return error")
-		utils.CheckError(os.Remove(book.getContentLocation()))
+		utils.CheckError(os.Remove(book.getContentLocation(storageDirectory)))
 		return false
 	}
 	book.SetStatus(database.Download)

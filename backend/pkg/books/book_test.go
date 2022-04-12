@@ -9,6 +9,7 @@ import (
 	"github.com/htchan/BookSpider/pkg/configs"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/database/sqlite"
+	"github.com/htchan/ApiParser"
 )
 
 func initBookTest() {
@@ -25,7 +26,7 @@ func cleanupBookTest() {
 	os.Remove("./book_test.db")
 }
 
-var config = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
+var config = configs.LoadSourceConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test_source_key"]
 
 func bookEqual(
 	book Book, site string, id, hash int, title string, writerId int,
@@ -40,7 +41,7 @@ func writerEqual(book Book, id int, name string) bool {
 }
 
 func Test_Books_Book_Constructor(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_test.db")
+	db := sqlite.NewSqliteDB("./book_test.db", 100)
 	defer db.Close()
 	t.Run("func NewBook", func(t *testing.T) {
 		t.Parallel()
@@ -62,17 +63,8 @@ func Test_Books_Book_Constructor(t *testing.T) {
 				book.config.DownloadUrl != "https://download-url/1" ||
 				book.config.ChapterUrl != "https://chapter-url/%v" ||
 				book.config.ChapterUrlPattern != "chapter-url-pattern" ||
-				book.config.TitleRegex != "(title-regex)" ||
-				book.config.WriterRegex != "(writer-regex)" ||
-				book.config.TypeRegex != "(type-regex)" ||
-				book.config.LastUpdateRegex != "(last-update-regex)" ||
-				book.config.LastChapterRegex != "(last-chapter-regex)" ||
-				book.config.ChapterUrlRegex != "chapter-url-regex-(\\d)" ||
-				book.config.ChapterTitleRegex != "chapter-title-regex-(\\d)" ||
-				book.config.ChapterContentRegex != "chapter-content-(.*)-content-regex" ||
 				book.config.Decoder == nil ||
-				book.config.CONST_SLEEP != 1000 ||
-				book.config.StorageDirectory != "/test-data/storage/" {
+				book.config.ConstSleep != 1000 {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
@@ -242,11 +234,20 @@ func Test_Books_Book_Constructor(t *testing.T) {
 				t.Fatalf("book.config init wrongly config: %v", book.config)
 			}
 		})
+
+		t.Run("return nil if error happen", func(t *testing.T) {
+			t.Parallel()
+			book := LoadBookByRecord(db, nil, config)
+			
+			if book != nil{
+				t.Fatalf("LoadBook load the wrong book record: %v", book)
+			}
+		})
 	})
 }
 
 func Test_Books_Book_Save(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_test.db")
+	db := sqlite.NewSqliteDB("./book_test.db", 100)
 	defer db.Close()
 
 	t.Run("success to create a completely new book with writer", func(t *testing.T) {
@@ -361,6 +362,27 @@ func Test_Books_Book_Save(t *testing.T) {
 		}
 	})
 
+	t.Run("success to update an existing book with new error", func(t *testing.T) {
+		book := LoadBook(db, "test", 1002, -1, config)
+		book.SetError(errors.New("another error"))
+		result := book.Save(db)
+		db.Commit()
+		if !result {
+			t.Fatalf("Save fail")
+		}
+
+		query := db.QueryErrorBySiteId("test", 1002)
+		defer query.Close()
+		record, err := query.Scan()
+		if err != nil || record.(*database.ErrorRecord).Site != book.errorRecord.Site ||
+			record.(*database.ErrorRecord).Id != book.errorRecord.Id ||
+			record.(*database.ErrorRecord).Error.Error() != book.errorRecord.Error.Error() {
+				t.Fatalf(
+					"Save does not create error in book: %v, error in db: %v, err: %v",
+					book.errorRecord, record, err)
+		}
+	})
+
 	t.Run("success to update an existing book", func(t *testing.T) {
 		book := LoadBook(db, "test", 1000, -1, config)
 		book.SetTitle("title-1-new")
@@ -454,7 +476,7 @@ func Test_Books_Book_Save(t *testing.T) {
 					record, err)
 		}
 
-		query = db.QueryErrorBySiteId("test", 1002)
+		query = db.QueryErrorBySiteId("test", 1000)
 		defer query.Close()
 		if query.Next() {
 			t.Fatalf("Save create error: %v, err: %v", record, err)
@@ -521,6 +543,7 @@ func Test_Books_Book_validHTML(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
+	ApiParser.Setup(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser")
 	initConcurrentTest()
 	initBookTest()
 	

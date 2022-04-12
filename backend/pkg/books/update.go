@@ -1,40 +1,32 @@
 package books
 
 import (
-	// "errors"
+	"errors"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/ApiParser"
 )
 
 func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChapter string, err error) {
-	operation := [5]struct{
-		regex string
-		result *string
-	} {
-		{book.config.TitleRegex, &title},
-		{book.config.WriterRegex, &writer},
-		{book.config.TypeRegex, &typeString},
-		{book.config.LastUpdateRegex, &updateDate},
-		{book.config.LastChapterRegex, &updateChapter},
-	}
 	defer utils.Recover(func() {
-		for i := 0; i < 5; i++ {
-			*operation[i].result = ""
-		}
+		title, writer, typeString, updateDate, updateChapter = "", "", "", "", ""
 	})
 	// get online resource, try maximum 10 times if it keeps failed
 	html, _ := utils.GetWeb(
-		book.config.BaseUrl, 10, book.config.Decoder, book.config.CONST_SLEEP)
+		book.config.BaseUrl, 10, book.config.Decoder, book.config.ConstSleep)
 	err = book.validHTML(html)
 	utils.CheckError(err)
 	
-	// extract info from source
-	var result string
-	for i := 0; i < 5; i++ {
-		result, err = utils.Search(html, operation[i].regex)
-		utils.CheckError(err)
-		*operation[i].result = result
+	responseApi := ApiParser.Parse(html, book.config.SourceKey + ".info")
+	title, okTitle := responseApi.Data["Title"]
+	writer, okWriter := responseApi.Data["Writer"]
+	typeString, okTypeString := responseApi.Data["Type"]
+	updateDate, okUpdateDate := responseApi.Data["LastUpdate"]
+	updateChapter, okUpdateChapter := responseApi.Data["LastChapter"]
+	if !(okTitle && okWriter && okTypeString && okUpdateDate && okUpdateChapter) {
+		err = errors.New("some data not found")
+		panic(err)
 	}
 	return
 }

@@ -6,25 +6,22 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/configs"
 
-	"golang.org/x/sync/semaphore"
 	"sync"
-	"context"
 	"os"
 	"strconv"
 	"fmt"
 )
 
-var downloadConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
+var downloadConfig = configs.LoadSourceConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test_source_key"]
 
 func TestBooks_Book_Download(t *testing.T) {
-	downloadConfig.CONST_SLEEP = 0
-	downloadConfig.ChapterUrlRegex = "chapter-url-regex-(.*?) "
+	downloadConfig.ConstSleep = 0
+	downloadConfig.SourceKey = "test_source_key"
 	server := mock.DownloadServer()
 	defer server.Close()
 
 	t.Run("func getEmptyChapters", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			t.Parallel()
 			book := NewBook("test", 1, -1, downloadConfig)
 			book.config.DownloadUrl = server.URL + "/content/success/1"
 
@@ -41,22 +38,11 @@ func TestBooks_Book_Download(t *testing.T) {
 			}
 		})
 
-		t.Run("fail when length of url found != length of title found", func(t *testing.T) {
-			t.Parallel()
-			book := NewBook("test", 1, -1, downloadConfig)
-			book.config.DownloadUrl = server.URL + "/content/imbalance_url_title/1"
-
-			_, err := book.getEmptyChapters()
-			if err == nil {
-				t.Fatalf("book getEmptyChapters return nil error for not balance url and title")
-			}
-		})
-
 		t.Run("fail when response is empty", func(t *testing.T) {
 			t.Parallel()
 			book := NewBook("test", 1, -1, downloadConfig)
 			book.config.DownloadUrl = server.URL + "/content/empty"
-			book.config.CONST_SLEEP = 0
+			book.config.ConstSleep = 0
 
 			_, err := book.getEmptyChapters()
 			if err == nil {
@@ -76,69 +62,10 @@ func TestBooks_Book_Download(t *testing.T) {
 		})
 	})
 
-	t.Run("func downloadChapter", func(t *testing.T) {
-		t.Skip("deprecated")
-		var s = semaphore.NewWeighted(5)
-		var wg sync.WaitGroup
-		ctx := context.Background()
-
-		t.Run("success with replace", func(t *testing.T) {
-			t.Parallel()
-			book := NewBook("test", 1, -1, downloadConfig)
-
-			s.Acquire(ctx, 1)
-			wg.Add(1)
-			ch := make(chan Chapter, 1)
-			book.downloadChapter(0, server.URL + "/chapter/replace", "title", s, &wg, ch)
-
-			chapter, ok := <-ch
-			if !ok || chapter.Index != 0 || chapter.Title != "title" ||
-				chapter.Url != server.URL + "/chapter/replace" ||
-				chapter.Content != "url-hello" {
-					t.Fatalf("download chapter fail: %v", chapter)
-			}
-		})
-
-		t.Run("fail if response is empty", func(t *testing.T) {
-			t.Parallel()
-			book := NewBook("test", 1, -1, downloadConfig)
-			book.config.CONST_SLEEP = 0
-
-			s.Acquire(ctx, 1)
-			wg.Add(1)
-			ch := make(chan Chapter, 1)
-			book.downloadChapter(0, server.URL + "/content/empty", "title", s, &wg, ch)
-
-			chapter, ok := <-ch
-			if !ok || chapter.Index != 0 || chapter.Title != "title" ||
-				chapter.Url != server.URL + "/content/empty" ||
-				chapter.Content != "load html fail" {
-					t.Fatalf("download chapter success in empty response: %v", chapter)
-			}
-		})
-
-		t.Run("fail if no content found", func(t *testing.T) {
-			t.Parallel()
-			book := NewBook("test", 1, -1, downloadConfig)
-
-			s.Acquire(ctx, 1)
-			wg.Add(1)
-			ch := make(chan Chapter, 1)
-			book.downloadChapter(0, server.URL + "/content/no_url", "title", s, &wg, ch)
-
-			chapter, ok := <-ch
-			if !ok || chapter.Index != 0 || chapter.Title != "title" ||
-				chapter.Url != server.URL + "/content/no_url" ||
-				chapter.Content != "recognize html fail\nhello" {
-					t.Fatalf("download chapter success without content: %v", chapter)
-			}
-		})
-	})
-
 	t.Run("func downloadChapters", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			book := NewBook("test", 1, -1, downloadConfig)
-			book.config.CONST_SLEEP = 0
+			book.config.ConstSleep = 0
 			book.config.DownloadUrl = server.URL + "/chapter/success/"
 			urls := []string { "1", "2", "3" }
 			titles := []string { "title-1", "title-2", "title-3" }
@@ -167,7 +94,7 @@ func TestBooks_Book_Download(t *testing.T) {
 	t.Run("func saveContent", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			book := NewBook("test", 1, 1, downloadConfig)
-			book.config.CONST_SLEEP = 0
+			book.config.ConstSleep = 0
 			book.SetTitle("book-title")
 			book.SetWriter("book-writer")
 
@@ -176,7 +103,7 @@ func TestBooks_Book_Download(t *testing.T) {
 				Chapter{ Index: 1, Title: "title-1", Url: "url-1", Content: "content-1" },
 				Chapter{ Index: 3, Title: "title-3", Url: "url-3", Content: "content-3" },
 			}
-			book.saveContent(chapters)
+			book.saveContent("/test-data/storage", chapters)
 
 			b, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v1.txt")
 			utils.CheckError(err)
@@ -196,10 +123,10 @@ func TestBooks_Book_Download(t *testing.T) {
 			book := NewBook("test", 1, 10, downloadConfig)
 			book.config.DownloadUrl = server.URL + "/content/success/1"
 			book.config.ChapterUrl = server.URL + "/chapter/success/%v"
-			book.config.CONST_SLEEP = 0
+			book.config.ConstSleep = 0
 			book.SetTitle("book-title")
 			book.SetWriter("book-writer")
-			result := book.Download(10, &mutex)
+			result := book.Download("/test-data/storage", 10, &mutex)
 
 			if !result {
 				t.Fatalf("book download failed")
@@ -212,6 +139,33 @@ func TestBooks_Book_Download(t *testing.T) {
 
 			if string(b) != string(reference){
 				t.Fatalf("book saveContent save such content: %v", string(b))
+			}
+		})
+
+		t.Run("fail if too much chapters return error", func(t *testing.T) {
+			book := NewBook("test", 1, 10, downloadConfig)
+			book.config.DownloadUrl = server.URL + "/content/success/1"
+			book.config.ChapterUrl = server.URL + "/chapter/invalid/%v"
+			book.config.ConstSleep = 0
+			book.SetTitle("book-title")
+			book.SetWriter("book-writer")
+			result := book.Download("/test-data/storage", 10, &mutex)
+
+			if result {
+				t.Fatalf("book download success")
+			}
+		})
+
+		t.Run("fail because of wrong download url", func(t *testing.T) {
+			book := NewBook("test", 1, 10, downloadConfig)
+			book.config.DownloadUrl = server.URL + "/content/invalid/1"
+			book.config.ConstSleep = 0
+			book.SetTitle("book-title")
+			book.SetWriter("book-writer")
+			result := book.Download("/test-data/storage", 10, &mutex)
+
+			if result {
+				t.Fatalf("book download success")
 			}
 		})
 	})

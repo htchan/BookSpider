@@ -8,6 +8,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/ApiParser"
 )
 
 type Chapter struct {
@@ -15,7 +16,7 @@ type Chapter struct {
 	Url, Title, Content string
 }
 
-func NewChapter(i int, url, title string, config *configs.BookConfig) (chapter Chapter) {
+func NewChapter(i int, url, title string, config *configs.SourceConfig) (chapter Chapter) {
 	chapter.Index = i
 	//TODO: check the reason of adding the http here
 	if strings.HasPrefix(url, "/") || strings.HasPrefix(url, "http") {
@@ -100,16 +101,19 @@ func optimizeChapters(chapters []Chapter) {
 
 }
 
-func (chapter *Chapter)Download(config *configs.BookConfig, validHTML func(string)error) {
+func (chapter *Chapter)Download(config *configs.SourceConfig, validHTML func(string)error) {
 	// get chapter resource
-	html, _ := utils.GetWeb(chapter.Url, 10, config.Decoder, config.CONST_SLEEP)
+	html, _ := utils.GetWeb(chapter.Url, 10, config.Decoder, config.ConstSleep)
 	if err := validHTML(html); err != nil {
 		chapter.Content = "load html fail"
 		return
 	}
 	// extract chapter
-	content, err := utils.Search(html, config.ChapterContentRegex)
-	if err != nil {
+	responseApi := ApiParser.Parse(html, config.SourceKey + ".chapter_content")
+	content, ok := responseApi.Data["Content"]
+
+	// content, err := utils.Search(html, config.ChapterContentRegex)
+	if !ok {
 		chapter.Content = "recognize html fail\n" + html
 	} else {
 		chapter.Content = content

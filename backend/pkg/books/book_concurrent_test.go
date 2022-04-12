@@ -26,7 +26,7 @@ func cleanupConcurrentTest() {
 	os.Remove("./book_concurrent_test.db")
 }
 
-func test_concurrent_create(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
+func test_concurrent_create(db database.DB, config *configs.SourceConfig, n, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
 		var wg sync.WaitGroup
 		for i := 0; i < n; i++ {
@@ -57,7 +57,7 @@ func test_concurrent_create(db database.DB, config *configs.BookConfig, n, offse
 	}
 }
 
-func test_concurrent_load_book(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
+func test_concurrent_load_book(db database.DB, config *configs.SourceConfig, n, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
 		var wg sync.WaitGroup
 		for i := 0; i < n; i++ {
@@ -78,7 +78,7 @@ func test_concurrent_load_book(db database.DB, config *configs.BookConfig, n, of
 	}
 }
 
-func test_concurrent_load_book_by_record(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
+func test_concurrent_load_book_by_record(db database.DB, config *configs.SourceConfig, n, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
 		var wg sync.WaitGroup
 		for i := 0; i < n; i++ {
@@ -101,7 +101,7 @@ func test_concurrent_load_book_by_record(db database.DB, config *configs.BookCon
 	}
 }
 
-func test_concurrent_update_book(db database.DB, config *configs.BookConfig, n, offset int) func(t *testing.T) {
+func test_concurrent_update_book(db database.DB, config *configs.SourceConfig, n, offset int) func(t *testing.T) {
 	return func(t *testing.T) {
 		var wg sync.WaitGroup
 		for i := 0; i < n; i++ {
@@ -136,7 +136,7 @@ func test_concurrent_update_book(db database.DB, config *configs.BookConfig, n, 
 }
 
 func TestBooks_Book_Concurrent(t *testing.T) {
-	db := sqlite.NewSqliteDB("./book_concurrent_test.db")
+	db := sqlite.NewSqliteDB("./book_concurrent_test.db", 100)
 	defer db.Close()
 
 	t.Run("func Save", func(t *testing.T) {

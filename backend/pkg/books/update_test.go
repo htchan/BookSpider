@@ -9,9 +9,10 @@ import (
 	"github.com/htchan/BookSpider/pkg/configs"
 )
 
-var updateConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"].BookMeta
+var updateConfig = configs.LoadSourceConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test_source_key"]
 
 func Test_Books_Book_Update(t *testing.T) {
+	updateConfig.SourceKey = "test_source_key"
 	server := mock.UpdateServer()
 	defer server.Close()
 	
@@ -26,13 +27,13 @@ func Test_Books_Book_Update(t *testing.T) {
 				writer != "writer-regex" || typeString != "type-regex" ||
 				updateDate != "last-update-regex" ||
 				updateChapter != "last-chapter-regex" {
-					t.Fatalf("book fetch info failed - book: %v, err: %v", book.bookRecord, err)
+					t.Fatalf("book fetch info failed - book: %v, err: %v", title, err)
 			}
 		})
 
 		t.Run("fail because of invalid html", func(t *testing.T) {
 			book.config.BaseUrl = server.URL + "/empty"
-			book.config.CONST_SLEEP = 0
+			book.config.ConstSleep = 0
 			
 			title, writer, typeString, updateDate, updateChapter, err := book.fetchInfo()
 			
