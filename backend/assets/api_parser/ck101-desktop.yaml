@@ -8,6 +8,6 @@ info:
   items:
   - "<dd><a href=\"(?P<ChapterUrl>.*?)\">(?P<ChapterTitle>.*?)</a></dd>"
 
-chapter:
+chapter_content:
   data:
     - "(?s)<div.*?yuedu_zhengwen.*?>(?P<ChapterContent>.*?)</div>"

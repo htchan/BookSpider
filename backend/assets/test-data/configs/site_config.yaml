@@ -1,0 +1,6 @@
+test:
+  source_key: test_source_key
+  database_engine: "sqlite3"
+  database_location : "./test.db"
+  download_directory : "/test-data/storage/"
+  backup_directory: "/test-data/"

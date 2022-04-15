@@ -1,0 +1,12 @@
+info:
+  data:
+    - "(?P<Title>title-regex)"
+    - "(?P<Writer>writer-regex)"
+    - "(?P<Type>type-regex)"
+    - "(?P<LastUpdate>last-update-regex)"
+    - "(?P<LastChapter>last-chapter-regex)"
+  items: "chapter-url-regex-(?P<ChapterUrl>.*?) chapter-title-regex-(?P<ChapterTitle>\\d)"
+
+chapter_content:
+  data:
+    - "chapter-content-(?P<Content>.*?)-content-regex"

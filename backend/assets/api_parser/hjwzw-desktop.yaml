@@ -7,6 +7,6 @@ info:
     - "<meta property=\"og:novel:latest_chapter_name\" content=\"(?P<LastChapter>.*?)\" />"
   items: "<td><a href=\"(?P<ChapterUrl>.*?)\".*?>(?P<ChapterTitle>.*?)</a>"
 
-chapters:
+chapter_content:
   data:
     - "(?s)<div.*?AllySite.*?>.*?<div.*?>(?P<ChapterContent>.*?)</div>"

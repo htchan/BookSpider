@@ -1,0 +1,11 @@
+test_source_key:
+  baseUrl : "https://base-url/%v"
+  downloadUrl : "https://download-url/%v"
+  chapterUrl : "https://chapter-url/%v"
+  chapterUrlPattern : "chapter-url-pattern"
+  decode : big5
+  threads : 1000
+  downloadBookThreads: 5
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: true

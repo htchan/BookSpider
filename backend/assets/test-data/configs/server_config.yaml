@@ -1,0 +1,8 @@
+api:
+    - search
+    - download
+    - bookInfo
+    - siteInfo
+    - random
+    - process
+    - info

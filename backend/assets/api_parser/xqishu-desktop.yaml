@@ -8,6 +8,6 @@ info:
     - "<h3>最新章节：<a.*?>(?P<LastChapter>.*?)</a>.*?</h3>"
   items: "<li><a href=\"(?P<ChapterUrl>\\d+?.html)\">(?P<ChapterTitle>.*?)</a></li>"
 
-chapter:
+chapter_content:
   data:
     - "(?s)<div.*?book_content.*?>(?P<ChapterContent>.*?)</div>"

@@ -7,6 +7,6 @@ info:
     - "(?s).*<a.*?>(?P<LastChapter>.*?)</a> <font.*?></font>"
   items: "<td.*?><a href=\"(?P<ChapterUrl>.*?)\".*?>(?P<ChapterTitle>.*?)</a>.*?</td>"
 
-chapter:
+chapter_content:
   data:
     - "(?s)<p class=\"content\">(?P<ChapterContent>.*?)</p>"
