@@ -55,6 +55,10 @@ func (site *Site)CommitDatabase() (err error) {
 	return
 }
 
+func (site *Site)StorageDirectory() string {
+	return site.config.StorageDirectory
+}
+
 func (site *Site)Map() (result map[string]interface{}) {
 	defer utils.Recover(func() {
 		result = map[string]interface{} {

@@ -1,0 +1,34 @@
+ck101:
+  source_key: ck101-desktop
+  database_engine: "sqlite3"
+  database_location : "/database/ck101.db"
+  download_directory : "/books/ck101/"
+  backup_directory: "/backup/"
+
+80txt:
+  source_key: 80txt-desktop
+  database_engine: "sqlite3"
+  database_location : "/database/80txt.db"
+  download_directory : "/books/80txt/"
+  backup_directory: "/backup/"
+
+xqishu:
+  source_key: xqishu-desktop
+  database_engine: "sqlite3"
+  database_location : "/database/xqishu.db"
+  download_directory : "/books/xqishu/"
+  backup_directory: "/backup/"
+
+hjwzw:
+  source_key: hjwzw-desktop
+  database_engine: "sqlite3"
+  database_location : "/database/hjwzw.db"
+  download_directory : "/books/hjwzw/"
+  backup_directory: "/backup/"
+
+bestory:
+  source_key: bestory-desktop
+  database_engine: "sqlite3"
+  database_location : "/database/bestory.db"
+  download_directory : "/books/bestory"
+  backup_directory: "/backup/"

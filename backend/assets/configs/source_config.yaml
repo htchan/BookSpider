@@ -1,0 +1,71 @@
+80txt-desktop:
+  baseUrl : "https://www.80xs.la/txtml_%v.html"
+  downloadUrl : "http://www.80xs.la/txtml_%v.html"
+  chapterUrl : "%v"
+  chapterUrlPattern : "http://www.aidusk.com/.*?\\.html"
+  decode : utf8
+  threads : 1000
+  downloadBookThreads: 10
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: false
+
+bestory-desktop:
+  baseUrl : "https://www.book100.com/book/book%v.html"
+  downloadUrl : "https://www.book100.com/book/book%v.html"
+  chapterUrl : "https://www.book100.com/%v"
+  chapterUrlPattern : "/novel.*?\\.html"
+  decode : "big5"
+  threads : 1000
+  downloadBookThreads: 10
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: false
+
+ck101-desktop:
+  baseUrl : "https://www.ck101.org/book/%v.html"
+  downloadUrl : "https://www.ck101.org/0/%v/"
+  chapterUrl : "https://www.ck101.org%v"
+  chapterUrlPattern : "/.*?\\.html"
+  decode : big5
+  threads : 1000
+  downloadBookThreads: 10
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: false
+
+ck101-mobile:
+  baseUrl : "https://www.ck101.org/book/%v.html"
+  downloadUrl : "https://www.ck101.org/0/%v/"
+  chapterUrl : "https://www.ck101.org/%v"
+  chapterUrlPattern : "/.*?\\.html"
+  decode : big5
+  threads : 1000
+  downloadBookThreads: 10
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: false
+
+hjwzw-desktop:
+  baseUrl : "https://tw.hjwzw.com/Book/%v/"
+  downloadUrl : "https://tw.hjwzw.com/Book/Chapter/%v/"
+  chapterUrl : "https://tw.hjwzw.com%v"
+  chapterUrlPattern : "/.8?\\.html"
+  decode : utf8
+  threads : 1000
+  downloadBookThreads: 10
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: false
+
+xqishu-desktop:
+  baseUrl : "http://www.aidusk.com/txt%v/"
+  downloadUrl : "http://www.aidusk.com/t/%v/"
+  chapterUrl : "http://www.aidusk.com%v"
+  chapterUrlPattern : "/t/.*?\\.html"
+  decode : utf8
+  threads : 10
+  downloadBookThreads: 5
+  constSleep : 1000
+  maxExploreError: 1000
+  useRequestInterval: true

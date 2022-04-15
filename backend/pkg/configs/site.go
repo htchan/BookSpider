@@ -17,10 +17,10 @@ type SiteConfig struct {
 	StorageDirectory string `yaml:"download_directory"`
 	BackupDirectory string `yaml:"backup_directory"`
 
-	SourceConfig SourceConfig
+	SourceConfig *SourceConfig
 }
 
-func LoadSiteConfigs(configDirectory string) (config map[string]SiteConfig) {
+func LoadSiteConfigs(configDirectory string) (config map[string]*SiteConfig) {
 	defer utils.Recover(func() { config = nil })
 
 	data, err := ioutil.ReadFile(filepath.Join(configDirectory, "site_config.yaml"))

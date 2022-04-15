@@ -27,7 +27,7 @@ type SourceConfig struct {
 	Decoder *encoding.Decoder
 }
 
-func LoadSourceConfigs(configDirectory string) (config map[string]SourceConfig) {
+func LoadSourceConfigs(configDirectory string) (config map[string]*SourceConfig) {
 	defer utils.Recover(func() { config = nil })
 
 	data, err := ioutil.ReadFile(filepath.Join(configDirectory, "source_config.yaml"))
@@ -36,6 +36,7 @@ func LoadSourceConfigs(configDirectory string) (config map[string]SourceConfig) 
 	for key, value := range config {
 		if (value.DecoderString == "big5") {
 			value.Decoder = traditionalchinese.Big5.NewDecoder()
+			value.SourceKey = key
 			config[key] = value
 		}
 	}

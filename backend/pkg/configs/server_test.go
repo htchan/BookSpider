@@ -6,7 +6,7 @@ import (
 )
 
 func Test_ServerConfig(t *testing.T) {
-	serverConfigLocation := os.Getenv("ASSETS_LOCATION") + "/configs/server_config.yaml"
+	serverConfigLocation := os.Getenv("ASSETS_LOCATION") + "/configs"
 	t.Run("func LoadServerConfigs", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result := LoadServerConfigs(serverConfigLocation)

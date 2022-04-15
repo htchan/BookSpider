@@ -10,7 +10,7 @@ func Test_SystemConfig(t *testing.T) {
 	t.Run("func LoadSystemConfigs", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result := LoadSystemConfigs(systemConfigDirectory)
-			if result == nil || len(result.AvailableSites) != 3 {
+			if result == nil || len(result.AvailableSiteConfigs) != 3 {
 				t.Fatalf("result: %v", result)
 			}
 		})

@@ -11,7 +11,7 @@ import (
 
 type SystemConfig struct {
 	AvailableSiteNames []string `yaml:"enabled_sites"`
-	AvailableSites map[string]SiteConfig
+	AvailableSiteConfigs map[string]*SiteConfig
 }
 
 func LoadSystemConfigs(configDirectory string) (config *SystemConfig) {
@@ -20,10 +20,10 @@ func LoadSystemConfigs(configDirectory string) (config *SystemConfig) {
 	data, err := ioutil.ReadFile(filepath.Join(configDirectory, "system_config.yaml"))
 	utils.CheckError(err)
 	utils.CheckError(yaml.Unmarshal(data, &config))
-	config.AvailableSites = make(map[string]SiteConfig)
+	config.AvailableSiteConfigs = make(map[string]*SiteConfig)
 	siteConfig := LoadSiteConfigs(configDirectory)
 	for _, siteName := range config.AvailableSiteNames {
-		config.AvailableSites[siteName] = siteConfig[siteName]
+		config.AvailableSiteConfigs[siteName] = siteConfig[siteName]
 	}
 	return
 }

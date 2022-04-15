@@ -1,0 +1,12 @@
+info:
+  data:
+    - "<meta property=\"og:novel:book_name\" content=\"(?P<Title>.*?)\" />"
+    - "<meta property=\"og:novel:author\" content=\"(?P<Writer>.*?)\" />"
+    - "<meta property=\"og:novel:category\" content=\"(?P<Type>.*?)\" />"
+    - "<meta property=\"og:novel:update_time\" content=\"(?P<LastUpdate>.*?)\" />"
+    - "<meta property=\"og:novel:latest_chapter_name\" content=\"(?P<LastChapter>.*?)\" />"
+  items: "<td><a href=\"(?P<ChapterUrl>.*?)\".*?>(?P<ChapterTitle>.*?)</a>"
+
+chapters:
+  data:
+    - "(?s)<div.*?AllySite.*?>.*?<div.*?>(?P<ChapterContent>.*?)</div>"
