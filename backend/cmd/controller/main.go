@@ -96,20 +96,20 @@ func main() {
 
 	flag := flags.NewFlags()
 
-	config := configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/configs/config.yaml")
+	config := configs.LoadSystemConfigs(os.Getenv("ASSETS_LOCATION") + "/configs")
 	siteMap := make(map[string]*sites.Site)
-	for key, siteConfig := range config.SiteConfigs {
+	for key, siteConfig := range config.AvailableSiteConfigs {
 		siteMap[key] = sites.NewSite(key, siteConfig)
 		siteMap[key].OpenDatabase()
 	}
 
-	flag.Load(config.MaxThreads)
+	flag.Load(10)
 
 
-	utils.StageFileName = os.Getenv("ASSETS_LOCATION") + config.Backend.StageFile
+	utils.StageFileName = os.Getenv("ASSETS_LOCATION") + "/log/stage.txt"
 
-	os.Remove(config.Backend.StageFile)
-	os.Create(config.Backend.StageFile)
+	os.Remove(utils.StageFileName)
+	os.Create(utils.StageFileName)
 
 	functionMap := map[string]sites.SiteOperation{
 		"UPDATE": sites.Update,
