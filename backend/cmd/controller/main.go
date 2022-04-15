@@ -8,6 +8,7 @@ import (
 	"github.com/htchan/BookSpider/pkg/flags"
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/ApiParser"
 	_ "net/http/pprof"
 	"sync"
 	"runtime"
@@ -86,6 +87,7 @@ func execute(function sites.SiteOperation, siteMap map[string]*sites.Site, f *fl
 }
 
 func main() {
+	ApiParser.Setup(os.Getenv("ASSETS_LOCATION") + "/api_parser")
 	// runtime.GOMAXPROCS(3)
 	logging.LogEvent("controller", "start", nil)
 	if (len(os.Args) < 2) {

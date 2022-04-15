@@ -36,9 +36,9 @@ func LoadSourceConfigs(configDirectory string) (config map[string]*SourceConfig)
 	for key, value := range config {
 		if (value.DecoderString == "big5") {
 			value.Decoder = traditionalchinese.Big5.NewDecoder()
-			value.SourceKey = key
-			config[key] = value
 		}
+		value.SourceKey = key
+		config[key] = value
 	}
 	return
 }
