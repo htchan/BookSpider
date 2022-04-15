@@ -14,7 +14,7 @@ import (
 )
 
 func (site *Site) updateBook(record *database.BookRecord) error {
-	book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
+	book := books.LoadBookByRecord(site.database, record, site.config.SourceConfig)
 	if book == nil {
 		return errors.New(fmt.Sprintf(
 			"[update] failed to load books %v-%v", site.Name, record.Id))
@@ -52,10 +52,10 @@ func (site *Site) update(errorFocus bool) (err error) {
 			defer wg.Done()
 			err := site.updateBook(record)
 			if err != nil {
-			logging.LogSiteEvent(site.Name, "updated", "update-failed", record.String() + err.Error())
+				logging.LogSiteEvent(site.Name, "updated", "update-failed", record.String() + err.Error())
 			}
 		} (site.semaphore, &wg, record.(*database.BookRecord))
-		if site.config.UseRequestInterval { utils.RequestInterval() }
+		if site.config.SourceConfig.UseRequestInterval { utils.RequestInterval() }
 	}
 	wg.Wait()
 	rows.Close()
@@ -67,7 +67,7 @@ func Update(site *Site, args *flags.Flags) (err error) {
 	if args.IsBook() && *args.Site == site.Name {
 		if *args.Site != site.Name { return nil }
 		siteName, id, hash := args.GetBookInfo()
-		book := books.LoadBook(site.database, siteName, id, hash, site.config.BookMeta)
+		book := books.LoadBook(site.database, siteName, id, hash, site.config.SourceConfig)
 		if book == nil {
 			return errors.New("book not found")
 		}

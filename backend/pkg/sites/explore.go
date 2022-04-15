@@ -14,7 +14,7 @@ import (
 )
 
 func (site *Site) exploreOldBook(id int, count *int) error {
-	book := books.LoadBook(site.database, site.Name, id, -1, site.config.BookMeta)
+	book := books.LoadBook(site.database, site.Name, id, -1, site.config.SourceConfig)
 	if book == nil {
 		return errors.New(fmt.Sprintf(
 		"load book %v-%v fail", site.Name, id))
@@ -33,7 +33,7 @@ func (site *Site) exploreOldBook(id int, count *int) error {
 }
 
 func (site *Site) exploreNewBook(id int, count *int) error {
-	book := books.NewBook(site.Name, id, -1, site.config.BookMeta)
+	book := books.NewBook(site.Name, id, -1, site.config.SourceConfig)
 	updateSuccess := book.Update() 
 	book.Save(site.database)
 	if updateSuccess {
@@ -53,7 +53,7 @@ func (site *Site) explore() (err error) {
 	errorCount := 0
 	// loop latest continuous error books in database
 	for ; i <= summary.MaxBookId; i++ {
-		if errorCount >= site.config.MaxExploreError {
+		if errorCount >= site.config.SourceConfig.MaxExploreError {
 			return nil
 		}
 		site.semaphore.Acquire(ctx, 1)
@@ -70,7 +70,7 @@ func (site *Site) explore() (err error) {
 		} (site.semaphore, &wg, i, &errorCount)
 	}
 	// loop books not in database
-	for ; errorCount < site.config.MaxExploreError; i++ {
+	for ; errorCount < site.config.SourceConfig.MaxExploreError; i++ {
 		site.semaphore.Acquire(ctx, 1)
 		wg.Add(1)
 		go func (s *semaphore.Weighted, wg *sync.WaitGroup, id int, errorCount *int) {
@@ -83,7 +83,7 @@ func (site *Site) explore() (err error) {
 				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(id), "explore", "success", nil)
 			}
 		} (site.semaphore, &wg, i, &errorCount)
-		if site.config.UseRequestInterval { utils.RequestInterval() }
+		if site.config.SourceConfig.UseRequestInterval { utils.RequestInterval() }
 	}
 	wg.Wait()
 	return
@@ -92,11 +92,10 @@ func (site *Site) explore() (err error) {
 func Explore(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() { return errors.New("invalid arguments") }
 	if args.IsBook() && *args.Site == site.Name {
-		if *args.Site != site.Name { return nil }
 		siteName, id, hash := args.GetBookInfo()
-		book := books.LoadBook(site.database, siteName, id, hash, site.config.BookMeta)
+		book := books.LoadBook(site.database, siteName, id, hash, site.config.SourceConfig)
 		if book != nil {
-			book = books.NewBook(siteName, id, hash, site.config.BookMeta)
+			book = books.NewBook(siteName, id, hash, site.config.SourceConfig)
 		}
 		book.Update()
 		book.Save(site.database)

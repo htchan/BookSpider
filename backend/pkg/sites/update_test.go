@@ -26,16 +26,11 @@ func cleanupUpdateTest() {
 	os.Remove("./update_test.db")
 }
 
-var updateConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var updateConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 
 func Test_Sites_Site_Update(t *testing.T) {
 	updateConfig.DatabaseLocation = "./update_test.db"
-	updateConfig.BookMeta.TitleRegex = "(title-.*?) "
-	updateConfig.BookMeta.WriterRegex = "(writer-.*?) "
-	updateConfig.BookMeta.TypeRegex = "(type-.*?) "
-	updateConfig.BookMeta.LastUpdateRegex = " (last-update-.*?) "
-	updateConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
 	site := NewSite("test", updateConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
@@ -47,9 +42,9 @@ func Test_Sites_Site_Update(t *testing.T) {
 	operation = Update
 
 	t.Run("func updateBook", func(t *testing.T) {
-		site.config.BookMeta.CONST_SLEEP = 0
+		site.config.SourceConfig.ConstSleep = 0
 
-		book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+		book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 		book.SetTitle("title-regex")
 		book.SetWriter("writer-regex")
 		book.SetType("type-regex")
@@ -59,7 +54,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 		site.CommitDatabase()
 
 		t.Run("do nothing if books does not get updated", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 
 			rows := site.database.QueryBookBySiteIdHash("test", 1, 100)
 			record, err := rows.Scan()
@@ -88,7 +83,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 		})
 
 		t.Run("success save the updated book to database", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 			book.SetUpdateChapter("hello")
 			book.Save(site.database)
 			site.CommitDatabase()
@@ -119,7 +114,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 		})
 
 		t.Run("return error if failed to load the books writer", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail"
 			record := &database.BookRecord{
 				Site: "not-exist",
 				Id: 100,
@@ -135,7 +130,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 	})
 
 	t.Run("func update", func(t *testing.T) {
-		site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+		site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 
 		t.Run("loop add the books in database (ignore error)", func(t *testing.T) {
 			summary := site.database.Summary(site.Name)
@@ -155,11 +150,11 @@ func Test_Sites_Site_Update(t *testing.T) {
 				t.Fatalf("site update() return error: %v", err)
 			}
 			// downloaded book will get a new record created
-			book := books.LoadBook(site.database, "test", 3, 200, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 3, 200, site.config.SourceConfig)
 			if book == nil {
 				t.Fatalf("cannot query %v-%v-%v, it was removed", "test", 3, 200)
 			}
-			book = books.LoadBook(site.database, "test", 3, -1, site.config.BookMeta)
+			book = books.LoadBook(site.database, "test", 3, -1, site.config.SourceConfig)
 			if book == nil {
 				t.Fatalf("cannot query %v-%v", "test", 3)
 			}
@@ -169,7 +164,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			}
 
 			// error book will not be looped
-			book = books.LoadBook(site.database, "test", 2, -1, site.config.BookMeta)
+			book = books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() != database.Error {
 				t.Fatalf("cannot query %v-%v", "test", 3)
 			}
@@ -205,7 +200,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			}
 
 			// error book will be touched
-			book := books.LoadBook(site.database, "test", 2, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() == database.Error {
 				t.Fatalf("cannot query %v-%v", "test", 2)
 			}
@@ -228,7 +223,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 		defer site.CloseDatabase()
 
 		t.Run("success for full site update", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 
 			f := &flags.Flags{}
 			err := operation(site, f)
@@ -250,9 +245,8 @@ func Test_Sites_Site_Update(t *testing.T) {
 		})
 
 		t.Run("success for specific book", func(t *testing.T) {
-			site.config.BookMeta.LastUpdateRegex = " (\\d+) "
-			site.config.BookMeta.LastChapterRegex = "(chapter-.*?)$"
-			site.config.BookMeta.BaseUrl = server.URL + "/specific_success/%v"
+			site.config.SourceConfig.SourceKey = "test_source_key_2"
+			site.config.SourceConfig.BaseUrl = server.URL + "/specific_success/%v"
 			flagSite, flagId, flagHash := "test", 1, "-1"
 			f := &flags.Flags{
 				Site: &flagSite,
@@ -265,7 +259,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site Update return error for specific book - error: %v", err)
 			}
-			book := books.LoadBook(site.database, "test", 1, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 1, -1, site.config.SourceConfig)
 			summary := site.database.Summary(site.Name)
 			if book == nil || book.GetUpdateDate() != "104" ||
 				book.GetUpdateChapter() != "chapter-1" || summary.BookCount != 7 {
@@ -301,11 +295,11 @@ func Test_Sites_Site_Update(t *testing.T) {
 
 func Test_Sites_Site_UpdateError(t *testing.T) {
 	updateConfig.DatabaseLocation = "./update_test.db"
-	updateConfig.BookMeta.TitleRegex = "(title-.*?) "
-	updateConfig.BookMeta.WriterRegex = "(writer-.*?) "
-	updateConfig.BookMeta.TypeRegex = "(type-.*?) "
-	updateConfig.BookMeta.LastUpdateRegex = " (last-update-.*?) "
-	updateConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
+	// updateConfig.SourceConfig.TitleRegex = "(title-.*?) "
+	// updateConfig.SourceConfig.WriterRegex = "(writer-.*?) "
+	// updateConfig.SourceConfig.TypeRegex = "(type-.*?) "
+	// updateConfig.SourceConfig.LastUpdateRegex = " (last-update-.*?) "
+	// updateConfig.SourceConfig.LastChapterRegex = "(last-chapter-.*?)$"
 	site := NewSite("test", updateConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
@@ -321,7 +315,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 		defer site.CloseDatabase()
 
 		t.Run("success for full site update", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 
 			f := &flags.Flags{}
 			err := operation(site, f)

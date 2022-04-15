@@ -29,9 +29,9 @@ func (site *Site) addMissingRecords() (err error) {
 		go func(s *semaphore.Weighted, wg *sync.WaitGroup, i int) {
 			defer s.Release(1)
 			defer wg.Done()
-			book := books.LoadBook(site.database, site.Name, i, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, site.Name, i, -1, site.config.SourceConfig)
 			if book == nil {
-				book = books.NewBook(site.Name, i, -1, site.config.BookMeta)
+				book = books.NewBook(site.Name, i, -1, site.config.SourceConfig)
 				book.Update()
 				book.Save(site.database)
 				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(i), "fix", "add-missing-record", nil)
@@ -64,9 +64,9 @@ func (site *Site) updateBooksByStorage() (err error) {
 		go func(s *semaphore.Weighted, wg *sync.WaitGroup, record *database.BookRecord) {
 			defer s.Release(1)
 			defer wg.Done()
-			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
+			book := books.LoadBookByRecord(site.database, record, site.config.SourceConfig)
 			// ensure the storage exist
-			if !book.HasContent() {
+			if !book.HasContent(site.config.StorageDirectory) {
 				book.SetStatus(database.End)
 				book.Save(site.database)
 				logging.LogBookEvent(record.String(), "fix", "update-to-end", nil)
@@ -92,7 +92,7 @@ func (site *Site) updateBooksByStorage() (err error) {
 				hashCode, err = strconv.Atoi(info[1])
 				if err != nil { return }
 			}
-			book := books.LoadBook(site.database, site.Name, i, hashCode, site.config.BookMeta)
+			book := books.LoadBook(site.database, site.Name, i, hashCode, site.config.SourceConfig)
 			if book!= nil && book.GetStatus() != database.Download {
 				book.SetStatus(database.Download)
 				book.Save(site.database)

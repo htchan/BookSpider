@@ -7,6 +7,7 @@ import (
 	"github.com/htchan/BookSpider/internal/utils"
 	"github.com/htchan/BookSpider/internal/database"
 	"github.com/htchan/BookSpider/pkg/configs"
+	"github.com/htchan/ApiParser"
 )
 
 func initSiteTest() {
@@ -23,7 +24,7 @@ func cleanupSiteTest() {
 	os.Remove("./test.db")
 }
 
-var siteConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var siteConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Constructor_NewSite(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
@@ -97,6 +98,8 @@ func Test_Sites_Site_Map(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
+	ApiParser.Setup(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser")
+	
 	initBackupTest()
 	initCheckTest()
 	initDownloadTest()

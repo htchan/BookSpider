@@ -25,7 +25,7 @@ func (site *Site)SearchByIdHash(id int, hash string) (book *books.Book) {
 		hashCode = -1
 	}
 
-	book = books.LoadBook(site.database, site.Name, id, int(hashCode), site.config.BookMeta)
+	book = books.LoadBook(site.database, site.Name, id, int(hashCode), site.config.SourceConfig)
 	return
 }
 
@@ -37,7 +37,7 @@ func (site *Site)SearchByWriterId(writerId int) (bookArray []*books.Book) {
 		bookArray = append(
 			bookArray,
 			books.LoadBookByRecord(
-				site.database, record.(*database.BookRecord), site.config.BookMeta))
+				site.database, record.(*database.BookRecord), site.config.SourceConfig))
 	}
 	return
 }
@@ -50,7 +50,7 @@ func (site *Site)SearchByStatus(status database.StatusCode) (bookArray []*books.
 		bookArray = append(
 			bookArray,
 			books.LoadBookByRecord(
-				site.database, record.(*database.BookRecord), site.config.BookMeta))
+				site.database, record.(*database.BookRecord), site.config.SourceConfig))
 	}
 	return
 }
@@ -78,7 +78,7 @@ func (site *Site)SearchByTitleWriter(titleSearch string, writerSearch string) (b
 		bookArray = append(
 			bookArray,
 			books.LoadBookByRecord(
-				site.database, record.(*database.BookRecord), site.config.BookMeta))
+				site.database, record.(*database.BookRecord), site.config.SourceConfig))
 	}
 	return
 }
@@ -89,7 +89,7 @@ func (site *Site) RandomSuggestBook(n int, status database.StatusCode) (bookArra
 
 	for _, record := range site.rowsToRecords(rows) {
 		bookArray = append(bookArray, books.LoadBookByRecord(
-			site.database, record.(*database.BookRecord), site.config.BookMeta))
+			site.database, record.(*database.BookRecord), site.config.SourceConfig))
 	}
 	return
 }

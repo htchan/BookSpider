@@ -23,7 +23,7 @@ func cleanupQueryTest() {
 	os.Remove("./query.db")
 }
 
-var queryConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var queryConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Query(t *testing.T) {
 	queryConfig.DatabaseLocation = "./query.db"

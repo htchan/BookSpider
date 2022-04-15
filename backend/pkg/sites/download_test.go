@@ -27,7 +27,7 @@ func cleanupDownloadTest() {
 	os.Remove("./download_test.db")
 }
 
-var downloadConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var downloadConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Download(t *testing.T) {
 	downloadConfig.DatabaseLocation = "./download_test.db"
@@ -40,9 +40,8 @@ func Test_Sites_Site_Download(t *testing.T) {
 	server := mock.DownloadServer()
 	defer server.Close()
 	t.Run("func Download", func(t *testing.T) {
-		site.config.BookMeta.ChapterUrlRegex = "chapter-url-regex-(.*?) "
-		site.config.BookMeta.DownloadUrl = server.URL + "/content/success/%v"
-		site.config.BookMeta.ChapterUrl = server.URL + "/chapter/success%v"
+		site.config.SourceConfig.DownloadUrl = server.URL + "/content/success/%v"
+		site.config.SourceConfig.ChapterUrl = server.URL + "/chapter/success%v"
 		t.Run("success for specific book", func(t *testing.T) {
 			flagSite, flagId, flagThreads := "test", 3, 0
 			f := &flags.Flags{
@@ -55,21 +54,30 @@ func Test_Sites_Site_Download(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site Download return error for specific book: %v", err)
 			}
-			book := books.LoadBook(site.database, "test", 3, -1, site.config.BookMeta)
-			if book == nil || book.GetStatus() != database.Download || !book.HasContent() {
+			book := books.LoadBook(site.database, "test", 3, -1, site.config.SourceConfig)
+			if book == nil || book.GetStatus() != database.Download || !book.HasContent(site.config.StorageDirectory) {
 				t.Fatalf("site Download does not turn book status to download and save content: %v", book)
 			}
 		})
 
 		t.Run("success for all site", func(t *testing.T) {
-			err := operation(site, &flags.Flags{})
+			book := books.LoadBook(site.database, site.Name, 2, -1, site.config.SourceConfig)
+			book.SetStatus(database.End)
+			book.Save(site.database)
 			site.CommitDatabase()
+
+			err := operation(site, &flags.Flags{})
+			utils.CheckError(site.CommitDatabase())
 			if err != nil {
-				t.Fatalf("site Download return error for specific book: %v", err)
+				t.Fatalf("site Download return error for all site: %v", err)
+			}
+			book = books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
+			if book == nil || book.GetStatus() != database.Download || !book.HasContent(site.config.StorageDirectory) {
+				t.Fatalf("site Download does not turn book status to download and save content: %v", book)
 			}
 		})
 
-		t.Run("fail for invalid arguements", func(t *testing.T) {
+		t.Run("fail if only id is provided", func(t *testing.T) {
 			flagId := 123
 
 			err := operation(site, &flags.Flags{ Id: &flagId })
@@ -84,6 +92,19 @@ func Test_Sites_Site_Download(t *testing.T) {
 			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
 				t.Fatalf("site Download return error for not matching site name- error: %v", err)
+			}
+		})
+
+		t.Run("skip if specific book not exist", func(t *testing.T) {
+			flagSite, flagId, flagThreads := "test", 999, 999
+			f := &flags.Flags{
+				Site: &flagSite,
+				Id: &flagId,
+				MaxThreads: &flagThreads,
+			}
+			err := operation(site, f)
+			if err == nil {
+				t.Fatalf("site Download not return error for not exist book")
 			}
 		})
 	})

@@ -26,7 +26,7 @@ func cleanupCheckTest() {
 	os.Remove("./check_test.db")
 }
 
-var checkConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var checkConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Check(t *testing.T) {
 	checkConfig.DatabaseLocation = "./check_test.db"
@@ -38,7 +38,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 
 	t.Run("func Check", func(t *testing.T) {
 		t.Run("success for full site", func(t *testing.T) {
-			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			book.SetUpdateChapter("后记abcdef")
 			book.Save(site.database)
 			site.CommitDatabase()
@@ -49,7 +49,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site Check return error for full site - error: %v", err)
 			}
-			book = books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			book = books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.End {
 				t.Fatalf("site.Check does not update the record status to end")
 			}

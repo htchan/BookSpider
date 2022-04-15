@@ -27,15 +27,10 @@ func cleanupExploreTest() {
 	os.Remove("./explore_test.db")
 }
 
-var exploreConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var exploreConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Explore(t *testing.T) {
 	exploreConfig.DatabaseLocation = "./explore_test.db"
-	exploreConfig.BookMeta.TitleRegex = "(title-.*?) "
-	exploreConfig.BookMeta.WriterRegex = "(writer-.*?) "
-	exploreConfig.BookMeta.TypeRegex = "(type-.*?) "
-	exploreConfig.BookMeta.LastUpdateRegex = " (last-update-.*?) "
-	exploreConfig.BookMeta.LastChapterRegex = "(last-chapter-.*?)$"
 	site := NewSite("test", exploreConfig)
 	site.OpenDatabase()
 	defer site.CloseDatabase()
@@ -49,7 +44,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	t.Run("func exploreOldBook", func(t *testing.T) {
 		t.Run("update if book exist in db and updated in web", func(t *testing.T) {
 			count := 1
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 			err := site.exploreOldBook(2, &count)
 			site.CommitDatabase()
 			if count != 0 {
@@ -58,7 +53,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site.exploreOldBook return error: %v", err)
 			}
-			book := books.LoadBook(site.database, "test", 2, 101, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 2, 101, site.config.SourceConfig)
 			if book.GetStatus() == database.Error || book.GetTitle() != "title-regex" || 
 				book.GetWriter() != "writer-regex" || book.GetType() != "type-regex" ||
 				book.GetUpdateDate() != "last-update-regex" || book.GetError() != nil {
@@ -68,7 +63,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 		t.Run("add count if book exist in db but not updated in web", func(t *testing.T) {
 			count := 0
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreOldBook(4, &count)
 			site.CommitDatabase()
 			if count != 1 {
@@ -77,7 +72,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site.exploreOldBook return error: %v", err)
 			}
-			book := books.LoadBook(site.database, "test", 4, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 4, -1, site.config.SourceConfig)
 			if book.GetStatus() != database.Error || book.GetTitle() != "" || 
 				book.GetWriter() != "" || book.GetType() != "" ||
 				book.GetUpdateDate() != "" || book.GetError() == nil {
@@ -105,7 +100,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	t.Run("func exploreNewBook", func(t *testing.T) {
 		t.Run("success if book not exist in db and exist in web", func(t *testing.T) {
 			count := 1
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 			err := site.exploreNewBook(6, &count)
 			site.CommitDatabase()
 			if err != nil {
@@ -114,7 +109,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			if count != 0 {
 				t.Fatalf("site.updateNewBook not reset count: %v", count)
 			}
-			book := books.LoadBook(site.database, "test", 6, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 6, -1, site.config.SourceConfig)
 			if book.GetStatus() == database.Error || book.GetTitle() != "title-regex" ||
 				book.GetWriter() != "writer-regex" || book.GetError() != nil {
 					t.Fatalf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
@@ -123,7 +118,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 		t.Run("add count and save book if book not exist in db and web", func(t *testing.T) {
 			count := 0
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreNewBook(7, &count)
 			site.CommitDatabase()
 			if err != nil {
@@ -132,7 +127,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			if count != 1 {
 				t.Fatalf("site.updateNewBook not update count: %v", count)
 			}
-			book := books.LoadBook(site.database, "test", 7, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 7, -1, site.config.SourceConfig)
 			if book.GetStatus() != database.Error || book.GetTitle() != "" ||
 				book.GetWriter() != "" || book.GetError() == nil {
 					t.Fatalf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
@@ -141,7 +136,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 		t.Run("create duplicated book if book exist in db", func(t *testing.T) {
 			count := 0
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.exploreNewBook(1, &count)
 			site.CommitDatabase()
 			if err != nil {
@@ -150,7 +145,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			if count != 1 {
 				t.Fatalf("site.updateNewBook not update count: %v", count)
 			}
-			book := books.LoadBook(site.database, "test", 1, -1, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 1, -1, site.config.SourceConfig)
 			if _, _, hashCode := book.GetInfo(); hashCode == 100 ||
 				book.GetStatus() != database.Error || book.GetTitle() != "" ||
 				book.GetWriter() != "" || book.GetError() == nil {
@@ -160,11 +155,11 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	})
 
 	t.Run("func explore", func(t *testing.T) {
-		site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
-		site.config.BookMeta.CONST_SLEEP = 0
-		site.config.Threads = 2
-		site.semaphore = semaphore.NewWeighted(int64(site.config.Threads))
-		site.config.MaxExploreError = 3
+		site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
+		site.config.SourceConfig.ConstSleep = 0
+		site.config.SourceConfig.Threads = 2
+		site.semaphore = semaphore.NewWeighted(int64(site.config.SourceConfig.Threads))
+		site.config.SourceConfig.MaxExploreError = 3
 		t.Run("success for adding new books", func(t *testing.T) {
 			summary := site.database.Summary(site.Name)
 			if summary.BookCount != 9 || summary.ErrorCount != 4 ||
@@ -222,8 +217,29 @@ func Test_Sites_Site_Explore(t *testing.T) {
 	})
 
 	t.Run("func Explore", func(t *testing.T) {
+		t.Run("success for specific book", func(t *testing.T) {
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
+
+			flagSite, flagId := "test", 5
+			err := operation(site, &flags.Flags{Site: &flagSite, Id: &flagId})
+			if err != nil {
+				t.Fatalf("site Explore return error for specific book - error: %v", err)
+			}
+
+			summary := site.database.Summary(site.Name)
+			if summary.BookCount != 15 || summary.ErrorCount != 8 ||
+				summary.WriterCount != 4 || summary.UniqueBookCount != 13 ||
+				summary.MaxBookId != 13 || summary.LatestSuccessId != 8 ||
+				summary.StatusCount[database.Error] != 8 ||
+				summary.StatusCount[database.InProgress] != 5 ||
+				summary.StatusCount[database.End] != 1 ||
+				summary.StatusCount[database.Download] != 1 {
+					t.Fatalf("before book update generate wrong summary: %v", summary)
+				}
+		})
+		
 		t.Run("success for full site", func(t *testing.T) {
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 
 			err := operation(site, &flags.Flags{})
 			if err != nil {

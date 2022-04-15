@@ -15,7 +15,7 @@ import (
 func (site *Site) download() (err error) {
 	ctx := context.Background()
 	var wg sync.WaitGroup
-	s := semaphore.NewWeighted(int64(site.config.DownloadBookThreads))
+	s := semaphore.NewWeighted(int64(site.config.SourceConfig.DownloadBookThreads))
 	var loadContentMutex sync.Mutex
 	// query all end book
 	rows := site.database.QueryBooksByStatus(database.End)
@@ -31,9 +31,9 @@ func (site *Site) download() (err error) {
 			logging.LogBookEvent(record.String(), "download", "start", nil)
 			defer s.Release(1)
 			defer wg.Done()
-			book := books.LoadBookByRecord(site.database, record, site.config.BookMeta)
+			book := books.LoadBookByRecord(site.database, record, site.config.SourceConfig)
 			// call book.download with thread, wait group and semaphore
-			if book.Download(site.config.Threads, mutex) {
+			if book.Download(site.config.StorageDirectory, site.config.SourceConfig.Threads, mutex) {
 				book.Save(site.database)
 			}
 			logging.LogBookEvent(book.String(), "download", "completed", nil)
@@ -48,14 +48,14 @@ func Download(site *Site, args *flags.Flags) (err error) {
 	if !args.Valid() { return errors.New("invalid arguments") }
 	if args.IsBook() && *args.Site == site.Name {
 		siteName, id, hash := args.GetBookInfo()
-		book := books.LoadBook(site.database, siteName, id, hash, site.config.BookMeta)
+		book := books.LoadBook(site.database, siteName, id, hash, site.config.SourceConfig)
 		if book != nil {
 			maxThreads := *args.MaxThreads
 			if maxThreads <= 0 {
-				maxThreads = site.config.Threads
+				maxThreads = site.config.SourceConfig.Threads
 			}
 			var mutex sync.Mutex
-			if book.Download(maxThreads, &mutex) {
+			if book.Download(site.config.StorageDirectory, maxThreads, &mutex) {
 				book.Save(site.database)
 			}
 			return nil

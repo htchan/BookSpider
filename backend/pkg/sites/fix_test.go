@@ -27,7 +27,7 @@ func cleanupFixTest() {
 	os.Remove("./fix_test.db")
 }
 
-var fixConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var fixConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Fix(t *testing.T) {
 	fixConfig.DatabaseLocation = "./fix_test.db"
@@ -42,7 +42,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	defer server.Close()
 	t.Run("func addMissingRecords", func(t *testing.T) {
 		t.Run("success with adding error record", func(t *testing.T) {
-			book := books.NewBook("test", 7, 300, site.config.BookMeta)
+			book := books.NewBook("test", 7, 300, site.config.SourceConfig)
 			book.SetError(errors.New("test"))
 			book.Save(site.database)
 			site.CommitDatabase()
@@ -56,7 +56,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.Download] != 1 {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
 				}
-			site.config.BookMeta.BaseUrl = server.URL + "/partial_fail/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.addMissingRecords()
 			site.CommitDatabase()
 			if err != nil {
@@ -75,7 +75,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 		})
 
 		t.Run("success with adding in progress record", func(t *testing.T) {
-			book := books.NewBook("test", 9, 300, site.config.BookMeta)
+			book := books.NewBook("test", 9, 300, site.config.SourceConfig)
 			book.SetError(errors.New("test"))
 			book.Save(site.database)
 			site.CommitDatabase()
@@ -89,7 +89,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.Download] != 1 {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
 				}
-			site.config.BookMeta.BaseUrl = server.URL + "/success/%v"
+			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 			err := site.addMissingRecords()
 			site.CommitDatabase()
 			if err != nil {
@@ -127,19 +127,19 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	})
 
 	t.Run("func updateBooksByStorage", func(t *testing.T) {
-		site.config.BookMeta.BaseUrl = server.URL + ""
+		site.config.SourceConfig.BaseUrl = server.URL + ""
 		site.updateBooksByStorage()
 		site.CommitDatabase()
 
 		t.Run("success update book with storage", func(t *testing.T) {
-			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.Download {
 				t.Fatalf("site.updateBooksByStorage does not update book with storage: %v", book.GetStatus())
 			}
 		})
 
 		t.Run("success update book without storage", func(t *testing.T) {
-			book := books.LoadBook(site.database, "test", 3, 102, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 3, 102, site.config.SourceConfig)
 			if book.GetStatus() != database.End {
 				t.Fatalf("site.updateBooksByStorage does not update book without storage: %v", book.GetStatus())
 			}
@@ -147,7 +147,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 	})
 
 	t.Run("func Fix", func(t *testing.T) {
-		book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+		book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 		book.SetStatus(database.InProgress)
 		book.Save(site.database)
 		site.CommitDatabase()
@@ -158,7 +158,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 			if err != nil {
 				t.Fatalf("site Fix return error for full site - error: %v", err)
 			}
-			book := books.LoadBook(site.database, "test", 1, 100, site.config.BookMeta)
+			book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.Download {
 				t.Fatalf("site.Fix does not fix the record")
 			}

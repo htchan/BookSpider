@@ -25,7 +25,7 @@ func cleanupBackupTest() {
 	os.Remove("./backup.db")
 }
 
-var backupConfig = configs.LoadConfigYaml(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml").SiteConfigs["test"]
+var backupConfig = configs.LoadSiteConfigs(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")["test"]
 
 func Test_Sites_Site_Backup(t *testing.T) {
 	backupConfig.DatabaseLocation = "./backup.db"
@@ -78,7 +78,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		os.Remove(filepath.Dir(backupLocation))
 	})
 
-	t.Run("skip if not", func(t *testing.T) {
+	t.Run("skip if not target site", func(t *testing.T) {
 		flagSite := "not-test"
 		backupLocation := filepath.Join(site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
 		err := operation(site, &flags.Flags{Site: &flagSite})
@@ -89,6 +89,21 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		
 		if utils.Exists(backupLocation) {
 			t.Fatalf("site backup does not skip for flag site: not-test")
+		}
+	})
+
+	t.Run("skip if flags is a book", func(t *testing.T) {
+		flagSite := "test"
+		flagId := 10
+		backupLocation := filepath.Join(site.config.BackupDirectory, time.Now().Format("2006-01-02"), "test.sql")
+		err := operation(site, &flags.Flags{Site: &flagSite, Id: &flagId})
+
+		if err == nil {
+			t.Fatalf("site Backup not return error")
+		}
+		
+		if utils.Exists(backupLocation) {
+			t.Fatalf("site backup does not skip for flag site: test")
 		}
 	})
 }

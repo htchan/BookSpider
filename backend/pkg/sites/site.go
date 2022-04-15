@@ -25,7 +25,7 @@ func NewSite(name string, config *configs.SiteConfig) (site *Site) {
 	site.Name = name
 	site.database = nil
 	site.config = config
-	site.semaphore = semaphore.NewWeighted(int64(config.Threads))
+	site.semaphore = semaphore.NewWeighted(int64(config.SourceConfig.Threads))
 	return
 }
 
@@ -33,7 +33,7 @@ func (site *Site)OpenDatabase() (err error) {
 	if site.database != nil { return }
 	switch strings.ToUpper(site.config.DatabaseEngine) {
 	case "SQLITE3":
-		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation)
+		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation, 100)
 	default:
 		err = errors.New("invalid database engine")
 	}
