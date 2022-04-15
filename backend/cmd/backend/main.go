@@ -101,29 +101,31 @@ func ProcessState(res http.ResponseWriter, req *http.Request) {
 
 var currentProcess string
 var logs Logs
-var config *configs.Config
+var systemConfig *configs.SystemConfig
+var serverConfig *configs.ServerConfig
 var siteMap map[string]*sites.Site
 
-func setup(configFileLocation string) {
+func setup(configDirectory string) {
 	currentProcess = ""
-	config = configs.LoadConfigYaml(configFileLocation)
-	stageFileName = config.Backend.StageFile
+	systemConfig = configs.LoadSystemConfigs(configDirectory)
+	serverConfig = configs.LoadServerConfigs(configDirectory)
+	stageFileName = os.Getenv("ASSETS_LOCATION") + "/log/stage.txt"
 	siteMap = make(map[string]*sites.Site)
-	for key, siteConfig := range config.SiteConfigs {
+	for key, siteConfig := range systemConfig.AvailableSiteConfigs {
 		siteMap[key] = sites.NewSite(key, siteConfig)
 		siteMap[key].OpenDatabase()
 		//TODO: deploy a thread to close the database if it is not opened
 	}
 }
 func startServer(addr string) {
-	for _, api := range config.Backend.Api { apiFunc[api]() }
+	for _, api := range serverConfig.AvailableApi { apiFunc[api]() }
 	logging.LogEvent("server", "start", nil)
 	logging.LogEvent("server", "error", http.ListenAndServe(addr, nil))
 }
 func main() {
-	setup(os.Getenv("ASSETS_LOCATION") + "/configs/config.yaml")
+	setup(os.Getenv("ASSETS_LOCATION") + "/configs")
 	logs = Logs{
-		logLocation: config.Backend.LogFile, 
+		logLocation: os.Getenv("ASSETS_LOCATION") + "/log/controller.log", 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}

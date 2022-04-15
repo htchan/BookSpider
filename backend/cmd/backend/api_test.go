@@ -27,7 +27,7 @@ func cleanupMainTest() {
 }
 
 func Test_Backend_Api(t *testing.T) {
-	setup(os.Getenv("ASSETS_LOCATION") + "/test-data/config.yml")
+	setup(os.Getenv("ASSETS_LOCATION") + "/test-data/configs")
 	go func() {
 		startServer(":8080")
 	}()

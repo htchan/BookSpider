@@ -42,7 +42,7 @@ func BookDownload(res http.ResponseWriter, req *http.Request) {
 	if hashCodeInt > 0 {
 		fileName += "-v" + strconv.FormatInt(int64(hashCodeInt), 36)
 	}
-	content := book.GetContent()
+	content := book.GetContent(site.StorageDirectory())
 	res.Header().Set("Content-Type", "text/txt; charset=utf-8")
 	res.Header().Set("Content-Disposition", "attachment; filename=\"" + fileName + ".txt\"")
 	fmt.Fprintf(res, content)
