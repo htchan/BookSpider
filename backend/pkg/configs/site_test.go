@@ -19,6 +19,7 @@ func Test_SiteConfig(t *testing.T) {
 				siteConfig.DatabaseLocation != "/database/ck101.db" ||
 				siteConfig.StorageDirectory != "/books/ck101/" ||
 				siteConfig.BackupDirectory != "/backup/" ||
+				siteConfig.CommitStatements != 2 ||
 				siteConfig.SourceConfig.BaseUrl == "" {
 					t.Fatalf("wrong content: %v", siteConfig)
 				}

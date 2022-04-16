@@ -33,7 +33,7 @@ func (site *Site)OpenDatabase() (err error) {
 	if site.database != nil { return }
 	switch strings.ToUpper(site.config.DatabaseEngine) {
 	case "SQLITE3":
-		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation, 100)
+		site.database = sqlite.NewSqliteDB(site.config.DatabaseLocation, site.config.CommitStatements) //TODO: use a config to store the value here
 	default:
 		err = errors.New("invalid database engine")
 	}

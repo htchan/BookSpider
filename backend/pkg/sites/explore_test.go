@@ -227,11 +227,11 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			}
 
 			summary := site.database.Summary(site.Name)
-			if summary.BookCount != 15 || summary.ErrorCount != 8 ||
+			if summary.BookCount != 16 || summary.ErrorCount != 7 ||
 				summary.WriterCount != 4 || summary.UniqueBookCount != 13 ||
 				summary.MaxBookId != 13 || summary.LatestSuccessId != 8 ||
 				summary.StatusCount[database.Error] != 8 ||
-				summary.StatusCount[database.InProgress] != 5 ||
+				summary.StatusCount[database.InProgress] != 6 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
 					t.Fatalf("before book update generate wrong summary: %v", summary)
@@ -247,11 +247,11 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			}
 
 			summary := site.database.Summary(site.Name)
-			if summary.BookCount != 15 || summary.ErrorCount != 8 ||
+			if summary.BookCount != 16 || summary.ErrorCount != 7 ||
 				summary.WriterCount != 4 || summary.UniqueBookCount != 13 ||
 				summary.MaxBookId != 13 || summary.LatestSuccessId != 8 ||
 				summary.StatusCount[database.Error] != 8 ||
-				summary.StatusCount[database.InProgress] != 5 ||
+				summary.StatusCount[database.InProgress] != 6 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
 					t.Fatalf("before book update generate wrong summary: %v", summary)

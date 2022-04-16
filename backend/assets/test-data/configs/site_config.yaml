@@ -4,3 +4,4 @@ test:
   database_location : "./test.db"
   download_directory : "/test-data/storage/"
   backup_directory: "/test-data/"
+  commit_statements: 2

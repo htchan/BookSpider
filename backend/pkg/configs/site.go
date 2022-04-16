@@ -16,8 +16,9 @@ type SiteConfig struct {
 	DatabaseLocation string `yaml:"database_location"`
 	StorageDirectory string `yaml:"download_directory"`
 	BackupDirectory string `yaml:"backup_directory"`
+	CommitStatements int `yaml:"commit_statements"`
 
-	SourceConfig *SourceConfig
+	*SourceConfig
 }
 
 func LoadSiteConfigs(configDirectory string) (config map[string]*SiteConfig) {

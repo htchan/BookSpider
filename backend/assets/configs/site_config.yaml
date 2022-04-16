@@ -4,6 +4,7 @@ ck101:
   database_location : "/database/ck101.db"
   download_directory : "/books/ck101/"
   backup_directory: "/backup/"
+  commit_statements: 10000
 
 80txt:
   source_key: 80txt-desktop
@@ -11,6 +12,7 @@ ck101:
   database_location : "/database/80txt.db"
   download_directory : "/books/80txt/"
   backup_directory: "/backup/"
+  commit_statements: 10000
 
 xqishu:
   source_key: xqishu-desktop
@@ -18,6 +20,7 @@ xqishu:
   database_location : "/database/xqishu.db"
   download_directory : "/books/xqishu/"
   backup_directory: "/backup/"
+  commit_statements: 10000
 
 hjwzw:
   source_key: hjwzw-desktop
@@ -25,6 +28,7 @@ hjwzw:
   database_location : "/database/hjwzw.db"
   download_directory : "/books/hjwzw/"
   backup_directory: "/backup/"
+  commit_statements: 10000
 
 bestory:
   source_key: bestory-desktop
@@ -32,3 +36,4 @@ bestory:
   database_location : "/database/bestory.db"
   download_directory : "/books/bestory"
   backup_directory: "/backup/"
+  commit_statements: 10000
