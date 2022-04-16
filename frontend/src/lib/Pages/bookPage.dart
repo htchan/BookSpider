@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:js' as js;
+import 'package:url_launcher/url_launcher.dart';
 
 class BookPage extends StatefulWidget{
   final String url, siteName, bookId;
@@ -43,8 +44,40 @@ class _BookPageState extends State<BookPage> {
   Widget _renderBookContent(Map<String, dynamic> info) {
     List<Widget> rows = [
       SelectableText('ID: ${info['id']} - ${info['hash']}'),
-      SelectableText('Title: ${info['title']}'),
-      SelectableText('Writer: ${info['writer']}'),
+      Row(
+        // TODO: extract this to an external widget
+        children: [
+          SelectableText('Title: ${info['title']}'),
+          ElevatedButton(
+            child: Text("Search Google"),
+            onPressed: () {
+              // TODO: open new page to search google
+              String searchUrl = "https://www.google.com/search?q=${info['title']}";
+              print("${searchUrl}    ${canLaunch(searchUrl??"")}");
+              canLaunch(searchUrl??"").then( (result) {
+                if (result) launch(searchUrl??"");
+              });
+            },
+          )
+        ],
+      ),
+      Row(
+        // TODO: extract this to external widget
+        children: [
+          SelectableText('Writer: ${info['writer']}'),
+          ElevatedButton(
+            child: Text("Search"),
+            onPressed: () {
+              // TODO: search the writer name internally
+                String writer = info['writer'];
+                Navigator.pushNamed(
+                  this.scaffoldKey.currentContext,
+                  '/search/$siteName?writer=$writer'
+                );
+            },
+          )
+        ],
+      ),
       SelectableText('Type: ${info['type']}'),
       SelectableText('Last Update: ${info['updateDate']}'),
       SelectableText('Last Chapter: ${info['updateChapter']}')

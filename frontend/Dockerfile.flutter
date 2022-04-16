@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 RUN apt update && apt install -y git curl unzip
 
-RUN git clone --branch 2.2.3  https://github.com/flutter/flutter.git /flutter
+RUN git clone --branch stable  https://github.com/flutter/flutter.git /flutter
 
 ENV PATH "$PATH:/flutter/bin"
 

@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
               siteName: uri.pathSegments[1]
             ),
             settings: settings);
-        } else if (uri.pathSegments.length >= 2 && uri.pathSegments.indexOf('books') == 0) {
+        } else if (uri.pathSegments.length >= 3 && uri.pathSegments.indexOf('books') == 0) {
           return MaterialPageRoute(
             builder: (context) => BookPage(
               url: url,
