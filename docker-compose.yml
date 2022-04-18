@@ -42,7 +42,7 @@ services:
         command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log 2>&1"
 
     frontend:
-        image: "flutter:latest"
+        image: "flutter:stable"
         volumes:
             - frontend_volume:/build/web
             - ./frontend/src:/usr/src/app
