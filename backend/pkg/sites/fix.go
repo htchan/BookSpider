@@ -96,7 +96,7 @@ func (site *Site) updateBooksByStorage() (err error) {
 			if book!= nil && book.GetStatus() != database.Download {
 				book.SetStatus(database.Download)
 				book.Save(site.database)
-				logging.LogBookEvent(site.Name + "-" + strconv.Itoa(i) + "-" + info[0], "fix", "update-to-download", nil)
+				logging.LogBookEvent(book.String(), "fix", "update-to-download", nil)
 			}
 		}(site.semaphore, &wg, file.Name())
 	}
