@@ -36,7 +36,7 @@ func (db *SqliteDB) UpdateErrorRecord(record *database.ErrorRecord) (err error) 
 
 func (db *SqliteDB) UpdateBookRecordsStatusByChapter() error {
 	matchingChapterCriteria := []string{"后记", "後記", "新书", "新書", "结局", "結局", "感言",
-	"尾声", "尾聲", "终章", "終章", "外传", "外傳", "完本", "结束", "結束", "完結",
+	"尾声", "尾聲", "终章", "終章", "外传", "外傳", "完本", /*"结束", "結束", */"完結",
 	"完结", "终结", "終結", "番外", "结尾", "結尾", "全书完", "全書完", "全本完"}
 	sqlStmt := fmt.Sprintf("update books set status=%v where (", database.End)
 	for _, criteria := range matchingChapterCriteria {

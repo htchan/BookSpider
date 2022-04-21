@@ -80,7 +80,8 @@ class _BookPageState extends State<BookPage> {
       ),
       SelectableText('Type: ${info['type']}'),
       SelectableText('Last Update: ${info['updateDate']}'),
-      SelectableText('Last Chapter: ${info['updateChapter']}')
+      SelectableText('Last Chapter: ${info['updateChapter']}'),
+      SelectableText('Status: ${info['status']}')
     ];
     if (info['status'] == 'download') {
       rows.add(RaisedButton(
