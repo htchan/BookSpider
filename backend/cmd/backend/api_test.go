@@ -39,11 +39,8 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			res, err := client.Get(host + route)
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string][]string
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if value, ok := jsonData["siteNames"]; ok == false || len(value) != 1 || value[0] != "test" {
 				t.Fatalf("unexpected response data: %v", jsonData)
@@ -56,11 +53,8 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			res, err := client.Get(host + route + "test")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData database.SummaryRecord
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData.BookCount != 6 || jsonData.ErrorCount != 3 ||
 				jsonData.WriterCount != 3 || jsonData.UniqueBookCount != 5 ||
@@ -76,11 +70,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("failed if querying not exist site name", func(t *testing.T) {
 			res, err := client.Get(host + route + "unknown/")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "site <unknown> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -93,11 +85,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success without version", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/3")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["site"] != "test" || jsonData["id"] != 3.0 || jsonData["hash"] != "5k" ||
 				jsonData["title"] != "title-3-new" || jsonData["writer"] != "writer-3" ||
 				jsonData["type"] != "type-3-new" || jsonData["updateDate"] != "100" ||
@@ -109,11 +99,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success with version", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/3/2u")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["site"] != "test" || jsonData["id"] != 3.0 || jsonData["hash"] != "2u" ||
 				jsonData["title"] != "title-3" || jsonData["writer"] != "writer-2" ||
 				jsonData["type"] != "type-3" || jsonData["updateDate"] != "102" ||
@@ -125,11 +113,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if not enough params", func(t *testing.T) {
 			res, err := client.Get(host + route + "test")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 400.0 || jsonData["message"] != "not enough parameters" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -138,11 +124,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if query not exist site name", func(t *testing.T) {
 			res, err := client.Get(host + route + "unknown/1")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "site <unknown> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -151,11 +135,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if query not exist book id", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/999")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <999>, hash <> in site <test> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -164,11 +146,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if query not exist book version", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/1/123")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <1>, hash <123> in site <test> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -187,11 +167,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail without version", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/3")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 406.0 || jsonData["message"] != "book <3> not download yet" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -211,11 +189,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if target book id not exist", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/999")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <999>, hash <> in site <test> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -224,11 +200,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if target book version not exist", func(t *testing.T) {
 			res, err := client.Get(host + route + "test/1/123")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <1>, hash <123> in site <test> not found" {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -241,12 +215,10 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success with multi results even only title match", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test?title=title&writer=abc")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			// t.Fatalf(string(data))
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 3 {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -255,12 +227,10 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("return empty array if not exist", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test?title=abc&writer=abc")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			// t.Fatalf(string(data))
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 0 {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -269,12 +239,10 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("fail if both title and writer queries are empty", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			// t.Fatalf(string(data))
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 0 {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -287,11 +255,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success to return book not in order", func(t *testing.T) {
 			res, err := client.Get(host + route + "test")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 1 {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
@@ -300,11 +266,9 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success to return book with specific status", func(t *testing.T) {
 			res, err := client.Get(host + route + "test?status=error")
 			utils.CheckError(err)
-			defer res.Body.Close()
-			data, err := io.ReadAll(res.Body)
-			utils.CheckError(err)
 			var jsonData map[string]interface{}
-			err = json.Unmarshal(data, &jsonData)
+			err = json.NewDecoder(res.Body).Decode(&jsonData)
+			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 6 {
 				t.Fatalf("unexpected response data: %v", jsonData)
 			}
