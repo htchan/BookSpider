@@ -13,8 +13,11 @@ func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChap
 		title, writer, typeString, updateDate, updateChapter = "", "", "", "", ""
 	})
 	// get online resource, try maximum 10 times if it keeps failed
-	html, _ := utils.GetWeb(
+	html, trial := utils.GetWeb(
 		book.config.BaseUrl, 10, book.config.Decoder, book.config.ConstSleep)
+	if trial > 0 {
+		// logging.LogBookEvent(book.String(), "source_info", "trial", trial)
+	}
 	err = book.validHTML(html)
 	utils.CheckError(err)
 	

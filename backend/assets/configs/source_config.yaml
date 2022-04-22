@@ -64,7 +64,7 @@ xqishu-desktop:
   chapterUrl : "http://www.aidusk.com%v"
   chapterUrlPattern : "/t/.*?\\.html"
   decode : utf8
-  threads : 10
+  threads : 100
   downloadBookThreads: 5
   constSleep : 1000
   maxExploreError: 1000

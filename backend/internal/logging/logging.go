@@ -13,6 +13,10 @@ func logInfo(header string, data interface{}) {
 	}
 }
 
+func LogChapterEvent(chapter, action, event string, data interface{}) {
+	logInfo(fmt.Sprintf("book-spider.chapter.(%v).%v.%v", chapter, action, event), data)
+}
+
 func LogBookEvent(book, action, event string, data interface{}) {
 	logInfo(fmt.Sprintf("book-spider.book.%v.%v.%v", book, action, event), data)
 }

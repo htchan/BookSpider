@@ -18,7 +18,10 @@ import (
 
 func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 	// get basic info (all chapter url and title)
-	html, _ := utils.GetWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.ConstSleep)
+	html, trial := utils.GetWeb(book.config.DownloadUrl, 10, book.config.Decoder, book.config.ConstSleep)
+	if trial > 0 {
+		// logging.LogBookEvent(book.String(), "source_download_content", "trial", trial)
+	}
 	if err = book.validHTML(html); err != nil {
 		err = errors.New(fmt.Sprintf("invalid table of content html: %v", html))
 		return

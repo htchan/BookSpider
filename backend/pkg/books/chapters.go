@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/htchan/BookSpider/internal/utils"
+	"github.com/htchan/BookSpider/internal/logging"
 	"github.com/htchan/BookSpider/pkg/configs"
 	"github.com/htchan/ApiParser"
 )
@@ -103,7 +104,10 @@ func optimizeChapters(chapters []Chapter) {
 
 func (chapter *Chapter)Download(config *configs.SourceConfig, validHTML func(string)error) {
 	// get chapter resource
-	html, _ := utils.GetWeb(chapter.Url, 10, config.Decoder, config.ConstSleep)
+	html, trial := utils.GetWeb(chapter.Url, 10, config.Decoder, config.ConstSleep)
+	if trial > 0 {
+		// logging.LogChapterEvent(chapter.Url, "source_chapter", "trial", trial)
+	}
 	if err := validHTML(html); err != nil {
 		chapter.Content = "load html fail"
 		return
@@ -115,6 +119,7 @@ func (chapter *Chapter)Download(config *configs.SourceConfig, validHTML func(str
 	// content, err := utils.Search(html, config.ChapterContentRegex)
 	if !ok {
 		chapter.Content = "recognize html fail\n" + html
+		logging.LogChapterEvent(chapter.Url, "download", "failed", "content not found")
 	} else {
 		chapter.Content = content
 		chapter.optimizeContent()
