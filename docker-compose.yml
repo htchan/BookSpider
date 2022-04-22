@@ -83,7 +83,10 @@ services:
             - ./bin/database:/database
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
+            - ./bin/backup:/backup
             - ./backend/assets/configs:/configs
+            - ./backend/assets/api_parser:/api_parser
+            - ./backend/assets/schema:/schema
             - /etc/timezone:/etc/timezone:ro
         environment:
             - ASSETS_LOCATION=
