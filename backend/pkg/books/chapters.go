@@ -114,7 +114,7 @@ func (chapter *Chapter)Download(config *configs.SourceConfig, validHTML func(str
 	}
 	// extract chapter
 	responseApi := ApiParser.Parse(html, config.SourceKey + ".chapter_content")
-	content, ok := responseApi.Data["Content"]
+	content, ok := responseApi.Data["ChapterContent"]
 
 	// content, err := utils.Search(html, config.ChapterContentRegex)
 	if !ok {

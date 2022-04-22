@@ -9,4 +9,4 @@ info:
 
 chapter_content:
   data:
-    - "(?s)<div.*?book_content.*?>(?P<Content>.*?)</div>"
+    - "(?s)<div.*?book_content.*?>(?P<ChapterContent>.*?)</div>"

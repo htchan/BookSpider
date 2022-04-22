@@ -16,7 +16,7 @@ controller:
 	command=${command} params="${params}" docker-compose --profile controller up --force-recreate
 
 batch:
-	docker-compose --profile batch up -d
+	docker-compose --profile batch up -d --force-recreate
 
 test:
 	docker-compose --profile test up
