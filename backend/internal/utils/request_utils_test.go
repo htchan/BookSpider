@@ -17,14 +17,14 @@ func TestUtils_Request_getWeb(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			response := getWeb(server.URL + "/testing")
 			if response != "stub utils server" {
-				t.Fatalf("get Web return \"%v\"", response)
+				t.Errorf("get Web return \"%v\"", response)
 			}
 		})
 
 		t.Run("failed if status code is not 200", func(t *testing.T) {
 			response := getWeb(server.URL + "/error")
 			if response != "400" {
-				t.Fatalf("get Web return \"%v\" for non 200 response", response)
+				t.Errorf("get Web return \"%v\" for non 200 response", response)
 			}
 		})
 	})
@@ -33,7 +33,7 @@ func TestUtils_Request_getWeb(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			response, trial := GetWeb(server.URL + "/testing", 1, nil, 0)
 			if response != "stub utils server" || trial != 0 {
-				t.Fatalf("utils.GetWeb return \"%v\", %v for success case",
+				t.Errorf("utils.GetWeb return \"%v\", %v for success case",
 					response, trial)
 			}
 		})
@@ -42,7 +42,7 @@ func TestUtils_Request_getWeb(t *testing.T) {
 			decoder := traditionalchinese.Big5.NewDecoder()
 			response, trial := GetWeb(encodeServer.URL + "/testing", 1, decoder, 0)
 			if response != "一二三" || trial != 0 {
-				t.Fatalf("utils.GetWeb return \"%v\", %v for success case",
+				t.Errorf("utils.GetWeb return \"%v\", %v for success case",
 					response, trial)
 			}
 		})
@@ -50,7 +50,7 @@ func TestUtils_Request_getWeb(t *testing.T) {
 		t.Run("fail if decoder not match", func(t *testing.T) {
 			response, trial := GetWeb(encodeServer.URL + "/testing", 1, nil, 0)
 			if response == "一二三" || trial != 0 {
-				t.Fatalf("utils.GetWeb return \"%v\", %v for success case",
+				t.Errorf("utils.GetWeb return \"%v\", %v for success case",
 					response, trial)
 			}
 		})
@@ -63,7 +63,7 @@ func TestUtils_Request_getWeb(t *testing.T) {
 			RequestInterval()
 			after := time.Now().Unix()
 			if after - before < 1 {
-				t.Fatalf("it wait for %v unix", after - before)
+				t.Errorf("it wait for %v unix", after - before)
 			}
 		})
 
@@ -73,7 +73,7 @@ func TestUtils_Request_getWeb(t *testing.T) {
 			RequestInterval()
 			after := time.Now().Unix()
 			if after - before > 0 {
-				t.Fatalf("it wait for %v unix", after - before)
+				t.Errorf("it wait for %v unix", after - before)
 			}
 		})
 	})

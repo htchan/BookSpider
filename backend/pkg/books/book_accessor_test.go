@@ -35,7 +35,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		site, id, hashCode := book.GetInfo()
 		if site != "test" || id != 1 || hashCode != 100 {
-			t.Fatalf(
+			t.Errorf(
 				"book.GetInfo return wrong value - site: %v, id: %v, hash code: %v",
 				site, id, hashCode)
 		}
@@ -45,7 +45,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		title := book.GetTitle()
 		if title != "title-1" {
-			t.Fatalf("book.GetTitle return wrong value: %v", title)
+			t.Errorf("book.GetTitle return wrong value: %v", title)
 		}
 	})
 
@@ -54,7 +54,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book := NewBook("test", 1, 100, accessorConfig)
 		book.SetTitle("test-title")
 		if book.bookRecord.Title != "test-title" {
-			t.Fatalf("book.SetTitle update wrong value: %v", book.bookRecord.Title)
+			t.Errorf("book.SetTitle update wrong value: %v", book.bookRecord.Title)
 		}
 	})
 
@@ -62,7 +62,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		writer := book.GetWriter()
 		if writer != "writer-1" {
-			t.Fatalf("book.GetWriter return wrong value: %v", writer)
+			t.Errorf("book.GetWriter return wrong value: %v", writer)
 		}
 	})
 
@@ -72,7 +72,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book.SetWriter("test-writer")
 		if book.bookRecord.WriterId != -1 || book.writerRecord.Id != -1 ||
 			book.writerRecord.Name != "test-writer" {
-			t.Fatalf("book.SetWriter update wrong value: %v", book.writerRecord.Name)
+			t.Errorf("book.SetWriter update wrong value: %v", book.writerRecord.Name)
 		}
 	})
 
@@ -80,7 +80,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		typeString := book.GetType()
 		if typeString != "type-1" {
-			t.Fatalf("book.GetType return wrong value: %v", typeString)
+			t.Errorf("book.GetType return wrong value: %v", typeString)
 		}
 	})
 
@@ -89,7 +89,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book := NewBook("test", 1, 100, accessorConfig)
 		book.SetType("test-type")
 		if book.bookRecord.Type != "test-type" {
-			t.Fatalf("book.SetType update wrong value: %v", book.bookRecord.Type)
+			t.Errorf("book.SetType update wrong value: %v", book.bookRecord.Type)
 		}
 	})
 
@@ -97,7 +97,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		updateDate := book.GetUpdateDate()
 		if updateDate != "104" {
-			t.Fatalf("book.GetUpdateDate return wrong value: %v", updateDate)
+			t.Errorf("book.GetUpdateDate return wrong value: %v", updateDate)
 		}
 	})
 
@@ -106,7 +106,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book := NewBook("test", 1, 100, accessorConfig)
 		book.SetUpdateDate("test-date")
 		if book.bookRecord.UpdateDate != "test-date" {
-			t.Fatalf("book.SetUpdateDate update wrong value: %v", book.bookRecord.UpdateDate)
+			t.Errorf("book.SetUpdateDate update wrong value: %v", book.bookRecord.UpdateDate)
 		}
 	})
 
@@ -114,7 +114,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		updateChapter := book.GetUpdateChapter()
 		if updateChapter != "chapter-1" {
-			t.Fatalf("book.GetUpdateChapter return wrong value: %v", updateChapter)
+			t.Errorf("book.GetUpdateChapter return wrong value: %v", updateChapter)
 		}
 	})
 
@@ -123,7 +123,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book := NewBook("test", 1, 100, accessorConfig)
 		book.SetUpdateChapter("test-chapter")
 		if book.bookRecord.UpdateChapter != "test-chapter" {
-			t.Fatalf("book.SetUpdateChapter update wrong value: %v", book.bookRecord.UpdateChapter)
+			t.Errorf("book.SetUpdateChapter update wrong value: %v", book.bookRecord.UpdateChapter)
 		}
 	})
 
@@ -131,7 +131,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		status := book.GetStatus()
 		if status != database.InProgress {
-			t.Fatalf("book.GetStatus return wrong value: %v", status)
+			t.Errorf("book.GetStatus return wrong value: %v", status)
 		}
 	})
 
@@ -140,7 +140,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		book := NewBook("test", 1, 100, accessorConfig)
 		book.SetStatus(database.Error)
 		if book.bookRecord.Status != database.Error {
-			t.Fatalf("book.SetStatus update wrong value: %v", book.bookRecord.Status)
+			t.Errorf("book.SetStatus update wrong value: %v", book.bookRecord.Status)
 		}
 	})
 
@@ -149,7 +149,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Run("success for nil error", func(t *testing.T) {
 			err := book.GetError()
 			if err != nil {
-				t.Fatalf("book.GetError return wrong value: %v", err)
+				t.Errorf("book.GetError return wrong value: %v", err)
 			}
 		})
 
@@ -157,7 +157,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			book.errorRecord = &database.ErrorRecord{Error: errors.New("testing")}
 			err := book.GetError()
 			if err == nil || err.Error() != "testing" {
-				t.Fatalf("book.GetError return wrong value: %v", err)
+				t.Errorf("book.GetError return wrong value: %v", err)
 			}
 		})
 	})
@@ -170,7 +170,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			book.SetError(errors.New("test-error"))
 			if book.errorRecord == nil || book.errorRecord.Site != "test" ||
 				book.errorRecord.Id != 1 || book.errorRecord.Error.Error() != "test-error" {
-				t.Fatalf("book.SetError update wrong value: %v", book.errorRecord)
+				t.Errorf("book.SetError update wrong value: %v", book.errorRecord)
 			}
 		})
 
@@ -180,7 +180,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			book.SetError(errors.New("test-error"))
 			book.SetError(nil)
 			if book.errorRecord != nil {
-				t.Fatalf("book.SetError update wrong value: %v", book.errorRecord)
+				t.Errorf("book.SetError update wrong value: %v", book.errorRecord)
 			}
 		})
 	})
@@ -189,7 +189,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		t.Parallel()
 		contentLocation := book.getContentLocation("/test-data/storage")
 		if contentLocation != os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v100.txt" {
-			t.Fatalf("book.getContentLocation return wrong value: %v", contentLocation)
+			t.Errorf("book.getContentLocation return wrong value: %v", contentLocation)
 		}
 	})
 
@@ -201,7 +201,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			result := book.HasContent("/test-data/storage")
 
 			if !result {
-				t.Fatalf("book does not have content for exist file")
+				t.Errorf("book does not have content for exist file")
 			}
 		})
 
@@ -211,7 +211,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			result := book.HasContent("/test-data/storage")
 
 			if result {
-				t.Fatalf("book has content for not exist file")
+				t.Errorf("book has content for not exist file")
 			}
 		})
 	})
@@ -222,7 +222,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			t.Parallel()
 			content := book.GetContent("/test-data/storage")
 			if content != "hello" {
-				t.Fatalf("book.GetContent return wrong value: %v", content)
+				t.Errorf("book.GetContent return wrong value: %v", content)
 			}
 		})
 		
@@ -231,7 +231,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			book := NewBook("test", 1, 200, accessorConfig)
 			content := book.GetContent("/test-data/storage")
 			if content != "" {
-				t.Fatalf("non download book GetContent return some value: %v", content)
+				t.Errorf("non download book GetContent return some value: %v", content)
 			}
 		})
 	})
@@ -248,7 +248,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 			result["type"] != "type-1" ||
 			result["updateChapter"] != "chapter-1" ||
 			result["updateDate"] != "104" {
-			t.Fatalf("wrong map: %v", result)
+			t.Errorf("wrong map: %v", result)
 		}
 	})
 
@@ -256,7 +256,7 @@ func TestBooks_Book_Accessor(t *testing.T) {
 		result := book.String()
 
 		if result != "test-1-2s" {
-			t.Fatalf("wrong string: %v", result)
+			t.Errorf("wrong string: %v", result)
 		}
 	})
 }

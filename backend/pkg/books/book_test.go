@@ -50,13 +50,13 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			if book.bookRecord == nil ||
 				!bookEqual(*book,
 					"test", 1, 500, "", 0, "", "", "", database.Error) {
-				t.Fatalf("book.bookRecord init wrong record: %v", book.bookRecord)
+				t.Errorf("book.bookRecord init wrong record: %v", book.bookRecord)
 			}
 			if book.writerRecord == nil || !writerEqual(*book, 0, "") {
-				t.Fatalf("book.writerRecord init wrong record: %v", book.writerRecord)
+				t.Errorf("book.writerRecord init wrong record: %v", book.writerRecord)
 			}
 			if book.errorRecord != nil {
-				t.Fatalf("book.errorRecord was initialized error: %v", book.errorRecord)
+				t.Errorf("book.errorRecord was initialized error: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/1" ||
@@ -65,7 +65,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 				book.config.ChapterUrlPattern != "chapter-url-pattern" ||
 				book.config.Decoder == nil ||
 				book.config.ConstSleep != 1000 {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 	})
@@ -79,20 +79,20 @@ func Test_Books_Book_Constructor(t *testing.T) {
 				!bookEqual(*book,
 					"test", 3, 102, "title-3", 2, "type-3",
 					"102", "chapter-3", database.Download) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 2, "writer-2") {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord != nil {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
 				book.config.DownloadUrl != "https://download-url/3" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -104,20 +104,20 @@ func Test_Books_Book_Constructor(t *testing.T) {
 				!bookEqual(*book,
 					"test", 3, 200, "title-3-new", 3, "type-3-new",
 					"100", "chapter-3-new", database.End) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 3, "writer-3") {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord != nil {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
 				book.config.DownloadUrl != "https://download-url/3" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -128,21 +128,21 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			if book.bookRecord == nil ||
 				!bookEqual(*book,
 					"test", 2, 101, "", 0, "", "", "", database.Error) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 0, "")  {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord == nil || book.errorRecord.Site != "test" ||
 				book.errorRecord.Id != 2 || book.errorRecord.Error.Error() != "error-2" {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/2" ||
 				book.config.DownloadUrl != "https://download-url/2" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -151,7 +151,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			book := LoadBook(db, "not-exist", 1, -1, config)
 
 			if book != nil {
-				t.Fatalf(
+				t.Errorf(
 					"LoadBook load sth when book not exist\nbook: %v\nwriter: %v\nerror: %v",
 					book.bookRecord, book.writerRecord, book.errorRecord)
 			}
@@ -167,20 +167,20 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			if book.bookRecord == nil || 
 				!bookEqual(*book, 
 					"test", 3, 102, "", 2, "", "", "", database.Error) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 2, "writer-2") {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord != nil {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
 				book.config.DownloadUrl != "https://download-url/3" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -192,21 +192,21 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			if book.bookRecord == nil || 
 				!bookEqual(*book, 
 					"test", 2, 101, "hello", 0, "", "", "", database.Error) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 0, "") {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord == nil || book.errorRecord.Site != "test" ||
 				book.errorRecord.Id != 2 || book.errorRecord.Error.Error() != "error-2" {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/2" ||
 				book.config.DownloadUrl != "https://download-url/2" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -218,20 +218,20 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			if book.bookRecord == nil || 
 				!bookEqual(*book, 
 					"not-exist", 3, 102, "", 0, "", "", "", database.Error) {
-				t.Fatalf("LoadBook load the wrong book record: %v", book.bookRecord)
+				t.Errorf("LoadBook load the wrong book record: %v", book.bookRecord)
 			}
 
 			if book.writerRecord == nil || !writerEqual(*book, 0, "") {
-				t.Fatalf("LoadBook load the wrong writer record: %v", book.writerRecord)
+				t.Errorf("LoadBook load the wrong writer record: %v", book.writerRecord)
 			}
 
 			if book.errorRecord != nil {
-				t.Fatalf("LoadBook load the error record: %v", book.errorRecord)
+				t.Errorf("LoadBook load the error record: %v", book.errorRecord)
 			}
 
 			if book.config.BaseUrl != "https://base-url/3" ||
 				book.config.DownloadUrl != "https://download-url/3" {
-				t.Fatalf("book.config init wrongly config: %v", book.config)
+				t.Errorf("book.config init wrongly config: %v", book.config)
 			}
 		})
 
@@ -240,7 +240,7 @@ func Test_Books_Book_Constructor(t *testing.T) {
 			book := LoadBookByRecord(db, nil, config)
 			
 			if book != nil{
-				t.Fatalf("LoadBook load the wrong book record: %v", book)
+				t.Errorf("LoadBook load the wrong book record: %v", book)
 			}
 		})
 	})
@@ -257,7 +257,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryWriterByName("new-writer")
@@ -265,7 +265,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		record, err := query.Scan()
 		if err != nil || record.(*database.WriterRecord).Id != 4 ||
 			record.(*database.WriterRecord).Name != book.GetWriter() {
-				t.Fatalf(
+				t.Errorf(
 					"Save does not create not exist writer: %v, err: %v",
 					record, err)
 		}
@@ -274,18 +274,18 @@ func Test_Books_Book_Save(t *testing.T) {
 		defer query.Close()
 		record, err = query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1000: %v", err)
+			t.Errorf("cannot query test-1000: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		book.bookRecord.WriterId = 4
 		if !actualRecord.Equal(*book.bookRecord) {
-			t.Fatalf("Save does not create not exist book: %v, err: %v", record, err)
+			t.Errorf("Save does not create not exist book: %v, err: %v", record, err)
 		}
 
 		query = db.QueryErrorBySiteId("test", 1000)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf("Save create error: %v, err: %v", record, err)
+			t.Errorf("Save create error: %v, err: %v", record, err)
 		}
 	})
 
@@ -296,7 +296,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryWriterByName("writer-1")
@@ -304,7 +304,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		record, _ := query.Scan()
 		_, err := query.Scan()
 		if err == nil || *(record.(*database.WriterRecord)) != *book.writerRecord {
-			t.Fatalf(
+			t.Errorf(
 				"Save create new writer in book: %v, writer in db: %v, err: %v",
 				book.writerRecord, record, err)
 		}
@@ -313,19 +313,19 @@ func Test_Books_Book_Save(t *testing.T) {
 		defer query.Close()
 		record, err = query.Scan()
 		if err != nil {
-			t.Fatalf(
+			t.Errorf(
 				"cannot query test-1001: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		
 		if !book.bookRecord.Equal(*actualRecord) {
-			t.Fatalf("Save does not create not exist book: %v, err: %v", actualRecord, err)
+			t.Errorf("Save does not create not exist book: %v, err: %v", actualRecord, err)
 		}
 
 		query = db.QueryErrorBySiteId("test", 100)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf("Save create error: %v, err: %v", record, err)
+			t.Errorf("Save create error: %v, err: %v", record, err)
 		}
 	})
 
@@ -335,19 +335,19 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryBookBySiteIdHash("test", 1002, -1)
 		defer query.Close()
 		record, err := query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1002: %v", err)
+			t.Errorf("cannot query test-1002: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		book.bookRecord.WriterId = 0
 		if !book.bookRecord.Equal(*actualRecord) {
-			t.Fatalf("Save does not create not exist book: %v, err: %v", record, err)
+			t.Errorf("Save does not create not exist book: %v, err: %v", record, err)
 		}
 
 		query = db.QueryErrorBySiteId("test", 1002)
@@ -356,7 +356,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		if err != nil || record.(*database.ErrorRecord).Site != book.errorRecord.Site ||
 			record.(*database.ErrorRecord).Id != book.errorRecord.Id ||
 			record.(*database.ErrorRecord).Error.Error() != book.errorRecord.Error.Error() {
-				t.Fatalf(
+				t.Errorf(
 					"Save does not create error in book: %v, error in db: %v, err: %v",
 					book.errorRecord, record, err)
 		}
@@ -368,7 +368,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryErrorBySiteId("test", 1002)
@@ -377,7 +377,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		if err != nil || record.(*database.ErrorRecord).Site != book.errorRecord.Site ||
 			record.(*database.ErrorRecord).Id != book.errorRecord.Id ||
 			record.(*database.ErrorRecord).Error.Error() != book.errorRecord.Error.Error() {
-				t.Fatalf(
+				t.Errorf(
 					"Save does not create error in book: %v, error in db: %v, err: %v",
 					book.errorRecord, record, err)
 		}
@@ -389,25 +389,25 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryBookBySiteIdHash("test", 1000, -1)
 		defer query.Close()
 		record, err := query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1000: %v", err)
+			t.Errorf("cannot query test-1000: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		book.bookRecord.WriterId = 4
 		if !book.bookRecord.Equal(*actualRecord) {
-			t.Fatalf("Save does not create not exist book: %v, err: %v", record, err)
+			t.Errorf("Save does not create not exist book: %v, err: %v", record, err)
 		}
 
 		query = db.QueryErrorBySiteId("test", 1000)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf( "Save create error: %v, err: %v", record, err)
+			t.Errorf( "Save create error: %v, err: %v", record, err)
 		}
 	})
 
@@ -417,25 +417,25 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryBookBySiteIdHash("test", 1002, -1)
 		record, err := query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1000: %v", err)
+			t.Errorf("cannot query test-1000: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		defer query.Close()
 		book.bookRecord.WriterId = 0
 		if !book.bookRecord.Equal(*actualRecord) {
-			t.Fatalf("Save does not create not exist book: %v, err: %v", record, err)
+			t.Errorf("Save does not create not exist book: %v, err: %v", record, err)
 		}
 
 		query = db.QueryErrorBySiteId("test", 1002)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf("Save does not remove error: %v, err: %v", record, err)
+			t.Errorf("Save does not remove error: %v, err: %v", record, err)
 		}
 	})
 
@@ -445,19 +445,19 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryWriterByName("new-writer-2")
 		defer query.Close()
 		record, err := query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query new-writer-2: %v", err)
+			t.Errorf("cannot query new-writer-2: %v", err)
 		}
 		writerRecord := record.(*database.WriterRecord)
 		book.writerRecord.Id = 5
 		if err != nil || !writerRecord.Equal(*book.writerRecord) {
-			t.Fatalf(
+			t.Errorf(
 				"Save does not create not exist writer: %v, err: %v",
 				record, err)
 		}
@@ -466,12 +466,12 @@ func Test_Books_Book_Save(t *testing.T) {
 		defer query.Close()
 		record, err = query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1000: %v", err)
+			t.Errorf("cannot query test-1000: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		book.bookRecord.WriterId = 5
 		if !book.bookRecord.Equal(*actualRecord) {
-				t.Fatalf(
+				t.Errorf(
 					"Save does not create not exist book: %v, err: %v",
 					record, err)
 		}
@@ -479,7 +479,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		query = db.QueryErrorBySiteId("test", 1000)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf("Save create error: %v, err: %v", record, err)
+			t.Errorf("Save create error: %v, err: %v", record, err)
 		}
 	})
 
@@ -490,7 +490,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		result := book.Save(db)
 		db.Commit()
 		if !result {
-			t.Fatalf("Save fail")
+			t.Errorf("Save fail")
 		}
 
 		query := db.QueryBookBySiteIdHash("test", 1000, -1)
@@ -498,11 +498,11 @@ func Test_Books_Book_Save(t *testing.T) {
 		record, _ := query.Scan()
 		_, err := query.Scan()
 		if err != nil {
-			t.Fatalf("cannot query test-1000: %v", err)
+			t.Errorf("cannot query test-1000: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if !book.bookRecord.Equal(*actualRecord) {
-				t.Fatalf(
+				t.Errorf(
 					"Save does not create not exist book: %v, err: %v",
 					record, book.bookRecord)
 		}
@@ -510,7 +510,7 @@ func Test_Books_Book_Save(t *testing.T) {
 		query = db.QueryErrorBySiteId("test", 1002)
 		defer query.Close()
 		if query.Next() {
-			t.Fatalf(
+			t.Errorf(
 				"Save create error: %v, err: %v",
 				record, err)
 		}
@@ -523,27 +523,28 @@ func Test_Books_Book_validHTML(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		err := book.validHTML("hello")
 		if err != nil {
-			t.Fatalf("validate normal string as html return err: %v", err)
+			t.Errorf("validate normal string as html return err: %v", err)
 		}
 	})
 
 	t.Run("fail if input html is empty", func(t *testing.T) {
 		err := book.validHTML("")
 		if err == nil {
-			t.Fatalf("valid empty string as html not return error")
+			t.Errorf("valid empty string as html not return error")
 		}
 	})
 
 	t.Run("fail if input html is number", func(t *testing.T) {
 		err := book.validHTML("200")
 		if err == nil {
-			t.Fatalf("valid number string as html not return error")
+			t.Errorf("valid number string as html not return error")
 		}
 	})
 }
 
 func TestMain(m *testing.M) {
-	ApiParser.Setup(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser")
+	ApiParser.SetDefault(
+		ApiParser.FromDirectory(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser"))
 	initConcurrentTest()
 	initBookTest()
 	

@@ -11,7 +11,7 @@ func TestUtils_Error(t *testing.T) {
 			t.Parallel()
 			defer func() {
 				if r := recover(); r == nil {
-					t.Fatalf("utils CheckError does not panic for error")
+					t.Errorf("utils CheckError does not panic for error")
 				}
 			}()
 
@@ -22,7 +22,7 @@ func TestUtils_Error(t *testing.T) {
 			t.Parallel()
 			defer func() {
 				if r := recover(); r != nil {
-					t.Fatalf("utils do nothing even error is not nil")
+					t.Errorf("utils do nothing even error is not nil")
 				}
 			}()
 
@@ -37,13 +37,13 @@ func TestUtils_Error(t *testing.T) {
 
 			CheckError(errors.New("test error"))
 
-			t.Fatalf("Recover does not catch the error")
+			t.Errorf("Recover does not catch the error")
 		})
 
 		t.Run("recover do nothing if there is no error", func(t *testing.T) {
 			t.Parallel()
 			defer Recover(func() {
-				t.Fatalf("Recover does something even there is no error")
+				t.Errorf("Recover does something even there is no error")
 			})
 		})
 	})

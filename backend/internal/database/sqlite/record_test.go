@@ -26,7 +26,7 @@ func TestSqlite_Record_BookInsertStatement(t *testing.T) {
 			"type, update_date, update_chapter, status) " +
 			"values (\"test\", 1, 100, \"title-123\", 123, \"type\", " +
 			"\"update-date\", \"update-chapter\", 1)" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -49,7 +49,7 @@ func TestSqlite_Record_BookInsertStatement(t *testing.T) {
 			"type, update_date, update_chapter, status) " +
 			"values (\"test&#34;\", 1, 100, \"title-123&#34;\", 123, \"type&#34;\", " +
 			"\"update-date&#34;\", \"update-chapter&#34;\", 1)" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -74,7 +74,7 @@ func TestSqlite_Record_BookInsertStatement(t *testing.T) {
 			"(select id from writers where name=\"writer-1\"), " +
 			"\"type\", " +
 			"\"update-date\", \"update-chapter\", 1)" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -99,7 +99,7 @@ func TestSqlite_Record_BookInsertStatement(t *testing.T) {
 			"(select id from writers where name=\"writer-1&#34;\"), " +
 			"\"type&#34;\", " +
 			"\"update-date&#34;\", \"update-chapter&#34;\", 1)" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -123,7 +123,7 @@ func TestSqlite_Record_BookUpdateStatement(t *testing.T) {
 			"title=\"title-123\", writer_id=123, type=\"type\", " +
 			"update_date=\"update-date\", update_chapter=\"update-chapter\", status=1 " +
 			"where site=\"test\" and id=1 and hash_code=100" {
-				t.Fatalf("BookUpdateStatement return wrong string: %v", statement)
+				t.Errorf("BookUpdateStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -145,7 +145,7 @@ func TestSqlite_Record_BookUpdateStatement(t *testing.T) {
 			"title=\"title-123&#34;\", writer_id=123, type=\"type&#34;\", " +
 			"update_date=\"update-date&#34;\", update_chapter=\"update-chapter&#34;\", status=1 " +
 			"where site=\"test&#34;\" and id=1 and hash_code=100" {
-				t.Fatalf("BookUpdateStatement return wrong string: %v", statement)
+				t.Errorf("BookUpdateStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -167,7 +167,7 @@ func TestSqlite_Record_BookUpdateStatement(t *testing.T) {
 			"title=\"title-123\", writer_id=(select id from writers where name=\"writer-1\"), type=\"type\", " +
 			"update_date=\"update-date\", update_chapter=\"update-chapter\", status=1 " +
 			"where site=\"test\" and id=1 and hash_code=100" {
-				t.Fatalf("BookUpdateStatement return wrong string: %v", statement)
+				t.Errorf("BookUpdateStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -189,7 +189,7 @@ func TestSqlite_Record_BookUpdateStatement(t *testing.T) {
 			"title=\"title-123&#34;\", writer_id=(select id from writers where name=\"writer-1&#34;\"), type=\"type&#34;\", " +
 			"update_date=\"update-date&#34;\", update_chapter=\"update-chapter&#34;\", status=1 " +
 			"where site=\"test&#34;\" and id=1 and hash_code=100" {
-				t.Fatalf("BookUpdateStatement return wrong string: %v", statement)
+				t.Errorf("BookUpdateStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -210,7 +210,7 @@ func TestSqlite_Record_BookDeleteStatement(t *testing.T) {
 		statement := BookDeleteStatement(record)
 
 		if statement != "" {
-			t.Fatalf("BookDeleteStatement return wrong string: %v", statement)
+			t.Errorf("BookDeleteStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -224,7 +224,7 @@ func TestSqlite_Record_WriterInsertStatement(t *testing.T) {
 		statement := WriterInsertStatement(record)
 
 		if statement != "insert into writers (id, name) values (100, \"test\")" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -236,7 +236,7 @@ func TestSqlite_Record_WriterInsertStatement(t *testing.T) {
 		statement := WriterInsertStatement(record)
 
 		if statement != "insert into writers (name) values (\"test\")" {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -248,7 +248,7 @@ func TestSqlite_Record_WriterInsertStatement(t *testing.T) {
 		statement := WriterInsertStatement(record)
 
 		if statement != "insert into writers (id, name) values (100, \"test&#34;\")"  {
-				t.Fatalf("BookInsertStatement return wrong string: %v", statement)
+				t.Errorf("BookInsertStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -262,7 +262,7 @@ func TestSqlite_Record_WriterUpdateStatement(t *testing.T) {
 		statement := WriterUpdateStatement(record)
 
 		if statement != "" {
-			t.Fatalf("WriterUpdateStatement return wrong string: %v", statement)
+			t.Errorf("WriterUpdateStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -276,7 +276,7 @@ func TestSqlite_Record_WriterDeleteStatement(t *testing.T) {
 		statement := WriterDeleteStatement(record)
 
 		if statement != "" {
-			t.Fatalf("WriterDeleteStatement return wrong string: %v", statement)
+			t.Errorf("WriterDeleteStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -292,7 +292,7 @@ func TestSqlite_Record_ErrorInsertStatement(t *testing.T) {
 
 		if statement != "insert into errors (site, id, data) " +
 			"values (\"test\", 100, \"test-error\")" {
-				t.Fatalf("ErrorInsertStatement return wrong string: %v", statement)
+				t.Errorf("ErrorInsertStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -306,7 +306,7 @@ func TestSqlite_Record_ErrorInsertStatement(t *testing.T) {
 
 		if statement != "insert into errors (site, id, data) " +
 			"values (\"test&#34;\", 100, \"test-error&#34;\")" {
-				t.Fatalf("ErrorInsertStatement return wrong string: %v", statement)
+				t.Errorf("ErrorInsertStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -322,7 +322,7 @@ func TestSqlite_Record_ErrorUpdateStatement(t *testing.T) {
 
 		if statement != "update errors set data=\"test-error\" " +
 			"where site=\"test\" and id=100" {
-				t.Fatalf("ErrorUpdateStatement return wrong string: %v", statement)
+				t.Errorf("ErrorUpdateStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -336,7 +336,7 @@ func TestSqlite_Record_ErrorUpdateStatement(t *testing.T) {
 
 		if statement != "update errors set data=\"test-error&#34;\" " +
 			"where site=\"test&#34;\" and id=100" {
-				t.Fatalf("ErrorUpdateStatement return wrong string: %v", statement)
+				t.Errorf("ErrorUpdateStatement return wrong string: %v", statement)
 		}
 	})
 }
@@ -351,7 +351,7 @@ func TestSqlite_Record_ErrorDeleteStatement(t *testing.T) {
 		statement := ErrorDeleteStatement(record)
 
 		if statement != "delete from errors where site=\"test\" and id=100" {
-			t.Fatalf("ErrorDeleteStatement return wrong string: %v", statement)
+			t.Errorf("ErrorDeleteStatement return wrong string: %v", statement)
 		}
 	})
 
@@ -364,7 +364,7 @@ func TestSqlite_Record_ErrorDeleteStatement(t *testing.T) {
 		statement := ErrorDeleteStatement(record)
 
 		if statement != "delete from errors where site=\"test&#34;\" and id=100" {
-			t.Fatalf("ErrorDeleteStatement return wrong string: %v", statement)
+			t.Errorf("ErrorDeleteStatement return wrong string: %v", statement)
 		}
 	})
 }

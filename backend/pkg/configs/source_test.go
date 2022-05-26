@@ -11,7 +11,7 @@ func Test_SourceConfig(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result := LoadSourceConfigs(sourceConfigDirectory)
 			if result == nil || len(result) != 6 {
-				t.Fatalf("result: %v", result)
+				t.Errorf("result: %v", result)
 			}
 
 			sourceConfig := result["ck101-desktop"]
@@ -26,14 +26,14 @@ func Test_SourceConfig(t *testing.T) {
 			sourceConfig.MaxExploreError != 1000 ||
 			sourceConfig.UseRequestInterval != false ||
 			sourceConfig.Decoder == nil {
-				t.Fatalf("wrong content: %v", sourceConfig)
+				t.Errorf("wrong content: %v", sourceConfig)
 			}
 		})
 
 		t.Run("return nil config if file not exist", func(t *testing.T) {
 			result := LoadSourceConfigs(sourceConfigDirectory + "abc")
 			if result != nil {
-				t.Fatalf("result: %v", result)
+				t.Errorf("result: %v", result)
 			}
 		})
 	})
@@ -48,7 +48,7 @@ func Test_SourceConfig(t *testing.T) {
 			
 			if result.BaseUrl != "https://www.ck101.org/book/1.html" ||
 				result.DownloadUrl != "https://www.ck101.org/0/1/" {
-					t.Fatalf("wrong content: %v", result)
+					t.Errorf("wrong content: %v", result)
 				}
 		})
 	})

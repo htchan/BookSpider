@@ -10,7 +10,7 @@ func TestUtils_Regexp(t *testing.T) {
 		t.Run("always return false", func(t *testing.T) {
 			result := Match("abc", "(abc)")
 			if result {
-				t.Fatalf("Match return true result")
+				t.Errorf("Match return true result")
 			}
 		})
 	})
@@ -31,7 +31,7 @@ func TestUtils_Regexp(t *testing.T) {
 			t.Run(fmt.Sprintf("case %v", i), func(t *testing.T) {
 				actualString, actualError := Search(testcase.input1, testcase.input2)
 				if actualString != testcase.expectString || (actualError != nil) != testcase.expectErrorExist {
-					t.Fatalf("utils.Search(\"%v\", \"%v\") result gives\n\"%v\", %v, but not\n\"%v\", %v\n",
+					t.Errorf("utils.Search(\"%v\", \"%v\") result gives\n\"%v\", %v, but not\n\"%v\", %v\n",
 						testcase.input1, testcase.input2, actualString, actualError,
 						testcase.expectString, testcase.expectErrorExist)
 				}
@@ -52,12 +52,12 @@ func TestUtils_Regexp(t *testing.T) {
 				t.Parallel()
 				actual := SearchAll(testcase.input1, testcase.input2)
 				if len(actual) != len(testcase.expected) {
-					t.Fatalf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
+					t.Errorf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 						testcase.input1, testcase.input2, actual, testcase.expected)
 				}
 				for i := range actual {
 					if actual[i] != testcase.expected[i] {
-						t.Fatalf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
+						t.Errorf("utils.SearchAll(\"%v\", \"%v\") result gives\n%v, but not\n%v\n",
 							testcase.input1, testcase.input2, actual, testcase.expected)
 					}
 				}
@@ -80,7 +80,7 @@ func TestUtils_Regexp(t *testing.T) {
 			t.Run(fmt.Sprintf("case %v", i), func(t *testing.T) {
 				actual := Contains(testcase.input1, testcase.input2)
 				if actual != testcase.expected {
-					t.Fatalf("utils.Contains(%v, %v) result gives\n%v, but not\n%v\n",
+					t.Errorf("utils.Contains(%v, %v) result gives\n%v, but not\n%v\n",
 						testcase.input1, testcase.input2, actual, testcase.expected)
 				}
 			})

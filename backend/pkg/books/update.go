@@ -21,7 +21,7 @@ func (book *Book) fetchInfo() (title, writer, typeString, updateDate, updateChap
 	err = book.validHTML(html)
 	utils.CheckError(err)
 	
-	responseApi := ApiParser.Parse(html, book.config.SourceKey + ".info")
+	responseApi := ApiParser.Parse(book.config.SourceKey + ".info", html)
 	title, okTitle := responseApi.Data["Title"]
 	writer, okWriter := responseApi.Data["Writer"]
 	typeString, okTypeString := responseApi.Data["Type"]

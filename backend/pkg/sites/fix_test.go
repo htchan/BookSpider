@@ -54,13 +54,13 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 1 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 			site.config.SourceConfig.BaseUrl = server.URL + "/partial_fail/%v"
 			err := site.addMissingRecords()
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.addMissingRecords return error: %v", err)
+				t.Errorf("site.addMissingRecords return error: %v", err)
 			}
 			summary = site.database.Summary(site.Name)
 			if summary.BookCount != 8 || summary.ErrorCount != 5 ||
@@ -70,7 +70,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 1 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -87,13 +87,13 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 1 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 			site.config.SourceConfig.BaseUrl = server.URL + "/success/%v"
 			err := site.addMissingRecords()
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.addMissingRecords return error: %v", err)
+				t.Errorf("site.addMissingRecords return error: %v", err)
 			}
 			summary = site.database.Summary(site.Name)
 			if summary.BookCount != 10 || summary.ErrorCount != 6 ||
@@ -103,7 +103,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 2 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -111,7 +111,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 			err := site.addMissingRecords()
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.addMissingRecords return error: %v", err)
+				t.Errorf("site.addMissingRecords return error: %v", err)
 			}
 			summary := site.database.Summary(site.Name)
 			if summary.BookCount != 10 || summary.ErrorCount != 6 ||
@@ -121,7 +121,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 2 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 	})
@@ -134,14 +134,14 @@ func Test_Sites_Site_Fix(t *testing.T) {
 		t.Run("success update book with storage", func(t *testing.T) {
 			book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.Download {
-				t.Fatalf("site.updateBooksByStorage does not update book with storage: %v", book.GetStatus())
+				t.Errorf("site.updateBooksByStorage does not update book with storage: %v", book.GetStatus())
 			}
 		})
 
 		t.Run("success update book without storage", func(t *testing.T) {
 			book := books.LoadBook(site.database, "test", 3, 102, site.config.SourceConfig)
 			if book.GetStatus() != database.End {
-				t.Fatalf("site.updateBooksByStorage does not update book without storage: %v", book.GetStatus())
+				t.Errorf("site.updateBooksByStorage does not update book without storage: %v", book.GetStatus())
 			}
 		})
 	})
@@ -156,11 +156,11 @@ func Test_Sites_Site_Fix(t *testing.T) {
 			err := operation(site, &flags.Flags{})
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site Fix return error for full site - error: %v", err)
+				t.Errorf("site Fix return error for full site - error: %v", err)
 			}
 			book := books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.Download {
-				t.Fatalf("site.Fix does not fix the record")
+				t.Errorf("site.Fix does not fix the record")
 			}
 		})
 
@@ -169,7 +169,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
-				t.Fatalf("site Fix not return error for invalid arguments")
+				t.Errorf("site Fix not return error for invalid arguments")
 			}
 		})
 
@@ -178,7 +178,7 @@ func Test_Sites_Site_Fix(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
-				t.Fatalf("site Fix return error for not matching site name- error: %v", err)
+				t.Errorf("site Fix return error for not matching site name- error: %v", err)
 			}
 		})
 	})

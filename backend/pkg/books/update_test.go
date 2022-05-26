@@ -27,7 +27,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				writer != "writer-regex" || typeString != "type-regex" ||
 				updateDate != "last-update-regex" ||
 				updateChapter != "last-chapter-regex" {
-					t.Fatalf("book fetch info failed - book: %v, err: %v", title, err)
+					t.Errorf("book fetch info failed - book: %v, err: %v", title, err)
 			}
 		})
 
@@ -39,7 +39,7 @@ func Test_Books_Book_Update(t *testing.T) {
 			
 			if err == nil || title != "" || writer != "" || typeString != "" ||
 				updateDate != "" || updateChapter != "" {
-					t.Fatalf("book fetch info success for invalid html - book: %v, err: %v", book.bookRecord, err)
+					t.Errorf("book fetch info success for invalid html - book: %v, err: %v", book.bookRecord, err)
 			}
 		})
 
@@ -50,7 +50,7 @@ func Test_Books_Book_Update(t *testing.T) {
 			
 			if err == nil || title != "" || writer != "" || typeString != "" ||
 				updateDate != "" || updateChapter != "" {
-					t.Fatalf("book fetch info success for invalid html - book: %v, err: %v", book.bookRecord, err)
+					t.Errorf("book fetch info success for invalid html - book: %v, err: %v", book.bookRecord, err)
 			}
 		})
 	})
@@ -72,7 +72,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetError() != nil || book.GetStatus() != database.InProgress ||
 				book.GetUpdateDate() != "last-update-regex" ||
 				book.GetUpdateChapter() != "last-chapter-regex" {
-					t.Fatalf("book update success with update date different: %v", book.bookRecord)
+					t.Errorf("book update success with update date different: %v", book.bookRecord)
 			}
 		})
 
@@ -92,7 +92,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetError() != nil || book.GetStatus() != database.InProgress ||
 				book.GetUpdateDate() != "last-update-regex" ||
 				book.GetUpdateChapter() != "last-chapter-regex" {
-					t.Fatalf("book update success with update chapter different: %v", book.bookRecord)
+					t.Errorf("book update success with update chapter different: %v", book.bookRecord)
 			}
 		})
 
@@ -107,7 +107,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetError() != nil || book.GetStatus() != database.InProgress ||
 				book.GetUpdateDate() != "last-update-regex" ||
 				book.GetUpdateChapter() != "last-chapter-regex" {
-					t.Fatalf("error book update success with fetch info: %v", book.bookRecord)
+					t.Errorf("error book update success with fetch info: %v", book.bookRecord)
 			}
 		})
 
@@ -127,7 +127,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetError() != nil || book.GetStatus() != database.InProgress ||
 				book.GetUpdateDate() != "last-update-regex" ||
 				book.GetUpdateChapter() != "last-chapter-regex" {
-					t.Fatalf("book update success even partial fail: %v", book.bookRecord)
+					t.Errorf("book update success even partial fail: %v", book.bookRecord)
 			}
 		})
 
@@ -140,7 +140,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetWriter() != "" || book.GetType() != "" ||
 				book.GetError().Error() == "" || book.GetStatus() != database.Error ||
 				book.GetUpdateDate() != "" || book.GetUpdateChapter() != "" {
-					t.Fatalf("book update success even partial fail: %v", book.bookRecord)
+					t.Errorf("book update success even partial fail: %v", book.bookRecord)
 			}
 		})
 
@@ -154,7 +154,7 @@ func Test_Books_Book_Update(t *testing.T) {
 				book.GetWriter() != "" || book.GetType() != "" ||
 				book.GetError() != nil || book.GetStatus() == database.Error ||
 				book.GetUpdateDate() != "" || book.GetUpdateChapter() != "" {
-					t.Fatalf("book update success even partial fail: %v", book.bookRecord)
+					t.Errorf("book update success even partial fail: %v", book.bookRecord)
 			}
 		})
 	})

@@ -29,7 +29,7 @@ func TestSqlite_DB_Constructor(t *testing.T) {
 		defer db.Close()
 
 		if db._db == nil {
-			t.Fatalf("DB construct failed")
+			t.Errorf("DB construct failed")
 		}
 	})
 }
@@ -48,7 +48,7 @@ func TestSqlite_DB_Summary(t *testing.T) {
 			actual.StatusCount[database.InProgress] != 1 ||
 			actual.StatusCount[database.End] != 1 ||
 			actual.StatusCount[database.Download] != 1 {
-			t.Fatalf(
+			t.Errorf(
 				"DB Summary() failed\nactual: %v",
 				actual)
 		}
@@ -67,7 +67,7 @@ func TestSqlite_DB_Summary(t *testing.T) {
 			actual.StatusCount[database.InProgress] != 0 ||
 			actual.StatusCount[database.End] != 0 ||
 			actual.StatusCount[database.Download] != 0 {
-			t.Fatalf(
+			t.Errorf(
 				"DB Summary() failed\nactual: %v",
 				actual)
 		}
@@ -81,14 +81,14 @@ func TestSqlite_DB_execute(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		db.execute("abc")
 		if db.statementCount != 1 || db.statements[0] != "abc" {
-			t.Fatalf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
 	t.Run("commit when it reach the max statements", func(t *testing.T) {
 		db.execute("abc")
 		if db.statementCount != 0 {
-			t.Fatalf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.execute(abc) does not update statement Count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -112,14 +112,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(BookInsertStatement(bookRecord, "writer-1"))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryBookBySiteIdHash("test", 10, 10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 10 ||
@@ -128,7 +128,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 			actualRecord.UpdateDate != "update-date-10" ||
 			actualRecord.UpdateChapter != "update-chapter-10" ||
 			actualRecord.Status != database.InProgress {
-				t.Fatalf("DB.Commit fail for insert normal book record - err: %v, record: %v", err, actualRecord)
+				t.Errorf("DB.Commit fail for insert normal book record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -147,14 +147,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(BookInsertStatement(bookRecord, "writer-1"))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryBookBySiteIdHash("test", 11, 11)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 11 ||
@@ -163,7 +163,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 			actualRecord.UpdateDate != "update-date-11" ||
 			actualRecord.UpdateChapter != "update-chapter-11" ||
 			actualRecord.Status != database.InProgress {
-				t.Fatalf("DB.Commit fail for insert book record with negative writer id - err: %v, record: %v", err, actualRecord)
+				t.Errorf("DB.Commit fail for insert book record with negative writer id - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -182,14 +182,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(BookUpdateStatement(bookRecord, "writer-1"))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit update record return error: %v", err)
+			t.Errorf("commit update record return error: %v", err)
 		}
 
 		rows := db.QueryBookBySiteIdHash("test", 10, 10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query update record return error: %v", err)
+			t.Errorf("query update record return error: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 10 ||
@@ -198,7 +198,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 			actualRecord.UpdateDate != "update-date-10-new" ||
 			actualRecord.UpdateChapter != "update-chapter-10-new" ||
 			actualRecord.Status != database.InProgress {
-				t.Fatalf("DB.Commit fail for update normal book record - err: %v, record: %v", err, actualRecord)
+				t.Errorf("DB.Commit fail for update normal book record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -217,14 +217,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(BookUpdateStatement(bookRecord, "writer-3"))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit update record return error: %v", err)
+			t.Errorf("commit update record return error: %v", err)
 		}
 
 		rows := db.QueryBookBySiteIdHash("test", 11, 11)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query update record return error: %v", err)
+			t.Errorf("query update record return error: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 11 ||
@@ -233,7 +233,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 			actualRecord.UpdateDate != "update-date-11-new" ||
 			actualRecord.UpdateChapter != "update-chapter-11-new" ||
 			actualRecord.Status != database.InProgress {
-				t.Fatalf("DB.Commit fail for update book record with negative writer id - err: %v, record: %v", err, actualRecord)
+				t.Errorf("DB.Commit fail for update book record with negative writer id - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -252,14 +252,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(BookDeleteStatement(bookRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit delete record return error: %v", err)
+			t.Errorf("commit delete record return error: %v", err)
 		}
 
 		rows := db.QueryBookBySiteIdHash("test", 11, 11)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query delete record return error: %v", err)
+			t.Errorf("query delete record return error: %v", err)
 		}
 		actualRecord := record.(*database.BookRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 11 ||
@@ -268,7 +268,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 			actualRecord.UpdateDate != "update-date-11-new" ||
 			actualRecord.UpdateChapter != "update-chapter-11-new" ||
 			actualRecord.Status != database.InProgress {
-				t.Fatalf("DB.Commit fail for insert normal book record - err: %v, record: %v", err, actualRecord)
+				t.Errorf("DB.Commit fail for insert normal book record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -280,18 +280,18 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(WriterInsertStatement(writerRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryWriterById(10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.WriterRecord)
 		if actualRecord.Id != 10 || actualRecord.Name != "writer-10" {
-			t.Fatalf("DB.Commit fail for insert normal writer record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for insert normal writer record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -303,18 +303,18 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(WriterInsertStatement(writerRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryWriterById(11)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.WriterRecord)
 		if actualRecord.Id != 11 || actualRecord.Name != "writer-11" {
-			t.Fatalf("DB.Commit fail for insert normal writer record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for insert normal writer record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -326,18 +326,18 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(WriterUpdateStatement(writerRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit update record return error: %v", err)
+			t.Errorf("commit update record return error: %v", err)
 		}
 
 		rows := db.QueryWriterById(10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query update record return error: %v", err)
+			t.Errorf("query update record return error: %v", err)
 		}
 		actualRecord := record.(*database.WriterRecord)
 		if actualRecord.Id != 10 || actualRecord.Name != "writer-10" {
-			t.Fatalf("DB.Commit fail for update normal writer record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for update normal writer record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -349,18 +349,18 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(WriterDeleteStatement(writerRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit delete record return error: %v", err)
+			t.Errorf("commit delete record return error: %v", err)
 		}
 
 		rows := db.QueryWriterById(10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query delete record return error: %v", err)
+			t.Errorf("query delete record return error: %v", err)
 		}
 		actualRecord := record.(*database.WriterRecord)
 		if actualRecord.Id != 10 || actualRecord.Name != "writer-10" {
-			t.Fatalf("DB.Commit fail for delete normal writer record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for delete normal writer record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -373,19 +373,19 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(ErrorInsertStatement(errorRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryErrorBySiteId("test", 10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.ErrorRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 10 ||
 			actualRecord.Error.Error() != "error-10" {
-			t.Fatalf("DB.Commit fail for insert error record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for insert error record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -398,19 +398,19 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(ErrorUpdateStatement(errorRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit update record return error: %v", err)
+			t.Errorf("commit update record return error: %v", err)
 		}
 
 		rows := db.QueryErrorBySiteId("test", 10)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query update record return error: %v", err)
+			t.Errorf("query update record return error: %v", err)
 		}
 		actualRecord := record.(*database.ErrorRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 10 ||
 			actualRecord.Error.Error() != "error-10-new" {
-			t.Fatalf("DB.Commit fail for update error record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for update error record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 
@@ -423,14 +423,14 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(ErrorDeleteStatement(errorRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit delete record return error: %v", err)
+			t.Errorf("commit delete record return error: %v", err)
 		}
 
 		rows := db.QueryErrorBySiteId("test", 10)
 		defer rows.Close()
 		_, err = rows.Scan()
 		if err == nil {
-			t.Fatalf("query delete record not return error")
+			t.Errorf("query delete record not return error")
 		}
 	})
 
@@ -442,7 +442,7 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute("")
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 	})
 
@@ -456,19 +456,19 @@ func TestSqlite_DB_Commit(t *testing.T) {
 		db.execute(ErrorInsertStatement(errorRecord))
 		err := db.Commit()
 		if err != nil {
-			t.Fatalf("commit insert record return error: %v", err)
+			t.Errorf("commit insert record return error: %v", err)
 		}
 
 		rows := db.QueryErrorBySiteId("test", 11)
 		defer rows.Close()
 		record, err := rows.Scan()
 		if err != nil {
-			t.Fatalf("query insert record return error: %v", err)
+			t.Errorf("query insert record return error: %v", err)
 		}
 		actualRecord := record.(*database.ErrorRecord)
 		if actualRecord.Site != "test" || actualRecord.Id != 11 ||
 			actualRecord.Error.Error() != "error-11" {
-			t.Fatalf("DB.Commit fail for insert error record - err: %v, record: %v", err, actualRecord)
+			t.Errorf("DB.Commit fail for insert error record - err: %v, record: %v", err, actualRecord)
 		}
 	})
 }
@@ -478,7 +478,7 @@ func TestSqlite_DB_Close(t *testing.T) {
 		db := NewSqliteDB("./db_test.db", 100)
 		db.Close()
 		if db._db != nil {
-			t.Fatalf("DB Close() failed")
+			t.Errorf("DB Close() failed")
 		}
 	})
 }
@@ -492,7 +492,7 @@ func TestSqlite_DB_interface(t *testing.T) {
 		switch db.(type) {
 		case *SqliteDB:
 		case interface{}:
-			t.Fatalf("NewSqliteDB cannot use db interface")
+			t.Errorf("NewSqliteDB cannot use db interface")
 		}
 	})
 
@@ -501,7 +501,7 @@ func TestSqlite_DB_interface(t *testing.T) {
 		switch query.(type) {
 		case *SqliteBookRows:
 		case interface{}:
-			t.Fatalf("NewSqliteDB query does not return *BookRecord")
+			t.Errorf("NewSqliteDB query does not return *BookRecord")
 		}
 	})
 }

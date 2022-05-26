@@ -13,7 +13,7 @@ func Test_Books_NewChapter(t *testing.T) {
 		chapter := NewChapter(0, "0", "title-0", &config)
 		if chapter.Index != 0 || chapter.Url != "test/0" ||
 			chapter.Title != "title-0" || chapter.Content != "" {
-				t.Fatalf("NewChatper return wrong result: %v", chapter)
+				t.Errorf("NewChatper return wrong result: %v", chapter)
 		}
 	})
 
@@ -21,7 +21,7 @@ func Test_Books_NewChapter(t *testing.T) {
 		chapter := NewChapter(0, "/0", "title-0", &config)
 		if chapter.Index != 0 || chapter.Url != "test/0" ||
 			chapter.Title != "title-0" || chapter.Content != "" {
-				t.Fatalf("NewChatper return wrong result: %v", chapter)
+				t.Errorf("NewChatper return wrong result: %v", chapter)
 		}
 	})
 }
@@ -31,7 +31,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc421def" }
 		chapter.generateIndex()
 		if chapter.Index != 4210 {
-			t.Fatalf("chapter generate index is %v, not 4210", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4210", chapter.Index)
 		}
 	})
 
@@ -39,7 +39,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc四二一def" }
 		chapter.generateIndex()
 		if chapter.Index != 4210 {
-			t.Fatalf("chapter generate index is %v, not 4210", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4210", chapter.Index)
 		}
 	})
 
@@ -47,7 +47,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc四百二十一def" }
 		chapter.generateIndex()
 		if chapter.Index != 4210 {
-			t.Fatalf("chapter generate index is %v, not 4210", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4210", chapter.Index)
 		}
 	})
 
@@ -55,7 +55,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc肆貳壹def" }
 		chapter.generateIndex()
 		if chapter.Index != 4210 {
-			t.Fatalf("chapter generate index is %v, not 4210", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4210", chapter.Index)
 		}
 	})
 
@@ -63,7 +63,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc肆佰貳拾壹def" }
 		chapter.generateIndex()
 		if chapter.Index != 4210 {
-			t.Fatalf("chapter generate index is %v, not 4210", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4210", chapter.Index)
 		}
 	})
 
@@ -71,7 +71,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc肆佰貳拾壹def上" }
 		chapter.generateIndex()
 		if chapter.Index != 4212 {
-			t.Fatalf("chapter generate index is %v, not 4212", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4212", chapter.Index)
 		}
 	})
 
@@ -79,7 +79,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc肆佰貳拾壹def中" }
 		chapter.generateIndex()
 		if chapter.Index != 4215 {
-			t.Fatalf("chapter generate index is %v, not 4215", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4215", chapter.Index)
 		}
 	})
 
@@ -87,7 +87,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abc肆佰貳拾壹def下" }
 		chapter.generateIndex()
 		if chapter.Index != 4218 {
-			t.Fatalf("chapter generate index is %v, not 4218", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 4218", chapter.Index)
 		}
 	})
 
@@ -95,7 +95,7 @@ func Test_Books_Chapter_generateIndex(t *testing.T) {
 		chapter := Chapter{ Title: "abcdef" }
 		chapter.generateIndex()
 		if chapter.Index != 9999990 {
-			t.Fatalf("chapter generate index is %v, not 9999990", chapter.Index)
+			t.Errorf("chapter generate index is %v, not 9999990", chapter.Index)
 		}
 	})
 }
@@ -108,7 +108,7 @@ func Test_Books_Book_optimizedContent(t *testing.T) {
 		chapter.optimizeContent()
 
 		if chapter.Content != "abcdefgh\ni" {
-			t.Fatalf("chapter optimize content generate %v, but not %v",
+			t.Errorf("chapter optimize content generate %v, but not %v",
 				chapter.Content, "abcdefgh\ni")
 		}
 	})
@@ -124,7 +124,7 @@ func Test_Books_Chapter_sortChapters(t *testing.T) {
 		sortChapters(chapters)
 
 		if chapters[0].Index != 1 || chapters[1].Index != 5 {
-			t.Fatalf("sort chatpers return wrong order: %v", chapters)
+			t.Errorf("sort chatpers return wrong order: %v", chapters)
 		}
 	})
 
@@ -143,7 +143,7 @@ func Test_Books_Chapter_sortChapters(t *testing.T) {
 		if chapters[0].Url != "1" || chapters[1].Url != "2" ||
 			chapters[2].Url != "3" || chapters[3].Url != "4" ||
 			chapters[4].Index != 5 || chapters[5].Index != 6 {
-			t.Fatalf("sort chatpers return wrong order: %v", chapters)
+			t.Errorf("sort chatpers return wrong order: %v", chapters)
 		}
 	})
 }
@@ -168,7 +168,7 @@ func Test_Books_Chatper_Download(t *testing.T) {
 		chapter.Download(&config, validHTML)
 
 		if chapter.Content != "success" {
-			t.Fatalf("chapter Download fail with content: %v", chapter)
+			t.Errorf("chapter Download fail with content: %v", chapter)
 		}
 	})
 
@@ -178,7 +178,7 @@ func Test_Books_Chatper_Download(t *testing.T) {
 		chapter.Download(&config, validHTML)
 
 		if chapter.Content != "load html fail" {
-			t.Fatalf("chapter Download fail with content: %v", chapter)
+			t.Errorf("chapter Download fail with content: %v", chapter)
 		}
 	})
 
@@ -187,7 +187,7 @@ func Test_Books_Chatper_Download(t *testing.T) {
 		chapter.Download(&config, validHTML)
 
 		if chapter.Content != "recognize html fail\nhello" {
-			t.Fatalf("chapter Download fail with content: %v", chapter)
+			t.Errorf("chapter Download fail with content: %v", chapter)
 		}
 	})
 }

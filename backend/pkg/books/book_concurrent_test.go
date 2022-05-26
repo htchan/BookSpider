@@ -37,7 +37,7 @@ func test_concurrent_create(db database.DB, config *configs.SourceConfig, n, off
 				book.SetStatus(database.InProgress)
 				result := book.Save(db)
 				if !result {
-					t.Fatalf("concurrent save book failed at %v times trial, book: %v", i, book.bookRecord)
+					t.Errorf("concurrent save book failed at %v times trial, book: %v", i, book.bookRecord)
 				}
 			}(i)
 		}
@@ -46,12 +46,12 @@ func test_concurrent_create(db database.DB, config *configs.SourceConfig, n, off
 		for i := 0; i < n; i++ {
 			book := LoadBook(db, "test", i + offset, -1, config)
 			if book == nil {
-				t.Fatalf("book.Save does not create test-%v", i + offset)
+				t.Errorf("book.Save does not create test-%v", i + offset)
 			}
 			if book.bookRecord.Site != "test" || book.bookRecord.Id != i + offset ||
 				book.GetStatus() != database.InProgress || book.GetTitle() != "" ||
 				book.bookRecord.WriterId != 0 {
-					t.Fatalf("book.Save for test-%v save wrong book data: %v", i + offset, book)
+					t.Errorf("book.Save for test-%v save wrong book data: %v", i + offset, book)
 				}
 		}
 	}
@@ -66,11 +66,11 @@ func test_concurrent_load_book(db database.DB, config *configs.SourceConfig, n, 
 				defer wg.Done()
 				book := LoadBook(db, "test", i + offset, -1, config)
 				if book == nil {
-					t.Fatalf("fail to load test-%v from db", i + offset)
+					t.Errorf("fail to load test-%v from db", i + offset)
 				}
 				if site, id, _ := book.GetInfo();
 					site != "test" || id != i + offset {
-					t.Fatalf("concurrent load book failed at %v times trial, book: %v", i, book.bookRecord)
+					t.Errorf("concurrent load book failed at %v times trial, book: %v", i, book.bookRecord)
 				}
 			}(i)
 		}
@@ -92,7 +92,7 @@ func test_concurrent_load_book_by_record(db database.DB, config *configs.SourceC
 				book := LoadBookByRecord(db, record.(*database.BookRecord), config)
 				if site, id, _ := book.GetInfo();
 					site != "test" || id != i + offset {
-					t.Fatalf("concurrent load book failed at %v times trial, book: %v", i, book.bookRecord)
+					t.Errorf("concurrent load book failed at %v times trial, book: %v", i, book.bookRecord)
 				}
 			}(i)
 		}
@@ -112,7 +112,7 @@ func test_concurrent_update_book(db database.DB, config *configs.SourceConfig, n
 				book.SetTitle(book.GetTitle() + "-new")
 				result := book.Save(db)
 				if !result {
-					t.Fatalf("concurrent update book failed at %v times trial, book: %v", i, book.bookRecord)
+					t.Errorf("concurrent update book failed at %v times trial, book: %v", i, book.bookRecord)
 				}
 			}(i)
 		}
@@ -122,14 +122,14 @@ func test_concurrent_update_book(db database.DB, config *configs.SourceConfig, n
 			rows := db.QueryBookBySiteIdHash("test", i + offset, -1)
 			record, err := rows.Scan()
 			if err != nil {
-				t.Fatalf("book.Save does not create test-%v, err: %v", i + offset, err)
+				t.Errorf("book.Save does not create test-%v, err: %v", i + offset, err)
 			}
 			rows.Close()
 			actualRecord := record.(*database.BookRecord)
 			if actualRecord.Site != "test" || actualRecord.Id != i + offset ||
 				actualRecord.Status != database.InProgress || actualRecord.Title != "-new" ||
 				actualRecord.WriterId != 0 {
-					t.Fatalf("book.Save for test-%v save wrong book data: %v", i + offset, actualRecord)
+					t.Errorf("book.Save for test-%v save wrong book data: %v", i + offset, actualRecord)
 				}
 		}
 	}

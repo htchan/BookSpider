@@ -48,16 +48,16 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			err := site.exploreOldBook(2, &count)
 			site.CommitDatabase()
 			if count != 0 {
-				t.Fatalf("site.exploreOldBook not reset count: %v", count)
+				t.Errorf("site.exploreOldBook not reset count: %v", count)
 			}
 			if err != nil {
-				t.Fatalf("site.exploreOldBook return error: %v", err)
+				t.Errorf("site.exploreOldBook return error: %v", err)
 			}
 			book := books.LoadBook(site.database, "test", 2, 101, site.config.SourceConfig)
 			if book.GetStatus() == database.Error || book.GetTitle() != "title-regex" || 
 				book.GetWriter() != "writer-regex" || book.GetType() != "type-regex" ||
 				book.GetUpdateDate() != "last-update-regex" || book.GetError() != nil {
-				t.Fatalf("site.updateOldBook fail update book: %v, err: %v", book, err)
+				t.Errorf("site.updateOldBook fail update book: %v, err: %v", book, err)
 			}
 		})
 
@@ -67,16 +67,16 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			err := site.exploreOldBook(4, &count)
 			site.CommitDatabase()
 			if count != 1 {
-				t.Fatalf("site.exploreOldBook not update count: %v", count)
+				t.Errorf("site.exploreOldBook not update count: %v", count)
 			}
 			if err != nil {
-				t.Fatalf("site.exploreOldBook return error: %v", err)
+				t.Errorf("site.exploreOldBook return error: %v", err)
 			}
 			book := books.LoadBook(site.database, "test", 4, -1, site.config.SourceConfig)
 			if book.GetStatus() != database.Error || book.GetTitle() != "" || 
 				book.GetWriter() != "" || book.GetType() != "" ||
 				book.GetUpdateDate() != "" || book.GetError() == nil {
-				t.Fatalf("site.updateOldBook success update book: %v, err: %v", book, err)
+				t.Errorf("site.updateOldBook success update book: %v, err: %v", book, err)
 			}
 		})
 
@@ -84,7 +84,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 0
 			err := site.exploreOldBook(999, &count)
 			if err == nil || err.Error() != "load book test-999 fail"{
-				t.Fatalf("site.exploreOldBook return %v", err)
+				t.Errorf("site.exploreOldBook return %v", err)
 			}
 		})
 
@@ -92,7 +92,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			count := 0
 			err := site.exploreOldBook(1, &count)
 			if err == nil || err.Error() != "load book test-1 return status 1"{
-				t.Fatalf("site.exploreOldBook return %v", err)
+				t.Errorf("site.exploreOldBook return %v", err)
 			}
 		})
 	})
@@ -104,15 +104,15 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			err := site.exploreNewBook(6, &count)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.updateNewBook return error: %v", err)
+				t.Errorf("site.updateNewBook return error: %v", err)
 			}
 			if count != 0 {
-				t.Fatalf("site.updateNewBook not reset count: %v", count)
+				t.Errorf("site.updateNewBook not reset count: %v", count)
 			}
 			book := books.LoadBook(site.database, "test", 6, -1, site.config.SourceConfig)
 			if book.GetStatus() == database.Error || book.GetTitle() != "title-regex" ||
 				book.GetWriter() != "writer-regex" || book.GetError() != nil {
-					t.Fatalf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
+					t.Errorf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
 				}
 		})
 
@@ -122,15 +122,15 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			err := site.exploreNewBook(7, &count)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.updateNewBook return error: %v", err)
+				t.Errorf("site.updateNewBook return error: %v", err)
 			}
 			if count != 1 {
-				t.Fatalf("site.updateNewBook not update count: %v", count)
+				t.Errorf("site.updateNewBook not update count: %v", count)
 			}
 			book := books.LoadBook(site.database, "test", 7, -1, site.config.SourceConfig)
 			if book.GetStatus() != database.Error || book.GetTitle() != "" ||
 				book.GetWriter() != "" || book.GetError() == nil {
-					t.Fatalf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
+					t.Errorf("sites.updateNewBook does not create duplicated book for existing book: %v", book.GetWriter())
 				}
 		})
 
@@ -140,16 +140,16 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			err := site.exploreNewBook(1, &count)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.updateNewBook return error: %v", err)
+				t.Errorf("site.updateNewBook return error: %v", err)
 			}
 			if count != 1 {
-				t.Fatalf("site.updateNewBook not update count: %v", count)
+				t.Errorf("site.updateNewBook not update count: %v", count)
 			}
 			book := books.LoadBook(site.database, "test", 1, -1, site.config.SourceConfig)
 			if _, _, hashCode := book.GetInfo(); hashCode == 100 ||
 				book.GetStatus() != database.Error || book.GetTitle() != "" ||
 				book.GetWriter() != "" || book.GetError() == nil {
-					t.Fatalf("sites.updateNewBook does not create duplicated book for existing book: %v", book)
+					t.Errorf("sites.updateNewBook does not create duplicated book for existing book: %v", book)
 				}
 		})
 	})
@@ -169,12 +169,12 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 3 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 			err := site.explore()
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.explore return error: %v", err)
+				t.Errorf("site.explore return error: %v", err)
 			}
 			summary = site.database.Summary(site.Name)
 			if summary.BookCount < 14 || summary.ErrorCount < 7 ||
@@ -184,7 +184,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] < 5 ||
 				summary.StatusCount[database.End] < 1 ||
 				summary.StatusCount[database.Download] < 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 		t.Run("not add new book if it reach limit in exploring existing books", func(t *testing.T) {
@@ -196,12 +196,12 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] < 5 ||
 				summary.StatusCount[database.End] < 1 ||
 				summary.StatusCount[database.Download] < 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 			err := site.explore()
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site.explore return error: %v", err)
+				t.Errorf("site.explore return error: %v", err)
 			}
 			summary = site.database.Summary(site.Name)
 			if summary.BookCount < 14 || summary.ErrorCount < 7 ||
@@ -211,7 +211,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] < 5 ||
 				summary.StatusCount[database.End] < 1 ||
 				summary.StatusCount[database.Download] < 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 	})
@@ -223,7 +223,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 			flagSite, flagId := "test", 5
 			err := operation(site, &flags.Flags{Site: &flagSite, Id: &flagId})
 			if err != nil {
-				t.Fatalf("site Explore return error for specific book - error: %v", err)
+				t.Errorf("site Explore return error for specific book - error: %v", err)
 			}
 
 			summary := site.database.Summary(site.Name)
@@ -234,7 +234,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 6 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 		
@@ -243,7 +243,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 			err := operation(site, &flags.Flags{})
 			if err != nil {
-				t.Fatalf("site Explore return error for full site - error: %v", err)
+				t.Errorf("site Explore return error for full site - error: %v", err)
 			}
 
 			summary := site.database.Summary(site.Name)
@@ -254,7 +254,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 6 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -263,7 +263,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
-				t.Fatalf("site Explore not return error for invalid arguments")
+				t.Errorf("site Explore not return error for invalid arguments")
 			}
 		})
 
@@ -272,7 +272,7 @@ func Test_Sites_Site_Explore(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
-				t.Fatalf("site Explore return error for not matching site name- error: %v", err)
+				t.Errorf("site Explore return error for not matching site name- error: %v", err)
 			}
 		})
 	})

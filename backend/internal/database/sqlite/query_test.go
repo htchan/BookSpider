@@ -30,14 +30,14 @@ func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 		query := db.QueryBookBySiteIdHash("test", 3, 102)
 
 		if !query.Next() {
-			t.Fatalf("QueryBookBySiteIdHash(\"test\", 3, 102) return no record")
+			t.Errorf("QueryBookBySiteIdHash(\"test\", 3, 102) return no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryBookBySiteIdHash(\"test\", 3, 102) return %v records", n)
+			t.Errorf("QueryBookBySiteIdHash(\"test\", 3, 102) return %v records", n)
 		}
 	})
 
@@ -45,14 +45,14 @@ func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 		query := db.QueryBookBySiteIdHash("test", 3, -1)
 
 		if !query.Next() {
-			t.Fatalf("QueryBookBySiteIdHash(\"test\", 3, -1) return no record")
+			t.Errorf("QueryBookBySiteIdHash(\"test\", 3, -1) return no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 2 {
-			t.Fatalf("QueryBookBySiteIdHash(\"test\", 3, 102) return %v records", n)
+			t.Errorf("QueryBookBySiteIdHash(\"test\", 3, 102) return %v records", n)
 		}
 	})
 
@@ -61,7 +61,7 @@ func TestSqlite_DB_QueryBookBySiteIdHash(t *testing.T) {
 
 		if query.Next() {
 			record, err := query.Scan()
-			t.Fatalf("QueryBookBySiteIdHash(\"test\", -1, -1) return result record: %v, err: %v", record, err)
+			t.Errorf("QueryBookBySiteIdHash(\"test\", -1, -1) return result record: %v, err: %v", record, err)
 		}
 	})
 }
@@ -76,14 +76,14 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) returns no record")
+			t.Errorf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 3 {
-			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) return %v records", n)
+			t.Errorf("QueryBooksByPartialTitle([\"-new\", \"-3\"], [1, 5]) return %v records", n)
 		}
 	})
 
@@ -93,14 +93,14 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) returns no record")
+			t.Errorf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 2 {
-			t.Fatalf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) return %v records", n)
+			t.Errorf("QueryBooksByPartialTitle([\"-new\", \"-3\"], []) return %v records", n)
 		}
 	})
 
@@ -110,14 +110,14 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByPartialTitle([], [1, 5]) returns no record")
+			t.Errorf("QueryBooksByPartialTitle([], [1, 5]) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryBooksByPartialTitle([], [1, 5]) return %v records", n)
+			t.Errorf("QueryBooksByPartialTitle([], [1, 5]) return %v records", n)
 		}
 	})
 
@@ -127,7 +127,7 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 		query := db.QueryBooksByPartialTitleAndWriter(titles, writers)
 
 		if query.Next() {
-			t.Fatalf("QueryBooksByPartialTitleAndWriter(\"-writer\", 5) returns record")
+			t.Errorf("QueryBooksByPartialTitleAndWriter(\"-writer\", 5) returns record")
 		}
 	})
 
@@ -135,7 +135,7 @@ func TestSqlite_DB_QueryBooksByPartialTitleAndWriter(t *testing.T) {
 		query := db.QueryBooksByPartialTitleAndWriter([]string{}, []int{})
 
 		if query.Next() {
-			t.Fatalf("QueryBooksByPartialTitleAndWriter([], []) returns record")
+			t.Errorf("QueryBooksByPartialTitleAndWriter([], []) returns record")
 		}
 	})
 }
@@ -148,14 +148,14 @@ func TestSqlite_DB_QueryBooksByWriterId(t *testing.T) {
 		query := db.QueryBooksByWriterId(1)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByWriterId(1) returns no record")
+			t.Errorf("QueryBooksByWriterId(1) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryBooksByWriterId(1) return %v records", n)
+			t.Errorf("QueryBooksByWriterId(1) return %v records", n)
 		}
 	})
 
@@ -163,7 +163,7 @@ func TestSqlite_DB_QueryBooksByWriterId(t *testing.T) {
 		query := db.QueryBooksByWriterId(-1)
 
 		if query.Next() {
-			t.Fatalf("QueryBooksByWriterId(-1) returns record")
+			t.Errorf("QueryBooksByWriterId(-1) returns record")
 		}
 	})
 }
@@ -176,14 +176,14 @@ func TestSqlite_DB_QueryBooksByStatus(t *testing.T) {
 		query := db.QueryBooksByStatus(database.Error)
 
 		if !query.Next() {
-			t.Fatalf("QueryBooksByStatus(database.Error) returns no record")
+			t.Errorf("QueryBooksByStatus(database.Error) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 3 {
-			t.Fatalf("QueryBooksByStatus(database.Error) return %v records", n)
+			t.Errorf("QueryBooksByStatus(database.Error) return %v records", n)
 		}
 	})
 }
@@ -196,14 +196,14 @@ func TestSqlite_DB_QueryWriterById(t *testing.T) {
 		query := db.QueryWriterById(1)
 
 		if !query.Next() {
-			t.Fatalf("QueryWriterById(1) returns no record")
+			t.Errorf("QueryWriterById(1) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryWriterById(1) return %v records", n)
+			t.Errorf("QueryWriterById(1) return %v records", n)
 		}
 	})
 
@@ -211,7 +211,7 @@ func TestSqlite_DB_QueryWriterById(t *testing.T) {
 		query := db.QueryWriterById(-1)
 
 		if query.Next() {
-			t.Fatalf("QueryWriterById(-1) returns record")
+			t.Errorf("QueryWriterById(-1) returns record")
 		}
 	})
 }
@@ -224,14 +224,14 @@ func TestSqlite_DB_QueryWriterByName(t *testing.T) {
 		query := db.QueryWriterByName("writer-1")
 
 		if !query.Next() {
-			t.Fatalf("QueryWriterByName(\"title\") returns no record")
+			t.Errorf("QueryWriterByName(\"title\") returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryWriterByName(\"title\") return %v records", n)
+			t.Errorf("QueryWriterByName(\"title\") return %v records", n)
 		}
 	})
 
@@ -239,7 +239,7 @@ func TestSqlite_DB_QueryWriterByName(t *testing.T) {
 		query := db.QueryWriterByName("writer")
 
 		if query.Next() {
-			t.Fatalf("QueryWriterByName(\"writer\") returns no record")
+			t.Errorf("QueryWriterByName(\"writer\") returns no record")
 		}
 	})
 
@@ -247,7 +247,7 @@ func TestSqlite_DB_QueryWriterByName(t *testing.T) {
 		query := db.QueryWriterByName("title")
 
 		if query.Next() {
-			t.Fatalf("QueryWriterByName(\"title\") returns record")
+			t.Errorf("QueryWriterByName(\"title\") returns record")
 		}
 	})
 }
@@ -261,14 +261,14 @@ func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		query := db.QueryWritersByPartialName(names)
 
 		if !query.Next() {
-			t.Fatalf("QueryWritersByPartialName(\"writer-1\") returns no record")
+			t.Errorf("QueryWritersByPartialName(\"writer-1\") returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryWritersByPartialName(\"writer-1\") return %v records", n)
+			t.Errorf("QueryWritersByPartialName(\"writer-1\") return %v records", n)
 		}
 	})
 
@@ -277,14 +277,14 @@ func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		query := db.QueryWritersByPartialName(names)
 
 		if !query.Next() {
-			t.Fatalf("QueryWritersByPartialName(\"writer\") returns no record")
+			t.Errorf("QueryWritersByPartialName(\"writer\") returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 3 {
-			t.Fatalf("QueryWritersByPartialName(\"writer\") return %v records", n)
+			t.Errorf("QueryWritersByPartialName(\"writer\") return %v records", n)
 		}
 	})
 
@@ -293,7 +293,7 @@ func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		query := db.QueryWritersByPartialName(names)
 
 		if query.Next() {
-			t.Fatalf("QueryWritersByPartialName(\"title\") returns record")
+			t.Errorf("QueryWritersByPartialName(\"title\") returns record")
 		}
 	})
 
@@ -301,7 +301,7 @@ func TestSqlite_DB_QueryWriterByPartialName(t *testing.T) {
 		query := db.QueryWritersByPartialName([]string{})
 
 		if query.Next() {
-			t.Fatalf("QueryWritersByPartialName(\"title\") returns record")
+			t.Errorf("QueryWritersByPartialName(\"title\") returns record")
 		}
 	})
 }
@@ -314,14 +314,14 @@ func TestSqlite_DB_QueryErrorBySiteId(t *testing.T) {
 		query := db.QueryErrorBySiteId("test", 2)
 
 		if !query.Next() {
-			t.Fatalf("QueryErrorBySiteId(\"test\", 2) returns no record")
+			t.Errorf("QueryErrorBySiteId(\"test\", 2) returns no record")
 		}
 
 		n := 1
 		for ; query.Next(); n++ {}
 
 		if n != 1 {
-			t.Fatalf("QueryErrorBySiteId(\"test\", 2) return %v records", n)
+			t.Errorf("QueryErrorBySiteId(\"test\", 2) return %v records", n)
 		}
 	})
 
@@ -329,7 +329,7 @@ func TestSqlite_DB_QueryErrorBySiteId(t *testing.T) {
 		query := db.QueryErrorBySiteId("test", 1)
 
 		if query.Next() {
-			t.Fatalf("QueryErrorBySiteId(\"test\", 1) returns  record")
+			t.Errorf("QueryErrorBySiteId(\"test\", 1) returns  record")
 		}
 	})
 }
@@ -361,14 +361,14 @@ func TestSqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
 		n := 0
 		for ; rows.Next(); n++ {}
 		if n != 4 {
-			t.Fatalf("invalid count: n: %v", n)
+			t.Errorf("invalid count: n: %v", n)
 		}
 	})
 	t.Run("success query specific in progress books", func(t *testing.T) {
 		rows := db.QueryBooksWithRandomOrder(1, database.InProgress)
 		record, err := rows.Scan()
 		if err != nil || record.(*database.BookRecord).Title != "title-1" || rows.Next() {
-			t.Fatalf("invalid result: result: %v, err: %v", record, err)
+			t.Errorf("invalid result: result: %v, err: %v", record, err)
 		}
 	})
 	t.Run("success query books even n > total books in db", func(t *testing.T) {
@@ -376,7 +376,7 @@ func TestSqlite_DB_QueryBooksWithRandomOrder(t *testing.T) {
 		n := 0
 		for ; rows.Next(); n++ {}
 		if n != 6 {
-			t.Fatalf("invalid count: n: %v", n)
+			t.Errorf("invalid count: n: %v", n)
 		}
 	})
 }

@@ -49,10 +49,10 @@ func TestSqlite_DB_CreateBookRecord(t *testing.T) {
 		err := db.CreateBookRecord(bookRecord, writerRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create book record - err: %v", err)
+			t.Errorf("DB cannot create book record - err: %v", err)
 		}
 		if db.statementCount != 1 || db.statements[0] != BookInsertStatement(bookRecord, writerRecord.Name) {
-			t.Fatalf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -72,10 +72,10 @@ func TestSqlite_DB_CreateBookRecord(t *testing.T) {
 		err := db.CreateBookRecord(bookRecord, writerRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create book record - err: %v", err)
+			t.Errorf("DB cannot create book record - err: %v", err)
 		}
 		if db.statementCount != 2 || db.statements[1] != BookInsertStatement(bookRecord, writerRecord.Name) {
-			t.Fatalf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -95,10 +95,10 @@ func TestSqlite_DB_CreateBookRecord(t *testing.T) {
 		err := db.CreateBookRecord(bookRecord, writerRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create book record - err: %v", err)
+			t.Errorf("DB cannot create book record - err: %v", err)
 		}
 		if db.statementCount != 3 || db.statements[2] != BookInsertStatement(bookRecord, writerRecord.Name) {
-			t.Fatalf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -106,10 +106,10 @@ func TestSqlite_DB_CreateBookRecord(t *testing.T) {
 		err := db.CreateBookRecord(nil, writerRecord)
 
 		if err == nil {
-			t.Fatalf("DB does not create book record - err: %v", err)
+			t.Errorf("DB does not create book record - err: %v", err)
 		}
 		if db.statementCount != 3 {
-			t.Fatalf("DB.CreateBookRecord add record to statement - count: %v", db.statementCount)
+			t.Errorf("DB.CreateBookRecord add record to statement - count: %v", db.statementCount)
 		}
 	})
 }
@@ -127,10 +127,10 @@ func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
 		err := db.CreateWriterRecord(writerRecord)
 		
 		if err != nil {
-			t.Fatalf("DB cannot create writer record - err: %v", err)
+			t.Errorf("DB cannot create writer record - err: %v", err)
 		}
 		if db.statementCount != 1 || db.statements[0] != WriterInsertStatement(writerRecord) {
-			t.Fatalf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -143,10 +143,10 @@ func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
 		err := db.CreateWriterRecord(writerRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create writer record - err: %v", err)
+			t.Errorf("DB cannot create writer record - err: %v", err)
 		}
 		if db.statementCount != 2 || db.statements[1] != WriterInsertStatement(writerRecord) {
-			t.Fatalf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -159,10 +159,10 @@ func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
 		err := db.CreateWriterRecord(writerRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create writer record - err: %v", err)
+			t.Errorf("DB cannot create writer record - err: %v", err)
 		}
 		if db.statementCount != 3 || db.statements[2] != WriterInsertStatement(writerRecord) {
-			t.Fatalf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateWriterRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -170,10 +170,10 @@ func TestSqlite_DB_CreateWriterRecord(t *testing.T) {
 		err := db.CreateWriterRecord(nil)
 
 		if err == nil {
-			t.Fatalf("DB does not throw error in create writer record")
+			t.Errorf("DB does not throw error in create writer record")
 		}
 		if db.statementCount != 3 {
-			t.Fatalf("DB.CreateWriterRecord add record to statement - count: %v", db.statementCount)
+			t.Errorf("DB.CreateWriterRecord add record to statement - count: %v", db.statementCount)
 		}
 	})
 }
@@ -192,10 +192,10 @@ func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
 		err := db.CreateErrorRecord(errorRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create error record - err: %v", err)
+			t.Errorf("DB cannot create error record - err: %v", err)
 		}
 		if db.statementCount != 1 || db.statements[0] != ErrorInsertStatement(errorRecord) {
-			t.Fatalf("DB.CreateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -209,10 +209,10 @@ func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
 		err := db.CreateErrorRecord(errorRecord)
 
 		if err != nil {
-			t.Fatalf("DB cannot create error record - err: %v", err)
+			t.Errorf("DB cannot create error record - err: %v", err)
 		}
 		if db.statementCount != 2 || db.statements[0] != ErrorInsertStatement(errorRecord) {
-			t.Fatalf("DB.CreateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+			t.Errorf("DB.CreateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -220,10 +220,10 @@ func TestSqlite_DB_CreateErrorRecord(t *testing.T) {
 		err := db.CreateErrorRecord(nil)
 
 		if err == nil {
-			t.Fatalf("DB does not throw error in create error record ")
+			t.Errorf("DB does not throw error in create error record ")
 		}
 		if db.statementCount != 2 {
-			t.Fatalf("DB.CreateErrorRecord add record to statement - count: %v", db.statementCount)
+			t.Errorf("DB.CreateErrorRecord add record to statement - count: %v", db.statementCount)
 		}
 	})
 }
@@ -241,19 +241,19 @@ func test_concurrent_create(db database.DB, n int, offset int) func(t *testing.T
 					Error: errors.New("test")}
 				err := db.CreateErrorRecord(record)
 				if err != nil {
-					t.Fatalf("CreateErrorRecord(\"test\", %v, \"\") fail err: %v", i + offset, err)
+					t.Errorf("CreateErrorRecord(\"test\", %v, \"\") fail err: %v", i + offset, err)
 				}
 			}(i)
 		}
 		wg.Wait()
 
 		if db.(*SqliteDB).statementCount != n {
-			t.Fatalf("statement count not match: statement count: %v, n: %v", db.(*SqliteDB).statementCount, n)
+			t.Errorf("statement count not match: statement count: %v, n: %v", db.(*SqliteDB).statementCount, n)
 		}
 
 		for i := 0; i < n; i++ {
 			if db.(*SqliteDB).statements[i][:6] != "insert" {
-				t.Fatalf("statement missing at %v: %v", i, db.(*SqliteDB).statements[i])
+				t.Errorf("statement missing at %v: %v", i, db.(*SqliteDB).statements[i])
 			}
 		}
 	}

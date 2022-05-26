@@ -43,7 +43,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if value, ok := jsonData["siteNames"]; ok == false || len(value) != 1 || value[0] != "test" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})
@@ -63,7 +63,7 @@ func Test_Backend_Api(t *testing.T) {
 				jsonData.StatusCount[database.InProgress] != 1 ||
 				jsonData.StatusCount[database.End] != 1 ||
 				jsonData.StatusCount[database.Download] != 1 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -74,7 +74,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "site <unknown> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})
@@ -92,7 +92,7 @@ func Test_Backend_Api(t *testing.T) {
 				jsonData["title"] != "title-3-new" || jsonData["writer"] != "writer-3" ||
 				jsonData["type"] != "type-3-new" || jsonData["updateDate"] != "100" ||
 				jsonData["updateChapter"] != "chapter-3-new" || jsonData["status"] != "end" {
-					t.Fatalf("unexpected response data: %v", jsonData)
+					t.Errorf("unexpected response data: %v", jsonData)
 				}
 		})
 		
@@ -106,7 +106,7 @@ func Test_Backend_Api(t *testing.T) {
 				jsonData["title"] != "title-3" || jsonData["writer"] != "writer-2" ||
 				jsonData["type"] != "type-3" || jsonData["updateDate"] != "102" ||
 				jsonData["updateChapter"] != "chapter-3" || jsonData["status"] != "download" {
-					t.Fatalf("unexpected response data: %v", jsonData)
+					t.Errorf("unexpected response data: %v", jsonData)
 				}
 		})
 
@@ -117,7 +117,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 400.0 || jsonData["message"] != "not enough parameters" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -128,7 +128,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "site <unknown> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -139,7 +139,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <999>, hash <> in site <test> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -150,7 +150,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <1>, hash <123> in site <test> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})
@@ -171,7 +171,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 406.0 || jsonData["message"] != "book <3> not download yet" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -182,7 +182,7 @@ func Test_Backend_Api(t *testing.T) {
 			data, err := io.ReadAll(res.Body)
 			utils.CheckError(err)
 			if string(data) != string(content) {
-				t.Fatalf("unexpected response data: %v", string(data))
+				t.Errorf("unexpected response data: %v", string(data))
 			}
 		})
 
@@ -193,7 +193,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <999>, hash <> in site <test> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -204,7 +204,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if jsonData["code"] != 404.0 || jsonData["message"] != "book <1>, hash <123> in site <test> not found" {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})
@@ -215,36 +215,36 @@ func Test_Backend_Api(t *testing.T) {
 		t.Run("success with multi results even only title match", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test?title=title&writer=abc")
 			utils.CheckError(err)
-			// t.Fatalf(string(data))
+			// t.Errorf(string(data))
 			var jsonData map[string]interface{}
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 3 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
 		t.Run("return empty array if not exist", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test?title=abc&writer=abc")
 			utils.CheckError(err)
-			// t.Fatalf(string(data))
+			// t.Errorf(string(data))
 			var jsonData map[string]interface{}
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 0 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
 		t.Run("fail if both title and writer queries are empty", func(t *testing.T) {
 			res, err := client.Get(host + route + "/test")
 			utils.CheckError(err)
-			// t.Fatalf(string(data))
+			// t.Errorf(string(data))
 			var jsonData map[string]interface{}
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 0 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})
@@ -259,7 +259,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 1 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 
@@ -270,7 +270,7 @@ func Test_Backend_Api(t *testing.T) {
 			err = json.NewDecoder(res.Body).Decode(&jsonData)
 			utils.CheckError(err)
 			if len(jsonData["books"].([]interface{})) != 6 {
-				t.Fatalf("unexpected response data: %v", jsonData)
+				t.Errorf("unexpected response data: %v", jsonData)
 			}
 		})
 	})

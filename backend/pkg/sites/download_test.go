@@ -52,11 +52,11 @@ func Test_Sites_Site_Download(t *testing.T) {
 			err := operation(site, f)
 			utils.CheckError(site.CommitDatabase())
 			if err != nil {
-				t.Fatalf("site Download return error for specific book: %v", err)
+				t.Errorf("site Download return error for specific book: %v", err)
 			}
 			book := books.LoadBook(site.database, "test", 3, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() != database.Download || !book.HasContent(site.config.StorageDirectory) {
-				t.Fatalf("site Download does not turn book status to download and save content: %v", book)
+				t.Errorf("site Download does not turn book status to download and save content: %v", book.GetStatus())
 			}
 		})
 
@@ -69,11 +69,11 @@ func Test_Sites_Site_Download(t *testing.T) {
 			err := operation(site, &flags.Flags{})
 			utils.CheckError(site.CommitDatabase())
 			if err != nil {
-				t.Fatalf("site Download return error for all site: %v", err)
+				t.Errorf("site Download return error for all site: %v", err)
 			}
 			book = books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() != database.Download || !book.HasContent(site.config.StorageDirectory) {
-				t.Fatalf("site Download does not turn book status to download and save content: %v", book)
+				t.Errorf("site Download does not turn book status to download and save content: %v", book)
 			}
 		})
 
@@ -82,7 +82,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
-				t.Fatalf("site Download not return error for invalid arguments")
+				t.Errorf("site Download not return error for invalid arguments")
 			}
 		})
 
@@ -91,7 +91,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
-				t.Fatalf("site Download return error for not matching site name- error: %v", err)
+				t.Errorf("site Download return error for not matching site name- error: %v", err)
 			}
 		})
 
@@ -104,7 +104,7 @@ func Test_Sites_Site_Download(t *testing.T) {
 			}
 			err := operation(site, f)
 			if err == nil {
-				t.Fatalf("site Download not return error for not exist book")
+				t.Errorf("site Download not return error for not exist book")
 			}
 		})
 	})

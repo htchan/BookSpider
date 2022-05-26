@@ -59,26 +59,26 @@ func Test_Sites_Site_Update(t *testing.T) {
 			rows := site.database.QueryBookBySiteIdHash("test", 1, 100)
 			record, err := rows.Scan()
 			if err != nil {
-				t.Fatalf("%v-%v-%v not exist in database", "test", 1, 100)
+				t.Errorf("%v-%v-%v not exist in database", "test", 1, 100)
 			}
 			rows.Close()
 			err = site.updateBook(record.(*database.BookRecord))
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site updateBook return error: %v", err)
+				t.Errorf("site updateBook return error: %v", err)
 			}
 
 			rows = site.database.QueryBookBySiteIdHash("test", 1, 100)
 			record, err = rows.Scan()
 			if err != nil || rows.Next() {
-				t.Fatalf("%v-%v-%v not exist in database", "test", 1, 100)
+				t.Errorf("%v-%v-%v not exist in database", "test", 1, 100)
 			}
 			rows.Close()
 			bookRecord := record.(*database.BookRecord)
 			if bookRecord.Title != "title-regex" || bookRecord.WriterId != 4 ||
 				bookRecord.Type != "type-regex" || bookRecord.UpdateDate != "last-update-regex" ||
 				bookRecord.UpdateChapter != "last-chapter-regex" {
-					t.Fatalf("bookRecord had been modified: %v", bookRecord)
+					t.Errorf("bookRecord had been modified: %v", bookRecord)
 			}
 		})
 
@@ -90,26 +90,26 @@ func Test_Sites_Site_Update(t *testing.T) {
 			rows := site.database.QueryBookBySiteIdHash("test", 1, -1)
 			record, err := rows.Scan()
 			if err != nil {
-				t.Fatalf("%v-%v-%v not exist in database", "test", 1, 100)
+				t.Errorf("%v-%v-%v not exist in database", "test", 1, 100)
 			}
 			rows.Close()
 			err = site.updateBook(record.(*database.BookRecord))
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site updateBook return error: %v", err)
+				t.Errorf("site updateBook return error: %v", err)
 			}
 
 			rows = site.database.QueryBookBySiteIdHash("test", 1, 100)
 			record, err = rows.Scan()
 			if err != nil || rows.Next() {
-				t.Fatalf("%v-%v-%v not exist in database", "test", 1, 100)
+				t.Errorf("%v-%v-%v not exist in database", "test", 1, 100)
 			}
 			rows.Close()
 			bookRecord := record.(*database.BookRecord)
 			if bookRecord.Title != "title-regex" || bookRecord.WriterId != 4 ||
 				bookRecord.Type != "type-regex" || bookRecord.UpdateDate != "last-update-regex" ||
 				bookRecord.UpdateChapter != "last-chapter-regex" {
-					t.Fatalf("bookRecord had not been modified: %v", bookRecord)
+					t.Errorf("bookRecord had not been modified: %v", bookRecord)
 			}
 		})
 
@@ -124,7 +124,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			err := site.updateBook(record)
 			site.CommitDatabase()
 			if err == nil {
-				t.Fatalf("site updateBook not return error when record not exist: %v", err)
+				t.Errorf("site updateBook not return error when record not exist: %v", err)
 			}
 		})
 	})
@@ -141,32 +141,32 @@ func Test_Sites_Site_Update(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 1 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 
 			err := site.update(false)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site update() return error: %v", err)
+				t.Errorf("site update() return error: %v", err)
 			}
 			// downloaded book will get a new record created
 			book := books.LoadBook(site.database, "test", 3, 200, site.config.SourceConfig)
 			if book == nil {
-				t.Fatalf("cannot query %v-%v-%v, it was removed", "test", 3, 200)
+				t.Errorf("cannot query %v-%v-%v, it was removed", "test", 3, 200)
 			}
 			book = books.LoadBook(site.database, "test", 3, -1, site.config.SourceConfig)
 			if book == nil {
-				t.Fatalf("cannot query %v-%v", "test", 3)
+				t.Errorf("cannot query %v-%v", "test", 3)
 			}
 			_, _, hashCode := book.GetInfo()
 			if hashCode == 200 || book.GetTitle() != "title-regex" {
-				t.Fatalf("site update does not create new book for already download content: %v", book.GetTitle())
+				t.Errorf("site update does not create new book for already download content: %v", book.GetTitle())
 			}
 
 			// error book will not be looped
 			book = books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() != database.Error {
-				t.Fatalf("cannot query %v-%v", "test", 3)
+				t.Errorf("cannot query %v-%v", "test", 3)
 			}
 
 			summary = site.database.Summary(site.Name)
@@ -177,7 +177,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 2 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("book update generate wrong summary: %v", summary)
+					t.Errorf("book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -190,19 +190,19 @@ func Test_Sites_Site_Update(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 2 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 
 			err := site.update(true)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site update() return error: %v", err)
+				t.Errorf("site update() return error: %v", err)
 			}
 
 			// error book will be touched
 			book := books.LoadBook(site.database, "test", 2, -1, site.config.SourceConfig)
 			if book == nil || book.GetStatus() == database.Error {
-				t.Fatalf("cannot query %v-%v", "test", 2)
+				t.Errorf("cannot query %v-%v", "test", 2)
 			}
 
 			summary = site.database.Summary(site.Name)
@@ -213,7 +213,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 5 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("book update generate wrong summary: %v", summary)
+					t.Errorf("book update generate wrong summary: %v", summary)
 				}
 		})
 	})
@@ -229,7 +229,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 			err := operation(site, f)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site Update return error for specific book - error: %v", err)
+				t.Errorf("site Update return error for specific book - error: %v", err)
 			}
 
 			summary := site.database.Summary(site.Name)
@@ -240,7 +240,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 5 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("book update generate wrong summary: %v", summary)
+					t.Errorf("book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -257,13 +257,13 @@ func Test_Sites_Site_Update(t *testing.T) {
 			err := operation(site, f)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site Update return error for specific book - error: %v", err)
+				t.Errorf("site Update return error for specific book - error: %v", err)
 			}
 			book := books.LoadBook(site.database, "test", 1, -1, site.config.SourceConfig)
 			summary := site.database.Summary(site.Name)
 			if book == nil || book.GetUpdateDate() != "104" ||
 				book.GetUpdateChapter() != "chapter-1" || summary.BookCount != 7 {
-					t.Fatalf("wrong result: book count: %v, book: %v", summary.BookCount, book.GetUpdateChapter())
+					t.Errorf("wrong result: book count: %v, book: %v", summary.BookCount, book.GetUpdateChapter())
 			}
 		})
 
@@ -275,7 +275,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 
 			err := operation(site, f)
 			if err == nil {
-				t.Fatalf("site Update not return error for invalid arguments")
+				t.Errorf("site Update not return error for invalid arguments")
 			}
 		})
 
@@ -287,7 +287,7 @@ func Test_Sites_Site_Update(t *testing.T) {
 
 			err := operation(site, f)
 			if err != nil {
-				t.Fatalf("site Update return error for not matching site name- error: %v", err)
+				t.Errorf("site Update return error for not matching site name- error: %v", err)
 			}
 		})
 	})
@@ -321,7 +321,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 			err := operation(site, f)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site Update return error for specific book - error: %v", err)
+				t.Errorf("site Update return error for specific book - error: %v", err)
 			}
 
 			summary := site.database.Summary(site.Name)
@@ -332,7 +332,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 5 ||
 				summary.StatusCount[database.End] != 1 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("book update generate wrong summary: %v", summary)
+					t.Errorf("book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -346,7 +346,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 
 			err := operation(site, f)
 			if err == nil {
-				t.Fatalf("site Update not return error for invalid arguments")
+				t.Errorf("site Update not return error for invalid arguments")
 			}
 		})
 
@@ -358,7 +358,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 
 			err := operation(site, f)
 			if err == nil {
-				t.Fatalf("site Update not return error for invalid arguments")
+				t.Errorf("site Update not return error for invalid arguments")
 			}
 		})
 
@@ -370,7 +370,7 @@ func Test_Sites_Site_UpdateError(t *testing.T) {
 
 			err := operation(site, f)
 			if err != nil {
-				t.Fatalf("site Update return error for not matching site name- error: %v", err)
+				t.Errorf("site Update return error for not matching site name- error: %v", err)
 			}
 		})
 	})

@@ -27,13 +27,13 @@ func TestBooks_Book_Download(t *testing.T) {
 
 			chapters, err := book.getEmptyChapters()
 			if err != nil || len(chapters) != 4 {
-				t.Fatalf("book getEmptyChapters return err: %v, chapters: %v", err, chapters)
+				t.Errorf("book getEmptyChapters return err: %v, chapters: %v", err, chapters)
 			}
 
 			for i, chapter := range chapters {
 				s := strconv.Itoa(i + 1)
 				if chapter.Url != fmt.Sprintf(book.config.ChapterUrl, "/" + s) || chapter.Title != s {
-					t.Fatalf("book getEmptyChapters return wrong result at position %v, chatper: %v", i, chapter)
+					t.Errorf("book getEmptyChapters return wrong result at position %v, chatper: %v", i, chapter)
 				}
 			}
 		})
@@ -46,7 +46,7 @@ func TestBooks_Book_Download(t *testing.T) {
 
 			_, err := book.getEmptyChapters()
 			if err == nil {
-				t.Fatalf("book getEmptyChapters return nil error for invalid response")
+				t.Errorf("book getEmptyChapters return nil error for invalid response")
 			}
 		})
 
@@ -57,7 +57,7 @@ func TestBooks_Book_Download(t *testing.T) {
 
 			_, err := book.getEmptyChapters()
 			if err == nil {
-				t.Fatalf("book getEmptyChapters return nil error for invalid response")
+				t.Errorf("book getEmptyChapters return nil error for invalid response")
 			}
 		})
 	})
@@ -78,14 +78,14 @@ func TestBooks_Book_Download(t *testing.T) {
 			result := book.downloadChapters(chapters, 1)
 
 			if len(result) != 3 {
-				t.Fatalf("book download Chapters has wrong chapter count: %v", len(result))
+				t.Errorf("book download Chapters has wrong chapter count: %v", len(result))
 			}
 
 			for i, chapter := range result {
 				if chapter.Url != book.config.DownloadUrl + urls[i] || 
 					chapter.Title != titles[i] ||
 					chapter.Content != strconv.Itoa(i + 1) {
-						t.Fatalf("result at position %v incorrect: %v", chapter.Index, chapter)
+						t.Errorf("result at position %v incorrect: %v", chapter.Index, chapter)
 				}
 			} 
 		})
@@ -111,7 +111,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			utils.CheckError(err)
 
 			if string(b) != string(reference){
-				t.Fatalf("book saveContent save such content: %v", string(b))
+				t.Errorf("book saveContent save such content: %v", string(b))
 			}
 		})
 	})
@@ -129,7 +129,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			result := book.Download("/test-data/storage", 10, &mutex)
 
 			if !result {
-				t.Fatalf("book download failed")
+				t.Errorf("book download failed")
 			}
 
 			b, err := os.ReadFile(os.Getenv("ASSETS_LOCATION") + "/test-data/storage/1-v10.txt")
@@ -138,7 +138,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			utils.CheckError(err)
 
 			if string(b) != string(reference){
-				t.Fatalf("book saveContent save such content: %v", string(b))
+				t.Errorf("book saveContent save such content: %v", string(b))
 			}
 		})
 
@@ -152,7 +152,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			result := book.Download("/test-data/storage", 10, &mutex)
 
 			if result {
-				t.Fatalf("book download success")
+				t.Errorf("book download success")
 			}
 		})
 
@@ -165,7 +165,7 @@ func TestBooks_Book_Download(t *testing.T) {
 			result := book.Download("/test-data/storage", 10, &mutex)
 
 			if result {
-				t.Fatalf("book download success")
+				t.Errorf("book download success")
 			}
 		})
 	})

@@ -36,6 +36,6 @@ func TestSqlite_DB_Backup(t *testing.T) {
 	utils.CheckError(err)
 
 	if string(b) != string(reference){
-		t.Fatalf("db backup save such content: %v", string(b))
+		t.Errorf("db backup save such content: %v", string(b))
 	}
 }

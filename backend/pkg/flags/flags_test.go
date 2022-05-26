@@ -55,7 +55,7 @@ func Test_Flags_Flags_Load(t *testing.T) {
 
 		if *actual.Operation != testcase.expect.Operation || *actual.Site != testcase.expect.Site ||
 			*actual.Id != testcase.expect.Id || *actual.MaxThreads != testcase.expect.MaxThreads {
-			t.Fatalf("flags.Load(%v) returns \nOperation=%v,\tSite=%v,\tId=%v\tMaxThreads=%v\n"+
+			t.Errorf("flags.Load(%v) returns \nOperation=%v,\tSite=%v,\tId=%v\tMaxThreads=%v\n"+
 				"but not\nOperation=%v,\tSite=%v,\tId=%v\tMaxThreads=%v\n",
 				testcase.maxThreadsConfig,
 				*actual.Operation, *actual.Site, *actual.Id, *actual.MaxThreads,
@@ -71,28 +71,28 @@ func Test_Flags_Flags_IsEverything(t *testing.T) {
 	t.Run("true if it is empty", func(t *testing.T) {
 		f := Flags{}
 		if !f.IsEverything() {
-			t.Fatalf("flags IsEverything return false for empty")
+			t.Errorf("flags IsEverything return false for empty")
 		}
 	})
 
 	t.Run("true if it provides operation", func(t *testing.T) {
 		f := Flags{ Operation: &flagOperation }
 		if !f.IsEverything() {
-			t.Fatalf("flags IsEverything return false for empty")
+			t.Errorf("flags IsEverything return false for empty")
 		}
 	})
 
 	t.Run("false if providing site, id", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId }
 		if f.IsEverything() {
-			t.Fatalf("flags IsEverything return true for providing site, id")
+			t.Errorf("flags IsEverything return true for providing site, id")
 		}
 	})
 
 	t.Run("false if providing site", func(t *testing.T) {
 		f := Flags{ Site: &flagSite }
 		if f.IsEverything() {
-			t.Fatalf("flags IsEverything return true for providing site")
+			t.Errorf("flags IsEverything return true for providing site")
 		}
 	})
 }
@@ -103,28 +103,28 @@ func Test_Flags_Flags_IsBook(t *testing.T) {
 	t.Run("true if it provide site, id, hash", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
 		if !f.IsBook() {
-			t.Fatalf("flags IsBook return false for site, id, hash")
+			t.Errorf("flags IsBook return false for site, id, hash")
 		}
 	})
 
 	t.Run("true if it provide site, id", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId }
 		if !f.IsBook() {
-			t.Fatalf("flags IsBook return false for site, id")
+			t.Errorf("flags IsBook return false for site, id")
 		}
 	})
 
 	t.Run("false if missing site", func(t *testing.T) {
 		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
 		if f.IsBook() {
-			t.Fatalf("flags IsBook return true for missing site")
+			t.Errorf("flags IsBook return true for missing site")
 		}
 	})
 
 	t.Run("false if missing id", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
 		if f.IsBook() {
-			t.Fatalf("flags IsBook return true for missing id")
+			t.Errorf("flags IsBook return true for missing id")
 		}
 	})
 }
@@ -134,28 +134,28 @@ func Test_Flags_Flags_IsSite(t *testing.T) {
 	t.Run("true if it only provide site", func(t *testing.T) {
 		f := Flags{ Site: &flagSite }
 		if !f.IsSite() {
-			t.Fatalf("flags IsSite return false for only site")
+			t.Errorf("flags IsSite return false for only site")
 		}
 	})
 
 	t.Run("false if site not provide", func(t *testing.T) {
 		f := Flags{}
 		if f.IsSite() {
-			t.Fatalf("flags IsSite return true for empty flag")
+			t.Errorf("flags IsSite return true for empty flag")
 		}
 	})
 
 	t.Run("false if id provided", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId }
 		if f.IsSite() {
-			t.Fatalf("flags IsBook return true for site with id")
+			t.Errorf("flags IsBook return true for site with id")
 		}
 	})
 
 	t.Run("false if hash code provided", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
 		if f.IsSite() {
-			t.Fatalf("flags IsBook return true for site with hash code")
+			t.Errorf("flags IsBook return true for site with hash code")
 		}
 	})
 }
@@ -166,7 +166,7 @@ func Test_Flags_Flags_GetBookInfo(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
 		site, id, hash := f.GetBookInfo()
 		if site != "test" || id != 123 || hash != 13368 {
-			t.Fatalf(
+			t.Errorf(
 				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
 				site, id, hash)
 		}
@@ -176,7 +176,7 @@ func Test_Flags_Flags_GetBookInfo(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId }
 		site, id, hash := f.GetBookInfo()
 		if site != "test" || id != 123 || hash != -1 {
-			t.Fatalf(
+			t.Errorf(
 				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
 				site, id, hash)
 		}
@@ -186,7 +186,7 @@ func Test_Flags_Flags_GetBookInfo(t *testing.T) {
 		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
 		site, id, hash := f.GetBookInfo()
 		if site != "" || id != 123 || hash != 13368 {
-			t.Fatalf(
+			t.Errorf(
 				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
 				site, id, hash)
 		}
@@ -196,7 +196,7 @@ func Test_Flags_Flags_GetBookInfo(t *testing.T) {
 		f := Flags{ Site: &flagSite, HashCode: &flagHashCode }
 		site, id, hash := f.GetBookInfo()
 		if site != "test" || id != -1 || hash != 13368 {
-			t.Fatalf(
+			t.Errorf(
 				"flags GetBookInfo return wrong result - site: %v, id: %v, hash: %v",
 				site, id, hash)
 		}
@@ -209,21 +209,21 @@ func Test_Flags_Flags_Valid(t *testing.T) {
 	t.Run("true for valid book", func(t *testing.T) {
 		f := Flags{ Site: &flagSite, Id: &flagId, HashCode: &flagHashCode }
 		if !f.Valid() {
-			t.Fatalf("flags Valid return false for valid book")
+			t.Errorf("flags Valid return false for valid book")
 		}
 	})
 
 	t.Run("true for valid site", func(t *testing.T) {
 		f := Flags{ Site: &flagSite }
 		if !f.Valid() {
-			t.Fatalf("flags Valid return false for valid site")
+			t.Errorf("flags Valid return false for valid site")
 		}
 	})
 
 	t.Run("return false", func(t *testing.T) {
 		f := Flags{ Id: &flagId, HashCode: &flagHashCode }
 		if f.Valid() {
-			t.Fatalf("flags Valid return true for invalid arguments")
+			t.Errorf("flags Valid return true for invalid arguments")
 		}
 	})
 }

@@ -30,10 +30,10 @@ func Test_Sites_Constructor_NewSite(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		site := NewSite("test", siteConfig)
 		if site.Name != "test" || site.database != nil || site.config != siteConfig {
-			t.Fatalf("site init with wrong data %v", site)
+			t.Errorf("site init with wrong data %v", site)
 		}
 		if !site.semaphore.TryAcquire(1000) || site.semaphore.TryAcquire(1) {
-				t.Fatalf("site init with wrong threads count")
+				t.Errorf("site init with wrong threads count")
 		}
 	})
 }
@@ -44,7 +44,7 @@ func Test_Sites_Site_OpenDatabase(t *testing.T) {
 		err := site.OpenDatabase()
 		defer site.CloseDatabase()
 		if err != nil {
-			t.Fatalf("site OpenDatabase return error: %v", err)
+			t.Errorf("site OpenDatabase return error: %v", err)
 		}
 	})
 
@@ -54,7 +54,7 @@ func Test_Sites_Site_OpenDatabase(t *testing.T) {
 		site := NewSite("test", &tempConfig)
 		err := site.OpenDatabase()
 		if err == nil {
-			t.Fatalf("site OpenDatabase not return error")
+			t.Errorf("site OpenDatabase not return error")
 		}
 	})
 }
@@ -73,7 +73,7 @@ func Test_Sites_Site_Map(t *testing.T) {
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.InProgress]!= 1 ||
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.End]!= 1 ||
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.Download]!= 1 {
-				t.Fatalf("site.Map return wrong data: %v", siteMap)
+				t.Errorf("site.Map return wrong data: %v", siteMap)
 		}
 	})
 
@@ -92,13 +92,14 @@ func Test_Sites_Site_Map(t *testing.T) {
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.InProgress]!= 0 ||
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.End]!= 0 ||
 			siteMap["statusCount"].(map[database.StatusCode]int)[database.Download]!= 0 {
-				t.Fatalf("site.Map return wrong data: %v", siteMap)
+				t.Errorf("site.Map return wrong data: %v", siteMap)
 		}
 	})
 }
 
 func TestMain(m *testing.M) {
-	ApiParser.Setup(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser")
+	ApiParser.SetDefault(
+		ApiParser.FromDirectory(os.Getenv("ASSETS_LOCATION") + "/test-data/api_parser"))
 	
 	initBackupTest()
 	initCheckTest()

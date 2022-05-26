@@ -38,7 +38,7 @@ func TestSqlite_DB_DeleteBookRecords(t *testing.T) {
 		err := db.DeleteBookRecords(record)
 		
 		if err == nil || db.statementCount != 0 {
-			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
+			t.Errorf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -57,7 +57,7 @@ func TestSqlite_DB_DeleteWriterRecords(t *testing.T) {
 		err := db.DeleteWriterRecords(record)
 
 		if err == nil || db.statementCount != 0 {
-			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
+			t.Errorf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -77,7 +77,7 @@ func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
 		err := db.DeleteErrorRecords(records)
 		
 		if err != nil || db.statementCount != 1 || db.statements[0] != ErrorDeleteStatement(&records[0]) {
-			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
+			t.Errorf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -92,7 +92,7 @@ func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
 		err := db.DeleteErrorRecords(records)
 		
 		if err != nil || db.statementCount != 2 || db.statements[1] != ErrorDeleteStatement(&records[0]) {
-			t.Fatalf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
+			t.Errorf("DB.DeleteWriterRecord adds statement to db: count: %v, statement: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -100,7 +100,7 @@ func TestSqlite_DB_DeleteErrorRecord(t *testing.T) {
 		err := db.DeleteErrorRecords([]database.ErrorRecord{})
 		
 		if err == nil {
-			t.Fatalf("DB.DeleteWriterRecord does not throw error")
+			t.Errorf("DB.DeleteWriterRecord does not throw error")
 		}
 	})
 }

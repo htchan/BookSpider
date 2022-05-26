@@ -47,11 +47,11 @@ func Test_Sites_Site_Check(t *testing.T) {
 			fmt.Println("database", site.database)
 			site.CommitDatabase()
 			if err != nil {
-				t.Fatalf("site Check return error for full site - error: %v", err)
+				t.Errorf("site Check return error for full site - error: %v", err)
 			}
 			book = books.LoadBook(site.database, "test", 1, 100, site.config.SourceConfig)
 			if book.GetStatus() != database.End {
-				t.Fatalf("site.Check does not update the record status to end")
+				t.Errorf("site.Check does not update the record status to end")
 			}
 			summary := site.database.Summary(site.Name)
 			if summary.BookCount != 6 || summary.ErrorCount != 3 ||
@@ -61,7 +61,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 				summary.StatusCount[database.InProgress] != 0 ||
 				summary.StatusCount[database.End] != 2 ||
 				summary.StatusCount[database.Download] != 1 {
-					t.Fatalf("before book update generate wrong summary: %v", summary)
+					t.Errorf("before book update generate wrong summary: %v", summary)
 				}
 		})
 
@@ -70,7 +70,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Id: &flagId })
 			if err == nil {
-				t.Fatalf("site Check not return error for invalid arguments")
+				t.Errorf("site Check not return error for invalid arguments")
 			}
 		})
 
@@ -79,7 +79,7 @@ func Test_Sites_Site_Check(t *testing.T) {
 
 			err := operation(site, &flags.Flags{ Site: &flagSite })
 			if err != nil {
-				t.Fatalf("site Check return error for not matching site name- error: %v", err)
+				t.Errorf("site Check return error for not matching site name- error: %v", err)
 			}
 		})
 	})

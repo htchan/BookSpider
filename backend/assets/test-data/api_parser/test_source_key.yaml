@@ -9,4 +9,4 @@ info:
 
 chapter_content:
   data:
-    - "chapter-content-(?P<Content>.*?)-content-regex"
+    - "chapter-content-(?P<ChapterContent>.*?)-content-regex"

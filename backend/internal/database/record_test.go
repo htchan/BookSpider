@@ -31,7 +31,7 @@ func Test_record(t *testing.T) {
 				result[6].(string) != "book-update-date" ||
 				result[7].(string) != "book-update-chapter" ||
 				result[8].(StatusCode) != Error {
-				t.Fatalf("got result: %v", result)
+				t.Errorf("got result: %v", result)
 			}
 		})
 		
@@ -39,7 +39,7 @@ func Test_record(t *testing.T) {
 			result := record.String()
 
 			if result != "site-name-0-2s" {
-				t.Fatalf("got result: %v", result)
+				t.Errorf("got result: %v", result)
 			}
 		})
 
@@ -47,7 +47,7 @@ func Test_record(t *testing.T) {
 			t.Run("same", func(t *testing.T) {
 				success := record.Equal(record)
 				if !success {
-					t.Fatalf("got result: %v", success)
+					t.Errorf("got result: %v", success)
 				}
 			})
 
@@ -56,7 +56,7 @@ func Test_record(t *testing.T) {
 				record2.Status = Download
 				failure := record.Equal(record2)
 				if failure {
-					t.Fatalf("got result: %v", failure)
+					t.Errorf("got result: %v", failure)
 				}
 			})
 		})
@@ -73,7 +73,7 @@ func Test_record(t *testing.T) {
 
 			if result[0].(int) != 0 ||
 				result[1].(string) != "writer-name" {
-				t.Fatalf("got result: %v", result)
+				t.Errorf("got result: %v", result)
 			}
 		})
 
@@ -81,7 +81,7 @@ func Test_record(t *testing.T) {
 			t.Run("same", func(t *testing.T) {
 				success := record.Equal(record)
 				if !success {
-					t.Fatalf("got result: %v", success)
+					t.Errorf("got result: %v", success)
 				}
 			})
 
@@ -90,7 +90,7 @@ func Test_record(t *testing.T) {
 				record2.Name = "other-writer-name"
 				failure := record.Equal(record2)
 				if failure {
-					t.Fatalf("got result: %v", failure)
+					t.Errorf("got result: %v", failure)
 				}
 			})
 		})
@@ -109,7 +109,7 @@ func Test_record(t *testing.T) {
 			if result[0].(string) != "site-name" ||
 				result[1].(int) != 0 ||
 				result[2].(string) != "error-desc" {
-				t.Fatalf("got result: %v", result)
+				t.Errorf("got result: %v", result)
 			}
 		})
 
@@ -117,7 +117,7 @@ func Test_record(t *testing.T) {
 			t.Run("same", func(t *testing.T) {
 				success := record.Equal(record)
 				if !success {
-					t.Fatalf("got result: %v", success)
+					t.Errorf("got result: %v", success)
 				}
 			})
 
@@ -126,7 +126,7 @@ func Test_record(t *testing.T) {
 				record2.Id = 999
 				failure := record.Equal(record2)
 				if failure {
-					t.Fatalf("got result: %v", failure)
+					t.Errorf("got result: %v", failure)
 				}
 			})
 		})

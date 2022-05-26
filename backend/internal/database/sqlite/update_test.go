@@ -46,11 +46,11 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 		err := db.UpdateBookRecord(bookRecord, writerRecord)
 		
 		if err != nil {
-			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
+			t.Errorf("DB.UpdateBookRecord failed err: %v", err)
 		}
 		if db.statementCount != 1 ||
 			db.statements[0] != BookUpdateStatement(bookRecord, "") {
-				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+				t.Errorf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -58,7 +58,7 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 		err := db.UpdateBookRecord(nil, nil)
 		
 		if err == nil || db.statementCount != 1 {
-			t.Fatalf("DB.UpdateBookRecord success with nil err: %v", err)
+			t.Errorf("DB.UpdateBookRecord success with nil err: %v", err)
 		}
 	})
 
@@ -76,11 +76,11 @@ func Test_Sqlite_DB_UpdateBookRecord(t *testing.T) {
 		err := db.UpdateBookRecord(bookRecord, writerRecord)
 		
 		if err != nil {
-			t.Fatalf("DB.UpdateBookRecord failed err: %v", err)
+			t.Errorf("DB.UpdateBookRecord failed err: %v", err)
 		}
 		if db.statementCount != 2 ||
 			db.statements[1] != BookUpdateStatement(bookRecord, "") {
-				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+				t.Errorf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -97,11 +97,11 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 		err := db.UpdateErrorRecord(errorRecord)
 		
 		if err != nil {
-			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
+			t.Errorf("DB.UpdateErrorRecord failed err: %v", err)
 		}
 		if db.statementCount != 1 ||
 			db.statements[0] != ErrorUpdateStatement(errorRecord) {
-				t.Fatalf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+				t.Errorf("DB.UpdateBookRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 
@@ -109,7 +109,7 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 		err := db.UpdateErrorRecord(nil)
 		
 		if err == nil || db.statementCount != 1 {
-			t.Fatalf("DB.UpdateErrorRecord success with nil err: %v", err)
+			t.Errorf("DB.UpdateErrorRecord success with nil err: %v", err)
 		}
 	})
 
@@ -121,11 +121,11 @@ func Test_Sqlite_DB_UpdateErrorRecord(t *testing.T) {
 		err := db.UpdateErrorRecord(errorRecord)
 		
 		if err != nil {
-			t.Fatalf("DB.UpdateErrorRecord failed err: %v", err)
+			t.Errorf("DB.UpdateErrorRecord failed err: %v", err)
 		}
 		if db.statementCount != 2 ||
 			db.statements[1] != ErrorUpdateStatement(errorRecord) {
-				t.Fatalf("DB.UpdateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
+				t.Errorf("DB.UpdateErrorRecord does not add record to statement - count: %v, statements: %v", db.statementCount, db.statements)
 		}
 	})
 }
@@ -143,12 +143,12 @@ func Test_Sqlite_DB_UpdateBookRecordsStatusByChapter(t *testing.T) {
 			summary.StatusCount[database.InProgress] != 1 ||
 			summary.StatusCount[database.End] != 1 ||
 			summary.StatusCount[database.Download] != 1 {
-				t.Fatalf("before book update generate wrong summary: %v", summary)
+				t.Errorf("before book update generate wrong summary: %v", summary)
 			}
 		err := db.UpdateBookRecordsStatusByChapter()
 		db.Commit()
 		if err != nil {
-			t.Fatalf("db.UpdateBookRecordsStatusByChapter return error: %v", err)
+			t.Errorf("db.UpdateBookRecordsStatusByChapter return error: %v", err)
 		}
 
 		summary = db.Summary("test")
@@ -159,7 +159,7 @@ func Test_Sqlite_DB_UpdateBookRecordsStatusByChapter(t *testing.T) {
 			summary.StatusCount[database.InProgress] != 0 ||
 			summary.StatusCount[database.End] != 2 ||
 			summary.StatusCount[database.Download] != 1 {
-				t.Fatalf("before book update generate wrong summary: %v", summary)
+				t.Errorf("before book update generate wrong summary: %v", summary)
 			}
 	})
 }

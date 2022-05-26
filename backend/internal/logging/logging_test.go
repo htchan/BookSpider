@@ -26,7 +26,7 @@ func Test(t *testing.T) {
 			result := buf.String()
 
 			if result[20:] != "test hello\n" {
-				t.Fatalf("got result: %v", result[20:])
+				t.Errorf("got result: %v", result[20:])
 			}
 		})
 		
@@ -36,7 +36,7 @@ func Test(t *testing.T) {
 			result := buf.String()
 
 			if result[20:] != "test\n" {
-				t.Fatalf("got result: %v", result[20:])
+				t.Errorf("got result: %v", result[20:])
 			}
 		})
 	})
@@ -48,7 +48,7 @@ func Test(t *testing.T) {
 		result := buf.String()
 
 		if result[20:] != "book-spider.book.site-id-version.action.event\n" {
-			t.Fatalf("got result: %v", result[20:])
+			t.Errorf("got result: %v", result[20:])
 		}
 	})
 
@@ -59,7 +59,7 @@ func Test(t *testing.T) {
 		result := buf.String()
 
 		if result[20:] != "book-spider.site.site-name.action.event\n" {
-			t.Fatalf("got result: %v", result[20:])
+			t.Errorf("got result: %v", result[20:])
 		}
 	})
 
@@ -70,7 +70,7 @@ func Test(t *testing.T) {
 		result := buf.String()
 
 		if result[20:] != "book-spider.request.action.event\n" {
-			t.Fatalf("got result: %v", result[20:])
+			t.Errorf("got result: %v", result[20:])
 		}
 	})
 
@@ -81,7 +81,7 @@ func Test(t *testing.T) {
 		result := buf.String()
 
 		if result[20:] != "book-spider.area.event\n" {
-			t.Fatalf("got result: %v", result[20:])
+			t.Errorf("got result: %v", result[20:])
 		}
 	})
 

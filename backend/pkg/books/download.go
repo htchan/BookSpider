@@ -27,7 +27,7 @@ func (book Book) getEmptyChapters() (chapters []Chapter, err error) {
 		return
 	}
 
-	responseApi := ApiParser.Parse(html, book.config.SourceKey + ".info")
+	responseApi := ApiParser.Parse(book.config.SourceKey + ".info", html)
 	urls, titles := make([]string, len(responseApi.Items)), make([]string, len(responseApi.Items))
 	for i, item := range responseApi.Items {
 		urls[i] = item["ChapterUrl"]

@@ -11,7 +11,7 @@ func Test_SiteConfig(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			result := LoadSiteConfigs(siteConfigDirectory)
 			if result == nil || len(result) != 5 {
-				t.Fatalf("result: %v", result)
+				t.Errorf("result: %v", result)
 			}
 			siteConfig := result["ck101"]
 			if siteConfig.SourceKey != "ck101-desktop" ||
@@ -19,16 +19,16 @@ func Test_SiteConfig(t *testing.T) {
 				siteConfig.DatabaseLocation != "/database/ck101.db" ||
 				siteConfig.StorageDirectory != "/books/ck101/" ||
 				siteConfig.BackupDirectory != "/backup/" ||
-				siteConfig.CommitStatements != 2 ||
+				siteConfig.CommitStatements != 10000 ||
 				siteConfig.SourceConfig.BaseUrl == "" {
-					t.Fatalf("wrong content: %v", siteConfig)
+					t.Errorf("wrong content: %v", siteConfig)
 				}
 		})
 
 		t.Run("return nil config if file not exist", func(t *testing.T) {
 			result := LoadSiteConfigs(siteConfigDirectory + "abc")
 			if result != nil {
-				t.Fatalf("result: %v", result)
+				t.Errorf("result: %v", result)
 			}
 		})
 	})

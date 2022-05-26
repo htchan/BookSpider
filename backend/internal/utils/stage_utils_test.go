@@ -16,7 +16,7 @@ func Test_WriteStage(t *testing.T) {
 		CheckError(err)
 
 		if string(b) != "hello\n"{
-			t.Fatalf("book saveContent save such content: %v", string(b))
+			t.Errorf("book saveContent save such content: %v", string(b))
 		}
 	})
 	
@@ -32,7 +32,7 @@ func Test_WriteStage(t *testing.T) {
 		CheckError(err)
 
 		if string(b) != ""{
-			t.Fatalf("book saveContent save such content: %v", string(b))
+			t.Errorf("book saveContent save such content: %v", string(b))
 		}
 	})
 }

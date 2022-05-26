@@ -42,7 +42,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		err := operation(site, &flags.Flags{Site: &flagSite})
 
 		if err != nil {
-			t.Fatalf("site Backup return error: %v", err)
+			t.Errorf("site Backup return error: %v", err)
 		}
 		
 		b, err := os.ReadFile(backupLocation)
@@ -51,7 +51,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		utils.CheckError(err)
 
 		if string(b) != string(reference){
-			t.Fatalf("site backup save such content: %v", string(b))
+			t.Errorf("site backup save such content: %v", string(b))
 		}
 		os.Remove(backupLocation)
 		os.Remove(filepath.Dir(backupLocation))
@@ -63,7 +63,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		err := operation(site, &flags.Flags{})
 
 		if err != nil {
-			t.Fatalf("site Backup return error: %v", err)
+			t.Errorf("site Backup return error: %v", err)
 		}
 		
 		b, err := os.ReadFile(backupLocation)
@@ -72,7 +72,7 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		utils.CheckError(err)
 
 		if string(b) != string(reference){
-			t.Fatalf("site backup save such content: %v", string(b))
+			t.Errorf("site backup save such content: %v", string(b))
 		}
 		os.Remove(backupLocation)
 		os.Remove(filepath.Dir(backupLocation))
@@ -84,11 +84,11 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		err := operation(site, &flags.Flags{Site: &flagSite})
 
 		if err != nil {
-			t.Fatalf("site Backup return error: %v", err)
+			t.Errorf("site Backup return error: %v", err)
 		}
 		
 		if utils.Exists(backupLocation) {
-			t.Fatalf("site backup does not skip for flag site: not-test")
+			t.Errorf("site backup does not skip for flag site: not-test")
 		}
 	})
 
@@ -99,11 +99,11 @@ func Test_Sites_Site_Backup(t *testing.T) {
 		err := operation(site, &flags.Flags{Site: &flagSite, Id: &flagId})
 
 		if err == nil {
-			t.Fatalf("site Backup not return error")
+			t.Errorf("site Backup not return error")
 		}
 		
 		if utils.Exists(backupLocation) {
-			t.Fatalf("site backup does not skip for flag site: test")
+			t.Errorf("site backup does not skip for flag site: test")
 		}
 	})
 }
