@@ -125,7 +125,7 @@ func startServer(addr string) {
 func main() {
 	setup(os.Getenv("ASSETS_LOCATION") + "/configs")
 	logs = Logs{
-		logLocation: os.Getenv("ASSETS_LOCATION") + "/log/controller.log", 
+		logLocation: os.Getenv("ASSETS_LOCATION") + "/log/batch.log", 
 		Logs: make([]string, 100), 
 		MemoryLastUpdate: time.Unix(0, 0), 
 		FileLastUpdate: time.Unix(0, 0)}

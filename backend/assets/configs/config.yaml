@@ -70,4 +70,4 @@ backend:
         - process
         - info
     stageFile: '/log/stage.txt'
-    logFile: '/log/controller.log'
+    logFile: '/log/batch.log'
