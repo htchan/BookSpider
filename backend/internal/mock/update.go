@@ -33,3 +33,21 @@ func UpdateServer() *httptest.Server {
 			}
 		}))
 }
+
+func MockBookUpdateServer() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			if strings.HasPrefix(req.URL.Path, "/updated") {
+				fmt.Fprintf(res, "title_new writer_new type_new date_new chapter_new ")
+			} else if strings.HasPrefix(req.URL.Path, "/no_updated") {
+				fmt.Fprintf(res, "title writer type date chapter ")
+			} else if strings.HasPrefix(req.URL.Path, "/zero_length") {
+			} else if strings.HasPrefix(req.URL.Path, "/400") {
+				res.WriteHeader(400)
+			} else if strings.HasPrefix(req.URL.Path, "/503") {
+				res.WriteHeader(503)
+			} else if strings.HasPrefix(req.URL.Path, "/missing_date") {
+				fmt.Fprintf(res, "title writer type chapter ")
+			}
+	}))
+}

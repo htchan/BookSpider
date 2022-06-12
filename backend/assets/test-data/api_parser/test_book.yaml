@@ -1,0 +1,12 @@
+info:
+  data:
+    - "(?P<Title>title.*?) "
+    - "(?P<Writer>writer.*?) "
+    - "(?P<Type>type.*?) "
+    - "(?P<LastUpdate>date.*?) "
+    - "(?P<LastChapter>chapter.*?) "
+  items: "url-(?P<ChapterUrl>.*?) title-(?P<ChapterTitle>.*?) "
+
+chapter_content:
+  data:
+    - "chapter-content-(?P<ChapterContent>.*)"

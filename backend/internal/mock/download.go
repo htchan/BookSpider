@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"net/http"
 	"strings"
+	"regexp"
 )
 
 func DownloadServer() *httptest.Server {
@@ -34,6 +35,29 @@ func DownloadServer() *httptest.Server {
 				fmt.Fprintf(res, "chapter-content-url-hello<br />-content-regex")
 			} else if strings.HasPrefix(req.URL.Path, "/chapter/invalid") {
 
+			}
+		}))
+}
+
+func MockBookDownloadServer() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			if strings.Contains(req.URL.Path, "/chapter/success") {
+				reg := regexp.MustCompile(".*/chapter/")
+				data := reg.ReplaceAllString(req.URL.Path, "")
+				fmt.Fprintf(res, fmt.Sprintf("chapter-content-%v", data))
+			} else if strings.HasPrefix(req.URL.Path, "/chapter/400") {
+				res.WriteHeader(400)
+			} else if strings.HasPrefix(req.URL.Path, "/chapter/unknown") {
+				fmt.Fprintf(res, "unknown content")
+			} else if strings.HasPrefix(req.URL.Path, "/list_chapters") {
+				fmt.Fprintf(res, "url-0 title-0 url-1 title-1 url-2 title-2 ")
+			} else if strings.HasPrefix(req.URL.Path, "/list_success_chapters") {
+				fmt.Fprintf(res, "url-/0 title-0 url-/1 title-1 url-/2 title-2 ")
+			} else if strings.HasPrefix(req.URL.Path, "/400") {
+				res.WriteHeader(400)
+			} else if strings.HasPrefix(req.URL.Path, "/unknown") {
+				fmt.Fprintf(res, "unknown content")
 			}
 		}))
 }
