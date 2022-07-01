@@ -50,6 +50,7 @@ func TestLoadClientConfigs(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		dirName := fmt.Sprintf("client_test/%d", i)
 		os.MkdirAll(dirName, 0750)
 		os.WriteFile(fmt.Sprintf("./%v/client_configs.yaml", dirName), []byte(test.yamlClientString), 0644)

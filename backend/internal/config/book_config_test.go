@@ -43,6 +43,7 @@ func TestLoadBookConfigs(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		dirName := fmt.Sprintf("book_test/%d", i)
 		os.MkdirAll(dirName, 0750)
 		os.WriteFile(fmt.Sprintf("./%v/book_configs.yaml", dirName), []byte(test.yamlBookString), 0644)

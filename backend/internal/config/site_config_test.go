@@ -100,6 +100,7 @@ func TestLoadSiteConfigs(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		dirName := fmt.Sprintf("site_test/%d", i)
 		os.MkdirAll(dirName, 0750)
 		os.WriteFile(fmt.Sprintf("./%v/site_configs.yaml", dirName), []byte(test.yamlSiteString), 0644)
