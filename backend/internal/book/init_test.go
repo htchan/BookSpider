@@ -2,11 +2,11 @@ package book
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/htchan/ApiParser"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"time"
-	"github.com/htchan/ApiParser"
 )
 
 var db *sql.DB

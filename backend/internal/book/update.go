@@ -1,14 +1,14 @@
 package book
 
 import (
-	"fmt"
 	"errors"
-	"github.com/htchan/BookSpider/internal/book/model"
+	"fmt"
 	"github.com/htchan/ApiParser"
+	"github.com/htchan/BookSpider/internal/book/model"
 )
 
 func (book Book) baseURL() string {
-	return fmt.Sprintf(book.BookConfig.URL.Base, book.BookModel.ID)
+	return fmt.Sprintf(book.BookConfig.URLConfig.Base, book.BookModel.ID)
 }
 
 func (book Book) fetchInfo() (title, writer, typeStr, date, chapterStr string, err error) {
@@ -16,7 +16,7 @@ func (book Book) fetchInfo() (title, writer, typeStr, date, chapterStr string, e
 	if err != nil {
 		return
 	}
-	responseApi := ApiParser.Parse(book.BookConfig.SourceKey + ".info", html)
+	responseApi := ApiParser.Parse(book.BookConfig.SourceKey+".info", html)
 	okMap := make(map[string]bool)
 	title, okMap["title"] = responseApi.Data["Title"]
 	writer, okMap["writer"] = responseApi.Data["Writer"]
@@ -34,13 +34,13 @@ func (book Book) fetchInfo() (title, writer, typeStr, date, chapterStr string, e
 
 func (book Book) isNewBook(title, writer, typeStr string) bool {
 	return title != book.BookModel.Title || writer != book.WriterModel.Name ||
-	typeStr != book.BookModel.Type
+		typeStr != book.BookModel.Type
 }
 
 func (book Book) isUpdated(title, writer, typeStr, date, chapterStr string) bool {
 	return title != book.BookModel.Title || writer != book.WriterModel.Name ||
-	typeStr != book.BookModel.Type || date != book.BookModel.UpdateDate ||
-	chapterStr != book.BookModel.UpdateChapter
+		typeStr != book.BookModel.Type || date != book.BookModel.UpdateDate ||
+		chapterStr != book.BookModel.UpdateChapter
 }
 
 func (book *Book) Update() (bool, error) {

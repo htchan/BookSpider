@@ -1,24 +1,24 @@
 package book
 
 import (
-	"fmt"
-	"sync"
-	"os"
 	"errors"
-	"strings"
-	"strconv"
-	"path/filepath"
-	"github.com/htchan/BookSpider/internal/book/model"
+	"fmt"
 	"github.com/htchan/ApiParser"
+	"github.com/htchan/BookSpider/internal/book/model"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var CONTENT_SEP = strings.Repeat("-", 20)
 
 func (book Book) downloadURL() string {
-	return fmt.Sprintf(book.BookConfig.URL.Download, book.BookModel.ID)
+	return fmt.Sprintf(book.BookConfig.URLConfig.Download, book.BookModel.ID)
 }
 
-func (book Book) fetchChapters() []Chapter {
+func (book *Book) fetchChapters() []Chapter {
 	chapters, err := book.generateEmptyChapters()
 	if err != nil {
 		//TODO: log err
@@ -32,7 +32,7 @@ func (book Book) fetchChapters() []Chapter {
 			defer wg.Done()
 			defer book.CircuitBreakerClient.Release()
 			chapters[i].Fetch()
-		}(i,)
+		}(i)
 	}
 	wg.Wait()
 	return chapters
@@ -43,7 +43,7 @@ func (book Book) generateEmptyChapters() ([]Chapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	responseApi := ApiParser.Parse(book.BookConfig.SourceKey + ".info", html)
+	responseApi := ApiParser.Parse(book.BookConfig.SourceKey+".info", html)
 	if len(responseApi.Items) == 0 {
 		return nil, errors.New("empty chapters")
 	}
@@ -85,27 +85,13 @@ func (book Book) saveChapters(chapters []Chapter) error {
 }
 
 func (book *Book) Download() error {
-	var wg sync.WaitGroup
-	chapters, err := book.generateEmptyChapters()
-	if err != nil {
-		return err
-	}
-	for i := range chapters {
-		wg.Add(1)
-		book.CircuitBreakerClient.Acquire()
-		go func(i int) {
-			defer wg.Done()
-			defer book.CircuitBreakerClient.Release()
-			chapters[i].Fetch()
-		}(i)
-	}
-	wg.Wait()
+	chapters := book.fetchChapters()
 	sortChapters(chapters)
-	err = book.saveChapters(chapters)
+	err := book.saveChapters(chapters)
 	if err != nil {
 		return err
 	}
-	book.Status = model.End
+	book.Status = model.Download
 	return nil
 }
 

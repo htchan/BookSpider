@@ -1,24 +1,24 @@
 package book
 
 import (
-	"testing"
-	"errors"
-	"strings"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"runtime"
+	"strings"
+	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/htchan/BookSpider/internal/book/model"
-	"github.com/htchan/BookSpider/internal/config"
 	"github.com/htchan/BookSpider/internal/client"
+	"github.com/htchan/BookSpider/internal/config"
 )
 
 func equalBook(result, expect Book) bool {
 	return cmp.Equal(result.BookModel, expect.BookModel) &&
-	cmp.Equal(result.WriterModel, expect.WriterModel) &&
-	cmp.Equal(result.ErrorModel.Error(), expect.ErrorModel.Error()) &&
-	cmp.Equal(result.BookConfig, expect.BookConfig)
+		cmp.Equal(result.WriterModel, expect.WriterModel) &&
+		cmp.Equal(result.ErrorModel.Error(), expect.ErrorModel.Error()) &&
+		cmp.Equal(result.BookConfig, expect.BookConfig)
 }
 
 func diffBook(result, expect Book) string {
@@ -39,7 +39,7 @@ func TestBook_NewBook(t *testing.T) {
 
 	con := config.BookConfig{SourceKey: "new_bk"}
 	client := client.CircuitBreakerClient{}
-	t.Run("create new book instance", func (t *testing.T) {
+	t.Run("create new book instance", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -47,9 +47,9 @@ func TestBook_NewBook(t *testing.T) {
 				Title: "", WriterID: 0, Type: "",
 				UpdateDate: "", UpdateChapter: "", Status: model.Error,
 			},
-			WriterModel: model.WriterModel{ID: 0, Name: ""},
-			ErrorModel: model.ErrorModel{Site: "site", ID: 1, Err: errors.New("new book")},
-			BookConfig: &con,
+			WriterModel:          model.WriterModel{ID: 0, Name: ""},
+			ErrorModel:           model.ErrorModel{Site: "site", ID: 1, Err: errors.New("new book")},
+			BookConfig:           &con,
 			CircuitBreakerClient: &client,
 		}
 		result := NewBook("site", 1, &con, &client)
@@ -67,14 +67,14 @@ func TestBook_LoadBook(t *testing.T) {
 	con := config.BookConfig{}
 	client := client.CircuitBreakerClient{}
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from errors where site=$1", site)
 		db.Exec("delete from writers where name=$1", writer)
 		runtime.GC()
 	})
 
-	t.Run("load download book", func (t *testing.T) {
+	t.Run("load download book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -84,7 +84,7 @@ func TestBook_LoadBook(t *testing.T) {
 				Status: model.Download,
 			},
 			WriterModel: model.WriterModel{ID: 0, Name: writer},
-			BookConfig: &con,
+			BookConfig:  &con,
 		}
 		err := expect.Save(db)
 		if err != nil {
@@ -97,7 +97,7 @@ func TestBook_LoadBook(t *testing.T) {
 		}
 	})
 
-	t.Run("load end book", func (t *testing.T) {
+	t.Run("load end book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -107,7 +107,7 @@ func TestBook_LoadBook(t *testing.T) {
 				Status: model.End,
 			},
 			WriterModel: model.WriterModel{ID: 0, Name: writer},
-			BookConfig: &con,
+			BookConfig:  &con,
 		}
 		err := expect.Save(db)
 		if err != nil {
@@ -120,7 +120,7 @@ func TestBook_LoadBook(t *testing.T) {
 		}
 	})
 
-	t.Run("load in_progress book", func (t *testing.T) {
+	t.Run("load in_progress book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -130,7 +130,7 @@ func TestBook_LoadBook(t *testing.T) {
 				Status: model.InProgress,
 			},
 			WriterModel: model.WriterModel{ID: 0, Name: writer},
-			BookConfig: &con,
+			BookConfig:  &con,
 		}
 		err := expect.Save(db)
 		if err != nil {
@@ -143,7 +143,7 @@ func TestBook_LoadBook(t *testing.T) {
 		}
 	})
 
-	t.Run("load error book", func (t *testing.T) {
+	t.Run("load error book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -167,18 +167,18 @@ func TestBook_LoadBook(t *testing.T) {
 
 func TestBook_Save(t *testing.T) {
 	t.Parallel()
-	
+
 	site, writer := "save_bk", "save_bk_writer"
 	con := config.BookConfig{}
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from errors where site=$1", site)
 		db.Exec("delete from writers where name=$1", writer)
 		runtime.GC()
 	})
 
-	t.Run("create in progress book", func (t *testing.T) {
+	t.Run("create in progress book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -186,11 +186,11 @@ func TestBook_Save(t *testing.T) {
 				Status: model.InProgress,
 			},
 			WriterModel: model.WriterModel{Name: writer},
-			BookConfig: &con,
+			BookConfig:  &con,
 		}
 		err := expect.Save(db)
 		if err != nil || expect.BookModel.WriterID == 0 ||
-		expect.WriterModel.ID != expect.BookModel.WriterID {
+			expect.WriterModel.ID != expect.BookModel.WriterID {
 			t.Errorf("save book return: %v", err)
 			t.Errorf("save book book model update: %v", expect.BookModel)
 			t.Errorf("save book writer model update: %v", expect.WriterModel)
@@ -199,7 +199,7 @@ func TestBook_Save(t *testing.T) {
 		}
 	})
 
-	t.Run("create error book", func (t *testing.T) {
+	t.Run("create error book", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -210,7 +210,7 @@ func TestBook_Save(t *testing.T) {
 		}
 		err := expect.Save(db)
 		if err != nil || expect.BookModel.WriterID != 0 ||
-		expect.WriterModel.ID != 0 {
+			expect.WriterModel.ID != 0 {
 			t.Errorf("save book return: %v", err)
 			t.Errorf("save book book model update: %v", expect.BookModel)
 			t.Errorf("save book writer model update: %v", expect.WriterModel)
@@ -219,7 +219,7 @@ func TestBook_Save(t *testing.T) {
 		}
 	})
 
-	t.Run("update error book to inprogress", func (t *testing.T) {
+	t.Run("update error book to inprogress", func(t *testing.T) {
 		t.Parallel()
 		expect := Book{
 			BookModel: model.BookModel{
@@ -233,7 +233,7 @@ func TestBook_Save(t *testing.T) {
 		expect.WriterModel = model.WriterModel{Name: writer}
 		err := expect.Save(db)
 		if err != nil || expect.BookModel.WriterID == 0 ||
-		expect.WriterModel.ID != expect.BookModel.WriterID {
+			expect.WriterModel.ID != expect.BookModel.WriterID {
 			t.Errorf("save book return: %v", err)
 			t.Errorf("save book book model update: %v", expect.BookModel)
 			t.Errorf("save book writer model update: %v", expect.WriterModel)
@@ -246,7 +246,7 @@ func TestBook_Save(t *testing.T) {
 func TestBook_MarshalJSON(t *testing.T) {
 	t.Parallel()
 
-	t.Run("render downloaded book", func (t *testing.T) {
+	t.Run("render downloaded book", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
 			BookModel: model.BookModel{
@@ -260,7 +260,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Site: "bk_json", ID: 1, Err: errors.New("error"),
 			},
 		}
-		expect :=`{
+		expect := `{
 			"site":"bk_json","id":1,"hash":"2s",
 			"title":"title","writer":"writer","type":"type",
 			"update_date":"date","update_chapter":"chapter","status":"download"
@@ -272,7 +272,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 		}
 	})
 
-	t.Run("render end book", func (t *testing.T) {
+	t.Run("render end book", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
 			BookModel: model.BookModel{
@@ -286,7 +286,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Site: "bk_json", ID: 1, Err: errors.New("error"),
 			},
 		}
-		expect :=`{
+		expect := `{
 			"site":"bk_json","id":1,"hash":"2s",
 			"title":"title","writer":"writer","type":"type",
 			"update_date":"date","update_chapter":"chapter","status":"end"
@@ -298,7 +298,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 		}
 	})
 
-	t.Run("render in_progress book", func (t *testing.T) {
+	t.Run("render in_progress book", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
 			BookModel: model.BookModel{
@@ -312,7 +312,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Site: "bk_json", ID: 1, Err: errors.New("error"),
 			},
 		}
-		expect :=`{
+		expect := `{
 			"site":"bk_json","id":1,"hash":"2s",
 			"title":"title","writer":"writer","type":"type",
 			"update_date":"date","update_chapter":"chapter","status":"in_progress"
@@ -324,7 +324,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 		}
 	})
 
-	t.Run("render error book", func (t *testing.T) {
+	t.Run("render error book", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
 			BookModel: model.BookModel{
@@ -334,7 +334,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Site: "bk_json", ID: 1, Err: errors.New("error"),
 			},
 		}
-		expect :=`{
+		expect := `{
 			"site":"bk_json","id":1,"hash":"2s",
 			"title":"","writer":"","type":"",
 			"update_date":"","update_chapter":"","status":"error"
@@ -350,7 +350,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 func TestBook_String(t *testing.T) {
 	t.Parallel()
 
-	t.Run("work", func (t *testing.T) {
+	t.Run("work", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
 			BookModel: model.BookModel{

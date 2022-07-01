@@ -1,25 +1,25 @@
 package book
 
 import (
-	"testing"
+	"fmt"
+	"github.com/htchan/BookSpider/internal/book/model"
+	"github.com/htchan/BookSpider/internal/client"
+	"github.com/htchan/BookSpider/internal/config"
+	"github.com/htchan/BookSpider/internal/mock"
 	"os"
 	"strconv"
 	"strings"
-	"fmt"
-	"github.com/htchan/BookSpider/internal/config"
-	"github.com/htchan/BookSpider/internal/mock"
-	"github.com/htchan/BookSpider/internal/client"
-	"github.com/htchan/BookSpider/internal/book/model"
+	"testing"
 )
 
 func TestBook_downloadURL(t *testing.T) {
 	t.Parallel()
 	con := config.BookConfig{
-		URL: config.URLConfig{ Download: "http://some.book.site/download/%v" },
+		URLConfig: config.URLConfig{Download: "http://some.book.site/download/%v"},
 	}
 
 	book := Book{
-		BookModel: model.BookModel{ID: 1},
+		BookModel:  model.BookModel{ID: 1},
 		BookConfig: &con,
 	}
 	result := book.downloadURL()
@@ -32,19 +32,19 @@ func TestBook_fetchChapters(t *testing.T) {
 	t.Parallel()
 
 	server := mock.MockBookDownloadServer()
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		server.Close()
 	})
 
 	client := client.CircuitBreakerClient{}
 	client.Init(10)
 
-	t.Run("success", func (t *testing.T) {
+	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 
 		con := config.BookConfig{
-			URL: config.URLConfig{
-				Download: server.URL + "/list_success_chapters/%v",
+			URLConfig: config.URLConfig{
+				Download:      server.URL + "/list_success_chapters/%v",
 				ChapterPrefix: server.URL + "/chapter/success",
 			},
 			SourceKey: "test_book",
@@ -64,11 +64,11 @@ func TestBook_fetchChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("failed at download page", func (t *testing.T) {
+	t.Run("failed at download page", func(t *testing.T) {
 		t.Parallel()
 
 		con := config.BookConfig{
-			URL: config.URLConfig{ Download: server.URL + "/400/%v" },
+			URLConfig: config.URLConfig{Download: server.URL + "/400/%v"},
 			SourceKey: "test_book",
 		}
 
@@ -84,21 +84,21 @@ func TestBook_fetchChapters(t *testing.T) {
 func TestBook_generateEmptyChapters(t *testing.T) {
 	t.Parallel()
 	server := mock.MockBookDownloadServer()
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		server.Close()
 	})
 
 	client := client.CircuitBreakerClient{}
 	client.Init(0)
 
-	t.Run("success to fetch download page", func (t *testing.T) {
+	t.Run("success to fetch download page", func(t *testing.T) {
 		t.Parallel()
 		con := config.BookConfig{
-			URL: config.URLConfig{Download: server.URL+"/list_chapters/%v"},
+			URLConfig: config.URLConfig{Download: server.URL + "/list_chapters/%v"},
 			SourceKey: "test_book",
 		}
 		book := Book{
-			BookConfig: &con,
+			BookConfig:           &con,
 			CircuitBreakerClient: &client,
 		}
 
@@ -116,14 +116,14 @@ func TestBook_generateEmptyChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("fail to fetch download page", func (t *testing.T) {
+	t.Run("fail to fetch download page", func(t *testing.T) {
 		t.Parallel()
 		con := config.BookConfig{
-			URL: config.URLConfig{Download: server.URL+"/400/%v"},
+			URLConfig: config.URLConfig{Download: server.URL + "/400/%v"},
 			SourceKey: "test_book",
 		}
 		book := Book{
-			BookConfig: &con,
+			BookConfig:           &con,
 			CircuitBreakerClient: &client,
 		}
 
@@ -133,14 +133,14 @@ func TestBook_generateEmptyChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("fail to parse download page", func (t *testing.T) {
+	t.Run("fail to parse download page", func(t *testing.T) {
 		t.Parallel()
 		con := config.BookConfig{
-			URL: config.URLConfig{Download: server.URL+"/unknown/%v"},
+			URLConfig: config.URLConfig{Download: server.URL + "/unknown/%v"},
 			SourceKey: "test_book",
 		}
 		book := Book{
-			BookConfig: &con,
+			BookConfig:           &con,
 			CircuitBreakerClient: &client,
 		}
 
@@ -155,7 +155,7 @@ func TestBook_content(t *testing.T) {
 	t.Parallel()
 
 	book := Book{
-		BookModel: model.BookModel{Title: "title"},
+		BookModel:   model.BookModel{Title: "title"},
 		WriterModel: model.WriterModel{Name: "writer"},
 	}
 	if book.content() != "title\nwriter\n--------------------\n\n" {
@@ -168,18 +168,18 @@ func TestBook_saveChapters(t *testing.T) {
 
 	con := config.BookConfig{Storage: "./"}
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		os.Remove("5.txt")
 		os.Remove("6.txt")
 		os.Remove("7.txt")
 		os.Remove("8.txt")
 	})
 
-	t.Run("success to save file", func (t *testing.T) {
+	t.Run("success to save file", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
-			BookConfig: &con,
-			BookModel: model.BookModel{ID: 5, Title: "title"},
+			BookConfig:  &con,
+			BookModel:   model.BookModel{ID: 5, Title: "title"},
 			WriterModel: model.WriterModel{Name: "writer"},
 		}
 		chapters := []Chapter{Chapter{Title: "chapter", Content: "content"}}
@@ -188,13 +188,13 @@ func TestBook_saveChapters(t *testing.T) {
 			t.Errorf("save chapter return %v", err)
 		}
 		result, err := os.ReadFile(book.location())
-		if err != nil || string(result) != book.content() + chapters[0].content() {
+		if err != nil || string(result) != book.content()+chapters[0].content() {
 			t.Errorf("read file return error: %v", err)
 			t.Errorf("saved content is %v", string(result))
 		}
 	})
 
-	t.Run("fail to create file", func (t *testing.T) {
+	t.Run("fail to create file", func(t *testing.T) {
 		t.Parallel()
 		tempCon := config.BookConfig{Storage: "./unknown_dir/"}
 		book := Book{BookConfig: &tempCon}
@@ -204,11 +204,11 @@ func TestBook_saveChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("create the existing file", func (t *testing.T) {
+	t.Run("create the existing file", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
-			BookConfig: &con,
-			BookModel: model.BookModel{ID: 6, Title: "title"},
+			BookConfig:  &con,
+			BookModel:   model.BookModel{ID: 6, Title: "title"},
 			WriterModel: model.WriterModel{Name: "writer"},
 		}
 		chapters := []Chapter{Chapter{Title: "chapter", Content: "content"}}
@@ -224,11 +224,11 @@ func TestBook_saveChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("write empty chapters", func (t *testing.T) {
+	t.Run("write empty chapters", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
-			BookConfig: &con,
-			BookModel: model.BookModel{ID: 7, Title: "title"},
+			BookConfig:  &con,
+			BookModel:   model.BookModel{ID: 7, Title: "title"},
 			WriterModel: model.WriterModel{Name: "writer"},
 		}
 		err := book.saveChapters(nil)
@@ -242,11 +242,11 @@ func TestBook_saveChapters(t *testing.T) {
 		}
 	})
 
-	t.Run("too many failed chapters", func (t *testing.T) {
+	t.Run("too many failed chapters", func(t *testing.T) {
 		t.Parallel()
 		book := Book{
-			BookConfig: &con,
-			BookModel: model.BookModel{ID: 8, Title: "title"},
+			BookConfig:  &con,
+			BookModel:   model.BookModel{ID: 8, Title: "title"},
 			WriterModel: model.WriterModel{Name: "writer"},
 		}
 		chapters := []Chapter{Chapter{Title: "1", Content: "failed"}}
@@ -255,7 +255,7 @@ func TestBook_saveChapters(t *testing.T) {
 			t.Errorf("save chapter return %v", err)
 		}
 		result, err := os.ReadFile(book.location())
-		if err != nil || string(result) != book.content() + chapters[0].content() {
+		if err != nil || string(result) != book.content()+chapters[0].content() {
 			t.Errorf("read file return error: %v", err)
 			t.Errorf("saved content is %v", string(result))
 		}
@@ -266,14 +266,14 @@ func TestBook_Download(t *testing.T) {
 	t.Parallel()
 
 	server := mock.MockBookDownloadServer()
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		server.Close()
 		os.Remove("10.txt")
 	})
 
 	con := config.BookConfig{
-		URL: config.URLConfig{
-			Download: server.URL + "/list_success_chapters/%v",
+		URLConfig: config.URLConfig{
+			Download:      server.URL + "/list_success_chapters/%v",
 			ChapterPrefix: server.URL + "/chapter/success",
 		},
 		SourceKey: "test_book",
@@ -283,9 +283,9 @@ func TestBook_Download(t *testing.T) {
 	client.Init(10)
 
 	book := Book{
-		BookModel: model.BookModel{ID: 10, Title: "title"},
-		WriterModel: model.WriterModel{Name: "writer"},
-		BookConfig: &con,
+		BookModel:            model.BookModel{ID: 10, Title: "title"},
+		WriterModel:          model.WriterModel{Name: "writer"},
+		BookConfig:           &con,
 		CircuitBreakerClient: &client,
 	}
 
@@ -311,7 +311,7 @@ func TestBook_Download(t *testing.T) {
 	expected = strings.ReplaceAll(expected, "\t", "")
 
 	content, err := os.ReadFile("10.txt")
-	if err != nil || string(content) != book.content() + expected {
+	if err != nil || string(content) != book.content()+expected {
 		t.Errorf("read file return content: %v, err: %v", string(content), err)
 	}
 }
@@ -320,9 +320,9 @@ func TestBook_location(t *testing.T) {
 	t.Parallel()
 	con := config.BookConfig{Storage: "/test"}
 
-	t.Run("hash code is 0", func (t *testing.T) {
+	t.Run("hash code is 0", func(t *testing.T) {
 		book := Book{
-			BookModel: model.BookModel{Site: "test", ID: 1, HashCode: 0},
+			BookModel:  model.BookModel{Site: "test", ID: 1, HashCode: 0},
 			BookConfig: &con,
 		}
 		result := book.location()
@@ -331,9 +331,9 @@ func TestBook_location(t *testing.T) {
 		}
 	})
 
-	t.Run("hash code is 10", func (t *testing.T) {
+	t.Run("hash code is 10", func(t *testing.T) {
 		book := Book{
-			BookModel: model.BookModel{Site: "test", ID: 1, HashCode: 10},
+			BookModel:  model.BookModel{Site: "test", ID: 1, HashCode: 10},
 			BookConfig: &con,
 		}
 		result := book.location()
@@ -348,15 +348,15 @@ func TestBook_Content(t *testing.T) {
 	filename := "./1.txt"
 	os.WriteFile(filename, []byte("content"), 0644)
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		os.Remove(filename)
 	})
 
 	con := config.BookConfig{Storage: "."}
 
-	t.Run("return existing content", func (t *testing.T) {
+	t.Run("return existing content", func(t *testing.T) {
 		book := Book{
-			BookModel: model.BookModel{ID: 1, HashCode: 0},
+			BookModel:  model.BookModel{ID: 1, HashCode: 0},
 			BookConfig: &con,
 		}
 		result := book.Content()
@@ -365,9 +365,9 @@ func TestBook_Content(t *testing.T) {
 		}
 	})
 
-	t.Run("return non existant content", func (t *testing.T) {
+	t.Run("return non existant content", func(t *testing.T) {
 		book := Book{
-			BookModel: model.BookModel{ID: 1, HashCode: 10},
+			BookModel:  model.BookModel{ID: 1, HashCode: 10},
 			BookConfig: &con,
 		}
 		result := book.Content()

@@ -1,18 +1,18 @@
 package book
 
 import (
-	"strings"
-	"strconv"
-	"sort"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 
-	"github.com/htchan/BookSpider/internal/utils"
-	"github.com/htchan/BookSpider/internal/logging"
 	"github.com/htchan/ApiParser"
+	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/htchan/BookSpider/internal/utils"
 )
 
 type Chapter struct {
-	Index int
+	Index               int
 	URL, Title, Content string
 	*Book
 }
@@ -20,23 +20,23 @@ type Chapter struct {
 func NewChapter(i int, url, title string, book *Book) Chapter {
 	return Chapter{
 		Index: i,
-		URL: url,
+		URL:   url,
 		Title: title,
-		Book: book,
+		Book:  book,
 	}
 }
 
 func (chapter Chapter) chapterURL() string {
 	//TODO: check the reason of adding the http here
 	if strings.HasPrefix(chapter.URL, "/") || strings.HasPrefix(chapter.URL, "http") {
-		return chapter.Book.BookConfig.URL.ChapterPrefix + chapter.URL
+		return chapter.Book.BookConfig.URLConfig.ChapterPrefix + chapter.URL
 	} else {
 		return chapter.Book.downloadURL() + chapter.URL
 	}
 }
 
 func (chapter *Chapter) generateIndex() {
-	numberMap := map[string]string {
+	numberMap := map[string]string{
 		"序": "0",
 		"一": "1", "二": "2", "三": "3", "四": "4", "五": "5",
 		"六": "6", "七": "7", "八": "8", "九": "9",
@@ -47,7 +47,7 @@ func (chapter *Chapter) generateIndex() {
 		"尾聲": "9999990", "终章": "9999990", "終章": "9999990", "外传": "9999990",
 		"外傳": "9999990", "完本": "9999990", "结束": "9999990", "結束": "9999990",
 		"完結": "9999990", "完结": "9999990", "终结": "9999990", "終結": "9999990",
-		"番外": "9999990", "结尾": "9999990", "結尾": "9999990", 
+		"番外": "9999990", "结尾": "9999990", "結尾": "9999990",
 		"全书完": "9999990", "全書完": "9999990", "全本完": "9999990",
 	}
 	replaceList := "十拾百佰千仟万萬 ()"
@@ -69,20 +69,18 @@ func (chapter *Chapter) generateIndex() {
 	}
 	if strings.Contains(chapter.Title, "上") {
 		chapter.Index += 2
-	} else
-	if strings.Contains(chapter.Title, "中") {
+	} else if strings.Contains(chapter.Title, "中") {
 		chapter.Index += 5
-	} else
-	if strings.Contains(chapter.Title, "下") {
+	} else if strings.Contains(chapter.Title, "下") {
 		chapter.Index += 8
 	}
 }
 
 func (chapter *Chapter) optimizeContent() {
-	replaceItems := []struct{
+	replaceItems := []struct {
 		old, new string
-	} {
-		{"<br />", ""},
+	}{
+		{"<br />", "\n"},
 		{"&nbsp;", ""},
 		{"<b>", ""},
 		{"</b>", ""},
@@ -115,7 +113,7 @@ func (chapter *Chapter) Fetch() {
 		return
 	}
 	// extract chapter
-	responseApi := ApiParser.Parse(chapter.Book.BookConfig.SourceKey + ".chapter_content", html)
+	responseApi := ApiParser.Parse(chapter.Book.BookConfig.SourceKey+".chapter_content", html)
 	content, ok := responseApi.Data["ChapterContent"]
 
 	// content, err := utils.Search(html, config.ChapterContentRegex)

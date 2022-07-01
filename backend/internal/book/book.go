@@ -1,14 +1,14 @@
 package book
 
 import (
-	"errors"
-	"fmt"
-	"strconv"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/htchan/BookSpider/internal/book/model"
-	"github.com/htchan/BookSpider/internal/config"
 	"github.com/htchan/BookSpider/internal/client"
+	"github.com/htchan/BookSpider/internal/config"
+	"strconv"
 )
 
 type Book struct {
@@ -21,9 +21,9 @@ type Book struct {
 
 func NewBook(site string, id int, con *config.BookConfig, client *client.CircuitBreakerClient) Book {
 	return Book{
-		BookModel: model.BookModel{Site: site, ID: id, HashCode: model.GenerateHash()},
-		ErrorModel: model.ErrorModel{Site: site, ID: id, Err: errors.New("new book")},
-		BookConfig: con,
+		BookModel:            model.BookModel{Site: site, ID: id, HashCode: model.GenerateHash()},
+		ErrorModel:           model.ErrorModel{Site: site, ID: id, Err: errors.New("new book")},
+		BookConfig:           con,
 		CircuitBreakerClient: client,
 	}
 }
@@ -41,8 +41,8 @@ func LoadBook(db *sql.DB, site string, id, hash int, config *config.BookConfig, 
 func LoadBookFromModel(db *sql.DB, bookModel model.BookModel, config *config.BookConfig, client *client.CircuitBreakerClient) (Book, error) {
 	var (
 		book = Book{
-			BookModel: bookModel,
-			BookConfig: config,
+			BookModel:            bookModel,
+			BookConfig:           config,
 			CircuitBreakerClient: client,
 		}
 		err error
@@ -75,26 +75,26 @@ func (book *Book) Save(db *sql.DB) error {
 }
 
 func (book Book) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct{
-		Site string `json:"site"`
-		Id int `json:"id"`
-		Hash string `json:"hash"`
-		Title string `json:"title"`
-		Writer string `json:"writer"`
-		Type string `json:"type"`
-		UpdateDate string `json:"update_date"`
+	return json.Marshal(struct {
+		Site          string `json:"site"`
+		Id            int    `json:"id"`
+		Hash          string `json:"hash"`
+		Title         string `json:"title"`
+		Writer        string `json:"writer"`
+		Type          string `json:"type"`
+		UpdateDate    string `json:"update_date"`
 		UpdateChapter string `json:"update_chapter"`
-		Status string `json:"status"`
-	} {
-		Site: book.BookModel.Site,
-		Id: book.BookModel.ID,
-		Hash: strconv.FormatInt(int64(book.BookModel.HashCode), 36),
-		Title: book.BookModel.Title,
-		Writer: book.WriterModel.Name,
-		Type: book.BookModel.Type,
-		UpdateDate: book.BookModel.UpdateDate,
+		Status        string `json:"status"`
+	}{
+		Site:          book.BookModel.Site,
+		Id:            book.BookModel.ID,
+		Hash:          strconv.FormatInt(int64(book.BookModel.HashCode), 36),
+		Title:         book.BookModel.Title,
+		Writer:        book.WriterModel.Name,
+		Type:          book.BookModel.Type,
+		UpdateDate:    book.BookModel.UpdateDate,
 		UpdateChapter: book.BookModel.UpdateChapter,
-		Status: model.StatusToString(book.BookModel.Status),
+		Status:        model.StatusToString(book.BookModel.Status),
 	})
 }
 
