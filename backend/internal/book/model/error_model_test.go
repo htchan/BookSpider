@@ -1,22 +1,22 @@
 package model
 
 import (
-	"testing"
 	"errors"
 	"github.com/google/go-cmp/cmp"
 	"runtime"
+	"testing"
 )
 
 func TestErrorModel_SaveErrorModel(t *testing.T) {
 	t.Parallel()
 	site := "save_err_model"
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		db.Exec("delete from errors where site=$1", site)
 		runtime.GC()
 	})
 
-	t.Run("create error if model.Err is not nil", func (t *testing.T) {
+	t.Run("create error if model.Err is not nil", func(t *testing.T) {
 		t.Parallel()
 
 		model := ErrorModel{Site: site, ID: 1, Err: errors.New("some error")}
@@ -31,9 +31,9 @@ func TestErrorModel_SaveErrorModel(t *testing.T) {
 		}
 	})
 
-	t.Run("update error if error record already exist", func (t *testing.T) {
+	t.Run("update error if error record already exist", func(t *testing.T) {
 		t.Parallel()
-		
+
 		model := ErrorModel{Site: site, ID: 2, Err: errors.New("some error")}
 		SaveErrorModel(db, &model)
 		model.Err = errors.New("another error")
@@ -48,9 +48,9 @@ func TestErrorModel_SaveErrorModel(t *testing.T) {
 		}
 	})
 
-	t.Run("delete error if model.Err is nil", func (t *testing.T) {
+	t.Run("delete error if model.Err is nil", func(t *testing.T) {
 		t.Parallel()
-		
+
 		model := ErrorModel{Site: site, ID: 3, Err: errors.New("some error")}
 		SaveErrorModel(db, &model)
 		model.Err = nil
@@ -70,7 +70,7 @@ func TestErrorModel_QueryErrorModel(t *testing.T) {
 	t.Parallel()
 	site := "query_err_model"
 
-	t.Cleanup(func () {
+	t.Cleanup(func() {
 		db.Exec("delete from errors where site=$1", site)
 		runtime.GC()
 	})
@@ -79,16 +79,16 @@ func TestErrorModel_QueryErrorModel(t *testing.T) {
 	(site, id, data)
 	values
 	($1, 1, 'data_1');`,
-	site)
+		site)
 
-	t.Run("query existing error model", func (t *testing.T) {
+	t.Run("query existing error model", func(t *testing.T) {
 		result, err := QueryErrorModel(db, site, 1)
 		if err != nil || result.Site != site || result.ID != 1 || result.Error() != "data_1" {
 			t.Errorf("query model return wrong result: error: %v; result: %v", err, result)
 		}
 	})
 
-	t.Run("query non existence error model", func (t *testing.T) {
+	t.Run("query non existence error model", func(t *testing.T) {
 		result, err := QueryErrorModel(db, site, -123)
 		if err == nil {
 			t.Errorf("query model return wrong result: error: %v; result: %v", err, result)

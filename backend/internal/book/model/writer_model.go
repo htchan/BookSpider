@@ -6,7 +6,7 @@ import (
 )
 
 type WriterModel struct {
-	ID int
+	ID   int
 	Name string
 }
 
@@ -49,20 +49,20 @@ func QueryWriterModel(db *sql.DB, id int) (WriterModel, error) {
 	return rowToWriterModel(rows)
 }
 
-func QueryAllWriterModels(db *sql.DB) <-chan WriterModel {
+func QueryAllWriterModels(db *sql.DB) (<-chan WriterModel, error) {
 	queryStatement := "select id, name from writers"
 	writerChan := make(chan WriterModel)
 	rows, err := db.Query(queryStatement)
 	if err != nil {
 		close(writerChan)
-		return writerChan
+		return writerChan, err
 	}
 	go func() {
 		defer close(writerChan)
 		defer rows.Close()
 		var (
 			writerModel WriterModel
-			err error
+			err         error
 		)
 		for rows.Next() {
 			writerModel, err = rowToWriterModel(rows)
@@ -70,6 +70,6 @@ func QueryAllWriterModels(db *sql.DB) <-chan WriterModel {
 				writerChan <- writerModel
 			}
 		}
-	} ()
-	return writerChan
+	}()
+	return writerChan, nil
 }

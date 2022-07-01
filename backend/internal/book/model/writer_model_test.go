@@ -1,22 +1,24 @@
 package model
 
 import (
-	"testing"
 	"github.com/google/go-cmp/cmp"
 	"runtime"
+	"testing"
 )
 
 func TestWriterModel_SaveWriterModel(t *testing.T) {
 	t.Parallel()
 
-	t.Cleanup(func () {
-		db.Exec("delete from writers where id > 0")
+	writerName := "writer name"
+
+	t.Cleanup(func() {
+		db.Exec("delete from writers where name=$1", writerName)
 		runtime.GC()
 	})
 
 	t.Run("generate id when save new writer model", func(t *testing.T) {
 		t.Parallel()
-		model := WriterModel{Name: "writer name"}
+		model := WriterModel{Name: writerName}
 		err := SaveWriterModel(db, &model)
 		if err != nil {
 			t.Errorf("save writer model return error: %v", err)
@@ -34,7 +36,7 @@ func TestWriterModel_SaveWriterModel(t *testing.T) {
 
 	t.Run("do nothing if writer already exist", func(t *testing.T) {
 		t.Parallel()
-		model := WriterModel{Name: "writer name"}
+		model := WriterModel{Name: writerName}
 		SaveWriterModel(db, &model)
 		err := SaveWriterModel(db, &model)
 		if err != nil {
@@ -54,22 +56,25 @@ func TestWriterModel_SaveWriterModel(t *testing.T) {
 
 func TestWriterModel_QueryWriterModel(t *testing.T) {
 	t.Parallel()
-	t.Cleanup(func () {
-		db.Exec("delete from writers where id=0")
+
+	writerName := "writer_1"
+
+	t.Cleanup(func() {
+		db.Exec("delete from writers where name=$1", writerName)
 		runtime.GC()
 	})
 
-	db.Exec(`insert into writers (id, name) values (0, 'writer_1')`)
+	db.Exec(`insert into writers (id, name) values (-1, $1)`, writerName)
 
-	t.Run("query existing writer", func (t *testing.T) {
+	t.Run("query existing writer", func(t *testing.T) {
 		t.Parallel()
-		result, err := QueryWriterModel(db, 0)
-		if err != nil || !cmp.Equal(result.Name, "writer_1") {
+		result, err := QueryWriterModel(db, -1)
+		if err != nil || !cmp.Equal(result.Name, writerName) {
 			t.Errorf("query model return wrong result: error: %v; result: %v", err, result)
 		}
 	})
 
-	t.Run("query non existence writer", func (t *testing.T) {
+	t.Run("query non existence writer", func(t *testing.T) {
 		t.Parallel()
 		result, err := QueryWriterModel(db, -123)
 		if err == nil {
@@ -79,6 +84,25 @@ func TestWriterModel_QueryWriterModel(t *testing.T) {
 }
 
 func TestWriterModel_QueryAllWriterModels(t *testing.T) {
-	t.Parallel()
-	t.Skip()
+	SaveWriterModel(db, &WriterModel{Name: "all_writer_1"})
+	SaveWriterModel(db, &WriterModel{Name: "all_writer_2"})
+
+	t.Cleanup(func() {
+		db.Exec("delete from writers where name like $1", "all_writer%")
+	})
+
+	t.Run("works", func(t *testing.T) {
+		writerModelsChan, err := QueryAllWriterModels(db)
+		if err != nil {
+			t.Errorf("query all writer models return error: %v", err)
+		}
+		i := 0
+		for m := range writerModelsChan {
+			t.Log(m)
+			i++
+		}
+		if i != 3 {
+			t.Errorf("query all writer models return %d models", i)
+		}
+	})
 }

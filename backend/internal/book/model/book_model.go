@@ -2,9 +2,9 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
-	"errors"
 	"time"
 )
 
@@ -16,27 +16,28 @@ const (
 	End
 	Download
 )
+
 var StatusCodeMap = map[string]StatusCode{
-	"ERROR": Error,
+	"ERROR":      Error,
 	"INPROGRESS": InProgress,
-	"END": End,
-	"DOWNLOAD": Download,
+	"END":        End,
+	"DOWNLOAD":   Download,
 }
 
 func StatusToString(status StatusCode) string {
-	statusList := []string{ "error", "in_progress", "end", "download" }
+	statusList := []string{"error", "in_progress", "end", "download"}
 	return statusList[status]
 }
 
 type BookModel struct {
-	Site string
-	ID, HashCode int
-	Title string
-	WriterID int
-	Type string
-	UpdateDate string
+	Site          string
+	ID, HashCode  int
+	Title         string
+	WriterID      int
+	Type          string
+	UpdateDate    string
 	UpdateChapter string
-	Status StatusCode
+	Status        StatusCode
 }
 
 func GenerateHash() int {
@@ -100,12 +101,12 @@ func QueryBookModel(db *sql.DB, site string, id int, hashCode int) (BookModel, e
 	from books where site=$1 and id=$2`
 	var (
 		rows *sql.Rows
-		err error
+		err  error
 	)
 	if hashCode < 0 {
-		rows, err = db.Query(queryStatement + " order by hash_code desc limit 1", site, id)
+		rows, err = db.Query(queryStatement+" order by hash_code desc limit 1", site, id)
 	} else {
-		rows, err = db.Query(queryStatement + " and hash_code=$3", site, id, hashCode)
+		rows, err = db.Query(queryStatement+" and hash_code=$3", site, id, hashCode)
 	}
 	if err != nil {
 		return BookModel{}, err
@@ -117,51 +118,101 @@ func QueryBookModel(db *sql.DB, site string, id int, hashCode int) (BookModel, e
 	return rowToBookModel(rows)
 }
 
-func prepareQueryTitleWriterStatement(titlesCount, writersCount int) string {
+func QueryBookModelsByStatus(db *sql.DB, site string, status StatusCode) ([]BookModel, error) {
+	queryStatement := `select 
+	site, id, hash_code, 
+	title, writer_id, type, 
+	update_date, update_chapter, status 
+	from books where site=$1 and status=$2;`
+	rows, err := db.Query(queryStatement, site, status)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var bookModels []BookModel
+	var finalErr error
+	for rows.Next() {
+		model, err := rowToBookModel(rows)
+		if err != nil {
+			finalErr = err
+		}
+		bookModels = append(bookModels, model)
+	}
+	return bookModels, finalErr
+}
+
+func QueryBookModelsByRandom(db *sql.DB, site string, limit, offset int) ([]BookModel, error) {
 	queryStatement := `select 
 	site, id, hash_code, 
 	title, writer_id, type, 
 	update_date, update_chapter, status 
 	from books 
+	where site=$1 and status=$2 ORDER BY RANDOM() limit $3 offset $4;`
+	rows, err := db.Query(queryStatement, site, Download, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var bookModels []BookModel
+	var finalErr error
+	for rows.Next() {
+		model, err := rowToBookModel(rows)
+		if err != nil {
+			finalErr = err
+		}
+		bookModels = append(bookModels, model)
+	}
+	return bookModels, finalErr
+}
+
+func prepareQueryTitleWriterStatement(titlesCount, writersCount int) string {
+	queryStatement := `select 
+	site, books.id, hash_code, 
+	title, writer_id, type, 
+	update_date, update_chapter, status 
+	from books join writers on books.writer_id=writers.id 
 	where site=$1`
-	conditions := make([]string, titlesCount + writersCount)
+	conditions := make([]string, titlesCount+writersCount)
 	for i := 0; i < titlesCount; i++ {
-		conditions[i] = fmt.Sprintf("(title like $%v)", i + 2)
+		conditions[i] = fmt.Sprintf("(title like $%v)", i+2)
 	}
-	for i := titlesCount; i < titlesCount + writersCount; i++ {
-		conditions[i] = fmt.Sprintf("(writer_id=$%v)", i + 2)
-	}
-	if len(conditions) == 0 {
-		return queryStatement + " and status=3 ORDER BY RANDOM() limit $2 offset $3;"
+	for i := titlesCount; i < titlesCount+writersCount; i++ {
+		conditions[i] = fmt.Sprintf("(name like $%v)", i+2)
 	}
 	return fmt.Sprintf(
-		"%s and (%s) order by id, hash_code limit $%v offset $%v;",
+		"%s and (%s) order by books.id, hash_code limit $%v offset $%v;",
 		queryStatement, strings.Join(conditions, " or "),
-		titlesCount + writersCount + 2, titlesCount + writersCount + 3,
+		titlesCount+writersCount+2, titlesCount+writersCount+3,
 	)
 }
 
-func prepareQueryTitleWriterArgument(site string, titles []string, writerIDs []int, limit, offset int) []interface{} {
-	result := make([]interface{}, 0, len(titles) + len(writerIDs) + 3)
+func prepareQueryTitleWriterArgument(site string, titles, writers []string, limit, offset int) []interface{} {
+	result := make([]interface{}, 0, len(titles)+len(writers)+3)
 	result = append(result, site)
 	for _, title := range titles {
 		result = append(result, title)
 	}
-	for _, writerID := range writerIDs {
-		result = append(result, writerID)
-	} 
+	for _, writer := range writers {
+		result = append(result, writer)
+	}
 	result = append(result, limit, offset)
 	return result
 }
 
-func QueryBooksModelsByTitleWriter(
-	db *sql.DB, site string, titles []string, writerIDs []int, limit int, offset int,
+func QueryBookModelsByTitleWriter(
+	db *sql.DB, site string, titles, writers []string, limit, offset int,
 ) ([]BookModel, error) {
-	queryStatement := prepareQueryTitleWriterStatement(len(titles), len(writerIDs))
+	if len(titles) == 0 && len(writers) == 0 {
+		return QueryBookModelsByRandom(db, site, limit, offset)
+	}
+	queryStatement := prepareQueryTitleWriterStatement(len(titles), len(writers))
 	for i := range titles {
 		titles[i] = fmt.Sprintf("%%%s%%", titles[i])
 	}
-	rows, err := db.Query(queryStatement, prepareQueryTitleWriterArgument(site, titles, writerIDs, limit, offset)...)
+	for i := range writers {
+		writers[i] = fmt.Sprintf("%%%s%%", writers[i])
+	}
+	rows, err := db.Query(queryStatement, prepareQueryTitleWriterArgument(site, titles, writers, limit, offset)...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,29 +220,29 @@ func QueryBooksModelsByTitleWriter(
 	var models []BookModel
 	var finalErr error
 	for rows.Next() {
-		model, err := rowToBookModel(rows)
+		bkModel, err := rowToBookModel(rows)
 		if err != nil {
 			finalErr = err
 		}
-		models = append(models, model)
+		models = append(models, bkModel)
 	}
 	return models, finalErr
 }
 
-func QueryAllBookModels(db *sql.DB) <-chan BookModel {
-	queryStatement := "select site, id, hash_code, title, writer_id, type, update_date, update_chapter, status from books"
+func QueryAllBookModels(db *sql.DB, site string) (<-chan BookModel, error) {
+	queryStatement := "select site, id, hash_code, title, writer_id, type, update_date, update_chapter, status from books where site=$1"
 	bookChan := make(chan BookModel)
-	rows, err := db.Query(queryStatement)
+	rows, err := db.Query(queryStatement, site)
 	if err != nil {
 		close(bookChan)
-		return bookChan
+		return bookChan, err
 	}
 	go func() {
 		defer close(bookChan)
 		defer rows.Close()
 		var (
 			bookModel BookModel
-			err error
+			err       error
 		)
 		for rows.Next() {
 			bookModel, err = rowToBookModel(rows)
@@ -199,11 +250,11 @@ func QueryAllBookModels(db *sql.DB) <-chan BookModel {
 				bookChan <- bookModel
 			}
 		}
-	} ()
-	return bookChan
+	}()
+	return bookChan, nil
 }
 
-func OrderBookModelsForUpdate(db *sql.DB, site string) ([]BookModel, error) {
+func OrderBookModelsForUpdate(db *sql.DB, site string) (<-chan BookModel, error) {
 	queryStatement := `select distinct on (site, id)
 	site, id, hash_code,
 	title, writer_id, type,
@@ -211,20 +262,50 @@ func OrderBookModelsForUpdate(db *sql.DB, site string) ([]BookModel, error) {
 	from books
 	where site=$1
 	order by site, id, update_date desc`
-
+	bookChan := make(chan BookModel)
 	rows, err := db.Query(queryStatement, site)
 	if err != nil {
-		return nil, err
+		close(bookChan)
+		return bookChan, err
 	}
-	defer rows.Close()
-	var models []BookModel
-	var finalErr error
-	for rows.Next() {
-		model, err := rowToBookModel(rows)
-		if err != nil {
-			finalErr = err
+	go func() {
+		defer close(bookChan)
+		defer rows.Close()
+		var bookModel BookModel
+		for rows.Next() {
+			bookModel, err = rowToBookModel(rows)
+			if err == nil {
+				bookChan <- bookModel
+			}
 		}
-		models = append(models, model)
+	}()
+	return bookChan, err
+}
+
+func OrderBookModelsForDownload(db *sql.DB, site string) (<-chan BookModel, error) {
+	queryStatement := `select 
+	site, id, hash_code,
+	title, writer_id, type,
+	update_date, update_chapter, status
+	from books
+	where site=$1 and status=$2
+	order by update_date desc`
+	bookChan := make(chan BookModel)
+	rows, err := db.Query(queryStatement, site, End)
+	if err != nil {
+		close(bookChan)
+		return bookChan, err
 	}
-	return models, finalErr
+	go func() {
+		defer close(bookChan)
+		defer rows.Close()
+		var bookModel BookModel
+		for rows.Next() {
+			bookModel, err = rowToBookModel(rows)
+			if err == nil {
+				bookChan <- bookModel
+			}
+		}
+	}()
+	return bookChan, err
 }

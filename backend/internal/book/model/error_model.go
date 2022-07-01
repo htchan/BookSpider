@@ -1,19 +1,19 @@
 package model
 
 import (
-	"errors"
 	"database/sql"
+	"errors"
 )
 
 type ErrorModel struct {
 	Site string
-	ID int
-	Err error
+	ID   int
+	Err  error
 }
 
 func rowToErrorModel(rows *sql.Rows) (ErrorModel, error) {
 	var (
-		model ErrorModel
+		model  ErrorModel
 		errStr string
 	)
 	err := rows.Scan(&model.Site, &model.ID, &errStr)
@@ -39,7 +39,7 @@ func SaveErrorModel(db *sql.DB, model *ErrorModel) error {
 		if err == nil {
 			break
 		}
-	}	
+	}
 	return err
 }
 
