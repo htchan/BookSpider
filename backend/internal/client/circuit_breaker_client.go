@@ -1,29 +1,30 @@
 package client
 
 import (
-	"time"
-	"net/http"
-	"sync"
+	"context"
 	"errors"
 	"fmt"
-	"io"
-	"context"
-	"golang.org/x/sync/semaphore"
 	"github.com/htchan/BookSpider/internal/config"
+	"golang.org/x/sync/semaphore"
+	"io"
+	"net/http"
+	"sync"
+	"time"
 )
 
 type CircuitBreakerClient struct {
-	config.CircuitBreakerConfig
-	decoder Decoder
-	ctx context.Context
-	weighted *semaphore.Weighted
+	config.CircuitBreakerClientConfig
+	decoder   Decoder
+	ctx       context.Context
+	weighted  *semaphore.Weighted
 	failCount int
 	waitGroup sync.WaitGroup
-	client *http.Client
+	client    *http.Client
 }
 
 func (client *CircuitBreakerClient) Init(maxThreads int) {
 	client.client = &http.Client{Timeout: time.Duration(client.Timeout) * time.Second}
+	client.decoder.DecoderConfig = client.CircuitBreakerClientConfig.DecoderConfig
 	client.decoder.Load()
 	client.ctx = context.Background()
 	client.weighted = semaphore.NewWeighted(int64(maxThreads))
@@ -70,7 +71,7 @@ func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (s
 			go func() {
 				defer client.waitGroup.Done()
 				time.Sleep(time.Duration(client.CircuitBreakingSleep) * time.Second)
-				if client.failCount > int(float64(client.MaxFailCount) * client.MaxFailMultiplier) {
+				if client.failCount > int(float64(client.MaxFailCount)*client.MaxFailMultiplier) {
 					client.failCount = client.MaxFailCount / 2
 				}
 			}()
@@ -84,7 +85,7 @@ func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (s
 func (client *CircuitBreakerClient) Get(url string) (string, error) {
 	var (
 		html string
-		err error
+		err  error
 	)
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
@@ -94,7 +95,7 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 			} else if i >= client.RetryErr {
 				return html, err
 			}
-			time.Sleep(time.Duration((i + 1) * client.IntervalSleep) * time.Second)
+			time.Sleep(time.Duration((i+1)*client.IntervalSleep) * time.Second)
 			continue
 		}
 		break
