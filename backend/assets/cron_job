@@ -1,1 +1,1 @@
-00 02 01 * * cd /usr/src/app ; ./controller --operation=backup >> /log/batch.log 2>&1 ; ./controller --operation=update >> /log/batch.log 2>&1 ; ./controller --operation=explore >> /log/batch.log 2>&1 ; ./controller --operation=download >> /log/batch.log 2>&1 ; ./controller --operation=check >> /log/batch.log 2>&1 ; ./controller --operation=fix >> /log/batch.log 2>&1
+00 06 01 * * cd /usr/src/app ; ./batch

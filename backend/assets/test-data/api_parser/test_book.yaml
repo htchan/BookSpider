@@ -3,7 +3,7 @@ info:
     - "(?P<Title>title.*?) "
     - "(?P<Writer>writer.*?) "
     - "(?P<Type>type.*?) "
-    - "(?P<LastUpdate>date.*?) "
+    - "date-(?P<LastUpdate>.*?) "
     - "(?P<LastChapter>chapter.*?) "
   items: "url-(?P<ChapterUrl>.*?) title-(?P<ChapterTitle>.*?) "
 
