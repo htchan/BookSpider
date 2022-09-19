@@ -9,37 +9,21 @@ services:
             - ./bin/database:/database
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
-            - ./backend/assets/configs:/configs
-        environment:
-            - ASSETS_LOCATION=
+            - ./backend/config:/config
+            - ./backend/migrations:/migrations
+        env_file:
+            - .env
+            - ./backend/assets/.env
         networks:
             - router
+            - database
         profiles:
             - all
             - backend
             - web
+        ports:
+            - 9105:9105
         command: sh -c "./backend > /log/backend.log 2>&1"
-
-    controller:
-        build:
-            context: ./backend
-            dockerfile: ./build/Dockerfile.controller
-        volumes:
-            - ./bin/database:/database
-            - ./bin/log:/log
-            - /mnt/addition/download/Books:/books
-            - ./bin/backup:/backup
-            - ./backend/assets/configs:/configs
-            - ./backend/assets/api_parser:/api_parser
-            - ./backend/assets/schema:/schema
-        environment:
-            - ASSETS_LOCATION=
-        networks:
-            - router
-        profiles:
-            - all
-            - controller
-        command: sh -c "./controller --operation ${command} ${params} >> /log/controller.log 2>&1"
 
     frontend:
         image: "flutter:stable"
@@ -54,57 +38,26 @@ services:
             - web
         command: sh -c "flutter --version ; flutter pub get ; flutter build web"
     
-    backend_test:
-        build:
-            context: ./backend
-            dockerfile: ./build/Dockerfile.test
-        profiles:
-            - all
-            - test
-        command: >
-            sh -c "
-                go test github.com/htchan/BookSpider/internal/logging
-                go test github.com/htchan/BookSpider/internal/database
-                go test github.com/htchan/BookSpider/internal/database/sqlite
-                go test github.com/htchan/BookSpider/internal/utils
-                go test github.com/htchan/BookSpider/pkg/configs
-                go test github.com/htchan/BookSpider/pkg/books
-                go test github.com/htchan/BookSpider/pkg/flags
-                go test github.com/htchan/BookSpider/pkg/sites
-                go test github.com/htchan/BookSpider/cmd/backend
-                go test github.com/htchan/BookSpider/cmd/controller
-            "
-    
     batch:
         build: 
             context: ./backend
             dockerfile: ./build/Dockerfile.batch
         volumes:
-            - ./bin/database:/database
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
             - ./bin/backup:/backup
-            - ./backend/assets/configs:/configs
+            - ./backend/config:/config
             - ./backend/assets/api_parser:/api_parser
-            - ./backend/assets/schema:/schema
-            - /etc/timezone:/etc/timezone:ro
-        environment:
-            - ASSETS_LOCATION=
+            - ./backend/migrations:/migrations
+        env_file:
+            - ./backend/assets/.env
+            - .env
         networks:
-            - router
+            - database
         profiles:
             - all
             - batch
         command: sh -c "crond && tail -f /dev/null"
-
-    temp:
-        image: alpine:latest
-        profiles:
-            - temp
-        volumes:
-            - ./bin/log:/log
-        command: sh -c 'cp /log/test.txt /log/$$(date +"%Y-%m-%d--%T").log'
-
 
 volumes:
     frontend_volume:
@@ -114,3 +67,7 @@ networks:
     router:
         driver: bridge
         name: router
+    default:
+    database:
+        name: database
+        external: true
