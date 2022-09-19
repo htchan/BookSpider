@@ -1,0 +1,55 @@
+xbiquge:
+  url:
+    base: 'https://www.xbiquge.so/book/%v/'
+    download: https://www.xbiquge.so/book/%v/
+    chapterPrefix: https://www.xbiquge.so
+  maxChapterError: 100
+  updateDateLayout: null
+
+xqishu-desktop:
+  url:
+    base: "http://www.aidusk.com/txt%v/"
+    download: "http://www.aidusk.com/t/%v/"
+    chapterPrefix: "http://www.aidusk.com"
+  maxChapterError: 100
+  updateDateLayout: null
+
+80txt-desktop:
+  url:
+    base: "https://www.80xs.la/txtml_%v.html"
+    download: "http://www.80xs.la/txtml_%v.html"
+    chapterPrefix: "http://www.80xs.la"
+  maxChapterError: 100
+  updateDateLayour: null
+
+bestory-desktop:
+  url:
+    base: "https://www.book100.com/book/book%v.html"
+    download: "https://www.book100.com/book/book%v.html"
+    chapterPrefix: "https://www.book100.com"
+  maxChapterError: 100
+  updateDateLayour: null
+
+ck101-desktop:
+  url:
+    base: "https://www.ck101.org/book/%v.html"
+    download: "https://www.ck101.org/0/%v/"
+    chapterPrefix: "https://www.ck101.org"
+  maxChapterError: 100
+  updateDateLayour: null
+
+ck101-mobile:
+  url:
+    base: "https://www.ck101.org/book/%v.html"
+    download: "https://www.ck101.org/0/%v/"
+    chapter: "https://www.ck101.org"
+  maxChapterError: 100
+  updateDateLayour: null
+
+hjwzw-desktop:
+  url:
+    base: "https://tw.hjwzw.com/Book/%v/"
+    download: "https://tw.hjwzw.com/Book/Chapter/%v/"
+    chapter: "https://tw.hjwzw.com"
+  maxChapterError: 100
+  updateDateLayour: null

@@ -1,0 +1,9 @@
+maxCommonThreads: 1000
+
+enabledSites:
+  # - xbiquge
+  # - xqishu
+  # - ck101
+  # - 80txt
+  - hjwzw
+  # - bestory

@@ -1,0 +1,71 @@
+xbiquge:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'gbk'
+  maxThreads: 1000
+
+xqishu:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'utf8'
+  maxThreads: 100
+
+80txt:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'utf8'
+  maxThreads: 1000
+
+bestory:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'big5'
+  maxThreads: 1000
+
+ck101:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'big5'
+  maxThreads: 1000
+
+hjwzw:
+  maxFailCount: 1000
+  maxFailMultiplier: 1.5
+  circuitBreakingSleep: 10
+  intervalSleep: 1
+  timeout: 30
+  retry503: 100
+  retryErr: 10
+  decoder:
+    method: 'utf8'
+  maxThreads: 1000

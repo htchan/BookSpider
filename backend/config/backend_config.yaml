@@ -1,0 +1,11 @@
+enabledRoutes:
+  - api
+  - lite
+
+enabledSites:
+  - xbiquge
+  - xqishu
+  # - ck101
+  # - 80txt
+  - hjwzw
+  # - bestory

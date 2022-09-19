@@ -1,0 +1,108 @@
+xbiquge:
+  bookKey: xbiquge
+  clientKey: xbiquge
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 5
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 5
+    openConns: 5
+  maxExploreError: 1000
+  availability:
+    url: https://www.xbiquge.so/
+    check: 笔趣阁
+
+xqishu:
+  bookKey: xqishu-desktop
+  clientKey: xqishu
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 5
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 5
+    openConns: 5
+  maxExploreError: 1000
+  availability:
+    url: http://www.aidusk.com
+    check: 求书网
+
+
+80txt:
+  bookKey: 80txt-desktop
+  clientKey: 80txt
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 10
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 5
+    openConns: 5
+  maxExploreError: 1000
+  availability:
+    url: https://www.80xs.la/
+    check: 八零电子书
+
+bestory:
+  bookKey: bestory-desktop
+  clientKey: bestory
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 10
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 5
+    openConns: 5
+  maxExploreError: 1000
+  availability:
+    url: https://www.book100.com
+    check: 八零电子书
+
+ck101:
+  bookKey: ck101-desktop
+  clientKey: ck101
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 10
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 5
+    openConns: 5
+  maxExploreError: 1000
+  availability:
+    url: https://www.ck101.org
+    check: 卡提諾
+
+hjwzw:
+  bookKey: hjwzw-desktop
+  clientKey: hjwzw
+  storage: "/books"
+  backupDirectory: /backup/book_spider
+  concurrency:
+    fetchThreads: 1000
+    downloadThreads: 10
+  database:
+    engine: postgres
+    timeout: 30
+    idleConns: 1000
+    openConns: 1000
+  maxExploreError: 1000
+  availability:
+    url: https://tw.hjwzw.com
+    check: 黃金屋
