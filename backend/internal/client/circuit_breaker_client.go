@@ -4,38 +4,61 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/htchan/BookSpider/internal/config"
-	"golang.org/x/sync/semaphore"
 	"io"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/htchan/BookSpider/internal/config"
+	"golang.org/x/sync/semaphore"
+)
+
+var (
+	ZeroLengthError = errors.New("zero length")
 )
 
 type CircuitBreakerClient struct {
-	config.CircuitBreakerClientConfig
-	decoder   Decoder
-	ctx       context.Context
-	weighted  *semaphore.Weighted
-	failCount int
-	waitGroup sync.WaitGroup
-	client    *http.Client
+	conf           config.CircuitBreakerClientConfig
+	decoder        Decoder
+	ctx            context.Context
+	weighted       *semaphore.Weighted
+	commonCtx      *context.Context
+	commonWeighted *semaphore.Weighted
+	failCount      int
+	waitGroup      sync.WaitGroup
+	client         *http.Client
 }
 
-func (client *CircuitBreakerClient) Init(maxThreads int) {
-	client.client = &http.Client{Timeout: time.Duration(client.Timeout) * time.Second}
-	client.decoder.DecoderConfig = client.CircuitBreakerClientConfig.DecoderConfig
-	client.decoder.Load()
-	client.ctx = context.Background()
-	client.weighted = semaphore.NewWeighted(int64(maxThreads))
+func NewClient(conf config.CircuitBreakerClientConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) CircuitBreakerClient {
+	if commonWeighted == nil {
+		commonWeighted = semaphore.NewWeighted(int64(conf.MaxThreads))
+	}
+	if commonCtx == nil {
+		ctxObj := context.Background()
+		commonCtx = &ctxObj
+	}
+	return CircuitBreakerClient{
+		conf:           conf,
+		client:         &http.Client{Timeout: time.Duration(conf.Timeout) * time.Second},
+		decoder:        NewDecoder(conf.DecoderConfig),
+		ctx:            context.Background(),
+		weighted:       semaphore.NewWeighted(int64(conf.MaxThreads)),
+		commonCtx:      commonCtx,
+		commonWeighted: commonWeighted,
+	}
 }
 
 func (client CircuitBreakerClient) Acquire() error {
+	err := client.commonWeighted.Acquire(*client.commonCtx, 1)
+	if err != nil {
+		return err
+	}
 	return client.weighted.Acquire(client.ctx, 1)
 }
 
 func (client CircuitBreakerClient) Release() {
 	client.weighted.Release(1)
+	client.commonWeighted.Release(1)
 }
 
 func (client CircuitBreakerClient) SendRequest(url string) (string, error) {
@@ -52,7 +75,7 @@ func (client CircuitBreakerClient) SendRequest(url string) (string, error) {
 		return "", err
 	}
 	if len(html) == 0 {
-		return "", errors.New("zero length")
+		return "", ZeroLengthError
 	}
 	result, err := client.decoder.Decode(string(html))
 	if err != nil {
@@ -66,13 +89,13 @@ func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (s
 	response, err := client.SendRequest(url)
 	if err != nil && err.Error() == "code 503" {
 		client.failCount++
-		if client.failCount > client.MaxFailCount {
+		if client.failCount > client.conf.MaxFailCount {
 			client.waitGroup.Add(1)
 			go func() {
 				defer client.waitGroup.Done()
-				time.Sleep(time.Duration(client.CircuitBreakingSleep) * time.Second)
-				if client.failCount > int(float64(client.MaxFailCount)*client.MaxFailMultiplier) {
-					client.failCount = client.MaxFailCount / 2
+				time.Sleep(time.Duration(client.conf.CircuitBreakingSleep) * time.Second)
+				if client.failCount > int(float64(client.conf.MaxFailCount)*client.conf.MaxFailMultiplier) {
+					client.failCount = client.conf.MaxFailCount / 2
 				}
 			}()
 		}
@@ -90,15 +113,20 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
 		if err != nil {
-			if err.Error() == "code 503" && i >= client.Retry503 {
+			if err.Error() == "code 503" && i >= client.conf.Retry503 {
 				return html, err
-			} else if i >= client.RetryErr {
+			} else if i >= client.conf.RetryErr {
 				return html, err
 			}
-			time.Sleep(time.Duration((i+1)*client.IntervalSleep) * time.Second)
+			time.Sleep(time.Duration((i+1)*client.conf.IntervalSleep) * time.Second)
 			continue
 		}
 		break
 	}
 	return html, err
+}
+
+func (client *CircuitBreakerClient) Close() error {
+	client.waitGroup.Wait()
+	return nil
 }

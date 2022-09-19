@@ -4,20 +4,14 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
 	"github.com/htchan/BookSpider/internal/config"
 	"github.com/htchan/BookSpider/internal/mock"
 )
 
-func TestCircuitBreakerClient_Init(t *testing.T) {
+func Test_NewClient(t *testing.T) {
 	t.Parallel()
-	client := CircuitBreakerClient{
-		CircuitBreakerClientConfig: config.CircuitBreakerClientConfig{Timeout: 10},
-	}
-	if client.client != nil {
-		t.Errorf("the client is not nil in default")
-		return
-	}
-	client.Init(0)
+	client := NewClient(config.CircuitBreakerClientConfig{Timeout: 10}, nil, nil)
 
 	if client.client == nil || client.client.Timeout != 10*time.Second {
 		t.Errorf("wrong client created: %v", client.client)
@@ -27,8 +21,7 @@ func TestCircuitBreakerClient_Init(t *testing.T) {
 func TestCircuitBreakerClient_AcquireRelease(t *testing.T) {
 	t.Parallel()
 
-	client := CircuitBreakerClient{}
-	client.Init(1)
+	client := NewClient(config.CircuitBreakerClientConfig{MaxThreads: 1}, nil, nil)
 
 	t.Run("acquire block other acquire until release", func(t *testing.T) {
 		t.Parallel()
@@ -53,10 +46,7 @@ func TestCircuitBreakerClient_AcquireRelease(t *testing.T) {
 func TestCircuitBreakerClient_SendRequest(t *testing.T) {
 	t.Parallel()
 	server := mock.MockCircuitBreakerServer(2)
-	client := CircuitBreakerClient{
-		CircuitBreakerClientConfig: config.CircuitBreakerClientConfig{Timeout: 1},
-	}
-	client.Init(0)
+	client := NewClient(config.CircuitBreakerClientConfig{Timeout: 1}, nil, nil)
 
 	t.Cleanup(func() {
 		server.Close()
@@ -140,14 +130,11 @@ func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 		server.Close()
 	})
 
-	client := CircuitBreakerClient{
-		CircuitBreakerClientConfig: config.CircuitBreakerClientConfig{
-			Timeout:              1,
-			MaxFailCount:         1,
-			CircuitBreakingSleep: 2,
-		},
-	}
-	client.Init(0)
+	client := NewClient(config.CircuitBreakerClientConfig{
+		Timeout:              1,
+		MaxFailCount:         1,
+		CircuitBreakingSleep: 2,
+	}, nil, nil)
 
 	t.Run("stop send request if exceed limit", func(t *testing.T) {
 		tempClient := client
@@ -180,9 +167,9 @@ func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 
 	t.Run("reset to half of Max if it exceed max fail count * max fail multiplier", func(t *testing.T) {
 		tempClient := client
-		tempClient.MaxFailCount = 2
-		tempClient.MaxFailMultiplier = 1
-		tempClient.CircuitBreakingSleep = 0
+		tempClient.conf.MaxFailCount = 2
+		tempClient.conf.MaxFailMultiplier = 1
+		tempClient.conf.CircuitBreakingSleep = 0
 		t.Parallel()
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
@@ -207,14 +194,11 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 		server.Close()
 	})
 
-	client := CircuitBreakerClient{
-		CircuitBreakerClientConfig: config.CircuitBreakerClientConfig{
-			Retry503:      2,
-			RetryErr:      3,
-			IntervalSleep: 1,
-		},
-	}
-	client.Init(0)
+	client := NewClient(config.CircuitBreakerClientConfig{
+		Retry503:      2,
+		RetryErr:      3,
+		IntervalSleep: 1,
+	}, nil, nil)
 
 	t.Run("return html if receive 200", func(t *testing.T) {
 		t.Parallel()

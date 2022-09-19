@@ -9,16 +9,18 @@ import (
 )
 
 type Decoder struct {
-	config.DecoderConfig
 	decoder *encoding.Decoder
 }
 
-func (decoder *Decoder) Load() {
-	if decoder.Method == "big5" {
-		decoder.decoder = traditionalchinese.Big5.NewDecoder()
-	} else if decoder.Method == "gbk" {
-		decoder.decoder = simplifiedchinese.GBK.NewDecoder()
+func NewDecoder(conf config.DecoderConfig) Decoder {
+	var decoder *encoding.Decoder
+	if conf.Method == "big5" {
+		decoder = traditionalchinese.Big5.NewDecoder()
+	} else if conf.Method == "gbk" {
+		decoder = simplifiedchinese.GBK.NewDecoder()
 	}
+
+	return Decoder{decoder: decoder}
 }
 
 func (decoder Decoder) Decode(str string) (string, error) {

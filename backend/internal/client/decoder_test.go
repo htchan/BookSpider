@@ -2,37 +2,33 @@ package client
 
 import (
 	"encoding/hex"
-	"github.com/htchan/BookSpider/internal/config"
-	"golang.org/x/text/transform"
 	"testing"
+
+	"github.com/htchan/BookSpider/internal/config"
 )
 
-func TestDecoder_Load(t *testing.T) {
+func Test_NewDecoder(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		decoderMethod string
-		inputBytes    string
-		want          string
+		name      string
+		conf      config.DecoderConfig
+		expectNil bool
 	}{
 		{
-			name:          "load big5 decoder",
-			decoderMethod: "big5",
-			inputBytes:    "a440",
-			want:          "一",
+			name:      "load big5 decoder",
+			conf:      config.DecoderConfig{Method: "big5"},
+			expectNil: false,
 		},
 		{
-			name:          "load gbk decoder",
-			decoderMethod: "gbk",
-			inputBytes:    "d2bb",
-			want:          "一",
+			name:      "load gbk decoder",
+			conf:      config.DecoderConfig{Method: "gbk"},
+			expectNil: false,
 		},
 		{
-			name:          "load nil decoder",
-			decoderMethod: "",
-			inputBytes:    "",
-			want:          "",
+			name:      "load nil decoder",
+			conf:      config.DecoderConfig{},
+			expectNil: true,
 		},
 	}
 
@@ -41,20 +37,9 @@ func TestDecoder_Load(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			decoder := Decoder{DecoderConfig: config.DecoderConfig{Method: test.decoderMethod}}
-			decoder.Load()
-			if test.inputBytes == "" {
-				if decoder.decoder != nil {
-					t.Errorf("load non nil decoder")
-				}
-			} else {
-				hexByte, _ := hex.DecodeString(test.inputBytes)
-
-				got, _, err := transform.String(decoder.decoder, string(hexByte))
-
-				if err != nil || got != test.want {
-					t.Errorf("load wrong decoder decode %s to %s", got, test.want)
-				}
+			decoder := NewDecoder(test.conf)
+			if (decoder.decoder == nil) != test.expectNil {
+				t.Errorf("got decoder.decoder: %v; expect nil: %v", decoder.decoder, test.expectNil)
 			}
 		})
 	}
@@ -64,32 +49,32 @@ func TestDecoder_Decode(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		decoderMethod string
-		inputBytes    string
-		want          string
-		wantErr       bool
+		name       string
+		decoder    Decoder
+		inputBytes string
+		want       string
+		wantErr    bool
 	}{
 		{
-			name:          "decode big5 string with big5 decoder",
-			decoderMethod: "big5",
-			inputBytes:    "a440",
-			want:          "一",
-			wantErr:       false,
+			name:       "decode big5 string with big5 decoder",
+			decoder:    NewDecoder(config.DecoderConfig{Method: "big5"}),
+			inputBytes: "a440",
+			want:       "一",
+			wantErr:    false,
 		},
 		{
-			name:          "decode string with nil decoder",
-			decoderMethod: "",
-			inputBytes:    "41",
-			want:          "A",
-			wantErr:       false,
+			name:       "decode string with nil decoder",
+			decoder:    NewDecoder(config.DecoderConfig{Method: ""}),
+			inputBytes: "41",
+			want:       "A",
+			wantErr:    false,
 		},
 		{
-			name:          "decode big5 string with big5 decoder",
-			decoderMethod: "gbk",
-			inputBytes:    "d2bb",
-			want:          "一",
-			wantErr:       false,
+			name:       "decode gbk string with gbk decoder",
+			decoder:    NewDecoder(config.DecoderConfig{Method: "gbk"}),
+			inputBytes: "d2bb",
+			want:       "一",
+			wantErr:    false,
 		},
 	}
 
@@ -98,10 +83,8 @@ func TestDecoder_Decode(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			decoder := Decoder{DecoderConfig: config.DecoderConfig{Method: test.decoderMethod}}
-			decoder.Load()
 			hexByte, _ := hex.DecodeString(test.inputBytes)
-			got, err := decoder.Decode(string(hexByte))
+			got, err := test.decoder.Decode(string(hexByte))
 			if (err != nil) != test.wantErr {
 				t.Errorf("Decoder.Decode() return err %v, wantErr %v", err, test.wantErr)
 			}
@@ -110,25 +93,4 @@ func TestDecoder_Decode(t *testing.T) {
 			}
 		})
 	}
-
-	// t.Run("decode big5 string with big5 decoder", func (t *testing.T) {
-	// 	t.Parallel()
-	// 	decoder := Decoder{DecoderConfig: config.DecoderConfig{Method: "big5"}}
-	// 	decoder.Load()
-	// 	hexByte, _ := hex.DecodeString("a440")
-	// 	result, err := decoder.Decode(string(hexByte))
-	// 	if err != nil || result != "一" {
-	// 		t.Errorf("decode wrong result: %v; error: %v", result, err)
-	// 	}
-	// })
-
-	// t.Run("decode string with nil decoder", func (t *testing.T) {
-	// 	t.Parallel()
-	// 	decoder := Decoder{}
-	// 	hexByte, _ := hex.DecodeString("a440")
-	// 	result, err := decoder.Decode(string(hexByte))
-	// 	if err != nil || result != string(hexByte) {
-	// 		t.Errorf("decode wrong result: %v; error: %v", result, err)
-	// 	}
-	// })
 }
