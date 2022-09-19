@@ -1,8 +1,9 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"os"
+
+	"gopkg.in/yaml.v2"
 
 	"path/filepath"
 )
@@ -20,6 +21,7 @@ type CircuitBreakerClientConfig struct {
 	Retry503             int           `yaml:"retry503"`
 	RetryErr             int           `yaml:"retryErr"`
 	DecoderConfig        DecoderConfig `yaml:"decoder"`
+	MaxThreads           int           `yaml:"maxThreads"`
 }
 
 func LoadClientConfigs(configDirectory string) (map[string]*CircuitBreakerClientConfig, error) {

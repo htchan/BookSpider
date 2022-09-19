@@ -1,9 +1,10 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -12,10 +13,8 @@ const (
 )
 
 type BackendConfig struct {
-	EnabledRoutes    map[string]bool `yaml:"enabledRoutes"`
-	EnabledSiteNames []string        `yaml:"enabledSites"`
-
-	SiteConfigs map[string]*SiteConfig
+	EnabledRoutes    []string `yaml:"enabledRoutes"`
+	EnabledSiteNames []string `yaml:"enabledSites"`
 }
 
 func LoadBackendConfig(configDirectory string) (BackendConfig, error) {
@@ -29,6 +28,14 @@ func LoadBackendConfig(configDirectory string) (BackendConfig, error) {
 		return backendConfig, err
 	}
 
-	backendConfig.SiteConfigs, err = LoadSiteConfigs(configDirectory)
 	return backendConfig, err
+}
+
+func (conf BackendConfig) ContainsRoute(routeKey string) bool {
+	for _, key := range conf.EnabledRoutes {
+		if key == routeKey {
+			return true
+		}
+	}
+	return false
 }

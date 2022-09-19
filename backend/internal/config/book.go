@@ -1,9 +1,10 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 type URLConfig struct {
@@ -16,11 +17,7 @@ type BookConfig struct {
 	URLConfig        URLConfig `yaml:"url"`
 	MaxChaptersError int       `yaml:"maxChapterError"`
 	UpdateDateLayout string    `yaml:"updateDateLayout"`
-	Storage          string
-	SourceKey        string
 }
-
-type RequestFunc func(string) (string, error)
 
 func LoadBookConfigs(configDirectory string) (map[string]*BookConfig, error) {
 	data, err := os.ReadFile(filepath.Join(configDirectory, "book_configs.yaml"))
@@ -32,10 +29,6 @@ func LoadBookConfigs(configDirectory string) (map[string]*BookConfig, error) {
 	err = yaml.Unmarshal(data, &bookConfigs)
 	if err != nil {
 		return nil, err
-	}
-	for key, value := range bookConfigs {
-		value.SourceKey = key
-		bookConfigs[key] = value
 	}
 	return bookConfigs, nil
 }
