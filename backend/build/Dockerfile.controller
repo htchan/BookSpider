@@ -9,7 +9,7 @@ RUN apk add gcc musl-dev libc-dev
 RUN go mod download
 
 COPY ./internal ./internal
-COPY ./pkg ./pkg
+COPY ./internal ./internal
 COPY ./cmd/controller ./cmd/controller
 
 RUN --mount=type=cache,target=/root/.cache/go-build \

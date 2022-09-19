@@ -9,23 +9,19 @@ RUN apk add gcc musl-dev libc-dev
 RUN go mod download
 
 COPY ./internal ./internal
-COPY ./pkg ./pkg
-COPY ./cmd/controller ./cmd/controller
+COPY ./internal ./internal
+COPY ./cmd/batch ./cmd/batch
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -v  github.com/htchan/BookSpider/cmd/controller
+    go build -v  github.com/htchan/BookSpider/cmd/batch
 
 
 FROM golang:1.17.6-alpine3.14
 
 WORKDIR /usr/src/app
 
-RUN apk add tzdata
-
-COPY --from=builder /go/src/github.com/htchan/BookSpider/controller .
+COPY --from=builder /go/src/github.com/htchan/BookSpider/batch .
 COPY ./assets/cron_job /etc/cron.d/cron_job
-
-ENV TZ="Asia/Hong_Kong"
 
 RUN chmod 0644 /etc/cron.d/cron_job
 RUN crontab /etc/cron.d/cron_job
