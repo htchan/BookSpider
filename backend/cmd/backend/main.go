@@ -1,159 +1,66 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"time"
-	"io/ioutil"
-	"strings"
-	"net/http"
-	// "log"
-	
-	"encoding/json"
 
-	"github.com/htchan/BookSpider/pkg/sites"
-	"github.com/htchan/BookSpider/pkg/configs"
-	"github.com/htchan/BookSpider/internal/utils"
-	"github.com/htchan/BookSpider/internal/logging"
+	"github.com/go-chi/chi/v5"
+	"github.com/htchan/BookSpider/internal/config"
+	"github.com/htchan/BookSpider/internal/router"
+	"github.com/htchan/BookSpider/internal/service/site"
 )
 
-type Logs struct {
-	logLocation string
-	Logs []string
-	MemoryLastUpdate, FileLastUpdate time.Time
-	size int64
-}
-
-var stageFileName string
-const readLogLen int64 = 10000
-const RECORD_PER_PAGE = 50
-var apiFunc = map[string]func() {
-	"info": func() { http.HandleFunc("/api/novel/info", GeneralInfo) },
-	"siteInfo": func() { http.HandleFunc("/api/novel/sites/", SiteInfo) },
-	"bookInfo": func() { http.HandleFunc("/api/novel/books/", BookInfo) },
-
-	"download": func() { for name := range siteMap { http.HandleFunc("/api/novel/download/"+name+"/", BookDownload) } },
-	"search": func() { for name := range siteMap { http.HandleFunc("/api/novel/search/"+name+"", BookSearch) } },
-	"random": func() { for name := range siteMap { http.HandleFunc("/api/novel/random/"+name, BookRandom) } },
-
-	"process": func() { http.HandleFunc("/api/novel/process", ProcessState) },
-}
-
-func (logs *Logs) update() {
-	if time.Now().Unix() - logs.MemoryLastUpdate.Unix() < 60 { return }
-
-	logFileStat, err := os.Stat(logs.logLocation)
-	if err != nil { return }
-	fileSize := logFileStat.Size()
-	logs.FileLastUpdate = logFileStat.ModTime()
-	if fileSize == logs.size { return }
-
-	file, err := os.Open(logs.logLocation)
-	utils.CheckError(err)
-	defer file.Close()
-	logs.size = fileSize
-	offset := fileSize - readLogLen
-	if offset < readLogLen { offset = 0 }
-	
-	b := make([]byte, readLogLen)
-	file.ReadAt(b, offset)
-	logs.Logs = strings.Split(string(b), "\n")
-	logs.Logs = logs.Logs[1:]
-	for i, _ := range logs.Logs {
-		logs.Logs[i] = strings.ReplaceAll(logs.Logs[i], "\"", "\\\"")
-	}
-	logs.MemoryLastUpdate = time.Now()
-}
-func setHeader(res http.ResponseWriter) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-}
-func response(res http.ResponseWriter, data map[string]interface{}) {
-	encoder := json.NewEncoder(res)
-	utils.CheckError(encoder.Encode(data))
-}
-func error(res http.ResponseWriter, code int, msg string) {
-	res.WriteHeader(code)
-	response(res, map[string]interface{} {
-		"code": code,
-		"message": msg,
-	})
-}
-//TODO
-func ProcessState(res http.ResponseWriter, req *http.Request) {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	
-	logs.update()
-	data, err := ioutil.ReadFile(stageFileName)
-	var stageStr []string
-	if err != nil {
-		stageStr = append(stageStr, err.Error())
-	} else {
-		stageStr = append(stageStr, strings.Split(string(data), "\n")...)
-	}
-
-	response(res, map[string]interface{} {
-		"time": logs.FileLastUpdate.Unix(),
-		"stage": stageStr,
-		"logs": logs.Logs,
-	})
-}
-
-var currentProcess string
-var logs Logs
-var systemConfig *configs.SystemConfig
-var serverConfig *configs.ServerConfig
-var siteMap map[string]*sites.Site
-
-func setup(configDirectory string) {
-	currentProcess = ""
-	systemConfig = configs.LoadSystemConfigs(configDirectory)
-	serverConfig = configs.LoadServerConfigs(configDirectory)
-	stageFileName = os.Getenv("ASSETS_LOCATION") + "/log/stage.txt"
-	siteMap = make(map[string]*sites.Site)
-	for key, siteConfig := range systemConfig.AvailableSiteConfigs {
-		siteMap[key] = sites.NewSite(key, siteConfig)
-		siteMap[key].OpenDatabase()
-		//TODO: deploy a thread to close the database if it is not opened
-	}
-}
-func startServer(addr string) {
-	for _, api := range serverConfig.AvailableApi { apiFunc[api]() }
-	logging.LogEvent("server", "start", nil)
-	logging.LogEvent("server", "error", http.ListenAndServe(addr, nil))
-}
 func main() {
-	setup(os.Getenv("ASSETS_LOCATION") + "/configs")
-	logs = Logs{
-		logLocation: os.Getenv("ASSETS_LOCATION") + "/log/batch.log", 
-		Logs: make([]string, 100), 
-		MemoryLastUpdate: time.Unix(0, 0), 
-		FileLastUpdate: time.Unix(0, 0)}
+	configLocation := os.Getenv("ASSETS_LOCATION") + "/config"
+	var err error
 
-	startServer(":9427")
+	// TODO: load backend config
+	backendConfig, err := config.LoadBackendConfig(configLocation)
+	if err != nil {
+		fmt.Printf("load backend config: %v", err)
+		return
+	}
+
+	sites, err := site.LoadSitesFromConfigDirectory(configLocation, backendConfig.EnabledSiteNames)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// load routes
+	r := chi.NewRouter()
+	if backendConfig.ContainsRoute(config.RouteAPIKey) {
+		router.AddAPIRoutes(r, sites)
+	}
+
+	if backendConfig.ContainsRoute(config.RouteLiteKey) {
+		router.AddLiteRoutes(r, sites)
+	}
+
+	server := http.Server{
+		Addr:         ":9105",
+		Handler:      r,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  5 * time.Second,
+	}
+	// go func() {
+	log.Println("start http server")
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("backend stopped: %v", err)
+	}
+	// }()
+
+	// sigChan := make(chan os.Signal, 1)
+	// signal.Notify(sigChan, os.Interrupt)
+	// <-sigChan
+	// log.Println("received interrupt signal")
+
+	// // Setup graceful shutdown
+	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// defer cancel()
+	// server.Shutdown(ctx)
 }
-
-/*
-// get info of server
-host:port
-
-// get currentProcess info
-host:port/currentProcess
-
-// get info of site
-host:port/info/<site>
-
-// get info of book (all versions)
-host:port/<site>/<id>
-host:port/info/<site>/<id>
-
-// get info of book
-host:port/<site>/<id>/<version>
-host:port/info/<site>/<id>/<version>
-
-// download book
-host:port/download/<site>/<id>
-
-// search books
-host:port/search?title=???&writer=???
-*/
