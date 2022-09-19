@@ -1,0 +1,6 @@
+DROP INDEX IF EXISTS books_index;
+DROP INDEX IF EXISTS books_title;
+DROP INDEX IF EXISTS books_writer;
+DROP INDEX IF EXISTS books_status;
+
+DROP TABLE IF EXISTS books;

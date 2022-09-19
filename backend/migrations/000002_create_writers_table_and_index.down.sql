@@ -1,0 +1,4 @@
+DROP INDEX IF EXISTS writers_id;
+DROP INDEX IF EXISTS writers_name;
+
+DROP TABLE IF EXISTS writers;
