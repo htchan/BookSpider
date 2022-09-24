@@ -1,0 +1,13 @@
+info:
+  data:
+    - "<meta property=\"og:novel:book_name\" content=\"(?P<Title>.*?)\"/>"
+    - "<meta property=\"og:novel:author\" content=\"(?P<Writer>.*?)\"/>"
+    - "<meta property=\"og:novel:category\" content=\"(?P<Type>.*?)\"/>"
+    - "(?P<LastUpdate>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})"
+    - "更新时间：(?P<LastUpdate>.*?)[^ \\-:\\d]"
+    - "<meta property=\"og:novel:latest_chapter_name\" content=\"(?P<LastChapter>.*?)\"/>"
+  items: "<dd><a href=\"(?P<ChapterUrl>.*?)\">(?P<ChapterTitle>.*?)</a></dd>"
+
+chapter_content:
+  data:
+    - "<div id=\"content\" name=\"content\">(?P<ChapterContent>.*?)</div>"
