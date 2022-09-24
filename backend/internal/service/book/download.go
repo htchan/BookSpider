@@ -96,7 +96,7 @@ func Download(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig
 		return false, fmt.Errorf("Download book error: %w", err)
 	}
 
-	log.Printf("[%v] download chapters", bk)
+	log.Printf("[%v] download chapters; total: %v", bk, len(chapters))
 	err = downloadChapters(bk, chapters, bkConf, stConf, c)
 	if err != nil {
 		return false, fmt.Errorf("Download book error: %w", err)
