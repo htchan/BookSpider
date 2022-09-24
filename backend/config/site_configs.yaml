@@ -1,7 +1,7 @@
 xbiquge:
   bookKey: xbiquge
   clientKey: xbiquge
-  storage: "/books"
+  storage: "/books/xbiquge"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
@@ -19,7 +19,7 @@ xbiquge:
 xqishu:
   bookKey: xqishu-desktop
   clientKey: xqishu
-  storage: "/books"
+  storage: "/books/xqishu"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
@@ -38,7 +38,7 @@ xqishu:
 80txt:
   bookKey: 80txt-desktop
   clientKey: 80txt
-  storage: "/books"
+  storage: "/books/80txt"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
@@ -56,7 +56,7 @@ xqishu:
 bestory:
   bookKey: bestory-desktop
   clientKey: bestory
-  storage: "/books"
+  storage: "/books/bestory"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
@@ -74,7 +74,7 @@ bestory:
 ck101:
   bookKey: ck101-desktop
   clientKey: ck101
-  storage: "/books"
+  storage: "/books/ck101"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
@@ -92,7 +92,7 @@ ck101:
 hjwzw:
   bookKey: hjwzw-desktop
   clientKey: hjwzw
-  storage: "/books"
+  storage: "/books/hjwzw"
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000

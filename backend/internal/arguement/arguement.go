@@ -3,6 +3,7 @@ package arguement
 import (
 	"errors"
 	"flag"
+	"log"
 	"strconv"
 
 	"github.com/htchan/BookSpider/internal/model"
@@ -48,6 +49,9 @@ func (f *Arguement) GetSite(sites map[string]*site.Site) *site.Site {
 
 func (f *Arguement) GetBook(sites map[string]*site.Site) *model.Book {
 	st := f.GetSite(sites)
+	if st == nil {
+		return nil
+	}
 	var bk *model.Book
 	var err error
 	if *f.HashCode != "" {
@@ -62,7 +66,9 @@ func (f *Arguement) GetBook(sites map[string]*site.Site) *model.Book {
 			ID:       *f.ID,
 			HashCode: int(hash),
 		}
-	} else {
+		log.Printf("[%v] record not found", bk)
+	} else if err != nil {
+		log.Println(err)
 		return nil
 	}
 	return bk

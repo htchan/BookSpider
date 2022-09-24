@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/htchan/ApiParser"
 	"github.com/htchan/BookSpider/internal/arguement"
 	"github.com/htchan/BookSpider/internal/config"
 	"github.com/htchan/BookSpider/internal/model"
@@ -23,7 +24,7 @@ func OperateAllSites(sites map[string]*site.Site, operation string) error {
 			err := OperateSite(st, operation)
 
 			if err != nil {
-				log.Printf("Process fail: %v\n", err)
+				log.Printf("[%v] Operate fail: %v\n", st.Name, err)
 			}
 		}(st)
 	}
@@ -32,6 +33,9 @@ func OperateAllSites(sites map[string]*site.Site, operation string) error {
 }
 
 func OperateSite(st *site.Site, operation string) error {
+	if st == nil {
+		return errors.New("Site not found")
+	}
 	var err error
 	switch operation {
 	case "backup":
@@ -56,6 +60,9 @@ func OperateSite(st *site.Site, operation string) error {
 }
 
 func OperateBook(st *site.Site, bk *model.Book, operation string) error {
+	if st == nil {
+		return errors.New("Site not found")
+	}
 	var (
 		isUpdated bool
 		err       error
@@ -92,14 +99,17 @@ func main() {
 	// load backend config
 	batchConfig, err := config.LoadBatchConfig(configLocation)
 	if err != nil {
-		log.Fatalf("load backend config: %v", err)
+		log.Fatalf("load backend config failed: %v", err)
 	}
 
 	// load sites from config
 	sites, err := site.LoadSitesFromConfigDirectory(configLocation, batchConfig.EnabledSites)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("load site failed: %v", err)
 	}
+
+	ApiParser.SetDefault(
+		ApiParser.FromDirectory(os.Getenv("ASSETS_LOCATION") + "/api_parser"))
 
 	// load arguements
 	args := arguement.LoadArgs()

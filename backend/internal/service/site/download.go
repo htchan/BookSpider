@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -41,10 +42,10 @@ func Download(st *Site) error {
 	}
 
 	for bk := range bks {
+		bk := bk
 		st.Client.Acquire()
 		s.Acquire(ctx, 1)
 		wg.Add(1)
-		bk := bk
 
 		go func(bk *model.Book) {
 			defer st.Client.Release()
@@ -57,7 +58,7 @@ func Download(st *Site) error {
 			}
 
 			if err != nil {
-				//TODO: log the error
+				log.Printf("[%v] download failed: %v", bk, err)
 			}
 		}(&bk)
 	}

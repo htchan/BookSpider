@@ -8,7 +8,7 @@ import (
 )
 
 type ConcurrencyConfig struct {
-	DownloadThreads int `yaml:"DownloadThreads"`
+	DownloadThreads int `yaml:"downloadThreads"`
 }
 
 type DatabaseConfig struct {

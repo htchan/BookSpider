@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -37,10 +36,10 @@ func OpenDatabase(site string) (*sql.DB, error) {
 	if err != nil {
 		return database, err
 	}
-	database.SetMaxIdleConns(5)
-	database.SetMaxOpenConns(10)
-	database.SetConnMaxIdleTime(5 * time.Second)
-	database.SetConnMaxLifetime(5 * time.Second)
+	// database.SetMaxIdleConns(5)
+	// database.SetMaxOpenConns(10)
+	// database.SetConnMaxIdleTime(5 * time.Second)
+	// database.SetConnMaxLifetime(5 * time.Second)
 	log.Printf("postgres_database.open; %v", database)
 	return database, err
 }

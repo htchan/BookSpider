@@ -290,8 +290,8 @@ func generateUpdateStatusCondition(length int) string {
 	}
 
 	sqlStmt += fmt.Sprintf(
-		") and status != $%d and status != $%d and site=$%d",
-		length+2, length+3, length+4,
+		") and status = $%d and site=$%d",
+		length+2, length+3,
 	)
 
 	return sqlStmt
@@ -306,8 +306,7 @@ func (r *PsqlRepo) UpdateBooksStatus() error {
 	conditions := generateUpdateStatusCondition(len(matchingKeywords))
 
 	params := append(
-		matchingKeywords, model.StatusCode(model.Error).String(),
-		model.StatusCode(model.End).String(), r.site,
+		matchingKeywords, model.StatusCode(model.InProgress).String(), r.site,
 	)
 
 	_, err := r.db.Exec(
@@ -391,7 +390,7 @@ func (r *PsqlRepo) backupWriters(path string) error {
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (
-				select writers.* from writers join books on writers.id=books.writer_id 
+				select distinct(writers.*) from writers join books on writers.id=books.writer_id 
 				where books.site='%s'
 			) to '%s/%s/writers_%s.csv' csv header quote as '''' force quote *`,
 			r.site, path, r.site, time.Now().Format("2006-01-02"),

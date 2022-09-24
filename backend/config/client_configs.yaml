@@ -11,9 +11,9 @@ xbiquge:
   maxThreads: 1000
 
 xqishu:
-  maxFailCount: 1000
-  maxFailMultiplier: 1.5
-  circuitBreakingSleep: 10
+  maxFailCount: 10
+  maxFailMultiplier: 2
+  circuitBreakingSleep: 5
   intervalSleep: 1
   timeout: 30
   retry503: 100

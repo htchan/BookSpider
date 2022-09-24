@@ -1,8 +1,8 @@
 maxCommonThreads: 1000
 
 enabledSites:
-  # - xbiquge
-  # - xqishu
+  - xbiquge
+  - xqishu
   # - ck101
   # - 80txt
   - hjwzw

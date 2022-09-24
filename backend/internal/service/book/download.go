@@ -3,6 +3,7 @@ package book
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -24,7 +25,6 @@ func fetchChaptersHeaderInfo(bk *model.Book, bkConf config.BookConfig, stConf co
 	}
 
 	responseApi := ApiParser.Parse(stConf.BookKey+".info", html)
-	fmt.Println(responseApi)
 	if len(responseApi.Items) == 0 {
 		return nil, errors.New("empty chapters")
 	}
@@ -90,16 +90,19 @@ func Download(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig
 		return false, nil
 	}
 
+	log.Printf("[%v] fetching header info", bk)
 	chapters, err := fetchChaptersHeaderInfo(bk, bkConf, stConf, c)
 	if err != nil {
 		return false, fmt.Errorf("Download book error: %w", err)
 	}
 
+	log.Printf("[%v] download chapters", bk)
 	err = downloadChapters(bk, chapters, bkConf, stConf, c)
 	if err != nil {
 		return false, fmt.Errorf("Download book error: %w", err)
 	}
 
+	log.Printf("[%v] save content", bk)
 	err = saveContent(BookFileLocation(bk, stConf), bk, chapters)
 	if err != nil {
 		return false, fmt.Errorf("Download book error: %w", err)

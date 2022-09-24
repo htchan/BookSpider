@@ -2,6 +2,7 @@ package book
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -26,10 +27,11 @@ func checkStorage(bk *model.Book, stConf config.SiteConfig) bool {
 	}
 
 	if fileExist && !bk.IsDownloaded {
-		// TODO: log book status
+		log.Printf("[%v] file exist for not downloaded book", bk)
 		bk.IsDownloaded = true
 		isUpdated = true
 	} else if !fileExist && bk.IsDownloaded {
+		log.Printf("[%v] file not exist for downloaded book", bk)
 		bk.IsDownloaded = false
 		isUpdated = true
 	}
