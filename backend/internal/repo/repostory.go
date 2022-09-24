@@ -29,7 +29,7 @@ type Repostory interface {
 	FindBooksForUpdate() (<-chan model.Book, error)
 	FindBooksForDownload() (<-chan model.Book, error)
 	FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error)
-	FindBooksByRandom(limit, offset int) ([]model.Book, error)
+	FindBooksByRandom(limit int) ([]model.Book, error)
 	UpdateBooksStatus() error
 
 	// writer related

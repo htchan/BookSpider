@@ -53,7 +53,7 @@ func (m MockRepostory) FindBooksByTitleWriter(title, writer string, limit, offse
 	return make([]model.Book, 0), m.Err
 }
 
-func (m MockRepostory) FindBooksByRandom(limit, offset int) ([]model.Book, error) {
+func (m MockRepostory) FindBooksByRandom(limit int) ([]model.Book, error) {
 	return make([]model.Book, 0), m.Err
 }
 

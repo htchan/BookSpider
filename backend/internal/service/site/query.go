@@ -25,6 +25,6 @@ func (st *Site) QueryBooks(title, writer string, limit, offset int) ([]model.Boo
 	return st.rp.FindBooksByTitleWriter(title, writer, limit, offset)
 }
 
-func (st *Site) RandomBooks(limit, offset int) ([]model.Book, error) {
-	return st.rp.FindBooksByRandom(limit, offset)
+func (st *Site) RandomBooks(limit int) ([]model.Book, error) {
+	return st.rp.FindBooksByRandom(limit)
 }

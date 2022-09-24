@@ -44,9 +44,8 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
 	st := req.Context().Value("site").(*site.Site)
 	limit := req.Context().Value("limit").(int)
-	offset := req.Context().Value("offset").(int)
 
-	bks, err := st.RandomBooks(limit, offset)
+	bks, err := st.RandomBooks(limit)
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {

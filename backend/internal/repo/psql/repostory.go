@@ -202,7 +202,7 @@ func (r *PsqlRepo) FindBooksForUpdate() (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select distinct on (books.site, books.id) %s from %s 
-			where books.site=$1 order by books.site, books.id desc, books.hash_code desc, books.update_date desc`,
+			where books.site=$1 order by books.site, books.id desc, books.hash_code desc`,
 			QueryField, QueryTable,
 		),
 		r.site,
@@ -218,7 +218,7 @@ func (r *PsqlRepo) FindBooksForDownload() (<-chan model.Book, error) {
 		fmt.Sprintf(
 			`select %s from %s
 			where books.site=$1 and books.status=$2 and books.is_downloaded=$3
-			order by books.update_date desc`,
+			order by books.update_date desc, books.id desc`,
 			QueryField, QueryTable,
 		),
 		r.site, model.StatusCode(model.End).String(), false,
@@ -244,7 +244,7 @@ func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 			where books.site=$1 and 
 				(books.title like $2 or writers.name like $3) and 
 				(books.status != $4)
-			order by books.update_date, books.id limit $5 offset $6`,
+			order by books.update_date desc, books.id desc limit $5 offset $6`,
 			QueryField, QueryTable,
 		),
 		r.site, title, writer, model.StatusCode(model.Error).String(), limit, offset,
@@ -260,15 +260,16 @@ func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 
 	return bks, nil
 }
-func (r *PsqlRepo) FindBooksByRandom(limit, offset int) ([]model.Book, error) {
+func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s
 			where books.site=$1 and books.is_downloaded=$2
-			order by RANDOM() limit $3 offset $4`,
+			order by books.site, books.id desc, books.hash_code desc 
+			limit $3 offset RANDOM() * (select count(*) - $3 from books where site=$1 and is_downloaded=$2)`,
 			QueryField, QueryTable,
 		),
-		r.site, true, limit, offset,
+		r.site, true, limit,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by status: %w", err)

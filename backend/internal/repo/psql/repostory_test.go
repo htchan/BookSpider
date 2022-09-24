@@ -575,7 +575,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 			writer:       "writer",
 			limit:        10,
 			offset:       0,
-			expectResult: []model.Book{bksDB[0], bksDB[1], bksDB[2], bksDB[3]},
+			expectResult: []model.Book{bksDB[3], bksDB[2], bksDB[1], bksDB[0]},
 			expectErr:    false,
 		},
 		{
@@ -585,7 +585,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 			writer:       "writer",
 			limit:        1,
 			offset:       0,
-			expectResult: []model.Book{bksDB[0]},
+			expectResult: []model.Book{bksDB[3]},
 			expectErr:    false,
 		},
 		{
@@ -595,7 +595,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 			writer:       "writer",
 			limit:        1,
 			offset:       1,
-			expectResult: []model.Book{bksDB[1]},
+			expectResult: []model.Book{bksDB[2]},
 			expectErr:    false,
 		},
 		{
@@ -605,7 +605,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 			writer:       "writer 3",
 			limit:        5,
 			offset:       0,
-			expectResult: []model.Book{bksDB[0], bksDB[3]},
+			expectResult: []model.Book{bksDB[3], bksDB[0]},
 			expectErr:    false,
 		},
 	}
@@ -648,7 +648,6 @@ func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 		name         string
 		r            repo.Repostory
 		limit        int
-		offset       int
 		expectLength int
 		expectErr    bool
 	}{
@@ -656,7 +655,6 @@ func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 			name:         "works",
 			r:            NewRepo(site, db),
 			limit:        10,
-			offset:       0,
 			expectLength: 2,
 			expectErr:    false,
 		},
@@ -665,7 +663,7 @@ func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBooksByRandom(test.limit, test.offset)
+			result, err := test.r.FindBooksByRandom(test.limit)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}

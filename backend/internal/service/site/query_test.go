@@ -280,17 +280,16 @@ func TestSite_RandomBooks(t *testing.T) {
 	stubData(st.rp, site)
 
 	tests := []struct {
-		name          string
-		st            *Site
-		limit, offset int
-		expectLen     int
-		expectErr     bool
+		name      string
+		st        *Site
+		limit     int
+		expectLen int
+		expectErr bool
 	}{
 		{
 			name:      "works without offset",
 			st:        st,
 			limit:     10,
-			offset:    0,
 			expectLen: 2,
 			expectErr: false,
 		},
@@ -298,7 +297,6 @@ func TestSite_RandomBooks(t *testing.T) {
 			name:      "works with offset",
 			st:        st,
 			limit:     10,
-			offset:    1,
 			expectLen: 1,
 			expectErr: false,
 		},
@@ -309,7 +307,7 @@ func TestSite_RandomBooks(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			bks, err := test.st.RandomBooks(test.limit, test.offset)
+			bks, err := test.st.RandomBooks(test.limit)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
