@@ -10,16 +10,16 @@ RUN go mod download
 
 COPY ./internal ./internal
 COPY ./internal ./internal
-COPY ./cmd/controller ./cmd/controller
+COPY ./cmd/console ./cmd/console
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -v github.com/htchan/BookSpider/cmd/controller
+    go build -v github.com/htchan/BookSpider/cmd/console
 
 
 FROM golang:1.17.6-alpine3.14
 
 WORKDIR /usr/src/app
 
-COPY --from=builder /go/src/github.com/htchan/BookSpider/controller .
+COPY --from=builder /go/src/github.com/htchan/BookSpider/console .
 
 CMD ['./controller']

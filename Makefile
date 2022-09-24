@@ -24,8 +24,8 @@ backend:
 	docker-compose --profile backend up -d
 
 ## controller: deploy controller container
-controller:
-	command=${command} params="${params}" docker-compose --profile controller up --force-recreate
+console:
+	command=${command} params="${params}" docker-compose --profile console up --force-recreate
 
 ## batch: deploy batch container
 batch:

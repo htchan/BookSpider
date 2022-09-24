@@ -59,6 +59,27 @@ services:
             - batch
         command: sh -c "crond && tail -f /dev/null"
 
+    console:
+        build: 
+            context: ./backend
+            dockerfile: ./build/Dockerfile.console
+        volumes:
+            - ./bin/log:/log
+            - /mnt/addition/download/Books:/books
+            - ./bin/backup:/backup
+            - ./backend/config:/config
+            - ./backend/assets/api_parser:/api_parser
+            - ./backend/migrations:/migrations
+        env_file:
+            - ./backend/assets/.env
+            - .env
+        networks:
+            - database
+        profiles:
+            - all
+            - console
+        command: sh -c "./console --operation ${command} ${params} >> /log/console.log 2>&1"
+
 volumes:
     frontend_volume:
         name: novel_frontend_volume

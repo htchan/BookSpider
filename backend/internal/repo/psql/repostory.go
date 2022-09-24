@@ -142,7 +142,7 @@ func (r *PsqlRepo) FindBookById(id int) (*model.Book, error) {
 	if rows.Next() {
 		return rowsToBook(rows)
 	}
-	return nil, fmt.Errorf("fail to query book by site id: no records found")
+	return nil, fmt.Errorf("fail to query book by site id: %w", repo.BookNotExist)
 }
 func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 	fmt.Printf(
@@ -167,7 +167,7 @@ func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 	if rows.Next() {
 		return rowsToBook(rows)
 	}
-	return nil, fmt.Errorf("fail to query book by site id hash: no records found")
+	return nil, fmt.Errorf("fail to query book by site id hash: %w", repo.BookNotExist)
 }
 func (r *PsqlRepo) FindBooksByStatus(status model.StatusCode) (<-chan model.Book, error) {
 	rows, err := r.db.Query(

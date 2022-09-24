@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/htchan/BookSpider/internal/model"
 )
@@ -11,6 +12,8 @@ var ChapterEndKeywords = []string{
 	"尾声", "尾聲", "终章", "終章", "外传", "外傳", "完本" /*"结束", "結束", */, "完結",
 	"完结", "终结", "終結", "番外", "结尾", "結尾", "全书完", "全書完", "全本完",
 }
+
+var BookNotExist = errors.New("no records found")
 
 type Repostory interface {
 	Migrate() error
