@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -217,9 +218,12 @@ func (r *PsqlRepo) FindBooksForDownload() (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s
-			where books.site=$1 and books.status=$2 and books.is_downloaded=$3
-			order by books.update_date desc, books.id desc`,
-			QueryField, QueryTable,
+			where bks.site=$1 and bks.status=$2 and bks.is_downloaded=$3
+			order by bks.update_date desc, bks.id desc`,
+			strings.ReplaceAll(QueryField, "books", "bks"),
+			strings.ReplaceAll(
+				strings.ReplaceAll(QueryTable, "books.", "bks."), "books ", "(select distinct on (site, id) * from books where site=$1 order by site, id, hash_code desc) as bks ",
+			),
 		),
 		r.site, model.StatusCode(model.End).String(), false,
 	)
@@ -266,7 +270,7 @@ func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 			`select %s from %s
 			where books.site=$1 and books.is_downloaded=$2
 			order by books.site, books.id desc, books.hash_code desc 
-			limit $3 offset RANDOM() * (select count(*) - $3 from books where site=$1 and is_downloaded=$2)`,
+			limit $3 offset RANDOM() * (select count(*) from books where site=$1 and is_downloaded=$2)`,
 			QueryField, QueryTable,
 		),
 		r.site, true, limit,
