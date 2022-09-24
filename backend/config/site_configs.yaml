@@ -42,7 +42,7 @@ xqishu:
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
-    downloadThreads: 10
+    downloadThreads: 5
   database:
     engine: postgres
     timeout: 30
@@ -60,7 +60,7 @@ bestory:
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
-    downloadThreads: 10
+    downloadThreads: 5
   database:
     engine: postgres
     timeout: 30
@@ -78,7 +78,7 @@ ck101:
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
-    downloadThreads: 10
+    downloadThreads: 5
   database:
     engine: postgres
     timeout: 30
@@ -96,7 +96,7 @@ hjwzw:
   backupDirectory: /backup/book_spider
   concurrency:
     fetchThreads: 1000
-    downloadThreads: 10
+    downloadThreads: 5
   database:
     engine: postgres
     timeout: 30
