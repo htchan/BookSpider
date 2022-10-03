@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/htchan/BookSpider/internal/service/site"
 )
 
@@ -26,6 +27,17 @@ func AddAPIRoutes(router chi.Router, sites map[string]*site.Site) {
 	}
 
 	router.Route(api_route_prefix, func(router chi.Router) {
+		router.Use(
+			cors.Handler(
+				cors.Options{
+					AllowedOrigins: []string{"*"},
+					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+					AllowedHeaders: []string{"*"},
+					MaxAge:         300, // Maximum value not ignored by any of major browsers
+				},
+			),
+		)
+
 		router.Get("/info", GeneralInfoAPIHandler(sites))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
