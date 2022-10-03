@@ -13,6 +13,8 @@ xqishu-desktop:
     chapterPrefix: "http://www.aidusk.com"
   maxChapterError: 100
   updateDateLayout: null
+  unwantContent:
+    - "(?s)<div class="booknew\d+">.*?</div><div.*?</div>"
 
 80txt-desktop:
   url:

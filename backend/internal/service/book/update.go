@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/htchan/ApiParser"
 	"github.com/htchan/BookSpider/internal/client"
@@ -15,10 +16,17 @@ func baseURL(bk model.Book, config config.BookConfig) string {
 	return fmt.Sprintf(config.URLConfig.Base, bk.ID)
 }
 
-func fetchInfo(c *client.CircuitBreakerClient, bookKey, url string) (title, writer, typeStr, date, chapStr string, err error) {
+func fetchInfo(url string, c *client.CircuitBreakerClient, bookKey string, bkConf config.BookConfig) (title, writer, typeStr, date, chapStr string, err error) {
 	html, err := c.Get(url)
 	if err != nil {
 		return
+	}
+	for _, r := range bkConf.UnwantContent {
+		re, err := regexp.Compile(r)
+		if err != nil {
+			continue
+		}
+		html = re.ReplaceAllString(html, "")
 	}
 	responseApi := ApiParser.Parse(bookKey+".info", html)
 	okMap := make(map[string]bool)
@@ -47,7 +55,7 @@ func isUpdated(bk model.Book, title, writer, typeStr, date, chapStr string) bool
 }
 
 func Update(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
-	title, writer, typeStr, date, chapStr, err := fetchInfo(c, stConf.BookKey, baseURL(*bk, bkConf))
+	title, writer, typeStr, date, chapStr, err := fetchInfo(baseURL(*bk, bkConf), c, stConf.BookKey, bkConf)
 	// TODO: log the response
 	if err != nil {
 		if bk.Status == model.Error {

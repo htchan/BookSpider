@@ -17,6 +17,7 @@ type BookConfig struct {
 	URLConfig        URLConfig `yaml:"url"`
 	MaxChaptersError int       `yaml:"maxChapterError"`
 	UpdateDateLayout string    `yaml:"updateDateLayout"`
+	UnwantContent    []string  `yaml:"unwantContent"`
 }
 
 func LoadBookConfigs(configDirectory string) (map[string]*BookConfig, error) {

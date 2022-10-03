@@ -65,6 +65,7 @@ func Test_fetchInfo(t *testing.T) {
 		name         string
 		client       *client.CircuitBreakerClient
 		bookKey, url string
+		bkConf       config.BookConfig
 		expect       ExpectStruct
 	}{
 		{
@@ -117,13 +118,24 @@ func Test_fetchInfo(t *testing.T) {
 				date: "1234", chapterStr: "chapter", err: false,
 			},
 		},
+		{
+			name:    "replace unwant content in response",
+			client:  &c,
+			bookKey: "test_book",
+			url:     server.URL + "/update-book/chapter-not-end",
+			bkConf:  config.BookConfig{UnwantContent: []string{"ne"}},
+			expect: ExpectStruct{
+				title: "title", writer: "writer", typeStr: "type",
+				date: "1234", chapterStr: "chapter-w", err: false,
+			},
+		},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			title, writer, typeStr, date, chapterStr, err := fetchInfo(test.client, test.bookKey, test.url)
+			title, writer, typeStr, date, chapterStr, err := fetchInfo(test.url, test.client, test.bookKey, test.bkConf)
 			if (err != nil) != test.expect.err {
 				t.Errorf("got error: %v; want: %v", err, test.expect.err)
 			}

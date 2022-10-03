@@ -110,6 +110,22 @@ func Test_fetchChaptersHeaderInfo(t *testing.T) {
 			expectChapters: nil,
 			expectErr:      true,
 		},
+		{
+			name: "replace unwant content in response",
+			bk:   model.Book{ID: 1},
+			bkConf: config.BookConfig{
+				URLConfig:     config.URLConfig{Download: server.URL + "/chapter-header/valid/%v"},
+				UnwantContent: []string{"url-/2 title-2"},
+			},
+			stConf: config.SiteConfig{BookKey: "test_book"},
+			c:      &c,
+			expectChapters: model.Chapters{
+				{Index: 0, URL: "/1", Title: "1"},
+				{Index: 1, URL: "/3", Title: "3"},
+				{Index: 2, URL: "/4", Title: "4"},
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, test := range tests {

@@ -2,6 +2,7 @@ package chapter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/htchan/ApiParser"
@@ -47,6 +48,13 @@ func Download(bookID int, chapter *model.Chapter, bkConf config.BookConfig, stCo
 	if err != nil {
 		chapter.Error = fmt.Errorf("download chapter error: %w", err)
 		return chapter.Error
+	}
+	for _, r := range bkConf.UnwantContent {
+		re, err := regexp.Compile(r)
+		if err != nil {
+			continue
+		}
+		html = re.ReplaceAllString(html, "")
 	}
 
 	responseApi := ApiParser.Parse(stConf.BookKey+".chapter_content", html)

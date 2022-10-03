@@ -1,11 +1,11 @@
 info:
   data:
-    - "<h1>(?P<Title>.*?)全文阅读</h1>"
-    - "作者：<a.*?>(?P<Writer>.*?)</a>"
-    - "分类：<a.*?>(?P<Type>.*?)</a>"
-    - "(?P<LastUpdate>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})"
+    - "(?s)<h1>(?P<Title>.*?)全文阅读</h1>"
+    - "(?s)作者：<a.*?>(?P<Writer>.*?)</a>"
+    - "(?s)分类：<a.*?>(?P<Type>.*?)</a>"
+    - "(?s)(?P<LastUpdate>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})"
     - "(?s)<li><a.*>(?P<LastChapter>.*?)</a></li>.</div>"
-  items: "<li><a.*?href=\"(?P<ChapterUrl>http.*?)\">(?P<ChapterTitle>.*?)</a></li>"
+  items: "(?s)<li><a.*?href=\"(?P<ChapterUrl>http.*?)\">(?P<ChapterTitle>.*?)</a></li>"
 
 chapter_content:
   data:

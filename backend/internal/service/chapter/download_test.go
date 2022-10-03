@@ -161,6 +161,16 @@ func Test_Download(t *testing.T) {
 			expectChapter: model.Chapter{URL: server.URL + "/chapter/empty", Error: errors.New("chapter content not found")},
 			expectErr:     true,
 		},
+		{
+			name:          "replace unwant content in response",
+			bkID:          1,
+			chapter:       model.Chapter{URL: server.URL + "/chapter/valid"},
+			bkConf:        config.BookConfig{UnwantContent: []string{"regex"}},
+			stConf:        config.SiteConfig{BookKey: "test_book"},
+			c:             &c,
+			expectChapter: model.Chapter{URL: server.URL + "/chapter/valid", Content: "success-content-"},
+			expectErr:     false,
+		},
 	}
 
 	for _, test := range tests {

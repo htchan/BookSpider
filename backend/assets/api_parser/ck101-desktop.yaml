@@ -1,12 +1,12 @@
 info:
   data:
-    - "<h1><a.*?>(?P<Title>.*?)</a></h1>"
-    - "作者︰<a.*?>(?P<Writer>.*?)</a>"
-    - " &gt; (?P<Type>.*?) &gt; "
-    - "最新章節\\((?P<LastUpdate>\\d{4}-\\d{2}-\\d{2})\\)"
-    - "<a.*?id=\"newchapter\".*>(?P<LastChapter>.*?)./a>"
+    - "(?s)<h1><a.*?>(?P<Title>.*?)</a></h1>"
+    - "(?s)作者︰<a.*?>(?P<Writer>.*?)</a>"
+    - "(?s) &gt; (?P<Type>.*?) &gt; "
+    - "(?s)最新章節\\((?P<LastUpdate>\\d{4}-\\d{2}-\\d{2})\\)"
+    - "(?s)<a.*?id=\"newchapter\".*>(?P<LastChapter>.*?)./a>"
   items:
-  - "<dd><a href=\"(?P<ChapterUrl>.*?)\">(?P<ChapterTitle>.*?)</a></dd>"
+  - "(?s)<dd><a href=\"(?P<ChapterUrl>.*?)\">(?P<ChapterTitle>.*?)</a></dd>"
 
 chapter_content:
   data:

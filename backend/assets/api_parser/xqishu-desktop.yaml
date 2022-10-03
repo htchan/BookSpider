@@ -1,12 +1,12 @@
 
 info:
   data:
-    - "<div class=\"tit1\"><h1>(?P<Title>.*?)</h1>"
-    - "<span>小说作者：(?P<Writer>.*?)</span>"
+    - "(?s)<div class=\"tit1\"><h1>(?P<Title>.*?)</h1>"
+    - "(?s)<span>小说作者：(?P<Writer>.*?)</span>"
     - "(?s)<div class=\"crumbs\">.*?<a href=\"/ls/.*?html\">(?P<Type>.*?)</a>"
-    - "<span>更新日期：(?P<LastUpdate>.*?)</span>"
-    - "<h3>最新章节：<a.*?>(?P<LastChapter>.*?)</a>.*?</h3>"
-  items: "<li><a href=\"(?P<ChapterUrl>\\d+?.html)\">(?P<ChapterTitle>.*?)</a></li>"
+    - "(?s)<span>更新日期：(?P<LastUpdate>.*?)</span>"
+    - "(?s)<h3>最新章节：<a.*?>(?P<LastChapter>.*?)</a>.*?</h3>"
+  items: "(?s)<li><a href=\"(?P<ChapterUrl>\\d+?.html)\">(?P<ChapterTitle>.*?)</a></li>"
 
 chapter_content:
   data:

@@ -1,11 +1,11 @@
 info:
   data:
-    - "<title>(?P<Title>.*?) 在線觀看</title>"
-    - "作者:<font.*?>(?P<Writer>.*?)</font>"
-    - "<a href='/category/\\d+.html' id='cat\\d+' class=\"nav\" >(?P<Type>.*?)</a>"
-    - "更新: <b><font.*?>(?P<LastUpdate>.*?)</font></b>"
+    - "(?s)<title>(?P<Title>.*?) 在線觀看</title>"
+    - "(?s)作者:<font.*?>(?P<Writer>.*?)</font>"
+    - "(?s)<a href='/category/\\d+.html' id='cat\\d+' class=\"nav\" >(?P<Type>.*?)</a>"
+    - "(?s)更新: <b><font.*?>(?P<LastUpdate>.*?)</font></b>"
     - "(?s).*<a.*?>(?P<LastChapter>.*?)</a> <font.*?></font>"
-  items: "<td.*?><a href=\"(?P<ChapterUrl>.*?)\".*?>(?P<ChapterTitle>.*?)</a>.*?</td>"
+  items: "(?s)<td.*?><a href=\"(?P<ChapterUrl>.*?)\".*?>(?P<ChapterTitle>.*?)</a>.*?</td>"
 
 chapter_content:
   data:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"sync"
 
 	"github.com/htchan/ApiParser"
@@ -22,6 +23,13 @@ func fetchChaptersHeaderInfo(bk *model.Book, bkConf config.BookConfig, stConf co
 	html, err := c.Get(downloadURL(bk, bkConf))
 	if err != nil {
 		return nil, err
+	}
+	for _, r := range bkConf.UnwantContent {
+		re, err := regexp.Compile(r)
+		if err != nil {
+			continue
+		}
+		html = re.ReplaceAllString(html, "")
 	}
 
 	responseApi := ApiParser.Parse(stConf.BookKey+".info", html)
