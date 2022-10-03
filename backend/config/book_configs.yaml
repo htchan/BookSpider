@@ -14,7 +14,7 @@ xqishu-desktop:
   maxChapterError: 100
   updateDateLayout: null
   unwantContent:
-    - "(?s)<div class="booknew\d+">.*?</div><div.*?</div>"
+    - '(?s)<div class="booknew\d+">.*?</div><div.*?</div>'
 
 80txt-desktop:
   url:

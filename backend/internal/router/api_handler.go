@@ -65,6 +65,9 @@ func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
+		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
+		res.Header().Set("Content-Type", "text/txt; charset=utf-8")
+		res.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 		fmt.Fprint(res, content)
 	}
 }
