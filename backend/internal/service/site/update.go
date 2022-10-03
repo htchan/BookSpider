@@ -2,6 +2,7 @@ package site
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/model"
@@ -43,6 +44,7 @@ func Update(st *Site) error {
 
 			if err != nil {
 				//TODO: log the error
+				log.Printf("[%v] update failed: %v", bk, err)
 			}
 		}(&bk)
 	}

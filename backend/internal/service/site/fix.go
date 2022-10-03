@@ -11,7 +11,9 @@ import (
 	"github.com/htchan/BookSpider/internal/service/book"
 )
 
-func addMissingRecords(st *Site) {
+func PatchMissingRecords(st *Site) error {
+	log.Printf("[%v] patch missing records", st.Name)
+
 	var wg sync.WaitGroup
 	maxBookID := st.rp.Stats().MaxBookID
 	for i := 1; i < maxBookID; i++ {
@@ -31,24 +33,24 @@ func addMissingRecords(st *Site) {
 				st.rp.SaveError(&bk, bk.Error)
 				st.rp.SaveWriter(&bk.Writer)
 				st.rp.CreateBook(&bk)
-			} else {
+			} else if err != nil {
 				log.Printf("fail to fetch: id: %v; err: %v", id, err)
 			}
 		}(i)
 	}
 	wg.Wait()
+
+	return nil
 }
 
-func Fix(st *Site) error {
-	log.Printf("[%v] add missing records", st.Name)
-	addMissingRecords(st)
-
+func PatchDownloadStatus(st *Site) error {
 	bks, err := st.rp.FindAllBooks()
 	if err != nil {
-		return fmt.Errorf("Fix fail: %w", err)
+		return fmt.Errorf("Patch download status fail: %w", err)
 	}
 
 	var wg sync.WaitGroup
+	log.Printf("[%s] update books is_downloaded by storage", st.Name)
 
 	for bk := range bks {
 		bk := bk
@@ -67,4 +69,18 @@ func Fix(st *Site) error {
 	wg.Wait()
 
 	return nil
+}
+
+func Fix(st *Site) error {
+	err := PatchMissingRecords(st)
+	if err != nil {
+		return fmt.Errorf("Fix failed: %w", err)
+	}
+
+	err = PatchDownloadStatus(st)
+	if err != nil {
+		return fmt.Errorf("Fix failed: %w", err)
+	}
+	return nil
+
 }

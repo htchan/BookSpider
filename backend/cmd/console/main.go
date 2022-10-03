@@ -40,14 +40,19 @@ func OperateSite(st *site.Site, operation string) error {
 	switch operation {
 	case "backup":
 		err = site.Backup(st)
-	case "check":
+	case "update-status":
 		err = site.Check(st)
 	case "download":
 		err = site.Download(st)
-	case "exolore":
+	case "explore":
 		err = site.Explore(st)
 	case "fix":
 		err = site.Fix(st)
+	case "patch-missing-records":
+		err = site.PatchMissingRecords(st)
+	case "patch-download-status":
+		err = site.PatchDownloadStatus(st)
+
 	case "update":
 		err = site.Update(st)
 	case "validate":

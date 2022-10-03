@@ -14,7 +14,7 @@ import (
 func BookFileLocation(bk *model.Book, stConf config.SiteConfig) string {
 	filename := fmt.Sprintf("%d.txt", bk.ID)
 	if bk.HashCode > 0 {
-		filename = fmt.Sprintf("%d-%s.txt", bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))
+		filename = fmt.Sprintf("%d-v%s.txt", bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))
 	}
 	return filepath.Join(stConf.Storage, filename)
 }

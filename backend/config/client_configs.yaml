@@ -20,7 +20,7 @@ xqishu:
   retryErr: 10
   decoder:
     method: 'utf8'
-  maxThreads: 100
+  maxThreads: 200
 
 80txt:
   maxFailCount: 1000

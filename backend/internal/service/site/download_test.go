@@ -140,7 +140,7 @@ func Test_Download(t *testing.T) {
 				},
 			},
 			expectErr:      false,
-			expectLocation: "./download/2-2s.txt",
+			expectLocation: "./download/2-v2s.txt",
 			expectFileContent: "title 2 new\ndownload/st writer 2 new\n" + model.CONTENT_SEP +
 				"\n\n1\n" + model.CONTENT_SEP + "\nsuccess-content-regex\n" + model.CONTENT_SEP +
 				"\n2\n" + model.CONTENT_SEP + "\nsuccess-content-regex\n" + model.CONTENT_SEP +
