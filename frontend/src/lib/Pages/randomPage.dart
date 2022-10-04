@@ -1,73 +1,51 @@
-import 'dart:convert';
+import 'package:bookspider/models/all_model.dart';
+import 'package:bookspider/repostory/bookSpiderRepostory.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../Components/bookList.dart';
 
-class RandomPage extends StatefulWidget{
-  final String url, siteName;
+class RandomPage extends StatefulWidget {
+  final BookSpiderRepostory client;
+  final String siteName;
 
-  RandomPage({Key key, this.url, this.siteName}) : super(key: key);
+  RandomPage({Key? key, required this.client, required this.siteName})
+      : super(key: key);
 
   @override
-  _RandomPageState createState() => _RandomPageState(this.url, this.siteName);
+  _RandomPageState createState() =>
+      _RandomPageState(this.client, this.siteName);
 }
 
 class _RandomPageState extends State<RandomPage> {
-  final String url, siteName;
-  int n = 20;
-  Widget _booksPanel;
+  final BookSpiderRepostory client;
+  final String siteName;
+  int perPage = 20;
+  List<Book> books = [];
   final GlobalKey scaffoldKey = GlobalKey();
   final ScrollController scrollController;
 
-  _RandomPageState(this.url, this.siteName)
-  : this.scrollController = ScrollController() {
+  _RandomPageState(this.client, this.siteName)
+      : this.scrollController = ScrollController() {
     this._loadPage();
   }
 
   void _loadPage() {
-    String apiUrl = '$url/random/$siteName?num=$n';
-    _booksPanel = Center(child: Text("Loading books..."));
-    http.get(Uri.parse(apiUrl))
-    .then( (response) {
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        setState((){
-          _booksPanel = BookList(
-            scaffoldKey, 
-            siteName,
-            List<Map<String, dynamic>>.from(
-              jsonDecode(response.body)['books'] ?? []
-            ),
-            null,
-            randomButton
-          );
-        });
-      } else {
-        _booksPanel = Center(
-          child: Column(
-            children: [
-              Text(response.statusCode.toString()),
-              Text(response.body)
-            ],
-          )
-        );
-      }
+    this.client.randomBook(site: siteName, perPage: perPage).then((books) {
+      setState(() {
+        this.books = books;
+      });
     });
   }
 
   Widget randomButton(ScrollController controller) {
     return ListTile(
-      title: Center(child: Text(
-        'Reload',
-        style: TextStyle(color: Colors.blue)
-      )),
+      title:
+          Center(child: Text('Reload', style: TextStyle(color: Colors.blue))),
       onTap: () {
         setState(() {
           this._loadPage();
         });
         controller.animateTo(0,
-          duration: Duration(milliseconds: 500),
-          curve: Curves.fastOutSlowIn
-        );
+            duration: Duration(milliseconds: 500), curve: Curves.fastOutSlowIn);
       },
       hoverColor: Colors.blue.shade50,
     );
@@ -80,7 +58,13 @@ class _RandomPageState extends State<RandomPage> {
       appBar: AppBar(title: Text(this.siteName)),
       key: this.scaffoldKey,
       body: Container(
-        child: _booksPanel,
+        child: BookList(
+          this.scaffoldKey,
+          this.siteName,
+          this.books,
+          (_) => SizedBox.shrink(),
+          randomButton,
+        ),
         margin: EdgeInsets.symmetric(horizontal: 5.0),
       ),
     );

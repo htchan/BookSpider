@@ -1,82 +1,85 @@
+import 'package:bookspider/models/all_model.dart';
+import 'package:bookspider/repostory/bookSpiderRepostory.dart';
 import 'package:flutter/material.dart';
-import 'package:url_strategy/url_strategy.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import './Pages/mainPage.dart';
-import './Pages/sitePage.dart';
-import './Pages/searchPage.dart';
-import './Pages/randomPage.dart';
-import './Pages/bookPage.dart';
-import './Pages/stagePage.dart';
-import './Pages/errorPage.dart';
+import './Pages/allPage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   // setPathUrlStrategy();
   setUrlStrategy(PathUrlStrategy());
   runApp(MyApp());
 }
 
+const String host = String.fromEnvironment("NOVEL_SPIDER_API_HOST");
+const String FE_ROUTE_PREFIX = String.fromEnvironment(
+    "NOVEL_SPIDER_FE_ROUTE_PREFIX",
+    defaultValue: "/novel");
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  String url = 'http://192.168.128.146/api/novel';
+  final BookSpiderRepostory client = BookSpiderRepostory(host);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Book',
-      theme: ThemeData(
-        textTheme: Theme.of(context).textTheme.apply(
-          fontSizeFactor: 1.25,
+        title: 'Book',
+        theme: ThemeData(
+          textTheme: Theme.of(context).textTheme.apply(
+                fontSizeFactor: 1.25,
+              ),
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        var uri = Uri.parse(settings.name);
-        print(uri.pathSegments);
-        if (uri.pathSegments.indexOf('stage') == 0) {
+        initialRoute: "/",
+        onGenerateRoute: (settings) {
+          var uri = Uri.parse(settings.name ?? "");
+          print("path ${uri.path}");
+          if (RegExp("^/sites/([^/]*)/?\$").hasMatch(uri.path)) {
+            return MaterialPageRoute(
+                builder: (context) => SitePage(
+                    client: client,
+                    siteName: uri.pathSegments[1],
+                    site: settings.arguments as Site?),
+                settings: settings);
+          } else if (RegExp("^/sites/([^/]*)/random/?\$").hasMatch(uri.path)) {
+            var query = uri.queryParameters;
+            return MaterialPageRoute(
+                builder: (context) => RandomPage(
+                      client: client,
+                      siteName: uri.pathSegments[1],
+                    ),
+                settings: settings);
+          } else if (RegExp("^/sites/([^/]*)/search/?\$").hasMatch(uri.path)) {
+            var query = uri.queryParameters;
+            return MaterialPageRoute(
+                builder: (context) => SearchPage(
+                      client: client,
+                      siteName: uri.pathSegments[1],
+                      title: query['title'] ?? "",
+                      writer: query['writer'] ?? "",
+                      page: int.parse(query['page'] ?? "0"),
+                      perPage: int.parse(query['per_page'] ?? "20"),
+                    ),
+                settings: settings);
+          } else if (RegExp("^/sites/([^/]*)/books/([^/]*)/?\$")
+              .hasMatch(uri.path)) {
+            var idHash = uri.pathSegments[3].split("-");
+            idHash.add("0");
+            return MaterialPageRoute(
+                builder: (context) => BookPage(
+                    client: client,
+                    siteName: uri.pathSegments[1],
+                    id: idHash[0],
+                    hash: idHash[1],
+                    book: settings.arguments as Book?),
+                settings: settings);
+          }
           return MaterialPageRoute(
-            builder: (context) => StagePage(
-              url: url,
-            ), 
-            settings: settings);
-        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('sites') == 0) {
-          return MaterialPageRoute(
-            builder: (context) => SitePage(
-              url: url,
-              siteName: uri.pathSegments[1]
-            ),
-            settings: settings);
-        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('search') == 0) {
-          return MaterialPageRoute(
-            builder: (context) => SearchPage(
-              url: url, 
-              siteName: uri.pathSegments[1],
-              title: uri.queryParameters['title'],
-              writer: uri.queryParameters['writer']
-            ),
-            settings: settings);
-        } else if (uri.pathSegments.length >= 1 && uri.pathSegments.indexOf('random') == 0) {
-          return MaterialPageRoute(
-            builder: (context) => RandomPage(
-              url: url, 
-              siteName: uri.pathSegments[1]
-            ),
-            settings: settings);
-        } else if (uri.pathSegments.length >= 3 && uri.pathSegments.indexOf('books') == 0) {
-          return MaterialPageRoute(
-            builder: (context) => BookPage(
-              url: url,
-              siteName: uri.pathSegments[1],
-              bookId: uri.pathSegments[2]
-            ),
-            settings: settings);
-        } else {
-          return MaterialPageRoute(builder: (context) => MainPage(url: url,),
-            settings: settings);
-        }
-      }
-    );
+              builder: (context) => MainPage(client: client),
+              settings: settings);
+        });
   }
 }
 

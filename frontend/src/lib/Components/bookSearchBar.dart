@@ -5,17 +5,17 @@ class BookSearchBar extends StatefulWidget {
   final String siteName;
   final GlobalKey scaffoldKey;
 
-  BookSearchBar({Key key, this.scaffoldKey, this.siteName}) : super(key: key);
+  BookSearchBar({Key? key, required this.scaffoldKey, required this.siteName})
+      : super(key: key);
 
   @override
-  _BookSearchBarState createState() => _BookSearchBarState(this.scaffoldKey, this.siteName);
+  _BookSearchBarState createState() => _BookSearchBarState(this.scaffoldKey);
 }
 
 class _BookSearchBarState extends State<BookSearchBar> {
-  final String siteName;
   final GlobalKey scaffoldKey;
 
-  _BookSearchBarState(this.scaffoldKey, this.siteName);
+  _BookSearchBarState(this.scaffoldKey);
 
   Widget searchField(String labelText, TextEditingController textController) {
     return TextField(
@@ -31,8 +31,8 @@ class _BookSearchBarState extends State<BookSearchBar> {
       onPressed: () {
         String title = titleController.text;
         String writer = writerController.text;
-        Navigator.pushNamed(this.scaffoldKey.currentContext,
-            '/search/$siteName?title=$title&writer=$writer');
+        Navigator.pushNamed(this.scaffoldKey.currentContext!,
+            '/sites/${this.widget.siteName}/search?title=$title&writer=$writer');
       },
     );
   }
@@ -42,8 +42,8 @@ class _BookSearchBarState extends State<BookSearchBar> {
       icon: Icon(Icons2.RpgAwesome.perspective_dice_random),
       label: Text('Random'),
       onPressed: () {
-        Navigator.pushNamed(
-            this.scaffoldKey.currentContext, '/random/$siteName');
+        Navigator.pushNamed(this.scaffoldKey.currentContext!,
+            '/sites/${this.widget.siteName}/random');
       },
     );
   }

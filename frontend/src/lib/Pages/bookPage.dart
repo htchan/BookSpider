@@ -1,61 +1,66 @@
-import 'dart:convert';
+import 'package:bookspider/models/all_model.dart';
+import 'package:bookspider/repostory/bookSpiderRepostory.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:js' as js;
 import 'package:url_launcher/url_launcher.dart';
 
-class BookPage extends StatefulWidget{
-  final String url, siteName, bookId;
+class BookPage extends StatefulWidget {
+  final BookSpiderRepostory client;
+  final String siteName, id, hash;
+  final Book? book;
 
-  BookPage({Key key, this.url, this.siteName, this.bookId}) : super(key: key);
+  BookPage(
+      {Key? key,
+      required this.client,
+      required this.siteName,
+      required this.id,
+      required this.hash,
+      this.book})
+      : super(key: key);
 
   @override
-  _BookPageState createState() => _BookPageState(this.url, this.siteName, this.bookId);
+  _BookPageState createState() =>
+      _BookPageState(this.client, this.siteName, this.id, this.hash, this.book);
 }
 
 class _BookPageState extends State<BookPage> {
-  final String siteName, url, bookId;
-  Widget _body;
+  final BookSpiderRepostory client;
+  final String siteName, id, hash;
+  Book? book;
   final GlobalKey scaffoldKey = GlobalKey();
 
-  _BookPageState(this.url, this.siteName, this.bookId) {
-    // call backend api
-    String apiUrl = '$url/books/$siteName/$bookId';
-    _body = Center(child: Text('Loading'));
-    http.get(Uri.parse(apiUrl))
-    .then( (response) {
-      if (200 <= response.statusCode && response.statusCode < 300) {
+  _BookPageState(this.client, this.siteName, this.id, this.hash, this.book) {
+    if (this.book == null) {
+      this
+          .client
+          .getBook(site: siteName, id: int.parse(id), hash: hash)
+          .then((book) {
         setState(() {
-          _body = _renderBookContent(jsonDecode(response.body));
+          this.book = book;
         });
-      } else {
-        _body = Center(
-          child: Column(
-            children: [
-              Text(response.statusCode.toString()),
-              Text(response.body)
-            ],
-          )
-        );
-      }
-    });
+      });
+    }
   }
-  
-  Widget _renderBookContent(Map<String, dynamic> info) {
+
+  Widget _renderBookContent() {
+    if (book == null) {
+      return Center(
+        child: Text("loading"),
+      );
+    }
     List<Widget> rows = [
-      SelectableText('ID: ${info['id']} - ${info['hash']}'),
+      SelectableText('ID: ${book!.id} - ${book!.hash}'),
       Row(
         // TODO: extract this to an external widget
         children: [
-          SelectableText('Title: ${info['title']}'),
+          SelectableText('Title: ${book!.title}'),
           ElevatedButton(
             child: Text("Search Google"),
             onPressed: () {
               // TODO: open new page to search google
-              String searchUrl = "https://www.google.com/search?q=${info['title']}";
-              print("${searchUrl}    ${canLaunch(searchUrl??"")}");
-              canLaunch(searchUrl??"").then( (result) {
-                if (result) launch(searchUrl??"");
+              Uri searchUrl =
+                  Uri.parse("https://www.google.com/search?q=${book!.title}");
+              canLaunchUrl(searchUrl).then((result) {
+                if (result) launchUrl(searchUrl);
               });
             },
           )
@@ -64,35 +69,35 @@ class _BookPageState extends State<BookPage> {
       Row(
         // TODO: extract this to external widget
         children: [
-          SelectableText('Writer: ${info['writer']}'),
+          SelectableText('Writer: ${book!.writer}'),
           ElevatedButton(
             child: Text("Search"),
             onPressed: () {
               // TODO: search the writer name internally
-                String writer = info['writer'];
-                Navigator.pushNamed(
-                  this.scaffoldKey.currentContext,
-                  '/search/$siteName?writer=$writer'
-                );
+              String writer = book!.writer;
+              Navigator.pushNamed(this.scaffoldKey.currentContext!,
+                  '/sites/$siteName/search/?writer=$writer');
             },
           )
         ],
       ),
-      SelectableText('Type: ${info['type']}'),
-      SelectableText('Last Update: ${info['updateDate']}'),
-      SelectableText('Last Chapter: ${info['updateChapter']}'),
-      SelectableText('Status: ${info['status']}')
+      SelectableText('Type: ${book!.type}'),
+      SelectableText('Last Update: ${book!.updateDate}'),
+      SelectableText('Last Chapter: ${book!.updateChapter}'),
+      SelectableText('Status: ${book!.status}')
     ];
-    if (info['status'] == 'download') {
-      rows.add(RaisedButton(
+    if (book!.isDownload) {
+      rows.add(TextButton(
         child: Text('Download'),
-        onPressed: () => js.context.callMethod('open', ['$url/download/$siteName/$bookId']),
+        onPressed: () => this
+            .client
+            .downloadBook(site: siteName, id: int.parse(id), hash: hash),
       ));
-    } else if (info['end']) {
-      rows.add(Text('End'));
     }
     return ListView.separated(
-      separatorBuilder: (context, index) => Divider(height: 10,),
+      separatorBuilder: (context, index) => Divider(
+        height: 10,
+      ),
       itemCount: rows.length,
       itemBuilder: (context, index) => rows[index],
     );
@@ -102,12 +107,11 @@ class _BookPageState extends State<BookPage> {
   Widget build(BuildContext context) {
     // show the content
     return Scaffold(
-      appBar: AppBar(title: Text(this.siteName)),
-      key: this.scaffoldKey,
-      body: Container(
-        child: _body,
-        margin: EdgeInsets.symmetric(horizontal: 5.0),
-      )
-    );
+        appBar: AppBar(title: Text(this.siteName)),
+        key: this.scaffoldKey,
+        body: Container(
+          child: _renderBookContent(),
+          margin: EdgeInsets.symmetric(horizontal: 5.0),
+        ));
   }
 }

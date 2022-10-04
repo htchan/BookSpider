@@ -1,54 +1,56 @@
+import 'package:bookspider/models/all_model.dart';
 import 'package:flutter/material.dart';
 
 class SiteInfoPanel extends StatelessWidget {
-  GlobalKey scaffoldKey;
-  Map<String, dynamic> info;
+  final GlobalKey scaffoldKey;
+  final Site site;
 
-  SiteInfoPanel(this.scaffoldKey, this.info);
-  
-  Widget _renderBookCount(Map<String, dynamic> info) {
-    var bookCount = info['bookCount'];
-    var errorCount = info['errorCount'];
-    var totalCount = info['bookCount'] + info['errorCount'];
-    var maxId = info['maxid'];
-    Color totalCountColor = (totalCount == maxId) ? Colors.black : Colors.red;
+  SiteInfoPanel(this.scaffoldKey, this.site);
+
+  Widget _renderBookCount() {
+    var totalCount = site.statusErrorCount +
+        site.statusInProgressCount +
+        site.statusEndCount;
+    Color totalCountColor =
+        (totalCount == site.bookCount) ? Colors.black : Colors.red;
     return RichText(
-      textScaleFactor: Theme.of(scaffoldKey.currentContext).textTheme.bodyText1.fontSize / 14,
-      text: TextSpan(
-        style: TextStyle(color: Colors.black),
-        children:[
+        textScaleFactor: Theme.of(scaffoldKey.currentContext!)
+                .textTheme
+                .bodyText1!
+                .fontSize! /
+            14,
+        text: TextSpan(style: TextStyle(color: Colors.black), children: [
           TextSpan(text: 'BookCount : '),
-          TextSpan(text: '$totalCount, $maxId', style: TextStyle(color: totalCountColor)),
-          TextSpan(text: '($bookCount + $errorCount)')
-        ]
-      )
-    );
+          TextSpan(
+              text: '$totalCount, ${site.bookCount}',
+              style: TextStyle(color: totalCountColor)),
+          TextSpan(
+              text:
+                  '(${site.statusErrorCount} + ${site.statusInProgressCount} + ${site.statusEndCount})')
+        ]));
   }
-  Widget _renderRecordCount(Map<String, dynamic> info) {
-    var bookRecordCount = info['bookRecordCount'];
-    var errorRecordCount = info['errorRecordCount'];
-    var totalRecordCount = info['bookRecordCount'] + info['errorRecordCount'];
-    return Text('TotalCount : $totalRecordCount ($bookRecordCount + $errorRecordCount)');
+
+  Widget _renderRecordCount() {
+    return Text(
+        'TotalCount : ${site.bookCount + site.statusErrorCount} (${site.bookCount} + ${site.statusErrorCount})');
   }
-  Widget _renderEndCount(Map<String, dynamic> info) {
-    var endCount = info['endCount'];
-    var endRecordCount = info['endRecordCount'];
-    return Text('EndCount : $endCount ($endRecordCount)');
+
+  Widget _renderEndCount() {
+    return Text('EndCount : ${site.statusEndCount}');
   }
-  Widget _renderDownloadCount(Map<String, dynamic> info) {
-    var downloadCount = info['downloadCount'];
-    var downloadRecordCount = info['downloadRecordCount'];
-    return Text('DownloadCount : $downloadCount ($downloadRecordCount)');
+
+  Widget _renderDownloadCount() {
+    return Text('DownloadCount : ${site.bookDownloadCount}');
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _renderBookCount(info),
-        _renderRecordCount(info),
-        _renderEndCount(info),
-        _renderDownloadCount(info),
+        _renderBookCount(),
+        _renderRecordCount(),
+        _renderEndCount(),
+        _renderDownloadCount(),
       ],
       crossAxisAlignment: CrossAxisAlignment.start,
     );

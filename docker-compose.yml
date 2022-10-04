@@ -36,7 +36,9 @@ services:
             - all
             - frontend
             - web
-        command: sh -c "flutter --version ; flutter pub get ; flutter build web"
+        env_file:
+            - ./.env
+        command: sh -c "flutter --version ; flutter pub get ; flutter build web --base-href $NOVEL_SPIDER_FE_ROUTE_PREFIX/ --dart-define=NOVEL_SPIDER_API_HOST=$NOVEL_SPIDER_API_HOST --dart-define=NOVEL_SPIDER_API_ROUTE_PREFIX=$NOVEL_SPIDER_API_ROUTE_PREFIX --dart-define=NOVEL_SPIDER_FE_ROUTE_PREFIX=$NOVEL_SPIDER_FE_ROUTE_PREFIX"
     
     batch:
         build: 
