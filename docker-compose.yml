@@ -5,6 +5,11 @@ services:
         build: 
             context: ./backend
             dockerfile: ./build/Dockerfile.backend
+        deploy:
+            resources:
+                limits:
+                memory: '500M'
+        hostname: bookspider_backend
         volumes:
             - ./bin/database:/database
             - ./bin/log:/log
@@ -27,6 +32,10 @@ services:
 
     frontend:
         image: "flutter:stable"
+        deploy:
+            resources:
+                limits:
+                memory: '1G'
         volumes:
             - frontend_volume:/build/web
             - ./frontend/src:/usr/src/app
@@ -44,6 +53,10 @@ services:
         build: 
             context: ./backend
             dockerfile: ./build/Dockerfile.batch
+        deploy:
+            resources:
+                limits:
+                memory: '3G'
         volumes:
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
@@ -65,6 +78,10 @@ services:
         build: 
             context: ./backend
             dockerfile: ./build/Dockerfile.console
+        deploy:
+            resources:
+                limits:
+                memory: '3G'
         volumes:
             - ./bin/log:/log
             - /mnt/addition/download/Books:/books
