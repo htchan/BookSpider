@@ -4,7 +4,7 @@ xbiquge:
   circuitBreakingSleep: 10
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'gbk'
@@ -16,7 +16,7 @@ xqishu:
   circuitBreakingSleep: 5
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'utf8'
@@ -28,7 +28,7 @@ xqishu:
   circuitBreakingSleep: 10
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'utf8'
@@ -40,7 +40,7 @@ bestory:
   circuitBreakingSleep: 10
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'big5'
@@ -52,7 +52,7 @@ ck101:
   circuitBreakingSleep: 10
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'big5'
@@ -64,7 +64,7 @@ hjwzw:
   circuitBreakingSleep: 10
   intervalSleep: 1
   timeout: 30
-  retry503: 100
+  retryUnavailable: 100
   retryErr: 10
   decoder:
     method: 'utf8'
