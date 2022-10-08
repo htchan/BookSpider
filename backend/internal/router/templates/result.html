@@ -1,0 +1,30 @@
+<html>
+
+<head>
+  <title>Novel - {{ .Name }}</title>
+  <style>
+    .book-box {
+      border-style: solid;
+      padding-left: 1em;
+      padding-right: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>{{ .Name }}</h1>
+  <div>
+    {{ range $index, $value := .Books }}
+    <div class="book-box" onclick="location.href='books/{{$value.ID}}-{{$value.HashCode}}/'">
+      <p>{{ $value.Title }} - {{ $value.Writer.Name }}</p>
+      <p>{{ $value.UpdateDate }}</p>
+      <p>{{ $value.UpdateChapter }}</p>
+      <p>{{ if $value.IsDownloaded }}Downloaded{{ else }}{{ $value.Status }}{{ end }}</p>
+    </div>
+    {{else}}
+    <p>No Books Found</p>
+    {{ end }}
+  </div>
+</body>
+
+</html>

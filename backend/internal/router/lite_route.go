@@ -14,25 +14,23 @@ func AddLiteRoutes(router chi.Router, sites map[string]*site.Site) {
 	}
 
 	router.Route(api_route_prefix, func(router chi.Router) {
-		// router.Get("/info", GeneralInfoLiteHandler(sites))
+		router.Route("/sites/{siteName}", func(router chi.Router) {
+			router.Use(GetSite(sites))
+			router.Get("/", SiteLiteHandlerfunc)
 
-		// router.Route("/sites/{siteName}", func(router chi.Router) {
-		// 	router.Use(GetSite(sites))
-		// 	router.Get("/", SiteInfoLiteHandler)
+			router.With(GetSearchParams).With(GetPageParams).Get("/search", SearchLiteHandler)
+			router.With(GetPageParams).Get("/random", RandomLiteHandler)
 
-		// 	router.Route("/books", func(router chi.Router) {
-		// 		router.With(GetSearchParams).With(GetPageParams).Get("/search", BookSearchLiteHandler)
-		// 		router.With(GetPageParams).Get("/random", BookRandomLiteHandler)
+			router.Route("/books", func(router chi.Router) {
+				router.Route("/{idHash:\\d+(-[\\w]+)?}", func(router chi.Router) {
+					// idHash format is <id>-<hash>
+					router.Use(GetBook)
+					router.Get("/", BookLiteHandler)
+					router.Get("/download", DownloadLiteHandler)
+				})
+			})
+		})
 
-		// 		router.Route("/{idHash:\\d+(-[\\w]+)?}", func(router chi.Router) {
-		// 			// idHash format is <id>-<hash>
-		// 			router.Use(GetBook)
-		// 			router.With().Get("/", BookInfoLiteHandler)
-		// 			router.Get("/download", BookDownloadLiteHandler)
-		// 		})
-		// 	})
-		// })
-
-		// router.Get("/db-stats", dbStatsLiteHandler(sites))
+		router.Get("/", GeneralLiteHandler(sites))
 	})
 }

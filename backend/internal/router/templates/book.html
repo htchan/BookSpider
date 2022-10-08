@@ -1,0 +1,23 @@
+<html>
+
+<head>
+  <title>Novel - {{ .Name }} - {{ .Book.Title }}</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <h1>{{ .Name }}</h1>
+  <div>
+      <p>{{ .Book.Title }} - {{ .Book.Writer.Name }}</p>
+      <p>{{ .Book.UpdateDate }}</p>
+      <p>{{ .Book.UpdateChapter }}</p>
+      {{ if .Book.IsDownloaded }}
+      <a href="download">Downloaded</a>
+      {{ else }}
+      <p>{{ .Book.Status }}</p>
+      {{ end }}
+  </div>
+</body>
+
+</html>

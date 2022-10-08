@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>Novel</title>
+    <style>
+      .site_button {
+        display: block;
+        text-align: center;
+        border-style: solid;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Novel</h1>
+    {{ range $key, $value := . }}
+      <div
+        class="site_button"
+        onclick="location.href+='/sites/{{ $key }}/'"
+      >
+        {{$key}}
+      </div>
+      <br/>
+    {{ end }}
+  </body>
+</html>

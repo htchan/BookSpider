@@ -1,0 +1,38 @@
+<html>
+
+<head>
+  <title>Novel - {{ .Name }}</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <h1>{{ .Name }}</h1>
+  <div>
+    <p>Book Count: {{ .Summary.BookCount }}</p>
+    <p>Writer Count: {{ .Summary.WriterCount }}</p>
+    <p>Unique Book Count: {{ .Summary.UniqueBookCount }}</p>
+    <p>Max Book ID: {{ .Summary.MaxBookID }}</p>
+    <p>Latest Success Book ID: {{ .Summary.LatestSuccessID }}</p>
+    {{ range $key, $value := .Summary.StatusCount }}
+    <p>Status {{ $key }}: {{ $value }}</p>
+    {{ end }}
+    <p>DownloadCount: {{ .Summary.DownloadCount }}</p>
+  </div>
+  <hr/>
+  <h2>Search</h2>
+  <div class="search_panel">
+    <form action="search">
+      <label for="fname">Title:</label><br>
+      <input type="text" id="title" name="title"><br>
+      <label for="lname">Writer:</label><br>
+      <input type="text" id="writer" name="writer"><br>
+      <input type="hidden" id="page" name="page" value="0"><br>
+      <input type="hidden" id="per_page" name="per_page" value="10"><br>
+      <input type="submit" value="Submit">
+    </form>
+    <button onclick="location.href='random?per_page=10'">Random</button>
+  </div>
+</body>
+
+</html>
