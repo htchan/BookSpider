@@ -35,7 +35,7 @@ func Test_baseURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := baseURL(test.bk, test.conf)
+			result := baseURL(&test.bk, &test.conf)
 			if result != test.expect {
 				t.Errorf(cmp.Diff(result, test.expect))
 			}
@@ -135,7 +135,7 @@ func Test_fetchInfo(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			title, writer, typeStr, date, chapterStr, err := fetchInfo(test.url, test.client, test.bookKey, test.bkConf)
+			title, writer, typeStr, date, chapterStr, err := fetchInfo(test.url, test.client, test.bookKey, &test.bkConf)
 			if (err != nil) != test.expect.err {
 				t.Errorf("got error: %v; want: %v", err, test.expect.err)
 			}
@@ -203,7 +203,7 @@ func Test_isNewBook(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := isNewBook(test.bk, test.title, test.writer)
+			result := isNewBook(&test.bk, test.title, test.writer)
 			if result != test.expect {
 				t.Errorf("got: %v; want: %v", result, test.expect)
 			}
@@ -281,7 +281,7 @@ func Test_isUpdated(t *testing.T) {
 			t.Parallel()
 
 			result := isUpdated(
-				test.bk, test.title, test.writer, test.typeStr, test.date, test.chapterStr,
+				&test.bk, test.title, test.writer, test.typeStr, test.date, test.chapterStr,
 			)
 			if result != test.expect {
 				t.Errorf("got: %v; want: %v", result, test.expect)
@@ -410,7 +410,7 @@ func Test_Update(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := Update(&test.bk, test.bkConf, test.stConf, test.c)
+			result, err := Update(&test.bk, &test.bkConf, &test.stConf, test.c)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v, want: %v", err, test.expectErr)
 			}

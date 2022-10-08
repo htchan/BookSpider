@@ -24,7 +24,7 @@ func Test_Content(t *testing.T) {
 	})
 
 	site := "content/st"
-	st, err := NewSite(site, config.BookConfig{}, config.SiteConfig{Storage: "./storage"}, config.CircuitBreakerClientConfig{}, nil, nil)
+	st, err := NewSite(site, &config.BookConfig{}, &config.SiteConfig{Storage: "./storage"}, &config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return
@@ -104,16 +104,16 @@ func Test_Download(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{URLConfig: config.URLConfig{
+		&config.BookConfig{URLConfig: config.URLConfig{
 			Download:      server.URL + "/chapter-header/valid/%v",
 			ChapterPrefix: server.URL + "/chapter/valid",
 		}},
-		config.SiteConfig{
+		&config.SiteConfig{
 			BookKey:           "test_book",
 			Storage:           "./download",
 			ConcurrencyConfig: config.ConcurrencyConfig{DownloadThreads: 1},
 		},
-		config.CircuitBreakerClientConfig{MaxThreads: 10}, nil, nil)
+		&config.CircuitBreakerClientConfig{MaxThreads: 10}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

@@ -29,7 +29,7 @@ func Test_Check(t *testing.T) {
 		db.Close()
 	})
 
-	st, err := NewSite(site, config.BookConfig{}, config.SiteConfig{BackupDirectory: "/backup"}, config.CircuitBreakerClientConfig{}, nil, nil)
+	st, err := NewSite(site, &config.BookConfig{}, &config.SiteConfig{BackupDirectory: "/backup"}, &config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

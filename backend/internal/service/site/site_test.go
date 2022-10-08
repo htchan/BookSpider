@@ -26,7 +26,9 @@ func Test_NewSite(t *testing.T) {
 			stConf:     config.SiteConfig{},
 			clientConf: config.CircuitBreakerClientConfig{},
 			expect: Site{
-				Name: "test",
+				Name:   "test",
+				BkConf: &config.BookConfig{},
+				StConf: &config.SiteConfig{},
 			},
 			expectErr: false,
 		},
@@ -37,7 +39,7 @@ func Test_NewSite(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := NewSite(test.stName, test.bkConf, test.stConf, test.clientConf, nil, nil)
+			result, err := NewSite(test.stName, &test.bkConf, &test.stConf, &test.clientConf, nil, nil)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}

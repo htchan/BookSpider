@@ -25,7 +25,7 @@ func Test_Process(t *testing.T) {
 
 	os.Mkdir("process_test", os.ModePerm)
 	os.Create("process_test/12.txt")
-	os.Create("process_test/10-1.txt")
+	os.Create("process_test/10-v1.txt")
 	os.Create("process_test/13.txt")
 	t.Cleanup(func() {
 		server.Close()
@@ -300,7 +300,7 @@ func Test_Process(t *testing.T) {
 				Status: model.End, IsDownloaded: true, Error: nil,
 			},
 			expectContentExist: true,
-			expectLocation:     "process_test/10-1.txt",
+			expectLocation:     "process_test/10-v1.txt",
 			expectContent:      "",
 		},
 		{
@@ -380,7 +380,7 @@ func Test_Process(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := Process(&test.bk, test.bkConf, test.stConf, test.c)
+			result, err := Process(&test.bk, &test.bkConf, &test.stConf, test.c)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}

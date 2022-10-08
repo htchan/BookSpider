@@ -18,17 +18,17 @@ import (
 type Site struct {
 	Name   string
 	rp     repo.Repostory
-	BkConf config.BookConfig
-	StConf config.SiteConfig
+	BkConf *config.BookConfig
+	StConf *config.SiteConfig
 	Client *client.CircuitBreakerClient
 }
 
-func NewSite(name string, bkConf config.BookConfig, stConf config.SiteConfig, clientConf config.CircuitBreakerClientConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) (*Site, error) {
+func NewSite(name string, bkConf *config.BookConfig, stConf *config.SiteConfig, clientConf *config.CircuitBreakerClientConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) (*Site, error) {
 	db, err := psql.OpenDatabase(name)
 	if err != nil {
 		return nil, fmt.Errorf("new site error: %w", err)
 	}
-	c := client.NewClient(clientConf, commonWeighted, commonCtx)
+	c := client.NewClient(*clientConf, commonWeighted, commonCtx)
 	return &Site{
 		Name:   name,
 		rp:     psql.NewRepo(name, db),
@@ -37,7 +37,7 @@ func NewSite(name string, bkConf config.BookConfig, stConf config.SiteConfig, cl
 		Client: &c,
 	}, nil
 }
-func MockSite(name string, rp repo.Repostory, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) *Site {
+func MockSite(name string, rp repo.Repostory, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) *Site {
 	return &Site{
 		Name:   name,
 		rp:     rp,
@@ -78,7 +78,7 @@ func LoadSitesFromConfigDirectory(directory string, enabledSiteNames []string) (
 		}
 		bkConf := bookConfigs[stConf.BookKey]
 		clientConf := clientConfigs[stConf.ClientKey]
-		sites[siteName], err = NewSite(siteName, *bkConf, *stConf, *clientConf, nil, nil)
+		sites[siteName], err = NewSite(siteName, bkConf, stConf, clientConf, nil, nil)
 		if err != nil {
 			log.Printf("fail to load site %v: %v", siteName, err)
 		}
@@ -105,8 +105,8 @@ func (st *Site) Close() error {
 
 func (st Site) Equal(compare Site) bool {
 	return st.Name == compare.Name &&
-		cmp.Equal(st.BkConf, compare.BkConf) &&
-		cmp.Equal(st.StConf, compare.StConf)
+		cmp.Equal(&st.BkConf, &compare.BkConf) &&
+		cmp.Equal(&st.StConf, &compare.StConf)
 }
 
 func (st *Site) CreateBook(bk *model.Book) error {

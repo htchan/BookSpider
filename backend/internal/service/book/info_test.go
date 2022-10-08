@@ -32,7 +32,7 @@ func Test_Info(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := Info(test.bk)
+			result := Info(&test.bk)
 			if result != test.expect {
 				t.Error(result, test.expect)
 			}

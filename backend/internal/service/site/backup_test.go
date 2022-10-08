@@ -81,7 +81,7 @@ func TestSite_Backup(t *testing.T) {
 
 	stubData(psql.NewRepo(site, db), site)
 
-	st, err := NewSite(site, config.BookConfig{}, config.SiteConfig{BackupDirectory: "/backup"}, config.CircuitBreakerClientConfig{}, nil, nil)
+	st, err := NewSite(site, &config.BookConfig{}, &config.SiteConfig{BackupDirectory: "/backup"}, &config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

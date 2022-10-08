@@ -18,7 +18,7 @@ type CircuitBreakerClientConfig struct {
 	CircuitBreakingSleep int           `yaml:"circuitBreakingSleep"`
 	IntervalSleep        int           `yaml:"intervalSleep"`
 	Timeout              int           `yaml:"timeout"`
-	Retry503             int           `yaml:"retry503"`
+	RetryUnavailable     int           `yaml:"retryUnavailable"`
 	RetryErr             int           `yaml:"retryErr"`
 	DecoderConfig        DecoderConfig `yaml:"decoder"`
 	MaxThreads           int           `yaml:"maxThreads"`

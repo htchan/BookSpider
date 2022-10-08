@@ -57,7 +57,7 @@ func Test_chapterURL(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			result := chapterURL(test.bkID, test.chapter, test.bkConf)
+			result := chapterURL(test.bkID, test.chapter, &test.bkConf)
 
 			if result != test.expect {
 				t.Errorf("got: %v; want: %v", result, test.expect)
@@ -177,7 +177,7 @@ func Test_Download(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			err := Download(test.bkID, &test.chapter, test.bkConf, test.stConf, test.c)
+			err := Download(test.bkID, &test.chapter, &test.bkConf, &test.stConf, test.c)
 
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)

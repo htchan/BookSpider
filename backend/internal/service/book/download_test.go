@@ -35,7 +35,7 @@ func Test_downloadURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := downloadURL(&test.bk, test.bkConf)
+			result := downloadURL(&test.bk, &test.bkConf)
 			if result != test.expect {
 				t.Errorf(cmp.Diff(result, test.expect))
 			}
@@ -133,7 +133,7 @@ func Test_fetchChaptersHeaderInfo(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := fetchChaptersHeaderInfo(&test.bk, test.bkConf, test.stConf, test.c)
+			result, err := fetchChaptersHeaderInfo(&test.bk, &test.bkConf, &test.stConf, test.c)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
@@ -207,7 +207,7 @@ func Test_downloadChapters(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := downloadChapters(&test.bk, test.chapters, test.bkConf, test.stConf, test.c)
+			err := downloadChapters(&test.bk, test.chapters, &test.bkConf, &test.stConf, test.c)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}
@@ -399,7 +399,7 @@ func Test_Download(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result, err := Download(&test.bk, test.bkConf, test.stConf, test.c)
+			result, err := Download(&test.bk, &test.bkConf, &test.stConf, test.c)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}

@@ -37,14 +37,14 @@ func Test_Update(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{URLConfig: config.URLConfig{
+		&config.BookConfig{URLConfig: config.URLConfig{
 			Base: server.URL + "/no-update-book/%v",
 		}},
-		config.SiteConfig{
+		&config.SiteConfig{
 			BookKey:         "test_book",
 			MaxExploreError: 2,
 		},
-		config.CircuitBreakerClientConfig{MaxThreads: 1}, nil, nil)
+		&config.CircuitBreakerClientConfig{MaxThreads: 1}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

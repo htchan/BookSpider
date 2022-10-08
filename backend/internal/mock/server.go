@@ -70,6 +70,9 @@ func MockCircuitBreakerServer(timeout int) *httptest.Server {
 			} else if req.URL.Path == "/503" {
 				res.WriteHeader(503)
 				fmt.Fprintf(res, "503")
+			} else if req.URL.Path == "/502" {
+				res.WriteHeader(502)
+				fmt.Fprintf(res, "502")
 			} else if req.URL.Path == "/timeout" {
 				time.Sleep(time.Duration(timeout) * time.Second)
 				fmt.Fprintf(res, "timeout")

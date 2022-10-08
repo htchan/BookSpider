@@ -27,9 +27,9 @@ func TestSite_BookFromID(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{},
-		config.SiteConfig{},
-		config.CircuitBreakerClientConfig{}, nil, nil)
+		&config.BookConfig{},
+		&config.SiteConfig{},
+		&config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return
@@ -109,9 +109,9 @@ func TestSite_BookFromIDHash(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{},
-		config.SiteConfig{},
-		config.CircuitBreakerClientConfig{}, nil, nil)
+		&config.BookConfig{},
+		&config.SiteConfig{},
+		&config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return
@@ -183,9 +183,9 @@ func TestSite_QueryBooks(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{},
-		config.SiteConfig{},
-		config.CircuitBreakerClientConfig{}, nil, nil)
+		&config.BookConfig{},
+		&config.SiteConfig{},
+		&config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return
@@ -208,7 +208,7 @@ func TestSite_QueryBooks(t *testing.T) {
 			writer:    "writer 2",
 			limit:     5,
 			offset:    0,
-			expect:    bksDB[0:3],
+			expect:    []model.Book{bksDB[2], bksDB[1], bksDB[0]},
 			expectErr: false,
 		},
 		{
@@ -218,7 +218,7 @@ func TestSite_QueryBooks(t *testing.T) {
 			writer:    "writer 2",
 			limit:     1,
 			offset:    2,
-			expect:    bksDB[2:3],
+			expect:    bksDB[:1],
 			expectErr: false,
 		},
 		{
@@ -269,9 +269,9 @@ func TestSite_RandomBooks(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{},
-		config.SiteConfig{},
-		config.CircuitBreakerClientConfig{}, nil, nil)
+		&config.BookConfig{},
+		&config.SiteConfig{},
+		&config.CircuitBreakerClientConfig{}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return
@@ -280,25 +280,25 @@ func TestSite_RandomBooks(t *testing.T) {
 	stubData(st.rp, site)
 
 	tests := []struct {
-		name      string
-		st        *Site
-		limit     int
-		expectLen int
-		expectErr bool
+		name         string
+		st           *Site
+		limit        int
+		expectMinLen int
+		expectErr    bool
 	}{
 		{
-			name:      "works without offset",
-			st:        st,
-			limit:     10,
-			expectLen: 2,
-			expectErr: false,
+			name:         "works without offset",
+			st:           st,
+			limit:        10,
+			expectMinLen: 1,
+			expectErr:    false,
 		},
 		{
-			name:      "works with offset",
-			st:        st,
-			limit:     10,
-			expectLen: 1,
-			expectErr: false,
+			name:         "works with offset",
+			st:           st,
+			limit:        10,
+			expectMinLen: 1,
+			expectErr:    false,
 		},
 	}
 
@@ -312,8 +312,8 @@ func TestSite_RandomBooks(t *testing.T) {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
 
-			if len(bks) != test.expectLen {
-				t.Errorf("book len diff: books: %v; expect len: %v", bks, test.expectLen)
+			if len(bks) < test.expectMinLen {
+				t.Errorf("book len diff: books: %v; expect len: %v", bks, test.expectMinLen)
 			}
 		})
 	}

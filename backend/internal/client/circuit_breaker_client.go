@@ -113,7 +113,7 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
 		if err != nil {
-			if err.Error() == "code 503" && i >= client.conf.Retry503 {
+			if (err.Error() == "code 503" || err.Error() == "code 502") && i >= client.conf.RetryUnavailable {
 				return html, err
 			} else if i >= client.conf.RetryErr {
 				return html, err

@@ -27,8 +27,8 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 		{
 			name: "works",
 			sites: map[string]*site.Site{
-				"test1": site.MockSite("test1", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
-				"test2": site.MockSite("test2", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+				"test1": site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+				"test2": site.MockSite("test2", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			},
 			url:       "https://localhost/data",
 			expectRes: `{"test1":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null},"test2":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}}`,
@@ -69,7 +69,7 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 	}{
 		{
 			name:      "works",
-			st:        site.MockSite("test1", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:        site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			url:       "https://localhost/data",
 			expectRes: `{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}`,
 		},
@@ -113,7 +113,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 	}{
 		{
 			name:      "works",
-			st:        site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			url:       "https://localhost/data",
 			title:     "title",
 			writer:    "writer",
@@ -123,7 +123,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 		},
 		{
 			name:      "error",
-			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			url:       "https://localhost/data",
 			title:     "title",
 			writer:    "writer",
@@ -174,7 +174,7 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 	}{
 		{
 			name:      "works",
-			st:        site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			url:       "https://localhost/data",
 			limit:     10,
 			offset:    0,
@@ -182,7 +182,7 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 		},
 		{
 			name:      "error",
-			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			url:       "https://localhost/data",
 			limit:     10,
 			offset:    0,
@@ -284,14 +284,14 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 		{
 			name:      "works",
 			url:       "https://localhost/data",
-			st:        site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{Storage: "storage"}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{Storage: "storage"}, nil),
 			bk:        &model.Book{Site: "test", ID: 1, HashCode: 0, Status: model.End, IsDownloaded: true},
 			expectRes: `data`,
 		},
 		{
 			name:      "bk is not download",
 			url:       "https://localhost/data",
-			st:        site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{Storage: "storage"}, nil),
+			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{Storage: "storage"}, nil),
 			bk:        &model.Book{Site: "test", ID: 1, HashCode: 0},
 			expectRes: `{"error":"book is not download"}`,
 		},
@@ -336,8 +336,8 @@ func Test_DBStatAPIHandler(t *testing.T) {
 			name: "works",
 			url:  "https://localhost/data",
 			sites: map[string]*site.Site{
-				"test1": site.MockSite("test1", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
-				"test2": site.MockSite("test2", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+				"test1": site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+				"test2": site.MockSite("test2", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			},
 			expectRes: `{"stats":[{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0},{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0}]}`,
 		},

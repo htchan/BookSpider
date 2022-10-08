@@ -38,9 +38,9 @@ func Test_Fix(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{URLConfig: config.URLConfig{Base: server.URL + "/error/%v"}},
-		config.SiteConfig{BookKey: "test_book"},
-		config.CircuitBreakerClientConfig{MaxThreads: 2}, nil, nil)
+		&config.BookConfig{URLConfig: config.URLConfig{Base: server.URL + "/error/%v"}},
+		&config.SiteConfig{BookKey: "test_book"},
+		&config.CircuitBreakerClientConfig{MaxThreads: 2}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

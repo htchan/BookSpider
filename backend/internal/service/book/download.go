@@ -15,11 +15,11 @@ import (
 	"github.com/htchan/BookSpider/internal/service/chapter"
 )
 
-func downloadURL(bk *model.Book, bkConf config.BookConfig) string {
+func downloadURL(bk *model.Book, bkConf *config.BookConfig) string {
 	return fmt.Sprintf(bkConf.URLConfig.Download, bk.ID)
 }
 
-func fetchChaptersHeaderInfo(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) (model.Chapters, error) {
+func fetchChaptersHeaderInfo(bk *model.Book, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) (model.Chapters, error) {
 	html, err := c.Get(downloadURL(bk, bkConf))
 	if err != nil {
 		return nil, err
@@ -46,8 +46,8 @@ func fetchChaptersHeaderInfo(bk *model.Book, bkConf config.BookConfig, stConf co
 }
 
 func downloadChapters(
-	bk *model.Book, chapters model.Chapters, bkConf config.BookConfig,
-	stConf config.SiteConfig, c *client.CircuitBreakerClient,
+	bk *model.Book, chapters model.Chapters, bkConf *config.BookConfig,
+	stConf *config.SiteConfig, c *client.CircuitBreakerClient,
 ) error {
 	var wg sync.WaitGroup
 
@@ -93,7 +93,7 @@ func saveContent(location string, bk *model.Book, chapters model.Chapters) error
 	return nil
 }
 
-func Download(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
+func Download(bk *model.Book, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
 	if bk.Status != model.End || bk.IsDownloaded {
 		return false, nil
 	}

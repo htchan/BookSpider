@@ -195,9 +195,9 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 	})
 
 	client := NewClient(config.CircuitBreakerClientConfig{
-		Retry503:      2,
-		RetryErr:      3,
-		IntervalSleep: 1,
+		RetryUnavailable: 2,
+		RetryErr:         3,
+		IntervalSleep:    1,
 	}, nil, nil)
 
 	t.Run("return html if receive 200", func(t *testing.T) {
@@ -208,10 +208,25 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 		}
 	})
 
-	t.Run("retry until reach Retry503 limit if getting 503 status code", func(t *testing.T) {
+	t.Run("retry until reach RetryUnavailable limit if getting 503 status code", func(t *testing.T) {
 		t.Parallel()
 		registerPoint := time.Now()
 		html, err := client.Get(server.URL + "/503")
+		if err == nil || html != "" {
+			t.Errorf("get return html: %v, err: %v", html, err)
+		}
+		if time.Now().Before(registerPoint.Add(3 * time.Second)) {
+			t.Errorf(
+				"get takes %v millisecond",
+				time.Now().UnixMilli()-registerPoint.UnixMilli(),
+			)
+		}
+	})
+
+	t.Run("retry until reach RetryUnavailable limit if getting 502 status code", func(t *testing.T) {
+		t.Parallel()
+		registerPoint := time.Now()
+		html, err := client.Get(server.URL + "/502")
 		if err == nil || html != "" {
 			t.Errorf("get return html: %v, err: %v", html, err)
 		}

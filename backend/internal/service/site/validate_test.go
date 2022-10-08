@@ -29,12 +29,12 @@ func Test_Validate(t *testing.T) {
 
 	st, err := NewSite(
 		site,
-		config.BookConfig{},
-		config.SiteConfig{
+		&config.BookConfig{},
+		&config.SiteConfig{
 			BookKey:         "test_book",
 			MaxExploreError: 2,
 		},
-		config.CircuitBreakerClientConfig{MaxThreads: 1}, nil, nil)
+		&config.CircuitBreakerClientConfig{MaxThreads: 1}, nil, nil)
 	if err != nil {
 		t.Errorf("fail to init site: %v", err)
 		return

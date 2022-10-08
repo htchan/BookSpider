@@ -12,11 +12,11 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 )
 
-func baseURL(bk model.Book, config config.BookConfig) string {
+func baseURL(bk *model.Book, config *config.BookConfig) string {
 	return fmt.Sprintf(config.URLConfig.Base, bk.ID)
 }
 
-func fetchInfo(url string, c *client.CircuitBreakerClient, bookKey string, bkConf config.BookConfig) (title, writer, typeStr, date, chapStr string, err error) {
+func fetchInfo(url string, c *client.CircuitBreakerClient, bookKey string, bkConf *config.BookConfig) (title, writer, typeStr, date, chapStr string, err error) {
 	html, err := c.Get(url)
 	if err != nil {
 		return
@@ -44,18 +44,18 @@ func fetchInfo(url string, c *client.CircuitBreakerClient, bookKey string, bkCon
 	return
 }
 
-func isNewBook(bk model.Book, title, writer string) bool {
+func isNewBook(bk *model.Book, title, writer string) bool {
 	return bk.Status != model.Error && (title != bk.Title || writer != bk.Writer.Name)
 }
 
-func isUpdated(bk model.Book, title, writer, typeStr, date, chapStr string) bool {
+func isUpdated(bk *model.Book, title, writer, typeStr, date, chapStr string) bool {
 	return title != bk.Title || writer != bk.Writer.Name ||
 		typeStr != bk.Type || date != bk.UpdateDate ||
 		chapStr != bk.UpdateChapter
 }
 
-func Update(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
-	title, writer, typeStr, date, chapStr, err := fetchInfo(baseURL(*bk, bkConf), c, stConf.BookKey, bkConf)
+func Update(bk *model.Book, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
+	title, writer, typeStr, date, chapStr, err := fetchInfo(baseURL(bk, bkConf), c, stConf.BookKey, bkConf)
 	// TODO: log the response
 	if err != nil {
 		if bk.Status == model.Error {
@@ -64,12 +64,12 @@ func Update(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, 
 		return false, err
 	}
 
-	if isNewBook(*bk, title, writer) {
+	if isNewBook(bk, title, writer) {
 		bk.HashCode = model.GenerateHash()
 		log.Printf("[%v] new book found: title: %v", bk, bk.Title)
 	}
 
-	isUpdated := isUpdated(*bk, title, writer, typeStr, date, chapStr)
+	isUpdated := isUpdated(bk, title, writer, typeStr, date, chapStr)
 	if isUpdated {
 		// TODO: log uipdated
 		bk.Status = model.InProgress

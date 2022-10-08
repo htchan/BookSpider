@@ -28,7 +28,7 @@ func Test_BookFileLocation(t *testing.T) {
 			name:   "works with hashcode = 1-0",
 			bk:     model.Book{Site: "test", ID: 1, HashCode: 100},
 			stConf: config.SiteConfig{Storage: "/test"},
-			expect: "/test/1-2s.txt",
+			expect: "/test/1-v2s.txt",
 		},
 	}
 
@@ -37,7 +37,7 @@ func Test_BookFileLocation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := BookFileLocation(&test.bk, test.stConf)
+			result := BookFileLocation(&test.bk, &test.stConf)
 
 			if result != test.expect {
 				t.Errorf("got: %v; want: %v", result, test.expect)
@@ -95,7 +95,7 @@ func Test_checkStorage(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			result := checkStorage(&test.bk, test.stConf)
+			result := checkStorage(&test.bk, &test.stConf)
 			if result != test.expect {
 				t.Errorf("got: %v; want: %v", result, test.expect)
 			}

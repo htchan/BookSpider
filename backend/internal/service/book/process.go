@@ -8,7 +8,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 )
 
-func Process(bk *model.Book, bkConf config.BookConfig, stConf config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
+func Process(bk *model.Book, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) (bool, error) {
 	isUpdated, err := Update(bk, bkConf, stConf, c)
 	if err != nil {
 		return isUpdated, fmt.Errorf("Process book error: %w", err)

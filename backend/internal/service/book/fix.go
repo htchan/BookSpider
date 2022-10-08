@@ -11,7 +11,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 )
 
-func BookFileLocation(bk *model.Book, stConf config.SiteConfig) string {
+func BookFileLocation(bk *model.Book, stConf *config.SiteConfig) string {
 	filename := fmt.Sprintf("%d.txt", bk.ID)
 	if bk.HashCode > 0 {
 		filename = fmt.Sprintf("%d-v%s.txt", bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))
@@ -19,7 +19,7 @@ func BookFileLocation(bk *model.Book, stConf config.SiteConfig) string {
 	return filepath.Join(stConf.Storage, filename)
 }
 
-func checkStorage(bk *model.Book, stConf config.SiteConfig) bool {
+func checkStorage(bk *model.Book, stConf *config.SiteConfig) bool {
 	isUpdated, fileExist := false, true
 
 	if _, err := os.Stat(BookFileLocation(bk, stConf)); err != nil {
@@ -38,6 +38,6 @@ func checkStorage(bk *model.Book, stConf config.SiteConfig) bool {
 	return isUpdated
 }
 
-func Fix(bk *model.Book, stConf config.SiteConfig) (bool, error) {
+func Fix(bk *model.Book, stConf *config.SiteConfig) (bool, error) {
 	return checkStorage(bk, stConf), nil
 }

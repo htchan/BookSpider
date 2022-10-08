@@ -129,6 +129,10 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		operation := "process"
+		if *args.Operation != "" {
+			operation = *args.Operation
+		}
+		log.Fatalf("%v failed: %v", operation, err)
 	}
 }

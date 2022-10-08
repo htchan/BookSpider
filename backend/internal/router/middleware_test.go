@@ -92,28 +92,28 @@ func Test_GetBook(t *testing.T) {
 	}{
 		{
 			name:       "set request context book for existing id",
-			st:         site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:         site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			idHash:     "1",
 			expectBook: &model.Book{ID: 1},
 			expectRes:  "ok",
 		},
 		{
 			name:       "set request context book for existing id-hash",
-			st:         site.MockSite("test", mock.MockRepostory{}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:         site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			idHash:     "1-2s",
 			expectBook: &model.Book{ID: 1, HashCode: 100},
 			expectRes:  "ok",
 		},
 		{
 			name:       "return error for not exist id",
-			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			idHash:     "1",
 			expectBook: &model.Book{ID: 1},
 			expectRes:  `{"error": "book not found"}`,
 		},
 		{
 			name:       "return error for not exist id",
-			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, config.BookConfig{}, config.SiteConfig{}, nil),
+			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
 			idHash:     "1-2s",
 			expectBook: &model.Book{ID: 1, HashCode: 100},
 			expectRes:  `{"error": "book not found"}`,
