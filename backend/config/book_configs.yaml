@@ -44,7 +44,7 @@ ck101-mobile:
   url:
     base: "https://www.ck101.org/book/%v.html"
     download: "https://www.ck101.org/0/%v/"
-    chapter: "https://www.ck101.org"
+    chapterPrefix: "https://www.ck101.org"
   maxChapterError: 100
   updateDateLayour: null
 
@@ -52,6 +52,6 @@ hjwzw-desktop:
   url:
     base: "https://tw.hjwzw.com/Book/%v/"
     download: "https://tw.hjwzw.com/Book/Chapter/%v/"
-    chapter: "https://tw.hjwzw.com"
+    chapterPrefix: "https://tw.hjwzw.com"
   maxChapterError: 100
   updateDateLayour: null
