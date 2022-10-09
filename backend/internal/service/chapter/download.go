@@ -41,6 +41,13 @@ func optimizeContent(chapter *model.Chapter) {
 		chapter.Content = strings.ReplaceAll(
 			chapter.Content, replaceItem.old, replaceItem.new)
 	}
+
+	lines := strings.Split(chapter.Content, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(line)
+	}
+
+	chapter.Content = strings.Join(lines, "\n")
 }
 
 func Download(bookID int, chapter *model.Chapter, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) error {

@@ -84,6 +84,11 @@ func Test_optimizeContent(t *testing.T) {
 			chapter: model.Chapter{Content: "<br /><p/>"},
 			expect:  model.Chapter{Content: "\n\n"},
 		},
+		{
+			name:    "remove space / tab in each line",
+			chapter: model.Chapter{Content: " abc \n\tdef\t"},
+			expect:  model.Chapter{Content: "abc\ndef"},
+		},
 	}
 
 	for _, test := range tests {
