@@ -42,7 +42,7 @@ func main() {
 	server := http.Server{
 		Addr:         ":9105",
 		Handler:      r,
-		ReadTimeout:  5 * time.Second,
+		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 5 * time.Second,
 		IdleTimeout:  5 * time.Second,
 	}
