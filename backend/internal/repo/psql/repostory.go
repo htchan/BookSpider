@@ -245,9 +245,8 @@ func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s 
-			where books.site=$1 and 
-				(books.title like $2 or writers.name like $3) and 
-				(books.status != $4)
+			where books.site=$1 and books.status != $4 and books.title != '' and writers.name != '' and
+				(books.title like $2 or writers.name like $3)
 			order by books.update_date desc, books.id desc limit $5 offset $6`,
 			QueryField, QueryTable,
 		),
