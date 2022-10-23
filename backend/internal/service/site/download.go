@@ -2,34 +2,14 @@ package site
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/service/book"
 	"golang.org/x/sync/semaphore"
 )
-
-func Content(st *Site, bk *model.Book) (string, error) {
-	if !bk.IsDownloaded {
-		return "", errors.New("book is not download")
-	}
-
-	location := book.BookFileLocation(bk, st.StConf)
-	if _, err := os.Stat(location); err != nil {
-		return "", errors.New("file not found")
-	}
-
-	content, err := os.ReadFile(location)
-	if err != nil {
-		return "", fmt.Errorf("get book content error: %w", err)
-	}
-
-	return string(content), nil
-}
 
 func Download(st *Site) error {
 	ctx := context.Background()

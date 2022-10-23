@@ -24,32 +24,6 @@ func chapterURL(bookID int, chapter *model.Chapter, bkConf *config.BookConfig) s
 	return downloadURL + chapter.URL
 }
 
-func optimizeContent(chapter *model.Chapter) {
-	replaceItems := []struct {
-		old, new string
-	}{
-		{"<br />", "\n"},
-		{"&nbsp;", ""},
-		{"<b>", ""},
-		{"</b>", ""},
-		{"<p>", ""},
-		{"</p>", ""},
-		{"                ", ""},
-		{"<p/>", "\n"},
-	}
-	for _, replaceItem := range replaceItems {
-		chapter.Content = strings.ReplaceAll(
-			chapter.Content, replaceItem.old, replaceItem.new)
-	}
-
-	lines := strings.Split(chapter.Content, "\n")
-	for i, line := range lines {
-		lines[i] = strings.TrimSpace(line)
-	}
-
-	chapter.Content = strings.Join(lines, "\n")
-}
-
 func Download(bookID int, chapter *model.Chapter, bkConf *config.BookConfig, stConf *config.SiteConfig, c *client.CircuitBreakerClient) error {
 	html, err := c.Get(chapterURL(bookID, chapter, bkConf))
 	if err != nil {
@@ -72,7 +46,7 @@ func Download(bookID int, chapter *model.Chapter, bkConf *config.BookConfig, stC
 	} else {
 		chapter.Content = content
 	}
-	optimizeContent(chapter)
+	chapter.OptimizeContent()
 
 	return chapter.Error
 }

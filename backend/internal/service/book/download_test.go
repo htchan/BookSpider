@@ -179,8 +179,8 @@ func Test_downloadChapters(t *testing.T) {
 			stConf: config.SiteConfig{BookKey: "test_book"},
 			c:      &c,
 			expectChapters: model.Chapters{
-				{URL: server.URL + "/chapter/extra-content", Title: "title 1", Content: "success-\ncontent-regex"},
-				{URL: server.URL + "/chapter/extra-content", Title: "title 2", Content: "success-\ncontent-regex"},
+				{URL: server.URL + "/chapter/extra-content", Title: "title 1", Content: "success-\n\ncontent-regex"},
+				{URL: server.URL + "/chapter/extra-content", Title: "title 2", Content: "success-\n\ncontent-regex"},
 			},
 			expectErr: false,
 		},
@@ -195,7 +195,7 @@ func Test_downloadChapters(t *testing.T) {
 			stConf: config.SiteConfig{BookKey: "test_book"},
 			c:      &c,
 			expectChapters: model.Chapters{
-				{URL: server.URL + "/chapter/extra-content", Title: "title 1", Content: "success-\ncontent-regex"},
+				{URL: server.URL + "/chapter/extra-content", Title: "title 1", Content: "success-\n\ncontent-regex"},
 				{URL: server.URL + "/chapter/unrecognize", Title: "title 2", Error: errors.New("chapter content not found")},
 			},
 			expectErr: false,

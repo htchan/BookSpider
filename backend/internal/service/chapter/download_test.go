@@ -66,44 +66,6 @@ func Test_chapterURL(t *testing.T) {
 	}
 }
 
-func Test_optimizeContent(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		chapter model.Chapter
-		expect  model.Chapter
-	}{
-		{
-			name:    "remove specific string",
-			chapter: model.Chapter{Content: "&nbsp;<b></b></p>                "},
-			expect:  model.Chapter{Content: ""},
-		},
-		{
-			name:    "replace specific string to \\n",
-			chapter: model.Chapter{Content: "<br /><p/>"},
-			expect:  model.Chapter{Content: "\n\n"},
-		},
-		{
-			name:    "remove space / tab in each line",
-			chapter: model.Chapter{Content: " abc \n\tdef\t"},
-			expect:  model.Chapter{Content: "abc\ndef"},
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			optimizeContent(&test.chapter)
-
-			if !cmp.Equal(test.chapter, test.expect) {
-				t.Error(cmp.Diff(test.chapter, test.expect))
-			}
-		})
-	}
-}
-
 func Test_Download(t *testing.T) {
 	t.Parallel()
 	ApiParser.SetDefault(
@@ -143,7 +105,7 @@ func Test_Download(t *testing.T) {
 			bkConf:        config.BookConfig{},
 			stConf:        config.SiteConfig{BookKey: "test_book"},
 			c:             &c,
-			expectChapter: model.Chapter{URL: server.URL + "/chapter/extra-content", Content: "success-\ncontent-regex"},
+			expectChapter: model.Chapter{URL: server.URL + "/chapter/extra-content", Content: "success-\n\ncontent-regex"},
 			expectErr:     false,
 		},
 		{

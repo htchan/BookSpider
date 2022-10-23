@@ -8,6 +8,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
+	"github.com/htchan/BookSpider/internal/service/book"
 	"github.com/htchan/BookSpider/internal/service/site"
 )
 
@@ -61,7 +62,7 @@ func BookInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
 	st := req.Context().Value("site").(*site.Site)
 	bk := req.Context().Value("book").(*model.Book)
-	content, err := site.Content(st, bk)
+	content, err := book.Content(bk, st.StConf)
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {

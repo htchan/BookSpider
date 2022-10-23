@@ -9,6 +9,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
+	"github.com/htchan/BookSpider/internal/service/book"
 	"github.com/htchan/BookSpider/internal/service/site"
 )
 
@@ -138,7 +139,7 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	st := req.Context().Value("site").(*site.Site)
 	bk := req.Context().Value("book").(*model.Book)
-	content, err := site.Content(st, bk)
+	content, err := book.Content(bk, st.StConf)
 	if err != nil {
 		res.WriteHeader(500)
 		fmt.Println(err)
