@@ -1,0 +1,226 @@
+xbiquge:
+  decode_method: gbk
+  max_threads: 1000
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 1000
+    max_fail_multiplier: 1.5
+    sleep_interval: 10s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/xbiquge"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: https://www.xbiquge.so/book/%v/
+    download: https://www.xbiquge.so/book/%v/
+    chapter_prefix: https://www.xbiquge.so
+    availability: https://www.xbiquge.so
+  max_explore_error: 1000
+  max_download_concurrency: 5
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+  
+  availability:
+    url: https://www.xbiquge.so/
+    check_string: 笔趣阁
+
+xqishu:
+  decode_method: utf8
+  max_threads: 200
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 10
+    max_fail_multiplier: 2
+    sleep_interval: 5s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/xqishu"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: http://www.aidusk.com/txt%v/
+    download: http://www.aidusk.com/t/%v/
+    chapter_prefix: http://www.aidusk.com
+    availability: http://www.aidusk.com
+  max_explore_error: 100
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+  
+  availability:
+    url: http://www.aidusk.com
+    check_string: 求书网
+
+80txt:
+  decode_method: utf8
+  max_threads: 1000
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 1000
+    max_fail_multiplier: 1.5
+    sleep_interval: 10s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/80txt"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: https://www.80xs.la/txtml_%v.html
+    download: http://www.80xs.la/txtml_%v.html
+    chapter_prefix: http://www.80xs.la
+    availability: http://www.80xs.la
+  max_explore_error: 100
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+  
+  availability:
+    url: https://www.80xs.la/
+    check_string: 八零电子书
+
+bestory:
+  decode_method: big5
+  max_threads: 1000
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 1000
+    max_fail_multiplier: 1.5
+    sleep_interval: 10s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/bestory"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: https://www.book100.com/book/book%v.html
+    download: https://www.book100.com/book/book%v.html
+    chapter_prefix: https://www.book100.com
+    availability: https://www.book100.com
+  max_explore_error: 100
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+  
+  availability:
+    url: https://www.book100.com
+    check_string: 八零电子书
+
+ck101:
+  decode_method: big5
+  max_threads: 1000
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 1000
+    max_fail_multiplier: 1.5
+    sleep_interval: 10s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/ck101"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: https://www.ck101.org/book/%v.html
+    download: https://www.ck101.org/0/%v/
+    chapterPrefix: https://www.ck101.org
+    availability: https://www.ck101.org
+  # urls: #mobile
+  #   base: https://www.ck101.org/book/%v.html
+  #   download: https://www.ck101.org/0/%v/
+  #   chapterPrefix: https://www.ck101.org
+  max_explore_error: 100
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+
+  availability:
+    url: https://www.ck101.org
+    check_string: 卡提諾
+
+hjwzw:
+  decode_method: big5
+  max_threads: 1000
+  request_timeout: 30s
+  circuit_breaker:
+    max_fail_count: 1000
+    max_fail_multiplier: 1.5
+    sleep_interval: 10s
+  retry_map:
+    default: 10
+    unavailable: 100
+
+  storage: "/books/hjwzw"
+  backupDirectory: /backup/book_spider
+
+  urls: #desktop
+    base: https://tw.hjwzw.com/Book/%v/
+    download: https://tw.hjwzw.com/Book/Chapter/%v/
+    chapterPrefix: https://tw.hjwzw.com
+    availability: https://tw.hjwzw.com
+  max_explore_error: 100
+  update_date_layout: null
+
+  goquery_selectors:
+    title: ""
+    writer: ""
+    book_type: ""
+    update_date: ""
+    update_chapter: ""
+    book_chapter: ""
+    chapter_title: ""
+    chapter_content: ""
+
+  availability:
+    url: https://tw.hjwzw.com
+    check_string: 黃金屋
