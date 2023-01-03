@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/htchan/BookSpider/internal/config"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/traditionalchinese"
 )
 
 func Test_NewDecoder(t *testing.T) {
@@ -40,6 +42,45 @@ func Test_NewDecoder(t *testing.T) {
 			decoder := NewDecoder(test.conf)
 			if (decoder.decoder == nil) != test.expectNil {
 				t.Errorf("got decoder.decoder: %v; expect nil: %v", decoder.decoder, test.expectNil)
+			}
+		})
+	}
+}
+
+func Test_NewDecoderV2(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		decodeMethod  string
+		expectDecoder Decoder
+	}{
+		{
+			name:          "load big5 decoder",
+			decodeMethod:  "big5",
+			expectDecoder: Decoder{decoder: traditionalchinese.Big5.NewDecoder()},
+		},
+		{
+			name:          "load gbk decoder",
+			decodeMethod:  "gbk",
+			expectDecoder: Decoder{decoder: simplifiedchinese.GBK.NewDecoder()},
+		},
+		{
+			name:          "load nil decoder",
+			decodeMethod:  "",
+			expectDecoder: Decoder{},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			decoder := NewDecoderV2(test.decodeMethod)
+			if !((decoder.decoder == nil && test.expectDecoder.decoder == nil) ||
+				(decoder.decoder != nil && test.expectDecoder.decoder != nil && *decoder.decoder == *test.expectDecoder.decoder)) {
+				t.Errorf("got decoder.decoder: %v; expect decoder: %v", decoder, test.expectDecoder)
 			}
 		})
 	}

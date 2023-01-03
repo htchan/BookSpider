@@ -23,6 +23,17 @@ func NewDecoder(conf config.DecoderConfig) Decoder {
 	return Decoder{decoder: decoder}
 }
 
+func NewDecoderV2(decodeMethod string) Decoder {
+	var decoder *encoding.Decoder
+	if decodeMethod == "big5" {
+		decoder = traditionalchinese.Big5.NewDecoder()
+	} else if decodeMethod == "gbk" {
+		decoder = simplifiedchinese.GBK.NewDecoder()
+	}
+
+	return Decoder{decoder: decoder}
+}
+
 func (decoder Decoder) Decode(str string) (string, error) {
 	if decoder.decoder == nil {
 		return str, nil

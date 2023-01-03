@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/htchan/BookSpider/internal/config"
+	config_new "github.com/htchan/BookSpider/internal/config_new"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -19,6 +20,8 @@ var (
 
 type CircuitBreakerClient struct {
 	conf           config.CircuitBreakerClientConfig
+	confV2         *config_new.CircuitBreakerClientConfig
+	retryConf      map[string]int
 	decoder        Decoder
 	ctx            context.Context
 	weighted       *semaphore.Weighted
@@ -48,7 +51,27 @@ func NewClient(conf config.CircuitBreakerClientConfig, commonWeighted *semaphore
 	}
 }
 
-func (client CircuitBreakerClient) Acquire() error {
+func NewClientV2(conf *config_new.SiteConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) CircuitBreakerClient {
+	if commonWeighted == nil {
+		commonWeighted = semaphore.NewWeighted(int64(conf.MaxThreads))
+	}
+	if commonCtx == nil {
+		ctxObj := context.Background()
+		commonCtx = &ctxObj
+	}
+	return CircuitBreakerClient{
+		confV2:         &conf.CircuitBreakerConfig,
+		retryConf:      conf.RetryConfig,
+		client:         &http.Client{Timeout: conf.RequestTimeout},
+		decoder:        NewDecoderV2(conf.DecodeMethod),
+		ctx:            context.Background(),
+		weighted:       semaphore.NewWeighted(int64(conf.MaxThreads)),
+		commonCtx:      commonCtx,
+		commonWeighted: commonWeighted,
+	}
+}
+
+func (client *CircuitBreakerClient) Acquire() error {
 	err := client.commonWeighted.Acquire(*client.commonCtx, 1)
 	if err != nil {
 		return err
@@ -56,12 +79,12 @@ func (client CircuitBreakerClient) Acquire() error {
 	return client.weighted.Acquire(client.ctx, 1)
 }
 
-func (client CircuitBreakerClient) Release() {
+func (client *CircuitBreakerClient) Release() {
 	client.weighted.Release(1)
 	client.commonWeighted.Release(1)
 }
 
-func (client CircuitBreakerClient) SendRequest(url string) (string, error) {
+func (client *CircuitBreakerClient) SendRequest(url string) (string, error) {
 	resp, err := client.client.Get(url)
 	if err != nil {
 		return "", err
@@ -87,15 +110,21 @@ func (client CircuitBreakerClient) SendRequest(url string) (string, error) {
 func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (string, error) {
 	client.waitGroup.Wait()
 	response, err := client.SendRequest(url)
+	maxFailCount, maxFailMultiplier := client.conf.MaxFailCount, client.conf.MaxFailMultiplier
+	circuitBreakingSleep := time.Duration(client.conf.CircuitBreakingSleep) * time.Second
+	if client.confV2 != nil {
+		maxFailCount, maxFailMultiplier = client.confV2.MaxFailCount, client.confV2.MaxFailMultiplier
+		circuitBreakingSleep = client.confV2.SleepInterval
+	}
 	if err != nil && err.Error() == "code 503" {
 		client.failCount++
-		if client.failCount > client.conf.MaxFailCount {
+		if client.failCount > maxFailCount {
 			client.waitGroup.Add(1)
 			go func() {
 				defer client.waitGroup.Done()
-				time.Sleep(time.Duration(client.conf.CircuitBreakingSleep) * time.Second)
-				if client.failCount > int(float64(client.conf.MaxFailCount)*client.conf.MaxFailMultiplier) {
-					client.failCount = client.conf.MaxFailCount / 2
+				time.Sleep(circuitBreakingSleep)
+				if client.failCount > int(float64(maxFailCount)*maxFailMultiplier) {
+					client.failCount = maxFailCount / 2
 				}
 			}()
 		}
@@ -110,15 +139,21 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 		html string
 		err  error
 	)
+	retryErr, retryUnavailable := client.conf.RetryErr, client.conf.RetryUnavailable
+	intervalSleep := time.Duration(client.conf.IntervalSleep) * time.Second
+	if client.confV2 != nil {
+		retryErr, retryUnavailable = client.retryConf["default"], client.retryConf["unavailable"]
+		intervalSleep = client.confV2.SleepInterval
+	}
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
 		if err != nil {
-			if (err.Error() == "code 503" || err.Error() == "code 502") && i >= client.conf.RetryUnavailable {
+			if (err.Error() == "code 503" || err.Error() == "code 502") && i >= retryUnavailable {
 				return html, err
-			} else if i >= client.conf.RetryErr {
+			} else if i >= retryErr {
 				return html, err
 			}
-			time.Sleep(time.Duration((i+1)*client.conf.IntervalSleep) * time.Second)
+			time.Sleep(time.Duration(i+1) * intervalSleep)
 			continue
 		}
 		break

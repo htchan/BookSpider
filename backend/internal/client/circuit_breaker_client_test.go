@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/htchan/BookSpider/internal/config"
+	config_new "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/mock"
+	"golang.org/x/text/encoding/traditionalchinese"
 )
 
 func Test_NewClient(t *testing.T) {
@@ -16,6 +18,23 @@ func Test_NewClient(t *testing.T) {
 	if client.client == nil || client.client.Timeout != 10*time.Second {
 		t.Errorf("wrong client created: %v", client.client)
 	}
+}
+
+func Test_NewClientV2(t *testing.T) {
+	t.Parallel()
+
+	client := NewClientV2(&config_new.SiteConfig{
+		RequestTimeout: 10 * time.Second,
+		DecodeMethod:   "big5",
+		MaxThreads:     10,
+	}, nil, nil)
+
+	if client.client == nil || client.client.Timeout != 10*time.Second ||
+		*client.decoder.decoder != *traditionalchinese.Big5.NewDecoder() ||
+		!client.weighted.TryAcquire(10) || client.weighted.TryAcquire(1) {
+		t.Errorf("wrong client created: %v", client.client)
+	}
+	defer client.weighted.Release(10)
 }
 
 func TestCircuitBreakerClient_AcquireRelease(t *testing.T) {
