@@ -1,4 +1,4 @@
-package parser
+package parse
 
 type Parser interface {
 	ParseBook(html string) (*ParsedBookFields, error)

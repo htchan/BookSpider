@@ -1,4 +1,4 @@
-package parser
+package parse
 
 import "github.com/htchan/BookSpider/internal/model"
 
