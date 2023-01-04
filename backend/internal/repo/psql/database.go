@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	config "github.com/htchan/BookSpider/internal/config_new"
 	_ "github.com/lib/pq"
 )
 
@@ -31,6 +32,23 @@ func OpenDatabase(site string) (*sql.DB, error) {
 	conn := fmt.Sprintf(
 		"host=%v port=%v user=%v password=%v dbname=%v sslmode=disable",
 		host, port, user, password, dbName,
+	)
+	database, err := sql.Open("postgres", conn)
+	if err != nil {
+		return database, err
+	}
+	// database.SetMaxIdleConns(5)
+	// database.SetMaxOpenConns(10)
+	// database.SetConnMaxIdleTime(5 * time.Second)
+	// database.SetConnMaxLifetime(5 * time.Second)
+	log.Printf("postgres_database.open; %v", database)
+	return database, err
+}
+
+func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
+	conn := fmt.Sprintf(
+		"host=%v port=%v user=%v password=%v dbname=%v sslmode=disable",
+		conf.Host, conf.Port, conf.User, conf.Password, conf.Name,
 	)
 	database, err := sql.Open("postgres", conn)
 	if err != nil {

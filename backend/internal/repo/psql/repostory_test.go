@@ -627,7 +627,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 
 func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 	t.Parallel()
-	//TODO: fill in testcase
+
 	StubPsqlConn()
 	db, err := OpenDatabase("")
 	if err != nil {
@@ -772,6 +772,30 @@ func TestPsqlRepo_UpdateBooksStatus(t *testing.T) {
 				t.Errorf("book diff: %v", cmp.Diff(bk, test.expectBook))
 			}
 		})
+	}
+}
+
+func BenchmarkPsqlRepo_UpdateBooksStatus(b *testing.B) {
+	StubPsqlConn()
+	db, err := OpenDatabase("")
+	if err != nil {
+		b.Fatalf("error in open database: %v", err)
+	}
+	site := "bm/bk_st/update"
+
+	b.Cleanup(func() {
+		db.Exec("delete from books where site=$1", site)
+		db.Exec("delete from writers where id>0 and name like $1", site+"%")
+		db.Exec("delete from errors where site=$1", site)
+		db.Close()
+	})
+
+	r := NewRepo(site, db)
+
+	stubData(NewRepo(site, db), site)
+
+	for n := 0; n < b.N; n++ {
+		r.UpdateBooksStatus()
 	}
 }
 

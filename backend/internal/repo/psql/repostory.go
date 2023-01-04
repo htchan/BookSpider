@@ -52,7 +52,7 @@ func (r *PsqlRepo) CreateBook(bk *model.Book) error {
 		`insert into books 
 		(site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded) 
 		values 
-		($1,$2,0,$3,$4,$5,$6,$7,$8, $9)`,
+		($1,$2,0,$3,$4,$5,$6,$7,$8,$9)`,
 		bk.Site, bk.ID, bk.Title, bk.Writer.ID, bk.Type,
 		bk.UpdateDate, bk.UpdateChapter, bk.Status.String(), bk.IsDownloaded,
 	)
@@ -269,7 +269,8 @@ func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 			`select %s from %s
 			where books.site=$1 and books.is_downloaded=$2
 			order by books.site, books.id desc, books.hash_code desc 
-			limit $3 offset RANDOM() * (select count(*) from books where site=$1 and is_downloaded=$2)`,
+			limit $3 offset RANDOM() * 
+			(select greatest(count(*) - $3, 0) from books where site=$1 and is_downloaded=$2)`,
 			QueryField, QueryTable,
 		),
 		r.site, true, limit,
@@ -290,12 +291,12 @@ func generateUpdateStatusCondition(length int) string {
 	sqlStmt := "(update_date < '" + strconv.Itoa(time.Now().Year()-1) + "'"
 
 	for i := 0; i < length; i++ {
-		sqlStmt += fmt.Sprintf(" or update_chapter like $%d", i+2)
+		sqlStmt += fmt.Sprintf(" or update_chapter like $%d", i+3)
 	}
 
 	sqlStmt += fmt.Sprintf(
 		") and status = $%d and site=$%d",
-		length+2, length+3,
+		length+3, length+4,
 	)
 
 	return sqlStmt
@@ -314,16 +315,8 @@ func (r *PsqlRepo) UpdateBooksStatus() error {
 	)
 
 	_, err := r.db.Exec(
-		fmt.Sprintf("update books set is_downloaded=$1 where %v and is_downloaded=true", conditions),
-		append([]interface{}{false}, params...)...,
-	)
-	if err != nil {
-		return fmt.Errorf("update book status failed: %w", err)
-	}
-
-	_, err = r.db.Exec(
-		fmt.Sprintf("update books set status=$1 where %v", conditions),
-		append([]interface{}{model.StatusCode(model.End).String()}, params...)...,
+		fmt.Sprintf("update books set is_downloaded=$1, status=$2 where %v", conditions),
+		append([]interface{}{false, model.StatusCode(model.End).String()}, params...)...,
 	)
 	if err != nil {
 		return fmt.Errorf("update book status failed: %w", err)
