@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -22,18 +23,27 @@ type GoqueryParser struct {
 
 var _ Parser = (*GoqueryParser)(nil)
 
+var (
+	ErrBookInfoSelectorEmpty          = errors.New("book info selector is empty")
+	ErrChapterListSelectorEmpty       = errors.New("chapter list selector is empty")
+	ErrChapterSelectorEmpty           = errors.New("chapter selector is empty")
+	ErrParseBookFieldsNotFound        = errors.New("parse book fail: fields not found")
+	ErrParseChapterFieldsNotFound     = errors.New("parse chapter fail: fields not found")
+	ErrParseChapterListNoChapterFound = errors.New("no chapters found")
+)
+
 func LoadGoqueryParser(conf *config.GoquerySelectorConfig) (*GoqueryParser, error) {
 	if conf.Title == "" || conf.Writer == "" || conf.BookType == "" ||
 		conf.LastUpdate == "" || conf.LastChapter == "" {
-		return nil, fmt.Errorf("book info selector is empty")
+		return nil, ErrBookInfoSelectorEmpty
 	}
 
 	if conf.BookChapter == "" {
-		return nil, fmt.Errorf("chapter list selector is empty")
+		return nil, ErrChapterListSelectorEmpty
 	}
 
 	if conf.ChapterContent == "" || conf.ChapterTitle == "" {
-		return nil, fmt.Errorf("chapter selector is empty")
+		return nil, ErrChapterSelectorEmpty
 	}
 
 	return &GoqueryParser{
@@ -74,7 +84,7 @@ func (parser *GoqueryParser) ParseBook(html string) (*ParsedBookFields, error) {
 
 	if fields.title == "" || fields.writer == "" || fields.bookType == "" ||
 		fields.updateDate == "" || fields.updateChapter == "" {
-		return nil, fmt.Errorf("parse book fail: %s", "fields not found")
+		return nil, ErrParseBookFieldsNotFound
 	}
 
 	return &fields, nil
@@ -98,7 +108,7 @@ func (parser *GoqueryParser) ParseChapterList(html string) (*ParsedChapterList, 
 	})
 
 	if len(chapters.chapters) == 0 {
-		return nil, fmt.Errorf("no chapter found")
+		return nil, ErrParseChapterListNoChapterFound
 	}
 
 	return &chapters, nil
@@ -119,7 +129,7 @@ func (parser *GoqueryParser) ParseChapter(html string) (*ParsedChapterFields, er
 	})
 
 	if fields.title == "" || fields.content == "" {
-		return nil, fmt.Errorf("parse chapter fail: %s", "fields not found")
+		return nil, ErrParseChapterFieldsNotFound
 	}
 	return &fields, nil
 }
