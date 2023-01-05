@@ -51,7 +51,7 @@ func NewClient(conf config.CircuitBreakerClientConfig, commonWeighted *semaphore
 	}
 }
 
-func NewClientV2(conf *config_new.SiteConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) CircuitBreakerClient {
+func NewClientV2(conf *config_new.SiteConfig, commonWeighted *semaphore.Weighted, commonCtx *context.Context) *CircuitBreakerClient {
 	if commonWeighted == nil {
 		commonWeighted = semaphore.NewWeighted(int64(conf.MaxThreads))
 	}
@@ -59,7 +59,7 @@ func NewClientV2(conf *config_new.SiteConfig, commonWeighted *semaphore.Weighted
 		ctxObj := context.Background()
 		commonCtx = &ctxObj
 	}
-	return CircuitBreakerClient{
+	return &CircuitBreakerClient{
 		confV2:         &conf.CircuitBreakerConfig,
 		retryConf:      conf.RetryConfig,
 		client:         &http.Client{Timeout: conf.RequestTimeout},
