@@ -1,13 +1,14 @@
-package parse
+package goquery
 
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/parse"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_LoadGoqueryParser(t *testing.T) {
+func Test_LoadParser(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -84,7 +85,7 @@ func Test_LoadGoqueryParser(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			parser, err := LoadGoqueryParser(test.conf)
+			parser, err := LoadParser(test.conf)
 
 			if (err != nil) != test.expectError {
 				t.Errorf("error fidd")
@@ -92,11 +93,7 @@ func Test_LoadGoqueryParser(t *testing.T) {
 				t.Errorf("got error: %v", err)
 			}
 
-			if !cmp.Equal(test.expectedParser, parser) {
-				t.Errorf("parser diff:")
-				t.Errorf("expect parser: %v", test.expectedParser)
-				t.Errorf("got parser: %v", parser)
-			}
+			assert.Equal(t, test.expectedParser, parser)
 		})
 	}
 }
@@ -108,7 +105,7 @@ func TestParser_ParseBook(t *testing.T) {
 		name         string
 		parser       GoqueryParser
 		html         string
-		expectFields *ParsedBookFields
+		expectFields *parse.ParsedBookFields
 		expectError  bool
 	}{
 		{
@@ -127,13 +124,13 @@ func TestParser_ParseBook(t *testing.T) {
 			<date>date</date>
 			<chapter>chapter</chapter>
 			</head></html>`,
-			expectFields: &ParsedBookFields{
-				title:         "title",
-				writer:        "writer",
-				bookType:      "type",
-				updateDate:    "date",
-				updateChapter: "chapter",
-			},
+			expectFields: parse.NewParsedBookFields(
+				"title",
+				"writer",
+				"type",
+				"date",
+				"chapter",
+			),
 			expectError: false,
 		},
 		{
@@ -168,9 +165,7 @@ func TestParser_ParseBook(t *testing.T) {
 				t.Errorf("got error: %v", err)
 			}
 
-			if !cmp.Equal(test.expectFields, fields) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectFields, fields))
-			}
+			assert.Equal(t, test.expectFields, fields)
 		})
 	}
 }
@@ -182,7 +177,7 @@ func TestParser_ParserChapterList(t *testing.T) {
 		name              string
 		parser            GoqueryParser
 		html              string
-		expectChapterList *ParsedChapterList
+		expectChapterList *parse.ParsedChapterList
 		expectError       bool
 	}{
 		{
@@ -196,15 +191,13 @@ func TestParser_ParserChapterList(t *testing.T) {
 				<li href="link 2">chap 2</li>
 			</ul>
 			</body></html>`,
-			expectChapterList: &ParsedChapterList{
-				chapters: []struct {
-					url   string
-					title string
-				}{
-					{url: "link 1", title: "chap 1"},
-					{url: "link 2", title: "chap 2"},
-				},
-			},
+			expectChapterList: func() *parse.ParsedChapterList {
+				var fields parse.ParsedChapterList
+				fields.Append("link 1", "chap 1")
+				fields.Append("link 2", "chap 2")
+
+				return &fields
+			}(),
 			expectError: false,
 		},
 		{
@@ -219,16 +212,14 @@ func TestParser_ParserChapterList(t *testing.T) {
 				<li href="link 3"></li>
 			</ul>
 			</body></html>`,
-			expectChapterList: &ParsedChapterList{
-				chapters: []struct {
-					url   string
-					title string
-				}{
-					{url: "link 1", title: "chap 1"},
-					{url: "", title: "chap 2"},
-					{url: "link 3", title: ""},
-				},
-			},
+			expectChapterList: func() *parse.ParsedChapterList {
+				var fields parse.ParsedChapterList
+				fields.Append("link 1", "chap 1")
+				fields.Append("", "chap 2")
+				fields.Append("link 3", "")
+
+				return &fields
+			}(),
 			expectError: false,
 		},
 		{
@@ -255,9 +246,7 @@ func TestParser_ParserChapterList(t *testing.T) {
 				t.Errorf("got error: %v", err)
 			}
 
-			if !cmp.Equal(test.expectChapterList, chapterList) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectChapterList, chapterList))
-			}
+			assert.Equal(t, test.expectChapterList, chapterList)
 		})
 	}
 }
@@ -269,7 +258,7 @@ func TestParser_parserChapter(t *testing.T) {
 		name         string
 		parser       GoqueryParser
 		html         string
-		expectFields *ParsedChapterFields
+		expectFields *parse.ParsedChapterFields
 		expectError  bool
 	}{
 		{
@@ -286,10 +275,10 @@ func TestParser_parserChapter(t *testing.T) {
 				long long long content
 			</content>
 			</body></html>`,
-			expectFields: &ParsedChapterFields{
-				title:   "title",
-				content: "some long long long \n\t\t\t\tlong long long \n\t\t\t\tlong long long content\n",
-			},
+			expectFields: parse.NewParsedChapterFields(
+				"title",
+				"some long long long \n\t\t\t\tlong long long \n\t\t\t\tlong long long content\n",
+			),
 			expectError: false,
 		},
 		{
@@ -318,9 +307,7 @@ func TestParser_parserChapter(t *testing.T) {
 				t.Errorf("got error: %v", err)
 			}
 
-			if !cmp.Equal(test.expectFields, fields) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectFields, fields))
-			}
+			assert.Equal(t, test.expectFields, fields)
 		})
 	}
 

@@ -3,8 +3,8 @@ package parse
 import (
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/htchan/BookSpider/internal/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParsedBookFields_Populate(t *testing.T) {
@@ -43,9 +43,7 @@ func TestParsedBookFields_Populate(t *testing.T) {
 
 			test.fields.Populate(&test.bk)
 
-			if !cmp.Equal(test.expectBook, test.bk) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectBook, test.bk))
-			}
+			assert.Equal(t, test.expectBook, test.bk)
 		})
 	}
 }
@@ -85,9 +83,7 @@ func TestParsedChapterList_Populate(t *testing.T) {
 
 			test.fields.Populate(&test.chapterList)
 
-			if !cmp.Equal(test.expectChapterList, test.chapterList) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectChapterList, test.chapterList))
-			}
+			assert.Equal(t, test.expectChapterList, test.chapterList)
 		})
 	}
 }
@@ -122,9 +118,7 @@ func TestParsedChapterFields_Populate(t *testing.T) {
 
 			test.fields.Populate(&test.bk)
 
-			if !cmp.Equal(test.expectBook, test.bk) {
-				t.Errorf("book diff: %v", cmp.Diff(test.expectBook, test.bk))
-			}
+			assert.Equal(t, test.expectBook, test.bk)
 		})
 	}
 }

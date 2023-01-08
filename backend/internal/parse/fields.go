@@ -1,6 +1,10 @@
 package parse
 
-import "github.com/htchan/BookSpider/internal/model"
+import (
+	"errors"
+
+	"github.com/htchan/BookSpider/internal/model"
+)
 
 type ParsedBookFields struct {
 	title         string
@@ -20,6 +24,74 @@ type ParsedChapterList struct {
 type ParsedChapterFields struct {
 	title   string
 	content string
+}
+
+var (
+	ErrParseBookFieldsNotFound        = errors.New("parse book fail: fields not found")
+	ErrParseChapterFieldsNotFound     = errors.New("parse chapter fail: fields not found")
+	ErrParseChapterListNoChapterFound = errors.New("no chapters found")
+)
+
+func IsNewBook(fields *ParsedBookFields, bk *model.Book) bool {
+	// TODO
+	return false
+}
+
+func IsUpdatedBook(fields *ParsedBookFields, bk *model.Book) bool {
+	// TODO
+	return false
+}
+
+func NewParsedBookFields(title, writer, bookType, updateDate, updateChapter string) *ParsedBookFields {
+	fields := ParsedBookFields{
+		title:         title,
+		writer:        writer,
+		bookType:      bookType,
+		updateDate:    updateDate,
+		updateChapter: updateChapter,
+	}
+
+	return &fields
+}
+
+func (fields *ParsedBookFields) Validate() error {
+	if fields.title == "" || fields.writer == "" || fields.bookType == "" ||
+		fields.updateDate == "" || fields.updateChapter == "" {
+		return ErrParseBookFieldsNotFound
+	}
+
+	return nil
+}
+
+func (fields *ParsedChapterList) Append(url, title string) {
+	fields.chapters = append(fields.chapters, struct {
+		url   string
+		title string
+	}{url, title})
+}
+
+func (fields *ParsedChapterList) Validate() error {
+	if len(fields.chapters) == 0 {
+		return ErrParseChapterListNoChapterFound
+	}
+
+	return nil
+}
+
+func NewParsedChapterFields(title, content string) *ParsedChapterFields {
+	fields := ParsedChapterFields{
+		title:   title,
+		content: content,
+	}
+	return &fields
+}
+
+func (fields *ParsedChapterFields) Validate() error {
+	if fields.title == "" || fields.content == "" {
+		return ErrParseChapterFieldsNotFound
+	}
+
+	return nil
 }
 
 func (fields *ParsedBookFields) Populate(bk *model.Book) {
@@ -43,47 +115,4 @@ func (fields *ParsedChapterList) Populate(chapters *model.Chapters) {
 func (fields *ParsedChapterFields) Populate(ch *model.Chapter) {
 	ch.Title = fields.title
 	ch.Content = fields.content
-}
-
-func (fields *ParsedBookFields) Equal(other *ParsedBookFields) bool {
-	if fields == other {
-		return true
-	} else if fields == nil || other == nil {
-		return false
-	}
-
-	return fields.title == other.title && fields.writer == other.writer &&
-		fields.bookType == other.bookType && fields.updateDate == other.updateDate &&
-		fields.updateChapter == other.updateChapter
-}
-
-func (fields *ParsedChapterList) Equal(other *ParsedChapterList) bool {
-	if fields == other {
-		return true
-	} else if fields == nil || other == nil {
-		return false
-	}
-
-	if len(fields.chapters) != len(other.chapters) {
-		return false
-	}
-
-	for i := range fields.chapters {
-		chap, otherChap := fields.chapters[i], other.chapters[i]
-		if chap.title != otherChap.title || chap.url != otherChap.url {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (fields *ParsedChapterFields) Equal(other *ParsedChapterFields) bool {
-	if fields == other {
-		return true
-	} else if fields == nil || other == nil {
-		return false
-	}
-
-	return fields.title == other.title && fields.content == other.content
 }
