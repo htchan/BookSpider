@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewChapter(t *testing.T) {
@@ -32,9 +33,7 @@ func Test_NewChapter(t *testing.T) {
 
 			result := NewChapter(test.index, test.url, test.title)
 
-			if !cmp.Equal(result, test.expect) {
-				t.Error(cmp.Diff(result, test.expect))
-			}
+			assert.Equal(t, result, test.expect)
 		})
 	}
 }
@@ -102,9 +101,7 @@ func TestChapter_optimizeContent(t *testing.T) {
 			t.Parallel()
 			test.chapter.OptimizeContent()
 
-			if !cmp.Equal(test.chapter, test.expect) {
-				t.Error(cmp.Diff(test.chapter, test.expect))
-			}
+			assert.Equal(t, test.chapter, test.expect)
 		})
 	}
 }
@@ -130,9 +127,7 @@ func Test_removeEmptyLines(t *testing.T) {
 			t.Parallel()
 
 			result := removeEmptyLines(test.lines)
-			if !cmp.Equal(result, test.expect) {
-				t.Error(cmp.Diff(result, test.expect))
-			}
+			assert.Equal(t, result, test.expect)
 		})
 	}
 }
@@ -219,9 +214,7 @@ func Test_StringToContent(t *testing.T) {
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v, expect error: %v", err, test.expectErr)
 			}
-			if !cmp.Equal(result, test.expect) {
-				t.Errorf("result diff: %v", cmp.Diff(result, test.expect))
-			}
+			assert.Equal(t, result, test.expect)
 		})
 	}
 }

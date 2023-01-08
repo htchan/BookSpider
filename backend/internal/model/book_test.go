@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewBook(t *testing.T) {
@@ -32,9 +32,37 @@ func Test_NewBook(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			result := NewBook(test.site, test.id)
-			if !cmp.Equal(result, test.expect) {
-				t.Errorf("book diff: %v", cmp.Diff(result, test.expect))
-			}
+			assert.Equal(t, result, test.expect)
+		})
+	}
+}
+
+func TestBook_HeaderInfo(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		bk     *Book
+		expect string
+	}{
+		{
+			name: "happy flow",
+			bk: &Book{
+				Title:  "title",
+				Writer: Writer{Name: "writer"},
+			},
+			expect: "title\nwriter\n--------------------\n\n",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := test.bk.HeaderInfo()
+
+			assert.Equal(t, test.expect, result)
 		})
 	}
 }
@@ -72,6 +100,45 @@ func TestBook_MarshalJSON(t *testing.T) {
 			if string(result) != test.expect {
 				t.Errorf("got:  %v\nwant: %v", string(result), test.expect)
 			}
+		})
+	}
+}
+
+func TestBook_String(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		bk     *Book
+		expect string
+	}{
+		{
+			name: "happy flow without hashcode",
+			bk: &Book{
+				Site: "test",
+				ID:   123,
+			},
+			expect: "test-123",
+		},
+		{
+			name: "happy flow with hashcode",
+			bk: &Book{
+				Site:     "test",
+				ID:       123,
+				HashCode: 999,
+			},
+			expect: "test-123-999",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := test.bk.String()
+
+			assert.Equal(t, test.expect, result)
 		})
 	}
 }

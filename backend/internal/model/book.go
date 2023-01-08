@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 )
@@ -35,6 +34,10 @@ func GenerateHash() int {
 	return int(time.Now().Unix())
 }
 
+func (bk *Book) HeaderInfo() string {
+	return bk.Title + "\n" + bk.Writer.Name + "\n" + CONTENT_SEP + "\n\n"
+}
+
 func (bk Book) MarshalJSON() ([]byte, error) {
 	errString := ""
 	if bk.Error != nil {
@@ -59,15 +62,6 @@ func (bk Book) MarshalJSON() ([]byte, error) {
 		Status: bk.Status.String(), IsDownloaded: bk.IsDownloaded,
 		Error: errString,
 	})
-}
-
-func (bk Book) Equal(compare Book) bool {
-	return bk.Site == compare.Site && bk.ID == compare.ID && math.Abs(float64(bk.HashCode-compare.HashCode)) < 1000 &&
-		bk.Title == compare.Title && bk.Writer == compare.Writer && bk.Type == compare.Type &&
-		bk.UpdateDate == compare.UpdateDate && bk.UpdateChapter == compare.UpdateChapter &&
-		bk.Status == compare.Status && bk.IsDownloaded == compare.IsDownloaded &&
-		((bk.Error == nil && compare.Error == nil) ||
-			((bk.Error != nil && compare.Error != nil) && bk.Error.Error() == compare.Error.Error()))
 }
 
 func (bk Book) String() string {

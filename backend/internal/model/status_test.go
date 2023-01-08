@@ -70,6 +70,11 @@ func TestStatusCode_String(t *testing.T) {
 			status: End,
 			expect: "END",
 		},
+		{
+			name:   "status code from not defined integer",
+			status: StatusCode(10),
+			expect: "ERROR",
+		},
 	}
 
 	for _, test := range tests {
