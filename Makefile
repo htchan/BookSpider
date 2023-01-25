@@ -7,6 +7,10 @@ help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed  -e 's/^/ /'
 
+## backend-*: redirect the command to makefile in backend directory
+backend-%:
+	make -C backend $*
+
 ## build service=<service>: build docker image of specified service (default all)
 build:
 	DOCKER_BUILDKIT=1 docker-compose --profile ${service} build
