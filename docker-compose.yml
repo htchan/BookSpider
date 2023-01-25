@@ -13,7 +13,9 @@ services:
         volumes:
             - ./bin/database:/database
             - ./bin/log:/log
-            - /mnt/addition/download/Books:/books
+            - type: bind
+              source: /mnt/addition/download/Books
+              target: /books
             - ./backend/config:/config
             - ./backend/migrations:/migrations
         env_file:
@@ -60,7 +62,9 @@ services:
                     memory: '3G'
         volumes:
             - ./bin/log:/log
-            - /mnt/addition/download/Books:/books
+            - type: bind
+              source: /mnt/addition/download/Books
+              target: /books
             - ./bin/backup:/backup
             - ./backend/config:/config
             - ./backend/assets/api_parser:/api_parser

@@ -1,22 +1,27 @@
-FROM golang:1.17.6-alpine3.14 as builder
+FROM golang:1.17.6-alpine3.14 as setup
 
 WORKDIR /go/src/github.com/htchan/BookSpider
 
-COPY ./go.mod .
-COPY ./go.sum .
+COPY ./go.mod ./go.sum .
+
+RUN --mount=type=cache,target=$GOPATH \
+    go mod download -x
+
+COPY ./internal ./internal
+
+FROM setup as builder
+
+WORKDIR /go/src/github.com/htchan/BookSpider
 
 RUN apk add gcc musl-dev libc-dev
-RUN go mod download
 
-COPY ./internal ./internal
-COPY ./internal ./internal
 COPY ./cmd/batch ./cmd/batch
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -v  github.com/htchan/BookSpider/cmd/batch
+    go build -v ./cmd/batch
 
 
-FROM golang:1.17.6-alpine3.14
+FROM alpine
 
 WORKDIR /usr/src/app
 
