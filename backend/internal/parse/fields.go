@@ -33,13 +33,17 @@ var (
 )
 
 func IsNewBook(fields *ParsedBookFields, bk *model.Book) bool {
-	// TODO
-	return false
+	return (bk.Title != "" && bk.Title != fields.title) ||
+		(bk.Writer.Name != "" && bk.Writer.Name != fields.writer) ||
+		(bk.Type != "" && bk.Type != fields.bookType)
 }
 
 func IsUpdatedBook(fields *ParsedBookFields, bk *model.Book) bool {
-	// TODO
-	return false
+	return bk.Title != fields.title ||
+		bk.Writer.Name != fields.writer ||
+		bk.Type != fields.bookType ||
+		bk.UpdateChapter != fields.updateChapter ||
+		bk.UpdateDate != fields.updateDate
 }
 
 func NewParsedBookFields(title, writer, bookType, updateDate, updateChapter string) *ParsedBookFields {
