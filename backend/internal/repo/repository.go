@@ -8,13 +8,19 @@ import (
 )
 
 var ChapterEndKeywords = []string{
-	"后记", "後記", "新书", "新書", "结局", "結局", "感言",
-	"尾声", "尾聲", "终章", "終章", "外传", "外傳", "完本" /*"结束", "結束", */, "完結",
-	"完结", "终结", "終結", "番外", "结尾", "結尾", "全书完", "全書完", "全本完",
+	// traditional chinese
+	"番外", "結局", "新書", "完結", "尾聲", "感言", "後記", "完本",
+	"全書完", "全文完", "全文終", "全文結", "劇終", "（完）", "終章",
+	"外傳", "結尾",
+	// simplified chinese
+	"番外", "结局", "新书", "完结", "尾声", "感言", "后记", "完本",
+	"全书完", "全文完", "全文终", "全文结", "剧终", "（完）", "终章",
+	"外传", "结尾",
 }
 
 var BookNotExist = errors.New("no records found")
 
+//go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
 type Repostory interface {
 	Migrate() error
 	// book related
