@@ -1,43 +1,55 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/htchan/BookSpider/internal/config"
+	config "github.com/htchan/BookSpider/internal/config_new"
+	repo "github.com/htchan/BookSpider/internal/repo/psql"
 	"github.com/htchan/BookSpider/internal/router"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"golang.org/x/sync/semaphore"
 )
 
 func main() {
-	configLocation := os.Getenv("ASSETS_LOCATION") + "/config"
-	var err error
-
-	// TODO: load backend config
-	backendConfig, err := config.LoadBackendConfig(configLocation)
+	conf, err := config.LoadConfig()
 	if err != nil {
-		fmt.Printf("load backend config: %v", err)
+		log.Fatalf("load backend config: %v", err)
 		return
 	}
 
-	sites, err := site.LoadSitesFromConfigDirectory(configLocation, backendConfig.EnabledSiteNames)
-	if err != nil {
-		log.Fatal(err)
+	ctx := context.Background()
+	services := make(map[string]service_new.Service)
+	for _, siteName := range conf.APIConfig.AvailableSiteNames {
+		db, err := repo.OpenDatabase(siteName)
+		if err != nil {
+			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
+		}
+
+		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
+
+		serv, err := service_new.LoadService(
+			siteName, conf.SiteConfigs[siteName], db, sema, &ctx,
+		)
+		if err != nil {
+			log.Fatalf("load service fail. site: %v, err: %v", siteName, err)
+		}
+
+		services[siteName] = serv
 	}
 
 	// load routes
 	r := chi.NewRouter()
-	if backendConfig.ContainsRoute(config.RouteAPIKey) {
-		router.AddAPIRoutes(r, sites)
-	}
+	// if conf.APIConfig.ContainsRoute(config.RouteAPIKey) {
+	router.AddAPIRoutes(r, services)
+	// }
 
-	if backendConfig.ContainsRoute(config.RouteLiteKey) {
-		router.AddLiteRoutes(r, sites)
-	}
+	// if backendConfig.ContainsRoute(config.RouteLiteKey) {
+	router.AddLiteRoutes(r, services)
+	// }
 
 	server := http.Server{
 		Addr:         ":9105",

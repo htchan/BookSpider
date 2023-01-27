@@ -8,7 +8,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
 )
 
 type Arguement struct {
@@ -43,22 +43,17 @@ func (f *Arguement) IsBook() bool {
 	return *f.Site != "" && *f.ID > 0
 }
 
-func (f *Arguement) GetSite(sites map[string]*site.Site) *site.Site {
+func (f *Arguement) GetSite(sites map[string]service_new.Service) service_new.Service {
 	return sites[*f.Site]
 }
 
-func (f *Arguement) GetBook(sites map[string]*site.Site) *model.Book {
+func (f *Arguement) GetBook(sites map[string]service_new.Service) *model.Book {
 	st := f.GetSite(sites)
 	if st == nil {
 		return nil
 	}
-	var bk *model.Book
-	var err error
-	if *f.HashCode != "" {
-		bk, err = st.BookFromIDHash(*f.ID, *f.HashCode)
-	} else {
-		bk, err = st.BookFromID(*f.ID)
-	}
+
+	bk, err := st.Book(*f.ID, *f.HashCode)
 	if errors.Is(err, repo.BookNotExist) {
 		hash, _ := strconv.ParseInt(*f.HashCode, 36, 64)
 		bk = &model.Book{

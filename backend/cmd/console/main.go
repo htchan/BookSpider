@@ -1,25 +1,25 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
-	"os"
 	"sync"
 
-	"github.com/htchan/ApiParser"
 	"github.com/htchan/BookSpider/internal/arguement"
-	"github.com/htchan/BookSpider/internal/config"
+	config "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/service/book"
-	"github.com/htchan/BookSpider/internal/service/site"
+	repo "github.com/htchan/BookSpider/internal/repo/psql"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"golang.org/x/sync/semaphore"
 )
 
-func OperateAllSites(sites map[string]*site.Site, operation string) error {
+func OperateAllSites(services map[string]service_new.Service, operation string) error {
 	// loop all sites by calling process
 	var wg sync.WaitGroup
-	for _, st := range sites {
-		st := st
-		go func(st *site.Site) {
+	for _, serv := range services {
+		st := serv
+		go func(st service_new.Service) {
 			defer wg.Done()
 			err := OperateSite(st, operation)
 
@@ -32,31 +32,27 @@ func OperateAllSites(sites map[string]*site.Site, operation string) error {
 	return nil
 }
 
-func OperateSite(st *site.Site, operation string) error {
-	if st == nil {
+func OperateSite(serv service_new.Service, operation string) error {
+	if serv == nil {
 		return errors.New("Site not found")
 	}
 	var err error
 	switch operation {
 	case "backup":
-		err = site.Backup(st)
+		err = serv.Backup()
 	case "update-status":
-		err = site.Check(st)
+		err = serv.ValidateEnd()
 	case "download":
-		err = site.Download(st)
+		err = serv.Download()
 	case "explore":
-		err = site.Explore(st)
-	case "fix":
-		err = site.Fix(st)
+		err = serv.Explore()
 	case "patch-missing-records":
-		err = site.PatchMissingRecords(st)
+		err = serv.PatchMissingRecords()
 	case "patch-download-status":
-		err = site.PatchDownloadStatus(st)
+		err = serv.PatchDownloadStatus()
 
 	case "update":
-		err = site.Update(st)
-	case "validate":
-		err = site.Validate(st)
+		err = serv.Update()
 	default:
 		err = errors.New("operation not found")
 	}
@@ -64,24 +60,19 @@ func OperateSite(st *site.Site, operation string) error {
 	return err
 }
 
-func OperateBook(st *site.Site, bk *model.Book, operation string) error {
-	if st == nil {
+func OperateBook(serv service_new.Service, bk *model.Book, operation string) error {
+	if serv == nil {
 		return errors.New("Site not found")
 	}
-	var (
-		isUpdated bool
-		err       error
-	)
+	var err error
 
 	switch operation {
 	case "download":
-		isUpdated, err = book.Download(bk, st.BkConf, st.StConf, st.Client)
-	case "fix":
-		isUpdated, err = book.Fix(bk, st.StConf)
+		err = serv.DownloadBook(bk)
 	case "update":
-		isUpdated, err = book.Update(bk, st.BkConf, st.StConf, st.Client)
+		err = serv.UpdateBook(bk)
 	case "validate":
-		isUpdated, err = book.Validate(bk)
+		err = serv.ValidateBookEnd(bk)
 	default:
 		err = errors.New("operation not found")
 	}
@@ -90,40 +81,44 @@ func OperateBook(st *site.Site, bk *model.Book, operation string) error {
 		return err
 	}
 
-	if isUpdated {
-		st.SaveWriter(bk)
-		st.SaveError(bk)
-		st.UpdateBook(bk)
-	}
 	return nil
 }
 
 func main() {
-	configLocation := os.Getenv("ASSETS_LOCATION") + "/config"
-
-	// load backend config
-	batchConfig, err := config.LoadBatchConfig(configLocation)
+	conf, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("load backend config failed: %v", err)
+		log.Fatalf("load backend config: %v", err)
+		return
 	}
 
-	// load sites from config
-	sites, err := site.LoadSitesFromConfigDirectory(configLocation, batchConfig.EnabledSites)
-	if err != nil {
-		log.Fatalf("load site failed: %v", err)
-	}
+	ctx := context.Background()
+	services := make(map[string]service_new.Service)
+	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
+		db, err := repo.OpenDatabase(siteName)
+		if err != nil {
+			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
+		}
 
-	ApiParser.SetDefault(
-		ApiParser.FromDirectory(os.Getenv("ASSETS_LOCATION") + "/api_parser"))
+		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
+
+		serv, err := service_new.LoadService(
+			siteName, conf.SiteConfigs[siteName], db, sema, &ctx,
+		)
+		if err != nil {
+			log.Fatalf("load service fail. site: %v, err: %v", siteName, err)
+		}
+
+		services[siteName] = serv
+	}
 
 	// load arguements
 	args := arguement.LoadArgs()
 	if args.IsAllSite() {
-		err = OperateAllSites(sites, *args.Operation)
+		err = OperateAllSites(services, *args.Operation)
 	} else if args.IsSite() {
-		err = OperateSite(args.GetSite(sites), *args.Operation)
+		err = OperateSite(args.GetSite(services), *args.Operation)
 	} else if args.IsBook() {
-		err = OperateBook(args.GetSite(sites), args.GetBook(sites), *args.Operation)
+		err = OperateBook(args.GetSite(services), args.GetBook(services), *args.Operation)
 	} else {
 		err = errors.New("invalid arguements")
 	}
