@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
+	"github.com/stretchr/testify/assert"
 )
 
 func stubData(r repo.Repostory, site string) []model.Book {
@@ -144,10 +145,7 @@ func TestPsqlRepo_CreateBook(t *testing.T) {
 					t.Errorf("got error: %v, expect err: %v", err, test.expectErr)
 				}
 
-				if !cmp.Equal(test.bk, test.expectBook) {
-					t.Errorf("got:  %v\nwant: %v", test.bk, test.expectBook)
-					t.Errorf(cmp.Diff(test.bk, test.expectBook))
-				}
+				assert.Equal(t, test.expectBook, test.bk)
 			})
 
 			t.Run("book in db", func(t *testing.T) {
@@ -155,10 +153,8 @@ func TestPsqlRepo_CreateBook(t *testing.T) {
 				if err != nil {
 					t.Fatalf("query got error: %v", err)
 				}
-				if !cmp.Equal(*bk, test.expectBook) {
-					t.Errorf("query got:  %v\nwant: %v", test.bk, test.expectBook)
-					t.Errorf(cmp.Diff(test.bk, test.expectBook))
-				}
+
+				assert.Equal(t, test.expectBook, *bk)
 			})
 		})
 	}
@@ -235,10 +231,7 @@ func TestPsqlRepo_UpdateBook(t *testing.T) {
 				if (err != nil) != test.expectQueryErr {
 					t.Errorf("query got error: %v; want error: %v", err, test.expectQueryErr)
 				}
-				if !cmp.Equal(bk, test.expectQueryResult) {
-					t.Errorf("query got:  %v\nwant: %v", bk, test.expectQueryResult)
-					t.Errorf(cmp.Diff(bk, test.expectQueryResult))
-				}
+				assert.Equal(t, test.expectQueryResult, bk)
 			})
 		})
 	}
@@ -297,10 +290,7 @@ func TestPsqlRepo_FindBookByID(t *testing.T) {
 					t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 				}
 
-				if !cmp.Equal(result, test.expectResult) || (result != nil && result.ID != test.id) {
-					t.Errorf("query got:  %v\nwant: %v", result, test.expectResult)
-					t.Errorf(cmp.Diff(result, test.expectResult))
-				}
+				assert.Equal(t, test.expectResult, result)
 			})
 		})
 	}
@@ -359,11 +349,7 @@ func TestPsqlRepo_FindBookByIDHash(t *testing.T) {
 					t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 				}
 
-				if !cmp.Equal(result, test.expectResult) ||
-					(result != nil && (result.ID != test.id || result.HashCode != test.hashcode)) {
-					t.Errorf("query got:  %v\nwant: %v", result, test.expectResult)
-					t.Errorf(cmp.Diff(result, test.expectResult))
-				}
+				assert.Equal(t, test.expectResult, result)
 			})
 		})
 	}
@@ -425,10 +411,7 @@ func TestPsqlRepo_FindAllBooks(t *testing.T) {
 				bks = append(bks, bk)
 			}
 
-			if !cmp.Equal(bks, test.expectResult) {
-				t.Errorf("query got:  %v\nwant: %v", bks, test.expectResult)
-				t.Errorf(cmp.Diff(bks, test.expectResult))
-			}
+			assert.Equal(t, test.expectResult, bks)
 		})
 	}
 }
@@ -478,10 +461,7 @@ func TestPsqlRepo_FindBooksForUpdate(t *testing.T) {
 				bks = append(bks, bk)
 			}
 
-			if !cmp.Equal(bks, test.expectResult) {
-				t.Errorf("query got:  %v\nwant: %v", bks, test.expectResult)
-				t.Errorf(cmp.Diff(bks, test.expectResult))
-			}
+			assert.Equal(t, test.expectResult, bks)
 		})
 	}
 }
@@ -531,10 +511,7 @@ func TestPsqlRepo_FindBooksForDownload(t *testing.T) {
 				bks = append(bks, bk)
 			}
 
-			if !cmp.Equal(bks, test.expectResult) {
-				t.Errorf("query got:  %v\nwant: %v", bks, test.expectResult)
-				t.Errorf(cmp.Diff(bks, test.expectResult))
-			}
+			assert.Equal(t, test.expectResult, bks)
 		})
 	}
 }
@@ -617,10 +594,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}
-			if !cmp.Equal(result, test.expectResult) {
-				t.Errorf("query got:  %v\nwant: %v", result, test.expectResult)
-				t.Errorf(cmp.Diff(result, test.expectResult))
-			}
+			assert.Equal(t, test.expectResult, result)
 		})
 	}
 }
@@ -767,10 +741,7 @@ func TestPsqlRepo_UpdateBooksStatus(t *testing.T) {
 				t.Errorf("book fail to fetch: id: %v; hash: %v; err: %v", test.bkID, test.bkHash, err)
 				return
 			}
-			if !cmp.Equal(bk, test.expectBook) {
-				t.Error(bk)
-				t.Errorf("book diff: %v", cmp.Diff(bk, test.expectBook))
-			}
+			assert.Equal(t, test.expectBook, bk)
 		})
 	}
 }
@@ -1015,9 +986,7 @@ func TestPsqlRepo_Stats(t *testing.T) {
 			t.Parallel()
 
 			result := test.r.Stats()
-			if !cmp.Equal(result, test.expect) {
-				t.Errorf(cmp.Diff(result, test.expect))
-			}
+			assert.Equal(t, test.expect, result)
 		})
 	}
 }
