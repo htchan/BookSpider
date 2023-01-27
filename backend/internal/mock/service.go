@@ -5,10 +5,12 @@
 package mock
 
 import (
+	sql "database/sql"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/htchan/BookSpider/internal/model"
+	repo "github.com/htchan/BookSpider/internal/repo"
 )
 
 // MockService is a mock of Service interface.
@@ -78,18 +80,18 @@ func (mr *MockServiceMockRecorder) BookContent(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookContent", reflect.TypeOf((*MockService)(nil).BookContent), arg0)
 }
 
-// Check mocks base method.
-func (m *MockService) Check() error {
+// BookInfo mocks base method.
+func (m *MockService) BookInfo(arg0 *model.Book) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check")
-	ret0, _ := ret[0].(error)
+	ret := m.ctrl.Call(m, "BookInfo", arg0)
+	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Check indicates an expected call of Check.
-func (mr *MockServiceMockRecorder) Check() *gomock.Call {
+// BookInfo indicates an expected call of BookInfo.
+func (mr *MockServiceMockRecorder) BookInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockService)(nil).Check))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookInfo", reflect.TypeOf((*MockService)(nil).BookInfo), arg0)
 }
 
 // CheckAvailability mocks base method.
@@ -104,6 +106,20 @@ func (m *MockService) CheckAvailability() error {
 func (mr *MockServiceMockRecorder) CheckAvailability() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAvailability", reflect.TypeOf((*MockService)(nil).CheckAvailability))
+}
+
+// DBStats mocks base method.
+func (m *MockService) DBStats() sql.DBStats {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DBStats")
+	ret0, _ := ret[0].(sql.DBStats)
+	return ret0
+}
+
+// DBStats indicates an expected call of DBStats.
+func (mr *MockServiceMockRecorder) DBStats() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBStats", reflect.TypeOf((*MockService)(nil).DBStats))
 }
 
 // Download mocks base method.
@@ -162,18 +178,18 @@ func (mr *MockServiceMockRecorder) ExploreBook(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExploreBook", reflect.TypeOf((*MockService)(nil).ExploreBook), arg0)
 }
 
-// Info mocks base method.
-func (m *MockService) Info(arg0 *model.Book) string {
+// Name mocks base method.
+func (m *MockService) Name() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Info", arg0)
+	ret := m.ctrl.Call(m, "Name")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Info indicates an expected call of Info.
-func (mr *MockServiceMockRecorder) Info(arg0 interface{}) *gomock.Call {
+// Name indicates an expected call of Name.
+func (mr *MockServiceMockRecorder) Name() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockService)(nil).Info), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockService)(nil).Name))
 }
 
 // PatchDownloadStatus mocks base method.
@@ -262,6 +278,20 @@ func (mr *MockServiceMockRecorder) RandomBooks(limit interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RandomBooks", reflect.TypeOf((*MockService)(nil).RandomBooks), limit)
 }
 
+// Stats mocks base method.
+func (m *MockService) Stats() repo.Summary {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Stats")
+	ret0, _ := ret[0].(repo.Summary)
+	return ret0
+}
+
+// Stats indicates an expected call of Stats.
+func (mr *MockServiceMockRecorder) Stats() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stats", reflect.TypeOf((*MockService)(nil).Stats))
+}
+
 // Update mocks base method.
 func (m *MockService) Update() error {
 	m.ctrl.T.Helper()
@@ -290,16 +320,30 @@ func (mr *MockServiceMockRecorder) UpdateBook(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBook", reflect.TypeOf((*MockService)(nil).UpdateBook), arg0)
 }
 
-// ValidateBook mocks base method.
-func (m *MockService) ValidateBook(arg0 *model.Book) error {
+// ValidateBookEnd mocks base method.
+func (m *MockService) ValidateBookEnd(arg0 *model.Book) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateBook", arg0)
+	ret := m.ctrl.Call(m, "ValidateBookEnd", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// ValidateBook indicates an expected call of ValidateBook.
-func (mr *MockServiceMockRecorder) ValidateBook(arg0 interface{}) *gomock.Call {
+// ValidateBookEnd indicates an expected call of ValidateBookEnd.
+func (mr *MockServiceMockRecorder) ValidateBookEnd(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateBook", reflect.TypeOf((*MockService)(nil).ValidateBook), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateBookEnd", reflect.TypeOf((*MockService)(nil).ValidateBookEnd), arg0)
+}
+
+// ValidateEnd mocks base method.
+func (m *MockService) ValidateEnd() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateEnd")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateEnd indicates an expected call of ValidateEnd.
+func (mr *MockServiceMockRecorder) ValidateEnd() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateEnd", reflect.TypeOf((*MockService)(nil).ValidateEnd))
 }
