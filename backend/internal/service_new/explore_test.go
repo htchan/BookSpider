@@ -625,7 +625,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 				}
 
 				return ServiceImp{
-					Name:   "test-explore-new",
+					name:   "test-explore-new",
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -709,7 +709,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 				}
 
 				return ServiceImp{
-					Name:   "test-explore-new",
+					name:   "test-explore-new",
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -730,7 +730,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
 				return ServiceImp{
-					Name: "test-explore-new",
+					name: "test-explore-new",
 					conf: config.SiteConfig{
 						MaxExploreError: 50,
 					},
@@ -843,7 +843,7 @@ func TestServiceImp_Explore(t *testing.T) {
 				}
 
 				return ServiceImp{
-					Name:   "test-explore",
+					name:   "test-explore",
 					client: c,
 					parser: p,
 					rpo:    rpo,

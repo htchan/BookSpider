@@ -47,7 +47,7 @@ func TestServiceImp_BookFileLocation(t *testing.T) {
 	}
 }
 
-func TestServiceImp_Info(t *testing.T) {
+func TestServiceImp_BookInfo(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -94,7 +94,7 @@ func TestServiceImp_Info(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := test.serv.Info(test.bk)
+			got := test.serv.BookInfo(test.bk)
 			assert.Equal(t, test.wantBk, test.bk)
 			assert.Equal(t, test.want, got)
 		})

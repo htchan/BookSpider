@@ -37,7 +37,7 @@ func (serv *ServiceImp) PatchDownloadStatus() error {
 	}
 
 	var wg sync.WaitGroup
-	log.Printf("[%s] update books is_downloaded by storage", serv.Name)
+	log.Printf("[%s] update books is_downloaded by storage", serv.name)
 
 	for bk := range bks {
 		bk := bk
@@ -61,7 +61,7 @@ func (serv *ServiceImp) PatchDownloadStatus() error {
 }
 
 func (serv *ServiceImp) PatchMissingRecords() error {
-	log.Printf("[%v] patch missing records", serv.Name)
+	log.Printf("[%v] patch missing records", serv.name)
 
 	var wg sync.WaitGroup
 	maxBookID := serv.rpo.Stats().MaxBookID
@@ -75,8 +75,8 @@ func (serv *ServiceImp) PatchMissingRecords() error {
 			defer wg.Done()
 			_, err := serv.rpo.FindBookById(id)
 			if errors.Is(err, repo.BookNotExist) {
-				log.Printf("[%v] book <%v> not exist in database", serv.Name, i)
-				bk := model.NewBook(serv.Name, id)
+				log.Printf("[%v] book <%v> not exist in database", serv.name, i)
+				bk := model.NewBook(serv.name, id)
 				serv.ExploreBook(&bk)
 			} else if err != nil {
 				log.Printf("fail to fetch: id: %v; err: %v", id, err)

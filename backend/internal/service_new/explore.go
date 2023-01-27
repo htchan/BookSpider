@@ -80,7 +80,7 @@ func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *int) {
 			defer wg.Done()
 			defer serv.client.Release()
 
-			bk := model.NewBook(serv.Name, i)
+			bk := model.NewBook(serv.name, i)
 			err := serv.ExploreBook(&bk)
 			if err != nil {
 				*errorCount += 1

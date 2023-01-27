@@ -214,7 +214,7 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 				rpo.EXPECT().SaveError(&model.Book{Site: "test-patch-missing-records", ID: 5, HashCode: model.GenerateHash(), Error: err}, err)
 
 				return ServiceImp{
-					Name:   "test-patch-missing-records",
+					name:   "test-patch-missing-records",
 					rpo:    rpo,
 					client: c,
 					parser: p,

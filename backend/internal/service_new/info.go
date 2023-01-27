@@ -25,7 +25,7 @@ func (serv *ServiceImp) BookFileLocation(bk *model.Book) string {
 	return filepath.Join(serv.conf.Storage, filename)
 }
 
-func (serv *ServiceImp) Info(bk *model.Book) string {
+func (serv *ServiceImp) BookInfo(bk *model.Book) string {
 	bytes, err := json.Marshal(bk)
 	if err != nil {
 		return fmt.Sprintf("%s-%v#%v", bk.Site, bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))

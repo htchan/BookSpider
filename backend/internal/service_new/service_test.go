@@ -14,6 +14,37 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
+func TestServiceImp_Name(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		serv ServiceImp
+		want string
+	}{
+		{
+			name: "happy flow",
+			serv: ServiceImp{name: "site name"},
+			want: "site name",
+		},
+		{
+			name: "empty site name",
+			serv: ServiceImp{name: ""},
+			want: "",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			got := test.serv.Name()
+
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
 func Test_LoadService(t *testing.T) {
 	t.Parallel()
 
@@ -52,7 +83,7 @@ func Test_LoadService(t *testing.T) {
 				ctx:    nil,
 			},
 			expectService: &ServiceImp{
-				Name: "test service",
+				name: "test service",
 				conf: config.SiteConfig{
 					GoquerySelectorConfig: config.GoquerySelectorConfig{
 						Title:          "title",

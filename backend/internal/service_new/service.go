@@ -22,6 +22,7 @@ type SiteOperation func() error
 
 //go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
 type Service interface {
+	Name() string
 	Backup() error
 	ValidateEnd() error
 	Download() error
@@ -38,12 +39,15 @@ type Service interface {
 	UpdateBook(*model.Book) error
 	ValidateBookEnd(*model.Book) error
 
-	Info(*model.Book) string
+	BookInfo(*model.Book) string
 	BookContent(*model.Book) (string, error)
 
 	Book(id int, hash string) (*model.Book, error)
 	QueryBooks(title, writer string, limit, offset int) ([]model.Book, error)
 	RandomBooks(limit int) ([]model.Book, error)
+
+	Stats() repo.Summary
+	DBStats() sql.DBStats
 }
 
 var (
@@ -51,7 +55,7 @@ var (
 )
 
 type ServiceImp struct {
-	Name   string
+	name   string
 	client client.Client
 	parser parse.Parser
 	conf   config.SiteConfig
@@ -59,6 +63,16 @@ type ServiceImp struct {
 }
 
 var _ Service = (*ServiceImp)(nil)
+
+func (serv ServiceImp) Name() string {
+	return serv.name
+}
+func (serv *ServiceImp) Stats() repo.Summary {
+	return serv.rpo.Stats()
+}
+func (serv *ServiceImp) DBStats() sql.DBStats {
+	return serv.rpo.DBStats()
+}
 
 func LoadService(
 	name string,
@@ -73,7 +87,7 @@ func LoadService(
 	}
 
 	return &ServiceImp{
-		Name:   name,
+		name:   name,
 		conf:   conf,
 		client: client.NewClientV2(&conf, weight, ctx),
 		parser: parser,
