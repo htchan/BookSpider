@@ -11,8 +11,9 @@ import (
 )
 
 type Selector struct {
-	selector string
-	attr     string
+	selector        string
+	attr            string
+	unwantedContent []string
 }
 
 type GoqueryParser struct {
@@ -37,10 +38,16 @@ var (
 var _ parse.Parser = (*GoqueryParser)(nil)
 
 func (s *Selector) Parse(selection *goquery.Selection) string {
+	result := selection.AttrOr(s.attr, "")
 	if s.attr == "" {
-		return selection.Text()
+		result = selection.Text()
 	}
-	return selection.AttrOr(s.attr, "")
+
+	for _, content := range s.unwantedContent {
+		result = strings.ReplaceAll(result, content, "")
+	}
+
+	return result
 }
 
 func LoadParser(conf *config.GoquerySelectorsConfig) (*GoqueryParser, error) {
@@ -62,15 +69,15 @@ func LoadParser(conf *config.GoquerySelectorsConfig) (*GoqueryParser, error) {
 	}
 
 	return &GoqueryParser{
-		titleSelector:            Selector{selector: conf.Title.Selector, attr: conf.Title.Attr},
-		writerSelector:           Selector{selector: conf.Writer.Selector, attr: conf.Writer.Attr},
-		bookTypeSelector:         Selector{selector: conf.BookType.Selector, attr: conf.BookType.Attr},
-		lastUpdateSelector:       Selector{selector: conf.LastUpdate.Selector, attr: conf.LastUpdate.Attr},
-		lastChapterSelector:      Selector{selector: conf.LastChapter.Selector, attr: conf.LastChapter.Attr},
-		bookChapterURLSelector:   Selector{selector: conf.BookChapterURL.Selector, attr: conf.BookChapterURL.Attr},
-		bookChapterTitleSelector: Selector{selector: conf.BookChapterTitle.Selector, attr: conf.BookChapterTitle.Attr},
-		ChapterTitleSelector:     Selector{selector: conf.ChapterTitle.Selector, attr: conf.ChapterTitle.Attr},
-		ChapterContentSelector:   Selector{selector: conf.ChapterContent.Selector, attr: conf.ChapterContent.Attr},
+		titleSelector:            Selector{selector: conf.Title.Selector, attr: conf.Title.Attr, unwantedContent: conf.Title.UnwantedContent},
+		writerSelector:           Selector{selector: conf.Writer.Selector, attr: conf.Writer.Attr, unwantedContent: conf.Writer.UnwantedContent},
+		bookTypeSelector:         Selector{selector: conf.BookType.Selector, attr: conf.BookType.Attr, unwantedContent: conf.BookType.UnwantedContent},
+		lastUpdateSelector:       Selector{selector: conf.LastUpdate.Selector, attr: conf.LastUpdate.Attr, unwantedContent: conf.LastUpdate.UnwantedContent},
+		lastChapterSelector:      Selector{selector: conf.LastChapter.Selector, attr: conf.LastChapter.Attr, unwantedContent: conf.LastChapter.UnwantedContent},
+		bookChapterURLSelector:   Selector{selector: conf.BookChapterURL.Selector, attr: conf.BookChapterURL.Attr, unwantedContent: conf.BookChapterURL.UnwantedContent},
+		bookChapterTitleSelector: Selector{selector: conf.BookChapterTitle.Selector, attr: conf.BookChapterTitle.Attr, unwantedContent: conf.BookChapterTitle.UnwantedContent},
+		ChapterTitleSelector:     Selector{selector: conf.ChapterTitle.Selector, attr: conf.ChapterTitle.Attr, unwantedContent: conf.ChapterTitle.UnwantedContent},
+		ChapterContentSelector:   Selector{selector: conf.ChapterContent.Selector, attr: conf.ChapterContent.Attr, unwantedContent: conf.ChapterContent.UnwantedContent},
 	}, nil
 }
 

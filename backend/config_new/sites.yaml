@@ -24,32 +24,29 @@ xbiquge:
 
   goquery_selectors:
     title:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:book_name"]
+      attr: content
     writer:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:author"]
+      attr: content
     book_type:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:category"]
+      attr: content
     update_date:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:update_time"]
+      attr: content
     update_chapter:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:latest_chapter_name"]
+      attr: content
     book_chapter_url:
-      selector: ""
-      attr: ""
+      selector: dd>a
+      attr: href
     book_chapter_title:
-      selector: ""
-      attr: ""
+      selector: dd>a
     chapter_title:
-      selector: ""
-      attr: ""
+      selector: div.bookname>h1
     chapter_content:
-      selector: ""
-      attr: ""
+      selector: div.content
   
   availability:
     url: https://www.xbiquge.so/
@@ -80,32 +77,28 @@ xqishu:
 
   goquery_selectors:
     title:
-      selector: ""
-      attr: ""
+      selector: div.tit1>h1
     writer:
-      selector: ""
-      attr: ""
+      selector: div.date:nth-child(1)
+      unwanted_content:
+        - 小说作者：
     book_type:
-      selector: ""
-      attr: ""
+      selector: div.crumbs:nth-child(2)
     update_date:
-      selector: ""
-      attr: ""
+      selector: div.date:nth-child(3)
+      unwanted_content:
+        - 更新日期：
     update_chapter:
-      selector: ""
-      attr: ""
+      selector: a.zx_zhang
     book_chapter_url:
-      selector: ""
-      attr: ""
+      selector: div.book_con_list>ul>li>a
+      attr: href
     book_chapter_title:
-      selector: ""
-      attr: ""
+      selector: div.book_con_list>ul>li>a
     chapter_title:
-      selector: ""
-      attr: ""
+      selector: div.date>h1
     chapter_content:
-      selector: ""
-      attr: ""
+      selector: div.book_content
   
   availability:
     url: http://www.aidusk.com
@@ -136,32 +129,29 @@ xqishu:
 
   goquery_selectors:
     title:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:book_name"]
+      attr: content
     writer:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:author"]
+      attr: content
     book_type:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:category"]
+      attr: content
     update_date:
-      selector: ""
-      attr: ""
+      selector: div.txt_info:nth-child(4)
+      unwanted_content:
+        - 更新时间：
     update_chapter:
-      selector: ""
-      attr: ""
+      selector: div.yulan:last-child>a
     book_chapter_url:
-      selector: ""
-      attr: ""
+      selector: div.yulan>li>a
+      attr: href
     book_chapter_title:
-      selector: ""
-      attr: ""
+      selector: div.yulan>li>a
     chapter_title:
-      selector: ""
-      attr: ""
+      selector: div.date>h1
     chapter_content:
-      selector: ""
-      attr: ""
+      selector: div.book_content
   
   availability:
     url: https://www.80xs.la/
@@ -308,32 +298,29 @@ hjwzw:
 
   goquery_selectors:
     title:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:book_name"]
+      attr: content
     writer:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:author"]
+      attr: content
     book_type:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:category"]
+      attr: content
     update_date:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:update_time"]
+      attr: content
     update_chapter:
-      selector: ""
-      attr: ""
+      selector: meta[property="og:novel:latest_chapter_name"]
+      attr: content
     book_chapter_url:
-      selector: ""
-      attr: ""
+      selector: td>a
+      attr: href
     book_chapter_title:
-      selector: ""
-      attr: ""
+      selector: td>a
     chapter_title:
-      selector: ""
-      attr: ""
+      selector: td>h1
     chapter_content:
-      selector: ""
-      attr: ""
+      selector: div>p
 
   availability:
     url: https://tw.hjwzw.com

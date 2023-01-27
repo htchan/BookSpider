@@ -21,15 +21,15 @@ func TestSeletor_Parse(t *testing.T) {
 	}{
 		{
 			name:     "happy flow with empty attr (return text)",
-			selector: Selector{selector: "a", attr: ""},
+			selector: Selector{selector: "a", attr: "", unwantedContent: []string{"t", "a", "s"}},
 			html:     `<html><a>test</a></html>`,
-			want:     "test",
+			want:     "e",
 		},
 		{
 			name:     "happy flow with existing attr",
-			selector: Selector{selector: "a", attr: "href"},
+			selector: Selector{selector: "a", attr: "href", unwantedContent: []string{"t", "a", "s"}},
 			html:     `<html><a href="abc">test</a></html>`,
-			want:     "abc",
+			want:     "bc",
 		},
 		{
 			name:     "not existing attr",
@@ -75,36 +75,36 @@ func Test_LoadParser(t *testing.T) {
 		{
 			name: "load parser successfully",
 			conf: &config.GoquerySelectorsConfig{
-				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
-				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
-				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: ""},
-				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: ""},
-				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: ""},
-				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "href"},
-				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: ""},
-				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
-				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
+				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: "", UnwantedContent: nil},
+				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: "", UnwantedContent: nil},
+				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: "", UnwantedContent: nil},
+				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: "", UnwantedContent: nil},
+				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: "", UnwantedContent: nil},
+				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "href", UnwantedContent: nil},
+				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "", UnwantedContent: nil},
+				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: "", UnwantedContent: nil},
+				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: "", UnwantedContent: nil},
 			},
 			expectedParser: &GoqueryParser{
-				titleSelector:            Selector{"title", ""},
-				writerSelector:           Selector{"writer", ""},
-				bookTypeSelector:         Selector{"book-type", ""},
-				lastUpdateSelector:       Selector{"update-date", ""},
-				lastChapterSelector:      Selector{"update-chapter", ""},
-				bookChapterURLSelector:   Selector{"book-chapter", "href"},
-				bookChapterTitleSelector: Selector{"book-chapter", ""},
-				ChapterTitleSelector:     Selector{"chapter-title", ""},
-				ChapterContentSelector:   Selector{"chapter-content", ""},
+				titleSelector:            Selector{"title", "", nil},
+				writerSelector:           Selector{"writer", "", nil},
+				bookTypeSelector:         Selector{"book-type", "", nil},
+				lastUpdateSelector:       Selector{"update-date", "", nil},
+				lastChapterSelector:      Selector{"update-chapter", "", nil},
+				bookChapterURLSelector:   Selector{"book-chapter", "href", nil},
+				bookChapterTitleSelector: Selector{"book-chapter", "", nil},
+				ChapterTitleSelector:     Selector{"chapter-title", "", nil},
+				ChapterContentSelector:   Selector{"chapter-content", "", nil},
 			},
 			expectError: false,
 		},
 		{
 			name: "missing book info selector",
 			conf: &config.GoquerySelectorsConfig{
-				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: ""},
-				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: ""},
-				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
-				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
+				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "", UnwantedContent: nil},
+				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "", UnwantedContent: nil},
+				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: "", UnwantedContent: nil},
+				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: "", UnwantedContent: nil},
 			},
 			expectedParser: nil,
 			expectError:    true,
@@ -112,13 +112,13 @@ func Test_LoadParser(t *testing.T) {
 		{
 			name: "missing book chapter selector",
 			conf: &config.GoquerySelectorsConfig{
-				Title:          config.GoquerySelectorConfig{Selector: "title", Attr: ""},
-				Writer:         config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
-				BookType:       config.GoquerySelectorConfig{Selector: "book-type", Attr: ""},
-				LastUpdate:     config.GoquerySelectorConfig{Selector: "update-date", Attr: ""},
-				LastChapter:    config.GoquerySelectorConfig{Selector: "update-chapter", Attr: ""},
-				ChapterTitle:   config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
-				ChapterContent: config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
+				Title:          config.GoquerySelectorConfig{Selector: "title", Attr: "", UnwantedContent: nil},
+				Writer:         config.GoquerySelectorConfig{Selector: "writer", Attr: "", UnwantedContent: nil},
+				BookType:       config.GoquerySelectorConfig{Selector: "book-type", Attr: "", UnwantedContent: nil},
+				LastUpdate:     config.GoquerySelectorConfig{Selector: "update-date", Attr: "", UnwantedContent: nil},
+				LastChapter:    config.GoquerySelectorConfig{Selector: "update-chapter", Attr: "", UnwantedContent: nil},
+				ChapterTitle:   config.GoquerySelectorConfig{Selector: "chapter-title", Attr: "", UnwantedContent: nil},
+				ChapterContent: config.GoquerySelectorConfig{Selector: "chapter-content", Attr: "", UnwantedContent: nil},
 			},
 			expectedParser: nil,
 			expectError:    true,
@@ -126,13 +126,13 @@ func Test_LoadParser(t *testing.T) {
 		{
 			name: "missing chapter info selector",
 			conf: &config.GoquerySelectorsConfig{
-				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
-				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
-				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: ""},
-				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: ""},
-				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: ""},
-				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "href"},
-				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: ""},
+				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: "", UnwantedContent: nil},
+				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: "", UnwantedContent: nil},
+				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: "", UnwantedContent: nil},
+				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: "", UnwantedContent: nil},
+				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: "", UnwantedContent: nil},
+				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "href", UnwantedContent: nil},
+				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter", Attr: "", UnwantedContent: nil},
 			},
 			expectedParser: nil,
 			expectError:    true,
@@ -140,15 +140,15 @@ func Test_LoadParser(t *testing.T) {
 		{
 			name: "mismatch chapter url and title selector",
 			conf: &config.GoquerySelectorsConfig{
-				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
-				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
-				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: ""},
-				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: ""},
-				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: ""},
-				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter-url", Attr: "href"},
-				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter-title", Attr: ""},
-				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
-				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
+				Title:            config.GoquerySelectorConfig{Selector: "title", Attr: "", UnwantedContent: nil},
+				Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: "", UnwantedContent: nil},
+				BookType:         config.GoquerySelectorConfig{Selector: "book-type", Attr: "", UnwantedContent: nil},
+				LastUpdate:       config.GoquerySelectorConfig{Selector: "update-date", Attr: "", UnwantedContent: nil},
+				LastChapter:      config.GoquerySelectorConfig{Selector: "update-chapter", Attr: "", UnwantedContent: nil},
+				BookChapterURL:   config.GoquerySelectorConfig{Selector: "book-chapter-url", Attr: "href", UnwantedContent: nil},
+				BookChapterTitle: config.GoquerySelectorConfig{Selector: "book-chapter-title", Attr: "", UnwantedContent: nil},
+				ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: "", UnwantedContent: nil},
+				ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: "", UnwantedContent: nil},
 			},
 			expectedParser: nil,
 			expectError:    true,
@@ -186,11 +186,11 @@ func TestParser_ParseBook(t *testing.T) {
 		{
 			name: "success parse html to book info",
 			parser: GoqueryParser{
-				titleSelector:       Selector{"title", ""},
-				writerSelector:      Selector{"writer", ""},
-				bookTypeSelector:    Selector{"type", ""},
-				lastUpdateSelector:  Selector{"date", ""},
-				lastChapterSelector: Selector{"chapter", ""},
+				titleSelector:       Selector{"title", "", nil},
+				writerSelector:      Selector{"writer", "", nil},
+				bookTypeSelector:    Selector{"type", "", nil},
+				lastUpdateSelector:  Selector{"date", "", nil},
+				lastChapterSelector: Selector{"chapter", "", nil},
 			},
 			html: `<html><head>
 			<title>title</title>
@@ -211,11 +211,11 @@ func TestParser_ParseBook(t *testing.T) {
 		{
 			name: "some book info in missing",
 			parser: GoqueryParser{
-				titleSelector:       Selector{"title", ""},
-				writerSelector:      Selector{"writer", ""},
-				bookTypeSelector:    Selector{"type", ""},
-				lastUpdateSelector:  Selector{"date", ""},
-				lastChapterSelector: Selector{"chapter", ""},
+				titleSelector:       Selector{"title", "", nil},
+				writerSelector:      Selector{"writer", "", nil},
+				bookTypeSelector:    Selector{"type", "", nil},
+				lastUpdateSelector:  Selector{"date", "", nil},
+				lastChapterSelector: Selector{"chapter", "", nil},
 			},
 			html: `<html><head>
 			<title>title</title>
@@ -258,8 +258,8 @@ func TestParser_ParserChapterList(t *testing.T) {
 		{
 			name: "success parse html to book info",
 			parser: GoqueryParser{
-				bookChapterURLSelector:   Selector{"ul>li", "href"},
-				bookChapterTitleSelector: Selector{"ul>li", ""},
+				bookChapterURLSelector:   Selector{"ul>li", "href", nil},
+				bookChapterTitleSelector: Selector{"ul>li", "", nil},
 			},
 			html: `<html><body>
 			<ul>
@@ -279,8 +279,8 @@ func TestParser_ParserChapterList(t *testing.T) {
 		{
 			name: "some chapter missing link / title",
 			parser: GoqueryParser{
-				bookChapterURLSelector:   Selector{"ul>li", "href"},
-				bookChapterTitleSelector: Selector{"ul>li", ""},
+				bookChapterURLSelector:   Selector{"ul>li", "href", nil},
+				bookChapterTitleSelector: Selector{"ul>li", "", nil},
 			},
 			html: `<html><body>
 			<ul>
@@ -302,8 +302,8 @@ func TestParser_ParserChapterList(t *testing.T) {
 		{
 			name: "no chapters",
 			parser: GoqueryParser{
-				bookChapterURLSelector:   Selector{"ul>li", "href"},
-				bookChapterTitleSelector: Selector{"ul>li", ""},
+				bookChapterURLSelector:   Selector{"ul>li", "href", nil},
+				bookChapterTitleSelector: Selector{"ul>li", "", nil},
 			},
 			html: `<html><body>
 			</body></html>`,
@@ -342,8 +342,8 @@ func TestParser_parserChapter(t *testing.T) {
 		{
 			name: "success parse html to book info",
 			parser: GoqueryParser{
-				ChapterTitleSelector:   Selector{"title", ""},
-				ChapterContentSelector: Selector{"content", ""},
+				ChapterTitleSelector:   Selector{"title", "", nil},
+				ChapterContentSelector: Selector{"content", "", nil},
 			},
 			html: `<html><body>
 			<title>title</title>
@@ -362,8 +362,8 @@ func TestParser_parserChapter(t *testing.T) {
 		{
 			name: "content not found",
 			parser: GoqueryParser{
-				ChapterTitleSelector:   Selector{"title", ""},
-				ChapterContentSelector: Selector{"content", ""},
+				ChapterTitleSelector:   Selector{"title", "", nil},
+				ChapterContentSelector: Selector{"content", "", nil},
 			},
 			html: `<html><body>
 			<title>title</title>

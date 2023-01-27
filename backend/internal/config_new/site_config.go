@@ -50,6 +50,7 @@ type GoquerySelectorsConfig struct {
 }
 
 type GoquerySelectorConfig struct {
-	Selector string `yaml:"selector"`
-	Attr     string `yaml:"attr"`
+	Selector        string   `yaml:"selector"`
+	Attr            string   `yaml:"attr"`
+	UnwantedContent []string `yaml:"unwanted_content"`
 }
