@@ -23,14 +23,33 @@ xbiquge:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
   
   availability:
     url: https://www.xbiquge.so/
@@ -60,14 +79,33 @@ xqishu:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
   
   availability:
     url: http://www.aidusk.com
@@ -97,14 +135,33 @@ xqishu:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
   
   availability:
     url: https://www.80xs.la/
@@ -134,14 +191,33 @@ bestory:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
   
   availability:
     url: https://www.book100.com
@@ -175,14 +251,33 @@ ck101:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
 
   availability:
     url: https://www.ck101.org
@@ -212,14 +307,33 @@ hjwzw:
   update_date_layout: null
 
   goquery_selectors:
-    title: ""
-    writer: ""
-    book_type: ""
-    update_date: ""
-    update_chapter: ""
-    book_chapter: ""
-    chapter_title: ""
-    chapter_content: ""
+    title:
+      selector: ""
+      attr: ""
+    writer:
+      selector: ""
+      attr: ""
+    book_type:
+      selector: ""
+      attr: ""
+    update_date:
+      selector: ""
+      attr: ""
+    update_chapter:
+      selector: ""
+      attr: ""
+    book_chapter_url:
+      selector: ""
+      attr: ""
+    book_chapter_title:
+      selector: ""
+      attr: ""
+    chapter_title:
+      selector: ""
+      attr: ""
+    chapter_content:
+      selector: ""
+      attr: ""
 
   availability:
     url: https://tw.hjwzw.com
