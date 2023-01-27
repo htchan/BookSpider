@@ -9,14 +9,13 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service/book"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
 )
 
 //go:embed templates/*
 var files embed.FS
 
-func GeneralLiteHandler(sites map[string]*site.Site) http.HandlerFunc {
+func GeneralLiteHandler(services map[string]service_new.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		t, err := template.ParseFS(files, "templates/sites.html")
 		if err != nil {
@@ -24,7 +23,7 @@ func GeneralLiteHandler(sites map[string]*site.Site) http.HandlerFunc {
 			log.Println(err)
 			return
 		}
-		t.Execute(res, sites)
+		t.Execute(res, services)
 	}
 }
 
@@ -36,13 +35,13 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	st := req.Context().Value("site").(*site.Site)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
 	t.Execute(res, struct {
 		Name    string
 		Summary repo.Summary
 	}{
-		Name:    st.Name,
-		Summary: st.Info(),
+		Name:    serv.Name(),
+		Summary: serv.Stats(),
 	})
 }
 
@@ -54,16 +53,16 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	st := req.Context().Value("site").(*site.Site)
-	title := req.Context().Value("title").(string)
-	writer := req.Context().Value("writer").(string)
-	limit := req.Context().Value("limit").(int)
-	offset := req.Context().Value("offset").(int)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	title := req.Context().Value(TITLE_KEY).(string)
+	writer := req.Context().Value(WRITER_KEY).(string)
+	limit := req.Context().Value(LIMIT_KEY).(int)
+	offset := req.Context().Value(OFFSET_KEY).(int)
 	if limit == 0 {
 		limit = 10
 	}
 
-	bks, err := st.QueryBooks(title, writer, limit, offset)
+	bks, err := serv.QueryBooks(title, writer, limit, offset)
 
 	if err != nil {
 		res.WriteHeader(404)
@@ -78,7 +77,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		lastPageNo int
 		nextPageNo int
 	}{
-		Name:       st.Name,
+		Name:       serv.Name(),
 		Books:      bks,
 		lastPageNo: pageNo - 1,
 		nextPageNo: pageNo + 1,
@@ -93,13 +92,13 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	st := req.Context().Value("site").(*site.Site)
-	limit := req.Context().Value("limit").(int)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	limit := req.Context().Value(LIMIT_KEY).(int)
 	if limit == 0 {
 		limit = 10
 	}
 
-	bks, err := st.RandomBooks(limit)
+	bks, err := serv.RandomBooks(limit)
 
 	if err != nil {
 		res.WriteHeader(404)
@@ -111,7 +110,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		Name  string
 		Books []model.Book
 	}{
-		Name:  st.Name,
+		Name:  serv.Name(),
 		Books: bks,
 	})
 }
@@ -124,22 +123,22 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	st := req.Context().Value("site").(*site.Site)
-	bk := req.Context().Value("book").(*model.Book)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 
 	t.Execute(res, struct {
 		Name string
 		Book *model.Book
 	}{
-		Name: st.Name,
+		Name: serv.Name(),
 		Book: bk,
 	})
 }
 
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
-	st := req.Context().Value("site").(*site.Site)
-	bk := req.Context().Value("book").(*model.Book)
-	content, err := book.Content(bk, st.StConf)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	bk := req.Context().Value(BOOK_KEY).(*model.Book)
+	content, err := serv.BookContent(bk)
 	if err != nil {
 		res.WriteHeader(500)
 		fmt.Println(err)

@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -9,26 +10,38 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/htchan/BookSpider/internal/config"
+	"github.com/golang/mock/gomock"
 	"github.com/htchan/BookSpider/internal/mock"
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/service/site"
+	"github.com/htchan/BookSpider/internal/repo"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_GeneralInfoAPIHandler(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		sites     map[string]*site.Site
-		url       string
-		expectRes string
+		name       string
+		setupServs func(ctrl *gomock.Controller) map[string]service_new.Service
+		url        string
+		expectRes  string
 	}{
 		{
 			name: "works",
-			sites: map[string]*site.Site{
-				"test1": site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
-				"test2": site.MockSite("test2", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			setupServs: func(ctrl *gomock.Controller) map[string]service_new.Service {
+				serv1 := mock.NewMockService(ctrl)
+				serv1.EXPECT().Name().Return("test1")
+				serv1.EXPECT().Stats().Return(repo.Summary{})
+
+				serv2 := mock.NewMockService(ctrl)
+				serv2.EXPECT().Name().Return("test2")
+				serv2.EXPECT().Stats().Return(repo.Summary{})
+
+				return map[string]service_new.Service{
+					"test1": serv1,
+					"test2": serv2,
+				}
 			},
 			url:       "https://localhost/data",
 			expectRes: `{"test1":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null},"test2":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}}`,
@@ -40,6 +53,9 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
@@ -47,13 +63,9 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 			}
 
 			res := httptest.NewRecorder()
-			GeneralInfoAPIHandler(test.sites).ServeHTTP(res, req)
+			GeneralInfoAPIHandler(test.setupServs(ctrl)).ServeHTTP(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -63,13 +75,18 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		st        *site.Site
+		setupServ func(ctrl *gomock.Controller) service_new.Service
 		url       string
 		expectRes string
 	}{
 		{
-			name:      "works",
-			st:        site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "works",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().Stats().Return(repo.Summary{})
+
+				return serv
+			},
 			url:       "https://localhost/data",
 			expectRes: `{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}`,
 		},
@@ -80,22 +97,21 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "site", test.st)
+			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
 			SiteInfoAPIHandler(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -105,31 +121,41 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		st            *site.Site
+		setupServ     func(ctrl *gomock.Controller) service_new.Service
 		url           string
 		title, writer string
 		limit, offset int
 		expectRes     string
 	}{
 		{
-			name:      "works",
-			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "works",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().QueryBooks("title 1", "writer 1", 10, 0).Return([]model.Book{}, nil)
+
+				return serv
+			},
 			url:       "https://localhost/data",
-			title:     "title",
-			writer:    "writer",
+			title:     "title 1",
+			writer:    "writer 1",
 			limit:     10,
 			offset:    0,
 			expectRes: `{"books":[]}`,
 		},
 		{
-			name:      "error",
-			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "error",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().QueryBooks("title 1", "writer 1", 10, 0).Return(nil, errors.New("some error"))
+
+				return serv
+			},
 			url:       "https://localhost/data",
-			title:     "title",
-			writer:    "writer",
+			title:     "title 1",
+			writer:    "writer 1",
 			limit:     10,
 			offset:    0,
-			expectRes: `{"error":"error"}`,
+			expectRes: `{"error":"some error"}`,
 		},
 	}
 
@@ -138,26 +164,25 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "site", test.st)
-			ctx = context.WithValue(ctx, "title", test.title)
-			ctx = context.WithValue(ctx, "writer", test.writer)
-			ctx = context.WithValue(ctx, "limit", test.limit)
-			ctx = context.WithValue(ctx, "offset", test.offset)
+			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, TITLE_KEY, test.title)
+			ctx = context.WithValue(ctx, WRITER_KEY, test.writer)
+			ctx = context.WithValue(ctx, LIMIT_KEY, test.limit)
+			ctx = context.WithValue(ctx, OFFSET_KEY, test.offset)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
 			BookSearchAPIHandler(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -167,26 +192,36 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		st            *site.Site
+		setupServ     func(ctrl *gomock.Controller) service_new.Service
 		url           string
 		limit, offset int
 		expectRes     string
 	}{
 		{
-			name:      "works",
-			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "works",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().RandomBooks(10).Return([]model.Book{}, nil)
+
+				return serv
+			},
 			url:       "https://localhost/data",
 			limit:     10,
 			offset:    0,
 			expectRes: `{"books":[]}`,
 		},
 		{
-			name:      "error",
-			st:        site.MockSite("test", mock.MockRepostory{Err: errors.New("error")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "error",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().RandomBooks(10).Return(nil, errors.New("some error"))
+
+				return serv
+			},
 			url:       "https://localhost/data",
 			limit:     10,
 			offset:    0,
-			expectRes: `{"error":"error"}`,
+			expectRes: `{"error":"some error"}`,
 		},
 	}
 
@@ -195,24 +230,23 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "site", test.st)
-			ctx = context.WithValue(ctx, "limit", test.limit)
-			ctx = context.WithValue(ctx, "offset", test.offset)
+			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, LIMIT_KEY, test.limit)
+			ctx = context.WithValue(ctx, OFFSET_KEY, test.offset)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
 			BookRandomAPIHandler(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -231,11 +265,11 @@ func Test_BookInfoAPIHandler(t *testing.T) {
 			url:  "https://localhost/data",
 			bk: &model.Book{
 				Site: "test", ID: 1, HashCode: 100,
-				Title: "title", Writer: model.Writer{ID: 2, Name: "writer"}, Type: "type",
+				Title: "title 1", Writer: model.Writer{ID: 2, Name: "writer 1"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
 				IsDownloaded: true, Error: errors.New("error"),
 			},
-			expectRes: `{"site":"test","id":1,"hash_code":"2s","title":"title","writer":"writer","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"error":"error"}`,
+			expectRes: `{"site":"test","id":1,"hash_code":"2s","title":"title 1","writer":"writer 1","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"error":"error"}`,
 		},
 	}
 
@@ -249,17 +283,13 @@ func Test_BookInfoAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "book", test.bk)
+			ctx := context.WithValue(req.Context(), BOOK_KEY, test.bk)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
 			BookInfoAPIHandler(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -277,23 +307,37 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 	tests := []struct {
 		name      string
 		url       string
-		st        *site.Site
+		setupServ func(ctrl *gomock.Controller) service_new.Service
 		bk        *model.Book
 		expectRes string
 	}{
 		{
-			name:      "works",
-			url:       "https://localhost/data",
-			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{Storage: "storage"}, nil),
+			name: "works",
+			url:  "https://localhost/data",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().
+					BookContent(&model.Book{Site: "test", ID: 1, HashCode: 0, Status: model.End, IsDownloaded: true}).
+					Return("data", nil)
+
+				return serv
+			},
 			bk:        &model.Book{Site: "test", ID: 1, HashCode: 0, Status: model.End, IsDownloaded: true},
 			expectRes: `data`,
 		},
 		{
-			name:      "bk is not download",
-			url:       "https://localhost/data",
-			st:        site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{Storage: "storage"}, nil),
+			name: "bk is not download",
+			url:  "https://localhost/data",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().
+					BookContent(&model.Book{Site: "test", ID: 1, HashCode: 0}).
+					Return("", errors.New("some error"))
+
+				return serv
+			},
 			bk:        &model.Book{Site: "test", ID: 1, HashCode: 0},
-			expectRes: `{"error":"book is not download"}`,
+			expectRes: `{"error":"some error"}`,
 		},
 	}
 
@@ -302,23 +346,22 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "site", test.st)
+			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
 			ctx = context.WithValue(ctx, "book", test.bk)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
 			BookDownloadAPIHandler(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
@@ -327,17 +370,25 @@ func Test_DBStatAPIHandler(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		url       string
-		sites     map[string]*site.Site
-		expectRes string
+		name       string
+		url        string
+		setupServs func(ctrl *gomock.Controller) map[string]service_new.Service
+		expectRes  string
 	}{
 		{
 			name: "works",
 			url:  "https://localhost/data",
-			sites: map[string]*site.Site{
-				"test1": site.MockSite("test1", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
-				"test2": site.MockSite("test2", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			setupServs: func(ctrl *gomock.Controller) map[string]service_new.Service {
+				serv1 := mock.NewMockService(ctrl)
+				serv1.EXPECT().DBStats().Return(sql.DBStats{})
+
+				serv2 := mock.NewMockService(ctrl)
+				serv2.EXPECT().DBStats().Return(sql.DBStats{})
+
+				return map[string]service_new.Service{
+					"test1": serv1,
+					"test2": serv2,
+				}
 			},
 			expectRes: `{"stats":[{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0},{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0}]}`,
 		},
@@ -348,6 +399,9 @@ func Test_DBStatAPIHandler(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
 			req, err := http.NewRequest("GET", test.url, nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
@@ -355,13 +409,9 @@ func Test_DBStatAPIHandler(t *testing.T) {
 			}
 
 			res := httptest.NewRecorder()
-			DBStatsAPIHandler(test.sites).ServeHTTP(res, req)
+			DBStatsAPIHandler(test.setupServs(ctrl)).ServeHTTP(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
 )
 
 var UnauthorizedError = errors.New("unauthorized")
@@ -20,7 +20,7 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 	fmt.Fprintln(res, fmt.Sprintf(`{ "error": "%v" }`, err))
 }
 
-func AddAPIRoutes(router chi.Router, sites map[string]*site.Site) {
+func AddAPIRoutes(router chi.Router, services map[string]service_new.Service) {
 	api_route_prefix := os.Getenv("BOOK_SPIDER_API_ROUTE_PREFIX")
 	if api_route_prefix == "" {
 		api_route_prefix = "/api/novel"
@@ -38,25 +38,25 @@ func AddAPIRoutes(router chi.Router, sites map[string]*site.Site) {
 			),
 		)
 
-		router.Get("/info", GeneralInfoAPIHandler(sites))
+		router.Get("/info", GeneralInfoAPIHandler(services))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
-			router.Use(GetSite(sites))
+			router.Use(GetSiteMiddleware(services))
 			router.Get("/", SiteInfoAPIHandler)
 
 			router.Route("/books", func(router chi.Router) {
-				router.With(GetSearchParams).With(GetPageParams).Get("/search", BookSearchAPIHandler)
-				router.With(GetPageParams).Get("/random", BookRandomAPIHandler)
+				router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", BookSearchAPIHandler)
+				router.With(GetPageParamsMiddleware).Get("/random", BookRandomAPIHandler)
 
 				router.Route("/{idHash:\\d+(-[\\w]+)?}", func(router chi.Router) {
 					// idHash format is <id>-<hash>
-					router.Use(GetBook)
+					router.Use(GetBookMiddleware)
 					router.With().Get("/", BookInfoAPIHandler)
 					router.Get("/download", BookDownloadAPIHandler)
 				})
 			})
 		})
 
-		router.Get("/db-stats", DBStatsAPIHandler(sites))
+		router.Get("/db-stats", DBStatsAPIHandler(services))
 	})
 }

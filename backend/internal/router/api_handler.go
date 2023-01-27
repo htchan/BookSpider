@@ -8,33 +8,32 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service/book"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
 )
 
-func GeneralInfoAPIHandler(sites map[string]*site.Site) http.HandlerFunc {
+func GeneralInfoAPIHandler(services map[string]service_new.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		stInfo := make(map[string]repo.Summary)
-		for _, site := range sites {
-			stInfo[site.Name] = site.Info()
+		servInfo := make(map[string]repo.Summary)
+		for _, serv := range services {
+			servInfo[serv.Name()] = serv.Stats()
 		}
-		json.NewEncoder(res).Encode(stInfo)
+		json.NewEncoder(res).Encode(servInfo)
 	}
 }
 
 func SiteInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
-	st := req.Context().Value("site").(*site.Site)
-	json.NewEncoder(res).Encode(st.Info())
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	json.NewEncoder(res).Encode(serv.Stats())
 }
 
 func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
-	st := req.Context().Value("site").(*site.Site)
-	title := req.Context().Value("title").(string)
-	writer := req.Context().Value("writer").(string)
-	limit := req.Context().Value("limit").(int)
-	offset := req.Context().Value("offset").(int)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	title := req.Context().Value(TITLE_KEY).(string)
+	writer := req.Context().Value(WRITER_KEY).(string)
+	limit := req.Context().Value(LIMIT_KEY).(int)
+	offset := req.Context().Value(OFFSET_KEY).(int)
 
-	bks, err := st.QueryBooks(title, writer, limit, offset)
+	bks, err := serv.QueryBooks(title, writer, limit, offset)
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
@@ -43,10 +42,10 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
-	st := req.Context().Value("site").(*site.Site)
-	limit := req.Context().Value("limit").(int)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	limit := req.Context().Value(LIMIT_KEY).(int)
 
-	bks, err := st.RandomBooks(limit)
+	bks, err := serv.RandomBooks(limit)
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
@@ -55,14 +54,14 @@ func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
-	bk := req.Context().Value("book").(*model.Book)
+	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	json.NewEncoder(res).Encode(bk)
 }
 
 func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
-	st := req.Context().Value("site").(*site.Site)
-	bk := req.Context().Value("book").(*model.Book)
-	content, err := book.Content(bk, st.StConf)
+	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	bk := req.Context().Value(BOOK_KEY).(*model.Book)
+	content, err := serv.BookContent(bk)
 	if err != nil {
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
@@ -73,11 +72,11 @@ func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func DBStatsAPIHandler(sites map[string]*site.Site) http.HandlerFunc {
+func DBStatsAPIHandler(services map[string]service_new.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		stats := make([]sql.DBStats, 0, len(sites))
-		for _, st := range sites {
-			stats = append(stats, st.Stat())
+		stats := make([]sql.DBStats, 0, len(services))
+		for _, serv := range services {
+			stats = append(stats, serv.DBStats())
 		}
 		json.NewEncoder(res).Encode(map[string][]sql.DBStats{"stats": stats})
 	}

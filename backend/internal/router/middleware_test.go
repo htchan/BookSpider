@@ -10,37 +10,38 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/htchan/BookSpider/internal/config"
 	"github.com/htchan/BookSpider/internal/mock"
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/service/site"
+	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_GetSite(t *testing.T) {
+func Test_GetSiteMiddleware(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name       string
-		sites      map[string]*site.Site
-		siteName   string
-		expectSite *site.Site
-		expectRes  string
+		name      string
+		servs     map[string]service_new.Service
+		siteName  string
+		wantServ  service_new.Service
+		expectRes string
 	}{
 		{
 			name: "set request context site if site found",
-			sites: map[string]*site.Site{
-				"test": {Name: "hello"},
+			servs: map[string]service_new.Service{
+				"test": &service_new.ServiceImp{},
 			},
-			siteName:   "test",
-			expectSite: &site.Site{Name: "hello"},
-			expectRes:  "site found",
+			siteName:  "test",
+			wantServ:  &service_new.ServiceImp{},
+			expectRes: "site found",
 		},
 		{
-			name:       "return error if site not found",
-			sites:      map[string]*site.Site{},
-			siteName:   "unknown",
-			expectSite: nil,
-			expectRes:  `{"error": "site not found"}`,
+			name:      "return error if site not found",
+			servs:     map[string]service_new.Service{},
+			siteName:  "unknown",
+			wantServ:  nil,
+			expectRes: `{"error": "site not found"}`,
 		},
 	}
 
@@ -48,21 +49,26 @@ func Test_GetSite(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			handlerFunc := GetSite(test.sites)
+
+			handlerFunc := GetSiteMiddleware(test.servs)
 			handler := handlerFunc(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					st := r.Context().Value("site").(*site.Site)
-					if !cmp.Equal(st, test.expectSite) {
-						t.Errorf("site diff: %v", cmp.Diff(st, test.expectSite))
-					}
+					serv := r.Context().Value(SERV_KEY).(service_new.Service)
+
+					assert.Equal(t, test.wantServ, serv)
+					// if !cmp.Equal(st, test.wantServ) {
+					// 	t.Errorf("site diff: %v", cmp.Diff(st, test.wantServ))
+					// }
 					fmt.Fprintln(w, test.expectRes)
 				},
 			))
+
 			req, err := http.NewRequest("GET", "", nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
+
 			ctx := req.Context()
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("siteName", test.siteName)
@@ -80,43 +86,65 @@ func Test_GetSite(t *testing.T) {
 	}
 }
 
-func Test_GetBook(t *testing.T) {
+func Test_GetBookMiddleware(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name       string
-		st         *site.Site
+		setupServ  func(ctrl *gomock.Controller) service_new.Service
 		idHash     string
 		expectBook *model.Book
-		expectRes  string
+		wantRes    string
 	}{
 		{
-			name:       "set request context book for existing id",
-			st:         site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "set request context book for existing id",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().Book(1, "").Return(&model.Book{ID: 1}, nil)
+
+				return serv
+			},
 			idHash:     "1",
 			expectBook: &model.Book{ID: 1},
-			expectRes:  "ok",
+			wantRes:    "ok",
 		},
 		{
-			name:       "set request context book for existing id-hash",
-			st:         site.MockSite("test", mock.MockRepostory{}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "set request context book for existing id-hash",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().Book(1, "2s").Return(&model.Book{ID: 1, HashCode: 100}, nil)
+
+				return serv
+			},
 			idHash:     "1-2s",
 			expectBook: &model.Book{ID: 1, HashCode: 100},
-			expectRes:  "ok",
+			wantRes:    "ok",
 		},
 		{
-			name:       "return error for not exist id",
-			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "return error for not exist id",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().Book(1, "").Return(nil, errors.New("some error"))
+				serv.EXPECT().Name().Return("")
+
+				return serv
+			},
 			idHash:     "1",
-			expectBook: &model.Book{ID: 1},
-			expectRes:  `{"error": "book not found"}`,
+			expectBook: nil,
+			wantRes:    `{"error": "book not found"}`,
 		},
 		{
-			name:       "return error for not exist id",
-			st:         site.MockSite("test", mock.MockRepostory{Err: errors.New("")}, &config.BookConfig{}, &config.SiteConfig{}, nil),
+			name: "return error for not exist id",
+			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+				serv := mock.NewMockService(ctrl)
+				serv.EXPECT().Book(1, "2s").Return(nil, errors.New("some error"))
+				serv.EXPECT().Name().Return("")
+
+				return serv
+			},
 			idHash:     "1-2s",
 			expectBook: &model.Book{ID: 1, HashCode: 100},
-			expectRes:  `{"error": "book not found"}`,
+			wantRes:    `{"error": "book not found"}`,
 		},
 	}
 
@@ -124,21 +152,29 @@ func Test_GetBook(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			handler := GetBook(http.HandlerFunc(
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			handler := GetBookMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					bk := r.Context().Value("book").(*model.Book)
+					bk := r.Context().Value(BOOK_KEY).(*model.Book)
 					if !cmp.Equal(bk, test.expectBook) {
 						t.Errorf("site diff: %v", cmp.Diff(bk, test.expectBook))
 					}
-					fmt.Fprintln(w, test.expectRes)
+					fmt.Fprintln(w, test.wantRes)
 				},
 			))
+
 			req, err := http.NewRequest("GET", "", nil)
 			if err != nil {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), "site", test.st)
+
+			serv := test.setupServ(ctrl)
+
+			ctx := context.WithValue(req.Context(), SERV_KEY, serv)
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("idHash", test.idHash)
 			ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
@@ -146,60 +182,56 @@ func Test_GetBook(t *testing.T) {
 			res := httptest.NewRecorder()
 			handler.ServeHTTP(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
+			assert.Equal(t, test.wantRes, strings.Trim(res.Body.String(), "\n"))
 		})
 	}
 }
 
-func Test_GetSearchParams(t *testing.T) {
+func Test_GetSearchParamsMiddleware(t *testing.T) {
 
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		url          string
-		expectTitle  string
-		expectWriter string
-		expectRes    string
+		name       string
+		url        string
+		wantTitle  string
+		wantWriter string
+		wantRes    string
 	}{
 		{
-			name:         "empty title and empty writer",
-			url:          "http://host/test",
-			expectTitle:  "",
-			expectWriter: "",
-			expectRes:    "ok",
+			name:       "empty title and empty writer",
+			url:        "http://host/test",
+			wantTitle:  "",
+			wantWriter: "",
+			wantRes:    "ok",
 		},
 		{
-			name:         "title and not writer",
-			url:          "http://host/test?title=title",
-			expectTitle:  "title",
-			expectWriter: "",
-			expectRes:    "ok",
+			name:       "title and not writer",
+			url:        "http://host/test?title=title",
+			wantTitle:  "title",
+			wantWriter: "",
+			wantRes:    "ok",
 		},
 		{
-			name:         "not title and writer",
-			url:          "http://host/test?writer=writer",
-			expectTitle:  "",
-			expectWriter: "writer",
-			expectRes:    "ok",
+			name:       "not title and writer",
+			url:        "http://host/test?writer=writer",
+			wantTitle:  "",
+			wantWriter: "writer",
+			wantRes:    "ok",
 		},
 		{
-			name:         "title and writer",
-			url:          "http://host/test?title=title&writer=writer",
-			expectTitle:  "title",
-			expectWriter: "writer",
-			expectRes:    "ok",
+			name:       "title and writer",
+			url:        "http://host/test?title=title&writer=writer",
+			wantTitle:  "title",
+			wantWriter: "writer",
+			wantRes:    "ok",
 		},
 		{
-			name:         "some unrelated params",
-			url:          "http://host/test?title=title&writer=writer&unknown=1",
-			expectTitle:  "title",
-			expectWriter: "writer",
-			expectRes:    "ok",
+			name:       "some unrelated params",
+			url:        "http://host/test?title=title&writer=writer&unknown=1",
+			wantTitle:  "title",
+			wantWriter: "writer",
+			wantRes:    "ok",
 		},
 	}
 
@@ -207,19 +239,19 @@ func Test_GetSearchParams(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			handler := GetSearchParams(http.HandlerFunc(
+			handler := GetSearchParamsMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					title := r.Context().Value("title").(string)
-					if title != test.expectTitle {
-						t.Errorf("title diff: %v", cmp.Diff(title, test.expectTitle))
+					title := r.Context().Value(TITLE_KEY).(string)
+					if title != test.wantTitle {
+						t.Errorf("title diff: %v", cmp.Diff(title, test.wantTitle))
 					}
 
-					writer := r.Context().Value("writer").(string)
-					if writer != test.expectWriter {
-						t.Errorf("writer diff: %v", cmp.Diff(writer, test.expectWriter))
+					writer := r.Context().Value(WRITER_KEY).(string)
+					if writer != test.wantWriter {
+						t.Errorf("writer diff: %v", cmp.Diff(writer, test.wantWriter))
 					}
 
-					fmt.Fprintln(w, test.expectRes)
+					fmt.Fprintln(w, test.wantRes)
 				},
 			))
 			req, err := http.NewRequest("GET", test.url, nil)
@@ -230,67 +262,67 @@ func Test_GetSearchParams(t *testing.T) {
 			res := httptest.NewRecorder()
 			handler.ServeHTTP(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
+			if strings.Trim(res.Body.String(), "\n") != test.wantRes {
 				t.Error("got different response as expect")
 				t.Error(res.Body.String())
-				t.Error(test.expectRes)
+				t.Error(test.wantRes)
 			}
 		})
 	}
 }
 
-func Test_GetPageParams(t *testing.T) {
+func Test_GetPageParamsMiddleware(t *testing.T) {
 
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		url          string
-		expectLimit  int
-		expectOffset int
-		expectRes    string
+		name       string
+		url        string
+		wantLimit  int
+		wantOffset int
+		wantRes    string
 	}{
 		{
-			name:         "empty page and empty per page",
-			url:          "http://host/test",
-			expectLimit:  0,
-			expectOffset: 0,
-			expectRes:    "ok",
+			name:       "empty page and empty per page",
+			url:        "http://host/test",
+			wantLimit:  0,
+			wantOffset: 0,
+			wantRes:    "ok",
 		},
 		{
-			name:         "page and empty per page",
-			url:          "http://host/test?page=2",
-			expectLimit:  0,
-			expectOffset: 0,
-			expectRes:    "ok",
+			name:       "page and empty per page",
+			url:        "http://host/test?page=2",
+			wantLimit:  0,
+			wantOffset: 0,
+			wantRes:    "ok",
 		},
 		{
-			name:         "empty page and per page",
-			url:          "http://host/test?per_page=10",
-			expectLimit:  10,
-			expectOffset: 0,
-			expectRes:    "ok",
+			name:       "empty page and per page",
+			url:        "http://host/test?per_page=10",
+			wantLimit:  10,
+			wantOffset: 0,
+			wantRes:    "ok",
 		},
 		{
-			name:         "page and per page",
-			url:          "http://host/test?page=2&per_page=10",
-			expectLimit:  10,
-			expectOffset: 20,
-			expectRes:    "ok",
+			name:       "page and per page",
+			url:        "http://host/test?page=2&per_page=10",
+			wantLimit:  10,
+			wantOffset: 20,
+			wantRes:    "ok",
 		},
 		{
-			name:         "page and per page of unknown value",
-			url:          "http://host/test?page=limit&per_page=offset",
-			expectLimit:  0,
-			expectOffset: 0,
-			expectRes:    "ok",
+			name:       "page and per page of unknown value",
+			url:        "http://host/test?page=limit&per_page=offset",
+			wantLimit:  0,
+			wantOffset: 0,
+			wantRes:    "ok",
 		},
 		{
-			name:         "some unrelated params",
-			url:          "http://host/test?page=2&per_page=10&unknown=1",
-			expectLimit:  10,
-			expectOffset: 20,
-			expectRes:    "ok",
+			name:       "some unrelated params",
+			url:        "http://host/test?page=2&per_page=10&unknown=1",
+			wantLimit:  10,
+			wantOffset: 20,
+			wantRes:    "ok",
 		},
 	}
 
@@ -298,19 +330,19 @@ func Test_GetPageParams(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			handler := GetPageParams(http.HandlerFunc(
+			handler := GetPageParamsMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					limit := r.Context().Value("limit").(int)
-					if limit != test.expectLimit {
-						t.Errorf("limit diff: %v", cmp.Diff(limit, test.expectLimit))
+					limit := r.Context().Value(LIMIT_KEY).(int)
+					if limit != test.wantLimit {
+						t.Errorf("limit diff: %v", cmp.Diff(limit, test.wantLimit))
 					}
 
-					offset := r.Context().Value("offset").(int)
-					if offset != test.expectOffset {
-						t.Errorf("offset diff: %v", cmp.Diff(offset, test.expectOffset))
+					offset := r.Context().Value(OFFSET_KEY).(int)
+					if offset != test.wantOffset {
+						t.Errorf("offset diff: %v", cmp.Diff(offset, test.wantOffset))
 					}
 
-					fmt.Fprintln(w, test.expectRes)
+					fmt.Fprintln(w, test.wantRes)
 				},
 			))
 			req, err := http.NewRequest("GET", test.url, nil)
@@ -321,10 +353,10 @@ func Test_GetPageParams(t *testing.T) {
 			res := httptest.NewRecorder()
 			handler.ServeHTTP(res, req)
 
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
+			if strings.Trim(res.Body.String(), "\n") != test.wantRes {
 				t.Error("got different response as expect")
 				t.Error(res.Body.String())
-				t.Error(test.expectRes)
+				t.Error(test.wantRes)
 			}
 		})
 	}
