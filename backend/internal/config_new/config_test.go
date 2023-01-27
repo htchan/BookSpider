@@ -56,14 +56,33 @@ func Test_LoadConfig(t *testing.T) {
 					max_download_concurrency: 10
 					update_date_layout: null
 					goquery_selectors:
-						title: title
-						writer: writer
-						book_type: book-type
-						update_date: update-date
-						update_chapter: update-chapter
-						book_chapter: book-chapter
-						chapter_title: chapter-title
-						chapter_content: chapter-content
+						title:
+							selector: title
+							attr:
+						writer:
+							selector: writer
+							attr:
+						book_type:
+							selector: book-type
+							attr:
+						update_date:
+							selector: update-date
+							attr:
+						update_chapter:
+							selector: update-chapter
+							attr:
+						book_chapter_url: 
+							selector: book-chapter
+							attr: href
+						book_chapter_title: 
+							selector: book-chapter
+							attr: 
+						chapter_title: 
+							selector: chapter-title
+							attr:
+						chapter_content:
+							selector: chapter-content
+							attr:
 					availability:
 						url: availability
 						check_string: check
@@ -91,14 +110,33 @@ func Test_LoadConfig(t *testing.T) {
 					max_download_concurrency: 10
 					update_date_layout: null
 					goquery_selectors:
-						title: title
-						writer: writer
-						book_type: book-type
-						update_date: update-date
-						update_chapter: update-chapter
-						book_chapter: book-chapter
-						chapter_title: chapter-title
-						chapter_content: chapter-content
+						title:
+							selector: title
+							attr:
+						writer:
+							selector: writer
+							attr:
+						book_type:
+							selector: book-type
+							attr:
+						update_date:
+							selector: update-date
+							attr:
+						update_chapter:
+							selector: update-chapter
+							attr:
+						book_chapter_url: 
+							selector: book-chapter
+							attr: href
+						book_chapter_title: 
+							selector: book-chapter
+							attr: 
+						chapter_title: 
+							selector: chapter-title
+							attr:
+						chapter_content:
+							selector: chapter-content
+							attr:
 					availability:
 						url: availability
 						check_string: check`,
@@ -135,15 +173,16 @@ func Test_LoadConfig(t *testing.T) {
 						},
 						MaxExploreError:        100,
 						MaxDownloadConcurrency: 10,
-						GoquerySelectorConfig: GoquerySelectorConfig{
-							Title:          "title",
-							Writer:         "writer",
-							BookType:       "book-type",
-							LastUpdate:     "update-date",
-							LastChapter:    "update-chapter",
-							BookChapter:    "book-chapter",
-							ChapterTitle:   "chapter-title",
-							ChapterContent: "chapter-content",
+						GoquerySelectorsConfig: GoquerySelectorsConfig{
+							Title:            GoquerySelectorConfig{"title", ""},
+							Writer:           GoquerySelectorConfig{"writer", ""},
+							BookType:         GoquerySelectorConfig{"book-type", ""},
+							LastUpdate:       GoquerySelectorConfig{"update-date", ""},
+							LastChapter:      GoquerySelectorConfig{"update-chapter", ""},
+							BookChapterURL:   GoquerySelectorConfig{"book-chapter", "href"},
+							BookChapterTitle: GoquerySelectorConfig{"book-chapter", ""},
+							ChapterTitle:     GoquerySelectorConfig{"chapter-title", ""},
+							ChapterContent:   GoquerySelectorConfig{"chapter-content", ""},
 						},
 						AvailabilityConfig: AvailabilityConfig{
 							URL:         "availability",
@@ -172,15 +211,16 @@ func Test_LoadConfig(t *testing.T) {
 						},
 						MaxExploreError:        100,
 						MaxDownloadConcurrency: 10,
-						GoquerySelectorConfig: GoquerySelectorConfig{
-							Title:          "title",
-							Writer:         "writer",
-							BookType:       "book-type",
-							LastUpdate:     "update-date",
-							LastChapter:    "update-chapter",
-							BookChapter:    "book-chapter",
-							ChapterTitle:   "chapter-title",
-							ChapterContent: "chapter-content",
+						GoquerySelectorsConfig: GoquerySelectorsConfig{
+							Title:            GoquerySelectorConfig{"title", ""},
+							Writer:           GoquerySelectorConfig{"writer", ""},
+							BookType:         GoquerySelectorConfig{"book-type", ""},
+							LastUpdate:       GoquerySelectorConfig{"update-date", ""},
+							LastChapter:      GoquerySelectorConfig{"update-chapter", ""},
+							BookChapterURL:   GoquerySelectorConfig{"book-chapter", "href"},
+							BookChapterTitle: GoquerySelectorConfig{"book-chapter", ""},
+							ChapterTitle:     GoquerySelectorConfig{"chapter-title", ""},
+							ChapterContent:   GoquerySelectorConfig{"chapter-content", ""},
 						},
 						AvailabilityConfig: AvailabilityConfig{
 							URL:         "availability",

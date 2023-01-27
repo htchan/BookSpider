@@ -67,15 +67,16 @@ func Test_LoadService(t *testing.T) {
 			args: Args{
 				name: "test service",
 				conf: config.SiteConfig{
-					GoquerySelectorConfig: config.GoquerySelectorConfig{
-						Title:          "title",
-						Writer:         "writer",
-						BookType:       "type",
-						LastUpdate:     "date",
-						LastChapter:    "chapter",
-						BookChapter:    "chapters",
-						ChapterTitle:   "chapter-title",
-						ChapterContent: "chapter-content",
+					GoquerySelectorsConfig: config.GoquerySelectorsConfig{
+						Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
+						Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
+						BookType:         config.GoquerySelectorConfig{Selector: "type", Attr: ""},
+						LastUpdate:       config.GoquerySelectorConfig{Selector: "date", Attr: ""},
+						LastChapter:      config.GoquerySelectorConfig{Selector: "chapter", Attr: ""},
+						BookChapterURL:   config.GoquerySelectorConfig{Selector: "chapters", Attr: "href"},
+						BookChapterTitle: config.GoquerySelectorConfig{Selector: "chapters", Attr: ""},
+						ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
+						ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
 					},
 				},
 				db:     nil,
@@ -85,28 +86,30 @@ func Test_LoadService(t *testing.T) {
 			expectService: &ServiceImp{
 				name: "test service",
 				conf: config.SiteConfig{
-					GoquerySelectorConfig: config.GoquerySelectorConfig{
-						Title:          "title",
-						Writer:         "writer",
-						BookType:       "type",
-						LastUpdate:     "date",
-						LastChapter:    "chapter",
-						BookChapter:    "chapters",
-						ChapterTitle:   "chapter-title",
-						ChapterContent: "chapter-content",
+					GoquerySelectorsConfig: config.GoquerySelectorsConfig{
+						Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
+						Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
+						BookType:         config.GoquerySelectorConfig{Selector: "type", Attr: ""},
+						LastUpdate:       config.GoquerySelectorConfig{Selector: "date", Attr: ""},
+						LastChapter:      config.GoquerySelectorConfig{Selector: "chapter", Attr: ""},
+						BookChapterURL:   config.GoquerySelectorConfig{Selector: "chapters", Attr: "href"},
+						BookChapterTitle: config.GoquerySelectorConfig{Selector: "chapters", Attr: ""},
+						ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
+						ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
 					},
 				},
 				client: client.NewClientV2(&config.SiteConfig{}, nil, nil),
 				parser: func() *goquery.GoqueryParser {
-					parser, _ := goquery.LoadParser(&config.GoquerySelectorConfig{
-						Title:          "title",
-						Writer:         "writer",
-						BookType:       "type",
-						LastUpdate:     "date",
-						LastChapter:    "chapter",
-						BookChapter:    "chapters",
-						ChapterTitle:   "chapter-title",
-						ChapterContent: "chapter-content",
+					parser, _ := goquery.LoadParser(&config.GoquerySelectorsConfig{
+						Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
+						Writer:           config.GoquerySelectorConfig{Selector: "writer", Attr: ""},
+						BookType:         config.GoquerySelectorConfig{Selector: "type", Attr: ""},
+						LastUpdate:       config.GoquerySelectorConfig{Selector: "date", Attr: ""},
+						LastChapter:      config.GoquerySelectorConfig{Selector: "chapter", Attr: ""},
+						BookChapterURL:   config.GoquerySelectorConfig{Selector: "chapters", Attr: "href"},
+						BookChapterTitle: config.GoquerySelectorConfig{Selector: "chapters", Attr: ""},
+						ChapterTitle:     config.GoquerySelectorConfig{Selector: "chapter-title", Attr: ""},
+						ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
 					})
 					return parser
 				}(),

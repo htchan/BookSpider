@@ -81,7 +81,7 @@ func LoadService(
 	weight *semaphore.Weighted,
 	ctx *context.Context,
 ) (Service, error) {
-	parser, err := goquery.LoadParser(&conf.GoquerySelectorConfig)
+	parser, err := goquery.LoadParser(&conf.GoquerySelectorsConfig)
 	if err != nil {
 		return nil, fmt.Errorf("load %v service failed: %w", name, err)
 	}

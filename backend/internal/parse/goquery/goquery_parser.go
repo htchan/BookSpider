@@ -10,48 +10,67 @@ import (
 	"github.com/htchan/BookSpider/internal/parse"
 )
 
+type Selector struct {
+	selector string
+	attr     string
+}
+
 type GoqueryParser struct {
-	titleSelector          string
-	writerSelector         string
-	bookTypeSelector       string
-	lastUpdateSelector     string
-	lastChapterSelector    string
-	bookChapterSelector    string
-	ChapterTitleSelector   string
-	ChapterContentSelector string
+	titleSelector            Selector
+	writerSelector           Selector
+	bookTypeSelector         Selector
+	lastUpdateSelector       Selector
+	lastChapterSelector      Selector
+	bookChapterURLSelector   Selector
+	bookChapterTitleSelector Selector
+	ChapterTitleSelector     Selector
+	ChapterContentSelector   Selector
 }
 
 var (
-	ErrBookInfoSelectorEmpty    = errors.New("book info selector is empty")
-	ErrChapterListSelectorEmpty = errors.New("chapter list selector is empty")
-	ErrChapterSelectorEmpty     = errors.New("chapter selector is empty")
+	ErrBookInfoSelectorEmpty       = errors.New("book info selector is empty")
+	ErrChapterListSelectorEmpty    = errors.New("chapter list selector is empty")
+	ErrBookChapterSelectorMismatch = errors.New("book chapter url selector different from title selector")
+	ErrChapterSelectorEmpty        = errors.New("chapter selector is empty")
 )
 
 var _ parse.Parser = (*GoqueryParser)(nil)
 
-func LoadParser(conf *config.GoquerySelectorConfig) (*GoqueryParser, error) {
-	if conf.Title == "" || conf.Writer == "" || conf.BookType == "" ||
-		conf.LastUpdate == "" || conf.LastChapter == "" {
+func (s *Selector) Parse(selection *goquery.Selection) string {
+	if s.attr == "" {
+		return selection.Text()
+	}
+	return selection.AttrOr(s.attr, "")
+}
+
+func LoadParser(conf *config.GoquerySelectorsConfig) (*GoqueryParser, error) {
+	if conf.Title.Selector == "" || conf.Writer.Selector == "" || conf.BookType.Selector == "" ||
+		conf.LastUpdate.Selector == "" || conf.LastChapter.Selector == "" {
 		return nil, ErrBookInfoSelectorEmpty
 	}
 
-	if conf.BookChapter == "" {
+	if conf.BookChapterURL.Selector == "" && conf.BookChapterTitle.Selector == "" {
 		return nil, ErrChapterListSelectorEmpty
 	}
 
-	if conf.ChapterContent == "" || conf.ChapterTitle == "" {
+	if conf.BookChapterURL.Selector != conf.BookChapterTitle.Selector {
+		return nil, ErrBookChapterSelectorMismatch
+	}
+
+	if conf.ChapterContent.Selector == "" || conf.ChapterTitle.Selector == "" {
 		return nil, ErrChapterSelectorEmpty
 	}
 
 	return &GoqueryParser{
-		titleSelector:          conf.Title,
-		writerSelector:         conf.Writer,
-		bookTypeSelector:       conf.BookType,
-		lastUpdateSelector:     conf.LastUpdate,
-		lastChapterSelector:    conf.LastChapter,
-		bookChapterSelector:    conf.BookChapter,
-		ChapterTitleSelector:   conf.ChapterTitle,
-		ChapterContentSelector: conf.ChapterContent,
+		titleSelector:            Selector{selector: conf.Title.Selector, attr: conf.Title.Attr},
+		writerSelector:           Selector{selector: conf.Writer.Selector, attr: conf.Writer.Attr},
+		bookTypeSelector:         Selector{selector: conf.BookType.Selector, attr: conf.BookType.Attr},
+		lastUpdateSelector:       Selector{selector: conf.LastUpdate.Selector, attr: conf.LastUpdate.Attr},
+		lastChapterSelector:      Selector{selector: conf.LastChapter.Selector, attr: conf.LastChapter.Attr},
+		bookChapterURLSelector:   Selector{selector: conf.BookChapterURL.Selector, attr: conf.BookChapterURL.Attr},
+		bookChapterTitleSelector: Selector{selector: conf.BookChapterTitle.Selector, attr: conf.BookChapterTitle.Attr},
+		ChapterTitleSelector:     Selector{selector: conf.ChapterTitle.Selector, attr: conf.ChapterTitle.Attr},
+		ChapterContentSelector:   Selector{selector: conf.ChapterContent.Selector, attr: conf.ChapterContent.Attr},
 	}, nil
 }
 
@@ -62,11 +81,11 @@ func (parser *GoqueryParser) ParseBook(html string) (*parse.ParsedBookFields, er
 	}
 
 	fields := parse.NewParsedBookFields(
-		doc.Find(parser.titleSelector).Text(),
-		doc.Find(parser.writerSelector).Text(),
-		doc.Find(parser.bookTypeSelector).Text(),
-		doc.Find(parser.lastUpdateSelector).Text(),
-		doc.Find(parser.lastChapterSelector).Text(),
+		parser.titleSelector.Parse(doc.Find(parser.titleSelector.selector)),
+		parser.writerSelector.Parse(doc.Find(parser.writerSelector.selector)),
+		parser.bookTypeSelector.Parse(doc.Find(parser.bookTypeSelector.selector)),
+		parser.lastUpdateSelector.Parse(doc.Find(parser.lastUpdateSelector.selector)),
+		parser.lastChapterSelector.Parse(doc.Find(parser.lastChapterSelector.selector)),
 	)
 
 	err = fields.Validate()
@@ -85,9 +104,9 @@ func (parser *GoqueryParser) ParseChapterList(html string) (*parse.ParsedChapter
 
 	var chapters parse.ParsedChapterList
 
-	doc.Find(parser.bookChapterSelector).Each(func(i int, s *goquery.Selection) {
-		url, _ := s.Attr("href")
-		title := s.Text()
+	doc.Find(parser.bookChapterURLSelector.selector).Each(func(i int, s *goquery.Selection) {
+		url := parser.bookChapterURLSelector.Parse(s)
+		title := parser.bookChapterTitleSelector.Parse(s)
 		chapters.Append(url, title)
 	})
 
@@ -106,10 +125,10 @@ func (parser *GoqueryParser) ParseChapter(html string) (*parse.ParsedChapterFiel
 	}
 
 	content := ""
-	title := doc.Find(parser.ChapterTitleSelector).Text()
+	title := parser.ChapterTitleSelector.Parse(doc.Find(parser.ChapterTitleSelector.selector))
 
-	doc.Find(parser.ChapterContentSelector).Each(func(i int, s *goquery.Selection) {
-		content += strings.TrimSpace(s.Text()) + "\n"
+	doc.Find(parser.ChapterContentSelector.selector).Each(func(i int, s *goquery.Selection) {
+		content += strings.TrimSpace(parser.ChapterContentSelector.Parse(s)) + "\n"
 	})
 
 	fields := parse.NewParsedChapterFields(title, content)

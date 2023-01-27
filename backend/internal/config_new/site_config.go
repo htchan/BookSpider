@@ -12,11 +12,11 @@ type SiteConfig struct {
 	Storage         string `yaml:"storage"`
 	BackupDirectory string `yaml:"backup_directory"`
 
-	URL                    URLConfig             `yaml:"urls"`
-	MaxExploreError        int                   `yaml:"max_explore_error"`
-	MaxDownloadConcurrency int                   `yaml:"max_download_concurrency"`
-	GoquerySelectorConfig  GoquerySelectorConfig `yaml:"goquery_selectors"`
-	AvailabilityConfig     AvailabilityConfig    `yaml:"availability"`
+	URL                    URLConfig              `yaml:"urls"`
+	MaxExploreError        int                    `yaml:"max_explore_error"`
+	MaxDownloadConcurrency int                    `yaml:"max_download_concurrency"`
+	GoquerySelectorsConfig GoquerySelectorsConfig `yaml:"goquery_selectors"`
+	AvailabilityConfig     AvailabilityConfig     `yaml:"availability"`
 	// UpdateDateLayour string    `yaml:"update_date_layout"`
 }
 
@@ -37,13 +37,19 @@ type AvailabilityConfig struct {
 	CheckString string `yaml:"check_string"`
 }
 
+type GoquerySelectorsConfig struct {
+	Title            GoquerySelectorConfig `yaml:"title"`
+	Writer           GoquerySelectorConfig `yaml:"writer"`
+	BookType         GoquerySelectorConfig `yaml:"book_type"`
+	LastUpdate       GoquerySelectorConfig `yaml:"update_date"`
+	LastChapter      GoquerySelectorConfig `yaml:"update_chapter"`
+	BookChapterURL   GoquerySelectorConfig `yaml:"book_chapter_url"`
+	BookChapterTitle GoquerySelectorConfig `yaml:"book_chapter_title"`
+	ChapterTitle     GoquerySelectorConfig `yaml:"chapter_title"`
+	ChapterContent   GoquerySelectorConfig `yaml:"chapter_content"`
+}
+
 type GoquerySelectorConfig struct {
-	Title          string `yaml:"title"`
-	Writer         string `yaml:"writer"`
-	BookType       string `yaml:"book_type"`
-	LastUpdate     string `yaml:"update_date"`
-	LastChapter    string `yaml:"update_chapter"`
-	BookChapter    string `yaml:"book_chapter"`
-	ChapterTitle   string `yaml:"chapter_title"`
-	ChapterContent string `yaml:"chapter_content"`
+	Selector string `yaml:"selector"`
+	Attr     string `yaml:"attr"`
 }
