@@ -18,21 +18,23 @@ func OperateAllSites(services map[string]service_new.Service, operation string) 
 	// loop all sites by calling process
 	var wg sync.WaitGroup
 	for _, serv := range services {
-		st := serv
-		go func(st service_new.Service) {
+		serv := serv
+		wg.Add(1)
+		go func(serv service_new.Service) {
 			defer wg.Done()
-			err := OperateSite(st, operation)
+			err := OperateSite(serv, operation)
 
 			if err != nil {
-				log.Printf("[%v] Operate fail: %v\n", st.Name, err)
+				log.Printf("[%v] Operate fail: %v\n", serv.Name(), err)
 			}
-		}(st)
+		}(serv)
 	}
 	wg.Wait()
 	return nil
 }
 
 func OperateSite(serv service_new.Service, operation string) error {
+	log.Println(operation)
 	if serv == nil {
 		return errors.New("Site not found")
 	}
@@ -71,6 +73,8 @@ func OperateBook(serv service_new.Service, bk *model.Book, operation string) err
 		err = serv.DownloadBook(bk)
 	case "update":
 		err = serv.UpdateBook(bk)
+	case "explore":
+		err = serv.ExploreBook(bk)
 	case "validate":
 		err = serv.ValidateBookEnd(bk)
 	default:

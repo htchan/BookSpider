@@ -46,7 +46,7 @@ xbiquge:
     chapter_title:
       selector: div.bookname>h1
     chapter_content:
-      selector: div.content
+      selector: div#content
   
   availability:
     url: https://www.xbiquge.so/
@@ -79,13 +79,13 @@ xqishu:
     title:
       selector: div.tit1>h1
     writer:
-      selector: div.date:nth-child(1)
+      selector: div.date>span:nth-child(1)
       unwanted_content:
         - 小说作者：
     book_type:
-      selector: div.crumbs:nth-child(2)
+      selector: div.crumbs>a:nth-child(2)
     update_date:
-      selector: div.date:nth-child(3)
+      selector: div.date>span:nth-child(3)
       unwanted_content:
         - 更新日期：
     update_chapter:
@@ -231,12 +231,12 @@ ck101:
   urls: #desktop
     base: https://www.ck101.org/book/%v.html
     download: https://www.ck101.org/0/%v/
-    chapterPrefix: https://www.ck101.org
+    chapter_prefix: https://www.ck101.org
     availability: https://www.ck101.org
   # urls: #mobile
   #   base: https://www.ck101.org/book/%v.html
   #   download: https://www.ck101.org/0/%v/
-  #   chapterPrefix: https://www.ck101.org
+  #   chapter_prefix: https://www.ck101.org
   max_explore_error: 100
   update_date_layout: null
 
@@ -274,7 +274,7 @@ ck101:
     check_string: 卡提諾
 
 hjwzw:
-  decode_method: big5
+  decode_method: utf8
   max_threads: 1000
   request_timeout: 30s
   circuit_breaker:
@@ -291,7 +291,7 @@ hjwzw:
   urls: #desktop
     base: https://tw.hjwzw.com/Book/%v/
     download: https://tw.hjwzw.com/Book/Chapter/%v/
-    chapterPrefix: https://tw.hjwzw.com
+    chapter_prefix: https://tw.hjwzw.com
     availability: https://tw.hjwzw.com
   max_explore_error: 100
   update_date_layout: null
@@ -313,10 +313,10 @@ hjwzw:
       selector: meta[property="og:novel:latest_chapter_name"]
       attr: content
     book_chapter_url:
-      selector: td>a
+      selector: div#tbchapterlist>table>tbody>tr>td>a
       attr: href
     book_chapter_title:
-      selector: td>a
+      selector: div#tbchapterlist>table>tbody>tr>td>a
     chapter_title:
       selector: td>h1
     chapter_content:

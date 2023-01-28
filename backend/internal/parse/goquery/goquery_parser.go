@@ -40,7 +40,7 @@ var _ parse.Parser = (*GoqueryParser)(nil)
 func (s *Selector) Parse(selection *goquery.Selection) string {
 	result := selection.AttrOr(s.attr, "")
 	if s.attr == "" {
-		result = selection.Text()
+		result = selection.Children().Remove().End().Text()
 	}
 
 	for _, content := range s.unwantedContent {
@@ -113,7 +113,7 @@ func (parser *GoqueryParser) ParseChapterList(html string) (*parse.ParsedChapter
 
 	doc.Find(parser.bookChapterURLSelector.selector).Each(func(i int, s *goquery.Selection) {
 		url := parser.bookChapterURLSelector.Parse(s)
-		title := parser.bookChapterTitleSelector.Parse(s)
+		title := strings.TrimSpace(parser.bookChapterTitleSelector.Parse(s))
 		chapters.Append(url, title)
 	})
 
@@ -126,13 +126,30 @@ func (parser *GoqueryParser) ParseChapterList(html string) (*parse.ParsedChapter
 }
 
 func (parser *GoqueryParser) ParseChapter(html string) (*parse.ParsedChapterFields, error) {
+	replaceItems := []struct {
+		old, new string
+	}{
+		{"<br />", "\n"},
+		{"&nbsp;", ""},
+		{"<b>", ""},
+		{"</b>", ""},
+		{"<p>", ""},
+		{"</p>", ""},
+		{"                ", ""},
+		{"<p/>", "\n"},
+	}
+	for _, replaceItem := range replaceItems {
+		html = strings.ReplaceAll(
+			html, replaceItem.old, replaceItem.new)
+	}
+
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		return nil, fmt.Errorf("parse chapter fail: %w", err)
 	}
 
 	content := ""
-	title := parser.ChapterTitleSelector.Parse(doc.Find(parser.ChapterTitleSelector.selector))
+	title := strings.TrimSpace(parser.ChapterTitleSelector.Parse(doc.Find(parser.ChapterTitleSelector.selector)))
 
 	doc.Find(parser.ChapterContentSelector.selector).Each(func(i int, s *goquery.Selection) {
 		content += strings.TrimSpace(parser.ChapterContentSelector.Parse(s)) + "\n"

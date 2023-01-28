@@ -28,15 +28,15 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 		bk.Status = model.InProgress
 		bk.Error = nil
 		parsedBookFields.Populate(bk)
-		err := serv.rpo.CreateBook(bk)
+		err := serv.rpo.SaveWriter(&bk.Writer)
+		if err != nil {
+			return err
+		}
+		err = serv.rpo.CreateBook(bk)
 		if err != nil {
 			return err
 		}
 
-		err = serv.rpo.SaveWriter(&bk.Writer)
-		if err != nil {
-			return err
-		}
 		log.Printf("[%v] new book found: title: %v", bk, bk.Title)
 	} else if parse.IsUpdatedBook(parsedBookFields, bk) {
 		// TODO: log updated
@@ -44,11 +44,11 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 		bk.Error = nil
 		parsedBookFields.Populate(bk)
 		log.Printf("[%v] updated book found: title: %v", bk, bk.Title)
-		err := serv.rpo.UpdateBook(bk)
+		err := serv.rpo.SaveWriter(&bk.Writer)
 		if err != nil {
 			return err
 		}
-		err = serv.rpo.SaveWriter(&bk.Writer)
+		err = serv.rpo.UpdateBook(bk)
 		if err != nil {
 			return err
 		}

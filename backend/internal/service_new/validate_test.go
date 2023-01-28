@@ -2,7 +2,9 @@ package service
 
 import (
 	"errors"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
@@ -15,19 +17,29 @@ func Test_isEnd(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		chapter string
-		want    bool
+		name string
+		bk   *model.Book
+		want bool
 	}{
 		{
-			name:    "chapter of ended book",
-			chapter: "last chatper （完）",
-			want:    true,
+			name: "book with ended chapter",
+			bk:   &model.Book{UpdateChapter: "last chatper （完）", UpdateDate: strconv.Itoa(time.Now().Year())},
+			want: true,
 		},
 		{
-			name:    "chapter of not ended book",
-			chapter: "chapter in middle",
-			want:    false,
+			name: "book with 1 yr ago update date",
+			bk:   &model.Book{UpdateChapter: "chapter in middle", UpdateDate: strconv.Itoa(time.Now().Year() - 1)},
+			want: false,
+		},
+		{
+			name: "book with 2 yr ago update date",
+			bk:   &model.Book{UpdateChapter: "chapter in middle", UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
+			want: true,
+		},
+		{
+			name: "book with not ended chapter",
+			bk:   &model.Book{UpdateChapter: "chapter in middle", UpdateDate: strconv.Itoa(time.Now().Year())},
+			want: false,
 		},
 	}
 
@@ -36,7 +48,7 @@ func Test_isEnd(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := isEnd(test.chapter)
+			got := isEnd(test.bk)
 			assert.Equal(t, test.want, got)
 		})
 	}
@@ -58,13 +70,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false,
+					ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2),
 				})
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "結尾", IsDownloaded: true},
-			wantBook:     &model.Book{ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false},
+			bk:           &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "結尾", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
+			wantBook:     &model.Book{ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -73,13 +85,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true,
+					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				})
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -98,8 +110,8 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				return ServiceImp{}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.InProgress, IsDownloaded: true},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.InProgress, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -108,13 +120,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true,
+					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				}).Return(errors.New("some error"))
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    true,
 			wantErrorStr: "update book in DB fail: some error",
 		},

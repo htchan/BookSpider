@@ -199,6 +199,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 				), nil)
 
 				rpo := mock.NewMockRepostory(ctrl)
+				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"})
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
 					ID:            5,
@@ -256,6 +257,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 				), nil)
 
 				rpo := mock.NewMockRepostory(ctrl)
+				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"})
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
 					ID:            5,

@@ -22,23 +22,6 @@ func NewChapter(i int, url, title string) Chapter {
 }
 
 func (c *Chapter) OptimizeContent() {
-	replaceItems := []struct {
-		old, new string
-	}{
-		{"<br />", "\n"},
-		{"&nbsp;", ""},
-		{"<b>", ""},
-		{"</b>", ""},
-		{"<p>", ""},
-		{"</p>", ""},
-		{"                ", ""},
-		{"<p/>", "\n"},
-	}
-	for _, replaceItem := range replaceItems {
-		c.Content = strings.ReplaceAll(
-			c.Content, replaceItem.old, replaceItem.new)
-	}
-
 	lines := strings.Split(c.Content, "\n")
 	lines = removeEmptyLines(lines)
 

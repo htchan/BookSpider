@@ -348,14 +348,14 @@ func TestParser_parserChapter(t *testing.T) {
 			html: `<html><body>
 			<title>title</title>
 			<content>
-				some long long long 
-				long long long 
+				some long long long <br />
+				long long long <b>
 				long long long content
 			</content>
 			</body></html>`,
 			expectFields: parse.NewParsedChapterFields(
 				"title",
-				"some long long long \n\t\t\t\tlong long long \n\t\t\t\tlong long long content\n",
+				"some long long long \n\n\t\t\t\tlong long long \n\t\t\t\tlong long long content\n",
 			),
 			expectError: false,
 		},

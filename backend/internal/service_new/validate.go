@@ -2,19 +2,24 @@ package service
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 )
 
-func isEnd(chapter string) bool {
+func isEnd(bk *model.Book) bool {
 	//TODO: fetch all chapter
 	//hint: use book.generateEmptyChapters
 	//TODO: check last n chapter to see if they contains any end keywords
 	//hint: use len(chapters) and the n should come from book config
-	chapter = strings.ReplaceAll(chapter, " ", "")
-	fmt.Println(chapter)
+	if bk.UpdateDate < strconv.Itoa(time.Now().Year()-1) {
+		return true
+	}
+
+	chapter := strings.ReplaceAll(bk.UpdateChapter, " ", "")
 	for _, keyword := range repo.ChapterEndKeywords {
 		if strings.Contains(chapter, keyword) {
 			return true
@@ -25,7 +30,7 @@ func isEnd(chapter string) bool {
 
 func (serv *ServiceImp) ValidateBookEnd(bk *model.Book) error {
 	isUpdated := false
-	if isEnd(bk.UpdateChapter) {
+	if isEnd(bk) {
 		if bk.Status != model.End {
 			bk.IsDownloaded = false
 			bk.Status = model.End

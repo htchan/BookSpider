@@ -79,16 +79,6 @@ func TestChapter_optimizeContent(t *testing.T) {
 		expect  Chapter
 	}{
 		{
-			name:    "remove specific string",
-			chapter: Chapter{Content: "&nbsp;<b></b></p>                "},
-			expect:  Chapter{Content: ""},
-		},
-		{
-			name:    "replace specific string to \\n",
-			chapter: Chapter{Content: "<br /><p/>"},
-			expect:  Chapter{Content: ""},
-		},
-		{
 			name:    "remove space / tab in each line",
 			chapter: Chapter{Content: " abc \n\tdef\t"},
 			expect:  Chapter{Content: "abc\n\ndef"},
