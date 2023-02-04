@@ -52,11 +52,11 @@ func main() {
 	// }
 
 	server := http.Server{
-		Addr:         ":9105",
+		Addr:         ":9427",
 		Handler:      r,
 		ReadTimeout:  30 * time.Second,
-		WriteTimeout: 5 * time.Second,
-		IdleTimeout:  5 * time.Second,
+		WriteTimeout: 300 * time.Second,
+		IdleTimeout:  300 * time.Second,
 	}
 	// go func() {
 	log.Println("start http server")
