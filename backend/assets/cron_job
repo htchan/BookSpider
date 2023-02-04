@@ -1,1 +1,1 @@
-00 20 1-7 * * cd /usr/src/app ; test $(date +\%u) -eq 5 && ./batch 2>&1 > /log/batch.log
+00 20 1-7 * * cd /usr/src/app ; test $(date +\%u) -eq 5 && ./batch > /log/batch.log 2>&1

@@ -29,7 +29,7 @@ services:
             - backend
             - web
         ports:
-            - 9105:9105
+            - 9427:9427
         command: sh -c "./backend > /log/backend.log 2>&1"
 
     frontend:
