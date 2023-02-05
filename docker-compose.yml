@@ -91,7 +91,7 @@ services:
         volumes:
             - ./bin/log:/log
             - type: bind
-              source: ./bin/books
+              source: /mnt/addition/download/Books
               target: /books
             - ./bin/backup:/backup
             - ./backend/config_new:/config

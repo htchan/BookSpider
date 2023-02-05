@@ -1,6 +1,6 @@
 xbiquge:
   decode_method: gbk
-  max_threads: 1000
+  max_threads: 1500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 1000
@@ -54,7 +54,7 @@ xbiquge:
 
 xqishu:
   decode_method: utf8
-  max_threads: 200
+  max_threads: 500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 10
@@ -72,7 +72,8 @@ xqishu:
     download: http://www.aidusk.com/t/%v/
     chapter_prefix: http://www.aidusk.com
     availability: http://www.aidusk.com
-  max_explore_error: 100
+  max_explore_error: 500
+  max_download_concurrency: 5
   update_date_layout: null
 
   goquery_selectors:
@@ -106,7 +107,7 @@ xqishu:
 
 80txt:
   decode_method: utf8
-  max_threads: 1000
+  max_threads: 1500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 1000
@@ -125,6 +126,7 @@ xqishu:
     chapter_prefix: http://www.80xs.la
     availability: http://www.80xs.la
   max_explore_error: 100
+  max_download_concurrency: 5
   update_date_layout: null
 
   goquery_selectors:
@@ -159,7 +161,7 @@ xqishu:
 
 bestory:
   decode_method: big5
-  max_threads: 1000
+  max_threads: 1500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 1000
@@ -178,6 +180,7 @@ bestory:
     chapter_prefix: https://www.book100.com
     availability: https://www.book100.com
   max_explore_error: 100
+  max_download_concurrency: 5
   update_date_layout: null
 
   goquery_selectors:
@@ -215,7 +218,7 @@ bestory:
 
 ck101:
   decode_method: big5
-  max_threads: 1000
+  max_threads: 1500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 1000
@@ -238,6 +241,7 @@ ck101:
   #   download: https://www.ck101.org/0/%v/
   #   chapter_prefix: https://www.ck101.org
   max_explore_error: 100
+  max_download_concurrency: 5
   update_date_layout: null
 
   goquery_selectors:
@@ -275,7 +279,7 @@ ck101:
 
 hjwzw:
   decode_method: utf8
-  max_threads: 1000
+  max_threads: 1500
   request_timeout: 30s
   circuit_breaker:
     max_fail_count: 1000
@@ -294,6 +298,7 @@ hjwzw:
     chapter_prefix: https://tw.hjwzw.com
     availability: https://tw.hjwzw.com
   max_explore_error: 100
+  max_download_concurrency: 5
   update_date_layout: null
 
   goquery_selectors:
