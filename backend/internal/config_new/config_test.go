@@ -6,8 +6,407 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
+
+func Test_validate_Config(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		conf  Config
+		valid bool
+	}{
+		{
+			name: "valid conf",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./config_test.go",
+			},
+			valid: true,
+		},
+		{
+			name: "invalid APIConfig",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./config_test.go",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid BatchConfig",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  0,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./config_test.go",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid SiteConfig",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{"data": {}},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./config_test.go",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid DatabaseConfig",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./config_test.go",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid ConfigLocation",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation: "./not-exist-dir",
+			},
+			valid: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validator.New().Struct(test.conf)
+			if !assert.Equal(t, test.valid, err == nil) {
+				t.Errorf("getting error: %v", err)
+			}
+		})
+	}
+}
+
+func Test_validate_APIConfig(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		conf  APIConfig
+		valid bool
+	}{
+		{
+			name: "valid conf",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: true,
+		},
+		{
+			name: "invalid APIRoutePrefix - non / prefix",
+			conf: APIConfig{
+				APIRoutePrefix:     "data",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid APIRoutePrefix - / suffix",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data/",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid LiteRoutePrefix - non / prefix",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "data",
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid LiteRoutePrefix - / suffix",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "/data/",
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid AvailableSiteNames - empty",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid AvailableSiteNames - empty content",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{""},
+			},
+			valid: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validator.New().Struct(test.conf)
+			if !assert.Equal(t, test.valid, err == nil) {
+				t.Errorf("getting error: %v", err)
+			}
+		})
+	}
+}
+
+func Test_validate_BatchConfig(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		conf  BatchConfig
+		valid bool
+	}{
+		{
+			name: "valid conf",
+			conf: BatchConfig{
+				MaxWorkingThreads:  1,
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: true,
+		},
+		{
+			name: "invalid MaxWorkingThreads - zero",
+			conf: BatchConfig{
+				MaxWorkingThreads:  0,
+				AvailableSiteNames: []string{"data"},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid AvailableSiteNames - empty",
+			conf: BatchConfig{
+				MaxWorkingThreads:  1,
+				AvailableSiteNames: []string{},
+			},
+			valid: false,
+		},
+		{
+			name: "invalid AvailableSiteNames - empty content",
+			conf: BatchConfig{
+				MaxWorkingThreads:  1,
+				AvailableSiteNames: []string{""},
+			},
+			valid: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validator.New().Struct(test.conf)
+			if !assert.Equal(t, test.valid, err == nil) {
+				t.Errorf("getting error: %v", err)
+			}
+		})
+	}
+}
+
+func Test_validate_DatabaseConfig(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		conf  DatabaseConfig
+		valid bool
+	}{
+		{
+			name: "valid conf",
+			conf: DatabaseConfig{
+				Host:     "host",
+				Port:     "port",
+				User:     "user",
+				Password: "pwd",
+				Name:     "name",
+			},
+			valid: true,
+		},
+		{
+			name: "invalid Host - empty",
+			conf: DatabaseConfig{
+				Host:     "",
+				Port:     "port",
+				User:     "user",
+				Password: "pwd",
+				Name:     "name",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid Port - empty",
+			conf: DatabaseConfig{
+				Host:     "host",
+				Port:     "",
+				User:     "user",
+				Password: "pwd",
+				Name:     "name",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid User - empty",
+			conf: DatabaseConfig{
+				Host:     "host",
+				Port:     "port",
+				User:     "",
+				Password: "pwd",
+				Name:     "name",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid Password - empty",
+			conf: DatabaseConfig{
+				Host:     "host",
+				Port:     "port",
+				User:     "user",
+				Password: "",
+				Name:     "name",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid Name - empty",
+			conf: DatabaseConfig{
+				Host:     "host",
+				Port:     "port",
+				User:     "user",
+				Password: "pwd",
+				Name:     "",
+			},
+			valid: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validator.New().Struct(test.conf)
+			if !assert.Equal(t, test.valid, err == nil) {
+				t.Errorf("getting error: %v", err)
+			}
+		})
+	}
+}
 
 func Test_LoadConfig(t *testing.T) {
 	tests := []struct {

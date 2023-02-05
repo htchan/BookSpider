@@ -21,6 +21,11 @@ func main() {
 		return
 	}
 
+	validErr := conf.Validate()
+	if validErr != nil {
+		log.Fatalf("validate config fail: %v", validErr)
+	}
+
 	ctx := context.Background()
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.APIConfig.AvailableSiteNames {

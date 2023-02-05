@@ -3,38 +3,38 @@ package config
 import "time"
 
 type SiteConfig struct {
-	DecodeMethod         string                     `yaml:"decode_method"`
-	MaxThreads           int                        `yaml:"max_threads"`
+	DecodeMethod         string                     `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
+	MaxThreads           int                        `yaml:"max_threads" validate:"min=1"`
 	CircuitBreakerConfig CircuitBreakerClientConfig `yaml:"circuit_breaker"`
-	RequestTimeout       time.Duration              `yaml:"request_timeout"`
-	RetryConfig          map[string]int             `yaml:"retry_map"`
+	RequestTimeout       time.Duration              `yaml:"request_timeout" validate:"min=1s"`
+	RetryConfig          map[string]int             `yaml:"retry_map" validate:"min=1,dive,min=1"`
 
-	Storage         string `yaml:"storage"`
-	BackupDirectory string `yaml:"backup_directory"`
+	Storage         string `yaml:"storage" validate:"dir"`
+	BackupDirectory string `yaml:"backup_directory" validate:"min=1"`
 
 	URL                    URLConfig              `yaml:"urls"`
-	MaxExploreError        int                    `yaml:"max_explore_error"`
-	MaxDownloadConcurrency int                    `yaml:"max_download_concurrency"`
+	MaxExploreError        int                    `yaml:"max_explore_error" validate:"min=1"`
+	MaxDownloadConcurrency int                    `yaml:"max_download_concurrency" validate:"min=1"`
 	GoquerySelectorsConfig GoquerySelectorsConfig `yaml:"goquery_selectors"`
 	AvailabilityConfig     AvailabilityConfig     `yaml:"availability"`
 	// UpdateDateLayour string    `yaml:"update_date_layout"`
 }
 
 type CircuitBreakerClientConfig struct {
-	MaxFailCount      int           `yaml:"max_fail_count"`
-	MaxFailMultiplier float64       `yaml:"max_fail_multiplier"`
-	SleepInterval     time.Duration `yaml:"sleep_interval"`
+	MaxFailCount      int           `yaml:"max_fail_count" validate:"min=1"`
+	MaxFailMultiplier float64       `yaml:"max_fail_multiplier" validate:"min=1"`
+	SleepInterval     time.Duration `yaml:"sleep_interval" validate:"min=1s"`
 }
 
 type URLConfig struct {
-	Base          string `yaml:"base"`
-	Download      string `yaml:"download"`
-	ChapterPrefix string `yaml:"chapter_prefix"`
+	Base          string `yaml:"base" validate:"startswith=http://|startswith=https://"`
+	Download      string `yaml:"download" validate:"startswith=http://|startswith=https://"`
+	ChapterPrefix string `yaml:"chapter_prefix" validate:"startswith=http://|startswith=https://"`
 }
 
 type AvailabilityConfig struct {
-	URL         string `yaml:"url"`
-	CheckString string `yaml:"check_string"`
+	URL         string `yaml:"url" validate:"url"`
+	CheckString string `yaml:"check_string" validate:"min=1"`
 }
 
 type GoquerySelectorsConfig struct {
@@ -50,7 +50,7 @@ type GoquerySelectorsConfig struct {
 }
 
 type GoquerySelectorConfig struct {
-	Selector        string   `yaml:"selector"`
+	Selector        string   `yaml:"selector" validate:"min=1"`
 	Attr            string   `yaml:"attr"`
-	UnwantedContent []string `yaml:"unwanted_content"`
+	UnwantedContent []string `yaml:"unwanted_content" validate:"dive,min=1"`
 }
