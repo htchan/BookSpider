@@ -19,8 +19,8 @@ type Config struct {
 }
 
 type APIConfig struct {
-	APIRoutePrefix     string   `env:"API_ROUTE_PREFIX" envDefault:"/api/novel" validate:"startswith=/,endsnotwith=/"`
-	LiteRoutePrefix    string   `env:"LITE_ROUTE_PREFIX" envDefault:"/lite/novel" validate:"startswith=/,endsnotwith=/"`
+	APIRoutePrefix     string   `env:"NOVEL_SPIDER_API_ROUTE_PREFIX,required" validate:"startswith=/,endsnotwith=/"`
+	LiteRoutePrefix    string   `env:"NOVEL_SPIDER_LITE_ROUTE_PREFIX,required" validate:"startswith=/,endsnotwith=/"`
 	AvailableSiteNames []string `env:"API_AVAILABLE_SITES,required" validate:"min=1,dive,min=1"`
 }
 

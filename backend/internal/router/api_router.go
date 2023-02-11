@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	config "github.com/htchan/BookSpider/internal/config_new"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
 )
 
@@ -20,13 +20,8 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 	fmt.Fprintln(res, fmt.Sprintf(`{ "error": "%v" }`, err))
 }
 
-func AddAPIRoutes(router chi.Router, services map[string]service_new.Service) {
-	api_route_prefix := os.Getenv("BOOK_SPIDER_API_ROUTE_PREFIX")
-	if api_route_prefix == "" {
-		api_route_prefix = "/api/novel"
-	}
-
-	router.Route(api_route_prefix, func(router chi.Router) {
+func AddAPIRoutes(router chi.Router, conf config.APIConfig, services map[string]service_new.Service) {
+	router.Route(conf.APIRoutePrefix, func(router chi.Router) {
 		router.Use(
 			cors.Handler(
 				cors.Options{

@@ -49,11 +49,11 @@ func main() {
 	// load routes
 	r := chi.NewRouter()
 	// if conf.APIConfig.ContainsRoute(config.RouteAPIKey) {
-	router.AddAPIRoutes(r, services)
+	router.AddAPIRoutes(r, conf.APIConfig, services)
 	// }
 
 	// if backendConfig.ContainsRoute(config.RouteLiteKey) {
-	router.AddLiteRoutes(r, services)
+	router.AddLiteRoutes(r, conf.APIConfig, services)
 	// }
 
 	server := http.Server{
