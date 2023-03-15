@@ -26,10 +26,20 @@ func main() {
 	ctx := context.Background()
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
-		db, err := repo.OpenDatabase(siteName)
+		migrateDB, err := repo.OpenDatabase(siteName)
 		if err != nil {
 			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
 		}
+
+		repo.Migrate(migrateDB)
+
+		db, err := repo.OpenDatabase(siteName)
+		if err != nil {
+			log.Error().Err(err).Str("site", siteName).Msg("load db fail")
+			return
+		}
+
+		defer db.Close()
 
 		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
 

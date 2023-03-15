@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	_ "github.com/lib/pq"
 )
@@ -60,6 +62,26 @@ func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
 	// database.SetConnMaxLifetime(5 * time.Second)
 	log.Printf("postgres_database.open; %v", database)
 	return database, err
+}
+
+func Migrate(db *sql.DB) error {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		return fmt.Errorf("migrate fail: %w", err)
+	}
+	m, err := migrate.NewWithDatabaseInstance(
+		"file:///migrations",
+		"postgres", driver)
+	if err != nil {
+		return fmt.Errorf("migrate fail: %w", err)
+	}
+	defer m.Close()
+
+	err = m.Up()
+	if err != nil {
+		log.Printf("migration: %s", err)
+	}
+	return nil
 }
 
 func StubPsqlConn() {
