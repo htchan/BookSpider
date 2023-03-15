@@ -12,6 +12,8 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.8
 	github.com/lib/pq v1.10.6
+	github.com/rs/zerolog v1.15.0
+	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/text v0.6.0
