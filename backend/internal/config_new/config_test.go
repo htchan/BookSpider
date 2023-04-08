@@ -39,7 +39,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
 				ConfigDirectory: ".",
 			},
 			valid: true,
@@ -64,7 +63,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
 				ConfigDirectory: ".",
 			},
 			valid: false,
@@ -89,7 +87,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
 				ConfigDirectory: ".",
 			},
 			valid: false,
@@ -114,7 +111,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
 				ConfigDirectory: ".",
 			},
 			valid: false,
@@ -139,33 +135,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
-				ConfigDirectory: ".",
-			},
-			valid: false,
-		},
-		{
-			// TODO: remove this
-			name: "invalid ConfigLocation",
-			conf: Config{
-				APIConfig: APIConfig{
-					APIRoutePrefix:     "/data",
-					LiteRoutePrefix:    "/data",
-					AvailableSiteNames: []string{"data"},
-				},
-				BatchConfig: BatchConfig{
-					MaxWorkingThreads:  1,
-					AvailableSiteNames: []string{"data"},
-				},
-				SiteConfigs: map[string]SiteConfig{},
-				DatabaseConfig: DatabaseConfig{
-					Host:     "host",
-					Port:     "port",
-					User:     "user",
-					Password: "pwd",
-					Name:     "name",
-				},
-				ConfigLocation:  "./not-exist-dir",
 				ConfigDirectory: ".",
 			},
 			valid: false,
@@ -190,7 +159,6 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation:  "./config_test.go",
 				ConfigDirectory: "./not-exist/",
 			},
 			valid: false,
@@ -525,15 +493,12 @@ func Test_LoadConfig(t *testing.T) {
 		envMap              map[string]string
 		stubConfFileFunc    func()
 		cleanupConfFileFunc func()
-		configLocation      string
-		configContent       string
 		expectedConf        *Config
 		expectError         bool
 	}{
 		{
 			name: "happy flow with default",
 			envMap: map[string]string{
-				"CONFIG_LOCATION":                "./test.yaml",
 				"CONFIG_DIRECTORY":               ".",
 				"NOVEL_SPIDER_API_ROUTE_PREFIX":  "/api-novel",
 				"NOVEL_SPIDER_LITE_ROUTE_PREFIX": "/lite-novel",
@@ -691,7 +656,6 @@ func Test_LoadConfig(t *testing.T) {
 					Password: "password",
 					Name:     "name",
 				},
-				ConfigLocation:  "./test.yaml",
 				ConfigDirectory: ".",
 			},
 			expectError: false,
@@ -699,7 +663,6 @@ func Test_LoadConfig(t *testing.T) {
 		{
 			name: "happy flow without default",
 			envMap: map[string]string{
-				"CONFIG_LOCATION":                "./test.yaml",
 				"CONFIG_DIRECTORY":               ".",
 				"API_AVAILABLE_SITES":            "xbiquge",
 				"MAX_WORKING_THREADS":            "1000",
@@ -792,7 +755,6 @@ func Test_LoadConfig(t *testing.T) {
 					Password: "password",
 					Name:     "name",
 				},
-				ConfigLocation:  "./test.yaml",
 				ConfigDirectory: ".",
 			},
 			expectError: false,
@@ -800,7 +762,6 @@ func Test_LoadConfig(t *testing.T) {
 		{
 			name: "empty sites",
 			envMap: map[string]string{
-				"CONFIG_LOCATION":                "./test.yaml",
 				"CONFIG_DIRECTORY":               ".",
 				"API_AVAILABLE_SITES":            "xbiquge",
 				"NOVEL_SPIDER_API_ROUTE_PREFIX":  "/api-novel",
@@ -837,7 +798,6 @@ func Test_LoadConfig(t *testing.T) {
 					Name:     "name",
 				},
 				SiteConfigs:     nil,
-				ConfigLocation:  "./test.yaml",
 				ConfigDirectory: ".",
 			},
 			expectError: false,
@@ -845,7 +805,6 @@ func Test_LoadConfig(t *testing.T) {
 		{
 			name: "sites config file not exist",
 			envMap: map[string]string{
-				"CONFIG_LOCATION":       "./test-not-exist.yaml",
 				"CONFIG_DIRECTORY":      ".",
 				"API_AVAILABLE_SITES":   "xbiquge",
 				"MAX_WORKING_THREADS":   "1000",
@@ -868,7 +827,6 @@ func Test_LoadConfig(t *testing.T) {
 		{
 			name: "sites config file not exist",
 			envMap: map[string]string{
-				"CONFIG_LOCATION":       "./config_test.go",
 				"CONFIG_DIRECTORY":      "./not-exist/",
 				"API_AVAILABLE_SITES":   "xbiquge",
 				"MAX_WORKING_THREADS":   "1000",

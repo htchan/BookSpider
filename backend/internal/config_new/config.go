@@ -17,7 +17,6 @@ type Config struct {
 	BatchConfig     BatchConfig           `yaml:"batch"`
 	SiteConfigs     map[string]SiteConfig `yaml:"sites" validate:"dive"`
 	DatabaseConfig  DatabaseConfig        `yaml:"database"`
-	ConfigLocation  string                `env:"CONFIG_LOCATION,required" validate:"file"`
 	ConfigDirectory string                `env:"CONFIG_DIRECTORY,required" validate:"dir"`
 }
 
