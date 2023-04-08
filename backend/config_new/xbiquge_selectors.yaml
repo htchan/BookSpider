@@ -1,0 +1,38 @@
+xbiquge: &xbiquge
+  decode_method: gbk
+
+  urls: #desktop
+    base: https://www.xbiquge.so/book/%v/
+    download: https://www.xbiquge.so/book/%v/
+    chapter_prefix: https://www.xbiquge.so
+    availability: https://www.xbiquge.so
+
+  goquery_selectors:
+    title:
+      selector: meta[property="og:novel:book_name"]
+      attr: content
+    writer:
+      selector: meta[property="og:novel:author"]
+      attr: content
+    book_type:
+      selector: meta[property="og:novel:category"]
+      attr: content
+    update_date:
+      selector: meta[property="og:novel:update_time"]
+      attr: content
+    update_chapter:
+      selector: meta[property="og:novel:latest_chapter_name"]
+      attr: content
+    book_chapter_url:
+      selector: dd>a
+      attr: href
+    book_chapter_title:
+      selector: dd>a
+    chapter_title:
+      selector: div.bookname>h1
+    chapter_content:
+      selector: div#content
+  
+  availability:
+    url: https://www.xbiquge.so/
+    check_string: 笔趣阁

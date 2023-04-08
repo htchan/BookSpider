@@ -39,7 +39,8 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./config_test.go",
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: ".",
 			},
 			valid: true,
 		},
@@ -63,7 +64,8 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./config_test.go",
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: ".",
 			},
 			valid: false,
 		},
@@ -87,7 +89,8 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./config_test.go",
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: ".",
 			},
 			valid: false,
 		},
@@ -111,7 +114,8 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./config_test.go",
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: ".",
 			},
 			valid: false,
 		},
@@ -135,11 +139,13 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./config_test.go",
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: ".",
 			},
 			valid: false,
 		},
 		{
+			// TODO: remove this
 			name: "invalid ConfigLocation",
 			conf: Config{
 				APIConfig: APIConfig{
@@ -159,7 +165,33 @@ func Test_validate_Config(t *testing.T) {
 					Password: "pwd",
 					Name:     "name",
 				},
-				ConfigLocation: "./not-exist-dir",
+				ConfigLocation:  "./not-exist-dir",
+				ConfigDirectory: ".",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid ConfigDirectory",
+			conf: Config{
+				APIConfig: APIConfig{
+					APIRoutePrefix:     "/data",
+					LiteRoutePrefix:    "/data",
+					AvailableSiteNames: []string{"data"},
+				},
+				BatchConfig: BatchConfig{
+					MaxWorkingThreads:  1,
+					AvailableSiteNames: []string{"data"},
+				},
+				SiteConfigs: map[string]SiteConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigLocation:  "./config_test.go",
+				ConfigDirectory: "./not-exist/",
 			},
 			valid: false,
 		},
@@ -409,18 +441,100 @@ func Test_validate_DatabaseConfig(t *testing.T) {
 }
 
 func Test_LoadConfig(t *testing.T) {
+	siteSelectorData1 := `xbiquge: &xbiquge
+	decode_method: gbk
+	urls: #desktop
+		base: https://www.xbiquge.so/book/%%v/
+		download: https://www.xbiquge.so/book/%%v/
+		chapter_prefix: https://www.xbiquge.so
+	goquery_selectors:
+		title:
+			selector: title
+			unwanted_content:
+				- a
+				- b
+		writer:
+			selector: writer
+			attr:
+		book_type:
+			selector: book-type
+			attr:
+		update_date:
+			selector: update-date
+			attr:
+		update_chapter:
+			selector: update-chapter
+			attr:
+		book_chapter_url: 
+			selector: book-chapter
+			attr: href
+		book_chapter_title: 
+			selector: book-chapter
+			attr: 
+		chapter_title: 
+			selector: chapter-title
+			attr:
+		chapter_content:
+			selector: chapter-content
+			attr:
+	availability:
+		url: availability
+		check_string: check
+`
+	siteSelectorData2 := `xqishu: &xqishu
+	decode_method: utf8
+	urls: #desktop
+		base: http://www.aidusk.com/txt%%v/
+		download: http://www.aidusk.com/t/%%v/
+		chapter_prefix: http://www.aidusk.com
+	goquery_selectors:
+		title:
+			selector: title
+			attr:
+		writer:
+			selector: writer
+			attr:
+		book_type:
+			selector: book-type
+			attr:
+		update_date:
+			selector: update-date
+			attr:
+		update_chapter:
+			selector: update-chapter
+			attr:
+		book_chapter_url: 
+			selector: book-chapter
+			attr: href
+		book_chapter_title: 
+			selector: book-chapter
+			attr: 
+		chapter_title: 
+			selector: chapter-title
+			attr:
+		chapter_content:
+			selector: chapter-content
+			attr:
+	availability:
+		url: availability
+		check_string: check
+`
+
 	tests := []struct {
-		name           string
-		envMap         map[string]string
-		configLocation string
-		configContent  string
-		expectedConf   *Config
-		expectError    bool
+		name                string
+		envMap              map[string]string
+		stubConfFileFunc    func()
+		cleanupConfFileFunc func()
+		configLocation      string
+		configContent       string
+		expectedConf        *Config
+		expectError         bool
 	}{
 		{
 			name: "happy flow with default",
 			envMap: map[string]string{
 				"CONFIG_LOCATION":                "./test.yaml",
+				"CONFIG_DIRECTORY":               ".",
 				"NOVEL_SPIDER_API_ROUTE_PREFIX":  "/api-novel",
 				"NOVEL_SPIDER_LITE_ROUTE_PREFIX": "/lite-novel",
 				"API_AVAILABLE_SITES":            "xbiquge,xqishu",
@@ -432,117 +546,56 @@ func Test_LoadConfig(t *testing.T) {
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
 			},
-			configLocation: "./test.yaml",
-			configContent: `
-				xbiquge:
-					decode_method: gbk
-					max_threads: 1000
-					request_timeout: 30s
-					circuit_breaker:
-						max_fail_count: 1000
-						max_fail_multiplier: 1.5
-						sleep_interval: 10s
-					retry_map:
-						default: 10
-						unavailable: 100
+			stubConfFileFunc: func() {
+				os.WriteFile("./xbiquge.yaml", []byte(strings.ReplaceAll(siteSelectorData1, "\t", "  ")), 0644)
+				os.WriteFile("./xqishu.yaml", []byte(strings.ReplaceAll(siteSelectorData2, "\t", "  ")), 0644)
 
-					storage: /storage
-					backup_directory: /backup
+				confData := `sites:
+	xbiquge:
+		<<: *xbiquge
+		max_threads: 1000
+		request_timeout: 30s
+		circuit_breaker:
+			max_fail_count: 1000
+			max_fail_multiplier: 1.5
+			sleep_interval: 10s
+		retry_map:
+			default: 10
+			unavailable: 100
 
-					urls: #desktop
-						base: https://www.xbiquge.so/book/%%v/
-						download: https://www.xbiquge.so/book/%%v/
-						chapter_prefix: https://www.xbiquge.so
-					max_explore_error: 100
-					max_download_concurrency: 10
-					update_date_layout: null
-					goquery_selectors:
-						title:
-							selector: title
-							unwanted_content:
-								- a
-								- b
-						writer:
-							selector: writer
-							attr:
-						book_type:
-							selector: book-type
-							attr:
-						update_date:
-							selector: update-date
-							attr:
-						update_chapter:
-							selector: update-chapter
-							attr:
-						book_chapter_url: 
-							selector: book-chapter
-							attr: href
-						book_chapter_title: 
-							selector: book-chapter
-							attr: 
-						chapter_title: 
-							selector: chapter-title
-							attr:
-						chapter_content:
-							selector: chapter-content
-							attr:
-					availability:
-						url: availability
-						check_string: check
+		storage: /storage
+		backup_directory: /backup
 
-				xqishu:
-					decode_method: utf8
-					max_threads: 200
-					request_timeout: 30s
-					circuit_breaker:
-						max_fail_count: 10
-						max_fail_multiplier: 2
-						sleep_interval: 5s
-					retry_map:
-						default: 10
-						unavailable: 100
+		max_explore_error: 100
+		max_download_concurrency: 10
+		update_date_layout: null
 
-					storage: /storage
-					backup_directory: /backup
+	xqishu:
+		<<: *xqishu
+		max_threads: 200
+		request_timeout: 30s
+		circuit_breaker:
+			max_fail_count: 10
+			max_fail_multiplier: 2
+			sleep_interval: 5s
+		retry_map:
+			default: 10
+			unavailable: 100
 
-					urls: #desktop
-						base: http://www.aidusk.com/txt%%v/
-						download: http://www.aidusk.com/t/%%v/
-						chapter_prefix: http://www.aidusk.com
-					max_explore_error: 100
-					max_download_concurrency: 10
-					update_date_layout: null
-					goquery_selectors:
-						title:
-							selector: title
-							attr:
-						writer:
-							selector: writer
-							attr:
-						book_type:
-							selector: book-type
-							attr:
-						update_date:
-							selector: update-date
-							attr:
-						update_chapter:
-							selector: update-chapter
-							attr:
-						book_chapter_url: 
-							selector: book-chapter
-							attr: href
-						book_chapter_title: 
-							selector: book-chapter
-							attr: 
-						chapter_title: 
-							selector: chapter-title
-							attr:
-						chapter_content:
-							selector: chapter-content
-							attr:
-					availability:
-						url: availability
-						check_string: check`,
+		storage: /storage
+		backup_directory: /backup
+
+		max_explore_error: 100
+		max_download_concurrency: 10
+		update_date_layout: null
+`
+				os.WriteFile(`./main.yaml`, []byte(strings.ReplaceAll(confData, "\t", "  ")), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./xqishu.yaml")
+				os.Remove("./xbiquge.yaml")
+				os.Remove("./main.yaml")
+			},
 			expectedConf: &Config{
 				APIConfig: APIConfig{
 					APIRoutePrefix:     "/api-novel",
@@ -638,7 +691,8 @@ func Test_LoadConfig(t *testing.T) {
 					Password: "password",
 					Name:     "name",
 				},
-				ConfigLocation: "./test.yaml",
+				ConfigLocation:  "./test.yaml",
+				ConfigDirectory: ".",
 			},
 			expectError: false,
 		},
@@ -646,6 +700,7 @@ func Test_LoadConfig(t *testing.T) {
 			name: "happy flow without default",
 			envMap: map[string]string{
 				"CONFIG_LOCATION":                "./test.yaml",
+				"CONFIG_DIRECTORY":               ".",
 				"API_AVAILABLE_SITES":            "xbiquge",
 				"MAX_WORKING_THREADS":            "1000",
 				"BATCH_AVAILABLE_SITES":          "xbiquge",
@@ -657,33 +712,40 @@ func Test_LoadConfig(t *testing.T) {
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
 			},
-			configLocation: "./test.yaml",
-			configContent: `
-				xbiquge:
-					decode_method: gbk
-					max_threads: 1000
-					request_timeout: 30s
-					circuit_breaker:
-						max_fail_count: 1000
-						max_fail_multiplier: 1.5
-						sleep_interval: 10s
-					retry_map:
-						default: 10
-						unavailable: 100
+			stubConfFileFunc: func() {
+				confData := `sites:
+	xbiquge:
+		decode_method: gbk
+		max_threads: 1000
+		request_timeout: 30s
+		circuit_breaker:
+			max_fail_count: 1000
+			max_fail_multiplier: 1.5
+			sleep_interval: 10s
+		retry_map:
+			default: 10
+			unavailable: 100
 
-					storage: /storage
-					backup_directory: /backup
+		storage: /storage
+		backup_directory: /backup
 
-					urls: #desktop
-						base: https://www.xbiquge.so/book/%%v/
-						download: https://www.xbiquge.so/book/%%v/
-						chapter_prefix: https://www.xbiquge.so
-					max_explore_error: 100
-					max_download_concurrency: 10
-					update_date_layout: null
-					availability:
-						url: availability
-						check_string: check`,
+		urls: #desktop
+			base: https://www.xbiquge.so/book/%%v/
+			download: https://www.xbiquge.so/book/%%v/
+			chapter_prefix: https://www.xbiquge.so
+		max_explore_error: 100
+		max_download_concurrency: 10
+		update_date_layout: null
+		availability:
+			url: availability
+			check_string: check
+`
+				os.WriteFile(`./main.yaml`, []byte(strings.ReplaceAll(confData, "\t", "  ")), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./xbiquge.yaml")
+				os.Remove("./main.yaml")
+			},
 			expectedConf: &Config{
 				APIConfig: APIConfig{
 					APIRoutePrefix:     "/api-novel",
@@ -730,7 +792,8 @@ func Test_LoadConfig(t *testing.T) {
 					Password: "password",
 					Name:     "name",
 				},
-				ConfigLocation: "./test.yaml",
+				ConfigLocation:  "./test.yaml",
+				ConfigDirectory: ".",
 			},
 			expectError: false,
 		},
@@ -738,6 +801,7 @@ func Test_LoadConfig(t *testing.T) {
 			name: "empty sites",
 			envMap: map[string]string{
 				"CONFIG_LOCATION":                "./test.yaml",
+				"CONFIG_DIRECTORY":               ".",
 				"API_AVAILABLE_SITES":            "xbiquge",
 				"NOVEL_SPIDER_API_ROUTE_PREFIX":  "/api-novel",
 				"NOVEL_SPIDER_LITE_ROUTE_PREFIX": "/lite-novel",
@@ -749,8 +813,12 @@ func Test_LoadConfig(t *testing.T) {
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
 			},
-			configLocation: "./test.yaml",
-			configContent:  ``,
+			stubConfFileFunc: func() {
+				os.WriteFile("./main.yaml", []byte(""), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./main.yaml")
+			},
 			expectedConf: &Config{
 				APIConfig: APIConfig{
 					APIRoutePrefix:     "/api-novel",
@@ -768,8 +836,9 @@ func Test_LoadConfig(t *testing.T) {
 					Password: "password",
 					Name:     "name",
 				},
-				SiteConfigs:    nil,
-				ConfigLocation: "./test.yaml",
+				SiteConfigs:     nil,
+				ConfigLocation:  "./test.yaml",
+				ConfigDirectory: ".",
 			},
 			expectError: false,
 		},
@@ -777,6 +846,7 @@ func Test_LoadConfig(t *testing.T) {
 			name: "sites config file not exist",
 			envMap: map[string]string{
 				"CONFIG_LOCATION":       "./test-not-exist.yaml",
+				"CONFIG_DIRECTORY":      ".",
 				"API_AVAILABLE_SITES":   "xbiquge",
 				"MAX_WORKING_THREADS":   "1000",
 				"BATCH_AVAILABLE_SITES": "xbiquge",
@@ -786,18 +856,49 @@ func Test_LoadConfig(t *testing.T) {
 				"PSQL_PASSWORD":         "password",
 				"PSQL_NAME":             "name",
 			},
-			configLocation: "./test.yaml",
-			configContent:  ``,
-			expectedConf:   nil,
-			expectError:    true,
+			stubConfFileFunc: func() {
+				os.WriteFile("./main.yaml", []byte(""), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./main.yaml")
+			},
+			expectedConf: nil,
+			expectError:  true,
 		},
 		{
-			name:           "fail to provide required env",
-			envMap:         map[string]string{},
-			configLocation: "./test.yaml",
-			configContent:  ``,
-			expectedConf:   nil,
-			expectError:    true,
+			name: "sites config file not exist",
+			envMap: map[string]string{
+				"CONFIG_LOCATION":       "./config_test.go",
+				"CONFIG_DIRECTORY":      "./not-exist/",
+				"API_AVAILABLE_SITES":   "xbiquge",
+				"MAX_WORKING_THREADS":   "1000",
+				"BATCH_AVAILABLE_SITES": "xbiquge",
+				"PSQL_HOST":             "host",
+				"PSQL_PORT":             "12345",
+				"PSQL_USER":             "user",
+				"PSQL_PASSWORD":         "password",
+				"PSQL_NAME":             "name",
+			},
+			stubConfFileFunc: func() {
+				os.WriteFile("./main.yaml", []byte(""), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./main.yaml")
+			},
+			expectedConf: nil,
+			expectError:  true,
+		},
+		{
+			name:   "fail to provide required env",
+			envMap: map[string]string{},
+			stubConfFileFunc: func() {
+				os.WriteFile("./main.yaml", []byte(""), 0644)
+			},
+			cleanupConfFileFunc: func() {
+				os.Remove("./main.yaml")
+			},
+			expectedConf: nil,
+			expectError:  true,
 		},
 	}
 
@@ -811,9 +912,8 @@ func Test_LoadConfig(t *testing.T) {
 				defer os.Unsetenv(key)
 			}
 
-			configContent := strings.ReplaceAll(test.configContent, "\t", "  ")
-			os.WriteFile(test.configLocation, []byte(configContent), 0644)
-			defer os.Remove(test.configLocation)
+			test.stubConfFileFunc()
+			defer test.cleanupConfFileFunc()
 
 			conf, err := LoadConfig()
 			if (err != nil) != test.expectError {

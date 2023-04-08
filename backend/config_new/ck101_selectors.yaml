@@ -1,0 +1,45 @@
+ck101: &ck101
+  decode_method: big5
+
+  urls: #desktop
+    base: https://www.ck101.org/book/%v.html
+    download: https://www.ck101.org/0/%v/
+    chapter_prefix: https://www.ck101.org
+    availability: https://www.ck101.org
+  # urls: #mobile
+  #   base: https://www.ck101.org/book/%v.html
+  #   download: https://www.ck101.org/0/%v/
+  #   chapter_prefix: https://www.ck101.org
+
+  goquery_selectors:
+    title:
+      selector: "placeholder"
+      attr: ""
+    writer:
+      selector: "placeholder"
+      attr: ""
+    book_type:
+      selector: "placeholder"
+      attr: ""
+    update_date:
+      selector: "placeholder"
+      attr: ""
+    update_chapter:
+      selector: "placeholder"
+      attr: ""
+    book_chapter_url:
+      selector: "placeholder"
+      attr: ""
+    book_chapter_title:
+      selector: "placeholder"
+      attr: ""
+    chapter_title:
+      selector: "placeholder"
+      attr: ""
+    chapter_content:
+      selector: "placeholder"
+      attr: ""
+
+  availability:
+    url: https://www.ck101.org
+    check_string: 卡提諾
