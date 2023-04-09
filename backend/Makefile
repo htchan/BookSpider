@@ -56,3 +56,12 @@ generate:
 ## clean: clean
 clean:
 	rm ./build/ -r
+
+include ../.env.db
+export $(shell sed 's/=.*//' ../.env.db)
+sqlc:
+	PGPASSWORD=${PSQL_PASSWORD} pg_dump \
+		-h ${PSQL_HOST} -p ${PSQL_PORT} -U ${PSQL_USER} -d ${PSQL_NAME} \
+		-t books -t writers -t errors --schema-only \
+		> ./internal/sqlc/schema.sql
+	sqlc generate
