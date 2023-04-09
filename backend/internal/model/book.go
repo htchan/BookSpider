@@ -1,10 +1,15 @@
 package model
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/siongui/gojianfan"
 )
 
 type Book struct {
@@ -70,4 +75,25 @@ func (bk Book) String() string {
 		result += fmt.Sprintf("-%v", bk.HashCode)
 	}
 	return result
+}
+
+func simplified(s string) string {
+	return gojianfan.T2S(s)
+}
+
+func strToShortHex(s string) string {
+	b := []byte(s)
+	encoded := base64.StdEncoding.EncodeToString(b)
+	return encoded
+}
+
+func (bk Book) Checksum() string {
+	if len(bk.Title) > 100 || len(bk.Writer.Name) > 100 {
+		log.Printf("[%v-%v-%v] title: %v; writer: %v is too long", bk.Site, bk.ID, bk.HashCode, bk.Title, bk.Writer.Name)
+		return ""
+	}
+
+	title := strings.ReplaceAll(bk.Title, " ", "")
+	writerName := strings.ReplaceAll(bk.Writer.Name, " ", "")
+	return strToShortHex(simplified(fmt.Sprintf("%s-%s", title, writerName)))
 }
