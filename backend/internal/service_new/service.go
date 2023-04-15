@@ -12,7 +12,7 @@ import (
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/htchan/BookSpider/internal/parse/goquery"
 	"github.com/htchan/BookSpider/internal/repo"
-	psql "github.com/htchan/BookSpider/internal/repo/psql"
+	sqlc "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -43,6 +43,7 @@ type Service interface {
 	BookContent(*model.Book) (string, error)
 
 	Book(id int, hash string) (*model.Book, error)
+	BookGroup(id int, hash string) (*model.Book, *model.BookGroup, error)
 	QueryBooks(title, writer string, limit, offset int) ([]model.Book, error)
 	RandomBooks(limit int) ([]model.Book, error)
 
@@ -91,6 +92,6 @@ func LoadService(
 		conf:   conf,
 		client: client.NewClientV2(&conf, weight, ctx),
 		parser: parser,
-		rpo:    psql.NewRepo(name, db),
+		rpo:    sqlc.NewRepo(name, db),
 	}, nil
 }
