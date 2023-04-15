@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -262,6 +263,14 @@ func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	}
 
 	return bks, nil
+}
+
+func (r *PsqlRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
+	return nil, errors.New("Not implemented error")
+}
+
+func (r *PsqlRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
+	return nil, errors.New("Not implemented error")
 }
 
 func generateUpdateStatusCondition(length int) string {

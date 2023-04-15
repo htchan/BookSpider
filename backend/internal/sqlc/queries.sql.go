@@ -342,6 +342,151 @@ func (q *Queries) GetBookByIDHash(ctx context.Context, arg GetBookByIDHashParams
 	return i, err
 }
 
+const getBookGroupByID = `-- name: GetBookGroupByID :many
+select books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.writer_id, coalesce(writers.name, ''), books.type,
+  books.update_date, books.update_chapter, 
+  books.status, books.is_downloaded, coalesce(errors.data, '')
+from books left join writers on books.writer_id=writers.id 
+  left join errors on books.site=errors.site and books.id=errors.id
+where books.checksum = (
+  select bks.checksum from books as bks 
+  where books.site=$1 and books.id=$2 
+  order by books.hash_code desc limit 1
+)
+`
+
+type GetBookGroupByIDParams struct {
+	Site sql.NullString
+	ID   sql.NullInt32
+}
+
+type GetBookGroupByIDRow struct {
+	Site          sql.NullString
+	ID            sql.NullInt32
+	HashCode      sql.NullInt32
+	Title         sql.NullString
+	Checksum      sql.NullString
+	WriterID      sql.NullInt32
+	Name          string
+	Type          sql.NullString
+	UpdateDate    sql.NullString
+	UpdateChapter sql.NullString
+	Status        sql.NullString
+	IsDownloaded  sql.NullBool
+	Data          string
+}
+
+func (q *Queries) GetBookGroupByID(ctx context.Context, arg GetBookGroupByIDParams) ([]GetBookGroupByIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getBookGroupByID, arg.Site, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookGroupByIDRow
+	for rows.Next() {
+		var i GetBookGroupByIDRow
+		if err := rows.Scan(
+			&i.Site,
+			&i.ID,
+			&i.HashCode,
+			&i.Title,
+			&i.Checksum,
+			&i.WriterID,
+			&i.Name,
+			&i.Type,
+			&i.UpdateDate,
+			&i.UpdateChapter,
+			&i.Status,
+			&i.IsDownloaded,
+			&i.Data,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBookGroupByIDHash = `-- name: GetBookGroupByIDHash :many
+select books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.writer_id, coalesce(writers.name, ''), books.type,
+  books.update_date, books.update_chapter, 
+  books.status, books.is_downloaded, coalesce(errors.data, '')
+from books left join writers on books.writer_id=writers.id 
+  left join errors on books.site=errors.site and books.id=errors.id
+where books.checksum = (
+  select bks.checksum from books as bks 
+  where bks.site=$1 and bks.id=$2 and bks.hash_code=$3
+  order by bks.hash_code desc limit 1
+)
+`
+
+type GetBookGroupByIDHashParams struct {
+	Site     sql.NullString
+	ID       sql.NullInt32
+	HashCode sql.NullInt32
+}
+
+type GetBookGroupByIDHashRow struct {
+	Site          sql.NullString
+	ID            sql.NullInt32
+	HashCode      sql.NullInt32
+	Title         sql.NullString
+	Checksum      sql.NullString
+	WriterID      sql.NullInt32
+	Name          string
+	Type          sql.NullString
+	UpdateDate    sql.NullString
+	UpdateChapter sql.NullString
+	Status        sql.NullString
+	IsDownloaded  sql.NullBool
+	Data          string
+}
+
+func (q *Queries) GetBookGroupByIDHash(ctx context.Context, arg GetBookGroupByIDHashParams) ([]GetBookGroupByIDHashRow, error) {
+	rows, err := q.db.QueryContext(ctx, getBookGroupByIDHash, arg.Site, arg.ID, arg.HashCode)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookGroupByIDHashRow
+	for rows.Next() {
+		var i GetBookGroupByIDHashRow
+		if err := rows.Scan(
+			&i.Site,
+			&i.ID,
+			&i.HashCode,
+			&i.Title,
+			&i.Checksum,
+			&i.WriterID,
+			&i.Name,
+			&i.Type,
+			&i.UpdateDate,
+			&i.UpdateChapter,
+			&i.Status,
+			&i.IsDownloaded,
+			&i.Data,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBooks = `-- name: ListBooks :many
 select books.site, books.id, books.hash_code, books.title, books.checksum,
   books.writer_id, coalesce(writers.name, ''), books.type,
@@ -482,17 +627,17 @@ select books.site, books.id, books.hash_code, books.title, books.checksum,
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status != 'ERROR' and 
-  books.title != '' and writers.name != '' and
-  (books.title like $2 or writers.name like $3)
+  (($2 != '%%' and books.title like $2) or
+  ($3 != '%%' and writers.name like $3))
 order by books.update_date desc, books.id desc limit $4 offset $5
 `
 
 type ListBooksByTitleWriterParams struct {
-	Site   sql.NullString
-	Title  sql.NullString
-	Name   sql.NullString
-	Limit  int32
-	Offset int32
+	Site    sql.NullString
+	Column2 interface{}
+	Column3 interface{}
+	Limit   int32
+	Offset  int32
 }
 
 type ListBooksByTitleWriterRow struct {
@@ -514,8 +659,8 @@ type ListBooksByTitleWriterRow struct {
 func (q *Queries) ListBooksByTitleWriter(ctx context.Context, arg ListBooksByTitleWriterParams) ([]ListBooksByTitleWriterRow, error) {
 	rows, err := q.db.QueryContext(ctx, listBooksByTitleWriter,
 		arg.Site,
-		arg.Title,
-		arg.Name,
+		arg.Column2,
+		arg.Column3,
 		arg.Limit,
 		arg.Offset,
 	)

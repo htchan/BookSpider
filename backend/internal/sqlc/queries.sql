@@ -88,8 +88,8 @@ select books.site, books.id, books.hash_code, books.title, books.checksum,
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status != 'ERROR' and 
-  books.title != '' and writers.name != '' and
-  (books.title like $2 or writers.name like $3)
+  (($2 != '%%' and books.title like $2) or
+  ($3 != '%%' and writers.name like $3))
 order by books.update_date desc, books.id desc limit $4 offset $5;
 
 -- name: ListRandomBooks :many
@@ -105,6 +105,32 @@ limit $2 offset RANDOM() *
 (
   select greatest(count(*) - $2, 0)
   from books as bks where site=$1 and bks.is_downloaded=true
+);
+
+-- name: GetBookGroupByID :many
+select books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.writer_id, coalesce(writers.name, ''), books.type,
+  books.update_date, books.update_chapter, 
+  books.status, books.is_downloaded, coalesce(errors.data, '')
+from books left join writers on books.writer_id=writers.id 
+  left join errors on books.site=errors.site and books.id=errors.id
+where books.checksum = (
+  select bks.checksum from books as bks 
+  where books.site=$1 and books.id=$2 
+  order by books.hash_code desc limit 1
+);
+
+-- name: GetBookGroupByIDHash :many
+select books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.writer_id, coalesce(writers.name, ''), books.type,
+  books.update_date, books.update_chapter, 
+  books.status, books.is_downloaded, coalesce(errors.data, '')
+from books left join writers on books.writer_id=writers.id 
+  left join errors on books.site=errors.site and books.id=errors.id
+where books.checksum = (
+  select bks.checksum from books as bks 
+  where bks.site=$1 and bks.id=$2 and bks.hash_code=$3
+  order by bks.hash_code desc limit 1
 );
 
 -- name: UpdateBooksStatus :exec

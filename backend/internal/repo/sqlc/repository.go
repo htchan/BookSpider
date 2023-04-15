@@ -319,10 +319,10 @@ func (r *SqlcRepo) FindBooksForDownload() (<-chan model.Book, error) {
 }
 func (r *SqlcRepo) FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error) {
 	results, err := r.queries.ListBooksByTitleWriter(r.ctx, sqlc.ListBooksByTitleWriterParams{
-		Site:  toSqlString(r.site),
-		Title: toSqlString(fmt.Sprintf("%%%s%%", title)),
-		Name:  toSqlString(fmt.Sprintf("%%%s%%", writer)),
-		Limit: int32(limit), Offset: int32(offset),
+		Site:    toSqlString(r.site),
+		Column2: toSqlString(fmt.Sprintf("%%%s%%", title)),
+		Column3: toSqlString(fmt.Sprintf("%%%s%%", writer)),
+		Limit:   int32(limit), Offset: int32(offset),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
@@ -390,6 +390,81 @@ func (r *SqlcRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	}
 
 	return bks, nil
+}
+
+func (r *SqlcRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
+	results, err := r.queries.GetBookGroupByID(r.ctx, sqlc.GetBookGroupByIDParams{
+		Site: toSqlString(r.site),
+		ID:   toSqlInt(id),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fail to get book group by site id: %w", err)
+	}
+
+	group := make(model.BookGroup, len(results))
+	for i := range results {
+		var bkErr error
+		if results[i].Data != "" {
+			bkErr = fmt.Errorf(results[i].Data)
+		}
+
+		group[i] = model.Book{
+			Site:     results[i].Site.String,
+			ID:       int(results[i].ID.Int32),
+			HashCode: int(results[i].HashCode.Int32),
+			Title:    results[i].Title.String,
+			Writer: model.Writer{
+				ID:   int(results[i].WriterID.Int32),
+				Name: results[i].Name,
+			},
+			Type:          results[i].Type.String,
+			UpdateDate:    results[i].UpdateDate.String,
+			UpdateChapter: results[i].UpdateChapter.String,
+			Status:        model.StatusFromString(results[i].Status.String),
+			IsDownloaded:  results[i].IsDownloaded.Bool,
+			Error:         bkErr,
+		}
+	}
+
+	return group, nil
+}
+
+func (r *SqlcRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
+	results, err := r.queries.GetBookGroupByIDHash(r.ctx, sqlc.GetBookGroupByIDHashParams{
+		Site:     toSqlString(r.site),
+		ID:       toSqlInt(id),
+		HashCode: toSqlInt(hashCode),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("fail to get book group by site id: %w", err)
+	}
+
+	group := make(model.BookGroup, len(results))
+	for i := range results {
+		var bkErr error
+		if results[i].Data != "" {
+			bkErr = fmt.Errorf(results[i].Data)
+		}
+
+		group[i] = model.Book{
+			Site:     results[i].Site.String,
+			ID:       int(results[i].ID.Int32),
+			HashCode: int(results[i].HashCode.Int32),
+			Title:    results[i].Title.String,
+			Writer: model.Writer{
+				ID:   int(results[i].WriterID.Int32),
+				Name: results[i].Name,
+			},
+			Type:          results[i].Type.String,
+			UpdateDate:    results[i].UpdateDate.String,
+			UpdateChapter: results[i].UpdateChapter.String,
+			Status:        model.StatusFromString(results[i].Status.String),
+			IsDownloaded:  results[i].IsDownloaded.Bool,
+			Error:         bkErr,
+		}
+	}
+
+	return group, nil
 }
 
 func (r *SqlcRepo) UpdateBooksStatus() error {

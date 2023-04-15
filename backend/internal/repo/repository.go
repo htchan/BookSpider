@@ -37,6 +37,9 @@ type Repostory interface {
 	FindBooksByRandom(limit int) ([]model.Book, error)
 	UpdateBooksStatus() error
 
+	FindBookGroupByID(id int) (model.BookGroup, error)
+	FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error)
+
 	// writer related
 	SaveWriter(*model.Writer) error // create and update id in writer
 	// the system will not delete / update existing writers
