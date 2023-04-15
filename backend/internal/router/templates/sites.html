@@ -13,13 +13,7 @@
   <body>
     <h1>Novel</h1>
     {{ range $key, $value := . }}
-      <div
-        class="site_button"
-        onclick="location.href+='/sites/{{ $key }}/'"
-      >
-        {{$key}}
-      </div>
-      <br/>
+      {{ template "site-card" $key }}
     {{ end }}
   </body>
 </html>

@@ -15,12 +15,7 @@
   <h1>{{ .Name }}</h1>
   <div>
     {{ range $index, $value := .Books }}
-    <div class="book-box" onclick="location.href='books/{{$value.ID}}-{{$value.HashCode}}/'">
-      <p>{{ $value.Title }} - {{ $value.Writer.Name }}</p>
-      <p>{{ $value.UpdateDate }}</p>
-      <p>{{ $value.UpdateChapter }}</p>
-      <p>{{ if $value.IsDownloaded }}Downloaded{{ else }}{{ $value.Status }}{{ end }}</p>
-    </div>
+      {{ template "book-card" $value }}
     {{else}}
     <p>No Books Found</p>
     {{ end }}

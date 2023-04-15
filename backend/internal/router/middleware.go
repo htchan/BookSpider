@@ -13,12 +13,13 @@ import (
 )
 
 const (
-	SERV_KEY   = "serv"
-	BOOK_KEY   = "book"
-	TITLE_KEY  = "title"
-	WRITER_KEY = "writer"
-	LIMIT_KEY  = "limit"
-	OFFSET_KEY = "offset"
+	SERV_KEY       = "serv"
+	BOOK_KEY       = "book"
+	BOOK_GROUP_KEY = "book_group"
+	TITLE_KEY      = "title"
+	WRITER_KEY     = "writer"
+	LIMIT_KEY      = "limit"
+	OFFSET_KEY     = "offset"
 )
 
 func GetSiteMiddleware(services map[string]service_new.Service) func(http.Handler) http.Handler {
@@ -44,26 +45,28 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 			idHash := chi.URLParam(req, "idHash")
 			serv := req.Context().Value(SERV_KEY).(service_new.Service)
 			var (
-				bk  *model.Book
-				err error
+				bk    *model.Book
+				group *model.BookGroup
+				err   error
 			)
 
 			idHashArray := strings.Split(idHash, "-")
 			if len(idHashArray) == 1 {
 				id, _ := strconv.Atoi(idHashArray[0])
-				bk, err = serv.Book(id, "")
+				bk, group, err = serv.BookGroup(id, "")
 			} else if len(idHashArray) == 2 {
 				id, _ := strconv.Atoi(idHashArray[0])
 				hash := idHashArray[1]
-				bk, err = serv.Book(id, hash)
+				bk, group, err = serv.BookGroup(id, hash)
 			}
 			if err != nil {
-				fmt.Printf("cannot query book. site: %v; id-hash: %v; err: %v", serv.Name(), idHash, err)
+				fmt.Printf("cannot query book. site: %v; id-hash: %v; err: %v\n", serv.Name(), idHash, err)
 				fmt.Fprintf(res, `{"error": "book not found"}`)
 				return
 			}
 
 			ctx := context.WithValue(req.Context(), BOOK_KEY, bk)
+			ctx = context.WithValue(ctx, BOOK_GROUP_KEY, group)
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},
 	)

@@ -17,7 +17,7 @@ var files embed.FS
 
 func GeneralLiteHandler(services map[string]service_new.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		t, err := template.ParseFS(files, "templates/sites.html")
+		t, err := template.ParseFS(files, "templates/sites.html", "templates/components/site-card.html")
 		if err != nil {
 			res.WriteHeader(http.StatusNotFound)
 			log.Println(err)
@@ -46,7 +46,7 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 }
 
 func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
-	t, err := template.ParseFS(files, "templates/result.html")
+	t, err := template.ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		log.Println(err)
@@ -85,7 +85,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
-	t, err := template.ParseFS(files, "templates/result.html")
+	t, err := template.ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		log.Println(err)
@@ -116,7 +116,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
-	t, err := template.ParseFS(files, "templates/book.html")
+	t, err := template.ParseFS(files, "templates/book.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		log.Println(err)
@@ -125,13 +125,16 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 
 	serv := req.Context().Value(SERV_KEY).(service_new.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
+	group := req.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
 
 	t.Execute(res, struct {
-		Name string
-		Book *model.Book
+		Name  string
+		Book  *model.Book
+		Group *model.BookGroup
 	}{
-		Name: serv.Name(),
-		Book: bk,
+		Name:  serv.Name(),
+		Book:  bk,
+		Group: group,
 	})
 }
 
