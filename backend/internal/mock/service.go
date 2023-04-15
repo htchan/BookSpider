@@ -80,6 +80,22 @@ func (mr *MockServiceMockRecorder) BookContent(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookContent", reflect.TypeOf((*MockService)(nil).BookContent), arg0)
 }
 
+// BookGroup mocks base method.
+func (m *MockService) BookGroup(id int, hash string) (*model.Book, *model.BookGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BookGroup", id, hash)
+	ret0, _ := ret[0].(*model.Book)
+	ret1, _ := ret[1].(*model.BookGroup)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// BookGroup indicates an expected call of BookGroup.
+func (mr *MockServiceMockRecorder) BookGroup(id, hash interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookGroup", reflect.TypeOf((*MockService)(nil).BookGroup), id, hash)
+}
+
 // BookInfo mocks base method.
 func (m *MockService) BookInfo(arg0 *model.Book) string {
 	m.ctrl.T.Helper()

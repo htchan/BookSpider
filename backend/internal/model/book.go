@@ -27,6 +27,8 @@ type Book struct {
 	Error  error
 }
 
+type BookGroup []Book
+
 func NewBook(site string, id int) Book {
 	return Book{
 		Site:     site,
