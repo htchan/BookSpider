@@ -156,7 +156,7 @@ where (update_date < $1 or
   status='INPROGRESS' and site=$2;
 
 -- name: CreateWriter :one
-insert into writers (name) values ($1) 
+insert into writers (name, checksum) values ($1, $2) 
 on conflict (name) do update set name=$1 
 returning *;
 

@@ -9,17 +9,18 @@ import (
 )
 
 type Book struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
-	Title         sql.NullString
-	WriterID      sql.NullInt32
-	Type          sql.NullString
-	UpdateDate    sql.NullString
-	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
-	Checksum      sql.NullString
+	Site           sql.NullString
+	ID             sql.NullInt32
+	HashCode       sql.NullInt32
+	Title          sql.NullString
+	WriterID       sql.NullInt32
+	Type           sql.NullString
+	UpdateDate     sql.NullString
+	UpdateChapter  sql.NullString
+	Status         sql.NullString
+	IsDownloaded   sql.NullBool
+	Checksum       sql.NullString
+	WriterChecksum sql.NullString
 }
 
 type Error struct {
@@ -29,6 +30,7 @@ type Error struct {
 }
 
 type Writer struct {
-	ID   int32
-	Name sql.NullString
+	ID       int32
+	Name     sql.NullString
+	Checksum sql.NullString
 }

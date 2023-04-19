@@ -35,7 +35,8 @@ CREATE TABLE public.books (
     update_chapter text,
     status character varying(10),
     is_downloaded boolean DEFAULT false,
-    checksum text
+    checksum text,
+    writer_checksum text
 );
 
 
@@ -60,7 +61,8 @@ ALTER TABLE public.errors OWNER TO test;
 
 CREATE TABLE public.writers (
     id integer NOT NULL,
-    name text
+    name text,
+    checksum text
 );
 
 
@@ -132,6 +134,13 @@ CREATE INDEX books_writer ON public.books USING btree (writer_id);
 
 
 --
+-- Name: books_writer_checksum; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX books_writer_checksum ON public.books USING btree (writer_checksum);
+
+
+--
 -- Name: checksum_index; Type: INDEX; Schema: public; Owner: test
 --
 
@@ -143,6 +152,13 @@ CREATE INDEX checksum_index ON public.books USING btree (checksum);
 --
 
 CREATE UNIQUE INDEX errors_index ON public.errors USING btree (site, id);
+
+
+--
+-- Name: writers_checksum_index; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX writers_checksum_index ON public.writers USING btree (checksum);
 
 
 --

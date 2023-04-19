@@ -65,7 +65,7 @@ INSERT INTO books
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum
+RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type CreateBookWithHashParams struct {
@@ -109,6 +109,7 @@ func (q *Queries) CreateBookWithHash(ctx context.Context, arg CreateBookWithHash
 		&i.Status,
 		&i.IsDownloaded,
 		&i.Checksum,
+		&i.WriterChecksum,
 	)
 	return i, err
 }
@@ -119,7 +120,7 @@ INSERT INTO books
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
 ($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum
+RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type CreateBookWithZeroHashParams struct {
@@ -161,6 +162,7 @@ func (q *Queries) CreateBookWithZeroHash(ctx context.Context, arg CreateBookWith
 		&i.Status,
 		&i.IsDownloaded,
 		&i.Checksum,
+		&i.WriterChecksum,
 	)
 	return i, err
 }
@@ -186,15 +188,20 @@ func (q *Queries) CreateError(ctx context.Context, arg CreateErrorParams) (Error
 }
 
 const createWriter = `-- name: CreateWriter :one
-insert into writers (name) values ($1) 
+insert into writers (name, checksum) values ($1, $2) 
 on conflict (name) do update set name=$1 
-returning id, name
+returning id, name, checksum
 `
 
-func (q *Queries) CreateWriter(ctx context.Context, name sql.NullString) (Writer, error) {
-	row := q.db.QueryRowContext(ctx, createWriter, name)
+type CreateWriterParams struct {
+	Name     sql.NullString
+	Checksum sql.NullString
+}
+
+func (q *Queries) CreateWriter(ctx context.Context, arg CreateWriterParams) (Writer, error) {
+	row := q.db.QueryRowContext(ctx, createWriter, arg.Name, arg.Checksum)
 	var i Writer
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.Checksum)
 	return i, err
 }
 
@@ -918,7 +925,7 @@ Update books SET
 title=$4, writer_id=$5, type=$6, update_date=$7, update_chapter=$8,
 status=$9, is_downloaded=$10, checksum=$11
 WHERE site=$1 and id=$2 and hash_code=$3
-RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum
+RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type UpdateBookParams struct {
@@ -962,6 +969,7 @@ func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, e
 		&i.Status,
 		&i.IsDownloaded,
 		&i.Checksum,
+		&i.WriterChecksum,
 	)
 	return i, err
 }

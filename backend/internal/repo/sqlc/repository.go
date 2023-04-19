@@ -476,7 +476,10 @@ func (r *SqlcRepo) UpdateBooksStatus() error {
 
 // writer related
 func (r *SqlcRepo) SaveWriter(writer *model.Writer) error {
-	result, err := r.queries.CreateWriter(r.ctx, toSqlString(writer.Name))
+	result, err := r.queries.CreateWriter(r.ctx, sqlc.CreateWriterParams{
+		Name:     toSqlString(writer.Name),
+		Checksum: toSqlString(writer.Checksum()),
+	})
 	if err != nil {
 		return fmt.Errorf("fail to save writer: %w", err)
 	}

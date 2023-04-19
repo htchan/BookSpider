@@ -34,12 +34,18 @@ type DbConf struct {
 	Name     string `env:"PSQL_NAME,required" validate:"min=1"`
 }
 
-type Source struct {
-	Site  string
-	ID    int
-	Hash  int
-	Title string
-	Name  string
+type TitleSource struct {
+	Site     string
+	ID       int
+	Hash     int
+	Title    string
+	WriterID int
+	Name     string
+}
+
+type WriterSource struct {
+	ID   int
+	Name string
 }
 
 func main() {
@@ -56,41 +62,74 @@ func main() {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("select books.site, books.id, books.hash_code, books.title, writers.name from books left join writers on books.writer_id=writers.id where status != 'ERROR' and (checksum=$1 or checksum is null)", "")
+	var titleWg, writerWg sync.WaitGroup
+
+	titleRows, err := db.Query("select books.site, books.id, books.hash_code, books.title from books where status != 'ERROR' and (checksum=$1 or checksum is null)", "")
 	if err != nil {
 		panic(err)
 	}
-	defer rows.Close()
-
-	var wg sync.WaitGroup
+	defer titleRows.Close()
 
 	sema := semaphore.NewWeighted(100)
 	ctx := context.Background()
-	for rows.Next() {
-		wg.Add(1)
+	for titleRows.Next() {
+		titleWg.Add(1)
 		sema.Acquire(ctx, 1)
-		var src Source
-		err := rows.Scan(&src.Site, &src.ID, &src.Hash, &src.Title, &src.Name)
+		var src TitleSource
+		err := titleRows.Scan(&src.Site, &src.ID, &src.Hash, &src.Title)
 		fmt.Println(src.Site, src.ID, src.Hash)
-		go func(src Source) {
-			defer wg.Done()
+		go func(src TitleSource) {
+			defer titleWg.Done()
 			defer sema.Release(1)
+			cachedSrc := src
 			if err != nil {
 				log.Println(err)
 			}
 
-			if len(src.Title) > 100 || len(src.Name) > 100 {
-				log.Printf("[%v-%v-%v] title: %v; writer: %v is too long", src.Site, src.ID, src.Hash, src.Title, src.Name)
+			if len(src.Title) > 100 {
+				log.Printf("[%v-%v-%v] title: %v; writer: %v is too long", cachedSrc.Site, cachedSrc.ID, cachedSrc.Hash, cachedSrc.Title, cachedSrc.Name)
 				return
 			}
 
-			src.Title = strings.ReplaceAll(src.Title, " ", "")
-			src.Name = strings.ReplaceAll(src.Name, " ", "")
-			sum := strToShortHex(simplified(fmt.Sprintf("%s-%s", src.Title, src.Name)))
+			src.Title = strings.ReplaceAll(cachedSrc.Title, " ", "")
+			titleSum := strToShortHex(simplified(fmt.Sprintf("%s", cachedSrc.Title)))
 
-			db.Exec("update books set checksum=$1 where site=$2 and id=$3 and hash_code=$4", sum, src.Site, src.ID, src.Hash)
+			db.Exec("update books set checksum=$1 where site=$2 and id=$3 and hash_code=$4", titleSum, cachedSrc.Site, cachedSrc.ID, cachedSrc.Hash)
 		}(src)
 	}
 
-	wg.Wait()
+	writerRows, err := db.Query("select id, name from books where checksum=$1 or checksum is null", "")
+	if err != nil {
+		panic(err)
+	}
+	defer writerRows.Close()
+
+	for writerRows.Next() {
+		writerWg.Add(1)
+		sema.Acquire(ctx, 1)
+		var src WriterSource
+		err := writerRows.Scan(&src.ID, &src.Name)
+		fmt.Println(src.ID)
+		go func(src WriterSource) {
+			defer writerWg.Done()
+			defer sema.Release(1)
+			cachedSrc := src
+			if err != nil {
+				log.Println(err)
+			}
+
+			if len(src.Name) > 100 {
+				log.Printf("[writer] id: %v; ;name: %v is too long", cachedSrc.ID, cachedSrc.Name)
+				return
+			}
+
+			src.Name = strings.ReplaceAll(cachedSrc.Name, " ", "")
+			nameSum := strToShortHex(simplified(fmt.Sprintf("%s", cachedSrc.Name)))
+
+			db.Exec("update writers set checksum=$1 whereid=$2", nameSum, cachedSrc.ID)
+		}(src)
+	}
+
+	titleWg.Wait()
+	writerWg.Wait()
 }
