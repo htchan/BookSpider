@@ -61,25 +61,26 @@ func (q *Queries) BooksStatusStat(ctx context.Context, site sql.NullString) ([]B
 
 const createBookWithHash = `-- name: CreateBookWithHash :one
 INSERT INTO books
-(site, id, hash_code, title, writer_id, type, 
+(site, id, hash_code, title, writer_id, writer_checksum, type, 
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
-($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type CreateBookWithHashParams struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
-	Title         sql.NullString
-	WriterID      sql.NullInt32
-	Type          sql.NullString
-	UpdateDate    sql.NullString
-	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
-	Checksum      sql.NullString
+	Site           sql.NullString
+	ID             sql.NullInt32
+	HashCode       sql.NullInt32
+	Title          sql.NullString
+	WriterID       sql.NullInt32
+	WriterChecksum sql.NullString
+	Type           sql.NullString
+	UpdateDate     sql.NullString
+	UpdateChapter  sql.NullString
+	Status         sql.NullString
+	IsDownloaded   sql.NullBool
+	Checksum       sql.NullString
 }
 
 func (q *Queries) CreateBookWithHash(ctx context.Context, arg CreateBookWithHashParams) (Book, error) {
@@ -89,6 +90,7 @@ func (q *Queries) CreateBookWithHash(ctx context.Context, arg CreateBookWithHash
 		arg.HashCode,
 		arg.Title,
 		arg.WriterID,
+		arg.WriterChecksum,
 		arg.Type,
 		arg.UpdateDate,
 		arg.UpdateChapter,
@@ -116,24 +118,25 @@ func (q *Queries) CreateBookWithHash(ctx context.Context, arg CreateBookWithHash
 
 const createBookWithZeroHash = `-- name: CreateBookWithZeroHash :one
 INSERT INTO books
-(site, id, hash_code, title, writer_id, type, 
+(site, id, hash_code, title, writer_id, writer_checksum, type, 
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
-($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, $10)
+($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type CreateBookWithZeroHashParams struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	Title         sql.NullString
-	WriterID      sql.NullInt32
-	Type          sql.NullString
-	UpdateDate    sql.NullString
-	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
-	Checksum      sql.NullString
+	Site           sql.NullString
+	ID             sql.NullInt32
+	Title          sql.NullString
+	WriterID       sql.NullInt32
+	WriterChecksum sql.NullString
+	Type           sql.NullString
+	UpdateDate     sql.NullString
+	UpdateChapter  sql.NullString
+	Status         sql.NullString
+	IsDownloaded   sql.NullBool
+	Checksum       sql.NullString
 }
 
 func (q *Queries) CreateBookWithZeroHash(ctx context.Context, arg CreateBookWithZeroHashParams) (Book, error) {
@@ -142,6 +145,7 @@ func (q *Queries) CreateBookWithZeroHash(ctx context.Context, arg CreateBookWith
 		arg.ID,
 		arg.Title,
 		arg.WriterID,
+		arg.WriterChecksum,
 		arg.Type,
 		arg.UpdateDate,
 		arg.UpdateChapter,
@@ -244,7 +248,7 @@ func (q *Queries) ErrorBooksStat(ctx context.Context, site sql.NullString) (int6
 }
 
 const getBookByID = `-- name: GetBookByID :one
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -263,7 +267,6 @@ type GetBookByIDRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -282,7 +285,6 @@ func (q *Queries) GetBookByID(ctx context.Context, arg GetBookByIDParams) (GetBo
 		&i.ID,
 		&i.HashCode,
 		&i.Title,
-		&i.Checksum,
 		&i.WriterID,
 		&i.Name,
 		&i.Type,
@@ -296,7 +298,7 @@ func (q *Queries) GetBookByID(ctx context.Context, arg GetBookByIDParams) (GetBo
 }
 
 const getBookByIDHash = `-- name: GetBookByIDHash :one
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -317,7 +319,6 @@ type GetBookByIDHashRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -336,7 +337,6 @@ func (q *Queries) GetBookByIDHash(ctx context.Context, arg GetBookByIDHashParams
 		&i.ID,
 		&i.HashCode,
 		&i.Title,
-		&i.Checksum,
 		&i.WriterID,
 		&i.Name,
 		&i.Type,
@@ -350,14 +350,15 @@ func (q *Queries) GetBookByIDHash(ctx context.Context, arg GetBookByIDHashParams
 }
 
 const getBookGroupByID = `-- name: GetBookGroupByID :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books
+  left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.checksum = (
-  select bks.checksum from books as bks 
+where (books.checksum, books.writer_checksum) = (
+  select bks.checksum, bks.writer_checksum from books as bks 
   where books.site=$1 and books.id=$2 
   order by books.hash_code desc limit 1
 )
@@ -373,7 +374,6 @@ type GetBookGroupByIDRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -398,7 +398,6 @@ func (q *Queries) GetBookGroupByID(ctx context.Context, arg GetBookGroupByIDPara
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -422,14 +421,15 @@ func (q *Queries) GetBookGroupByID(ctx context.Context, arg GetBookGroupByIDPara
 }
 
 const getBookGroupByIDHash = `-- name: GetBookGroupByIDHash :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books
+  left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.checksum = (
-  select bks.checksum from books as bks 
+where (books.checksum, books.writer_checksum) = (
+  select bks.checksum, bks.writer_checksum from books as bks 
   where bks.site=$1 and bks.id=$2 and bks.hash_code=$3
   order by bks.hash_code desc limit 1
 )
@@ -446,7 +446,6 @@ type GetBookGroupByIDHashRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -471,7 +470,6 @@ func (q *Queries) GetBookGroupByIDHash(ctx context.Context, arg GetBookGroupByID
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -495,7 +493,7 @@ func (q *Queries) GetBookGroupByIDHash(ctx context.Context, arg GetBookGroupByID
 }
 
 const listBooks = `-- name: ListBooks :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -510,7 +508,6 @@ type ListBooksRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -535,7 +532,6 @@ func (q *Queries) ListBooks(ctx context.Context, site sql.NullString) ([]ListBoo
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -559,7 +555,7 @@ func (q *Queries) ListBooks(ctx context.Context, site sql.NullString) ([]ListBoo
 }
 
 const listBooksByStatus = `-- name: ListBooksByStatus :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -578,7 +574,6 @@ type ListBooksByStatusRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -603,7 +598,6 @@ func (q *Queries) ListBooksByStatus(ctx context.Context, arg ListBooksByStatusPa
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -627,11 +621,11 @@ func (q *Queries) ListBooksByStatus(ctx context.Context, arg ListBooksByStatusPa
 }
 
 const listBooksByTitleWriter = `-- name: ListBooksByTitleWriter :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books left join writers on books.writer_id=writers.id
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status != 'ERROR' and 
   (($2 != '%%' and books.title like $2) or
@@ -652,7 +646,6 @@ type ListBooksByTitleWriterRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -683,7 +676,6 @@ func (q *Queries) ListBooksByTitleWriter(ctx context.Context, arg ListBooksByTit
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -707,7 +699,7 @@ func (q *Queries) ListBooksByTitleWriter(ctx context.Context, arg ListBooksByTit
 }
 
 const listBooksForDownload = `-- name: ListBooksForDownload :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -722,7 +714,6 @@ type ListBooksForDownloadRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -747,7 +738,6 @@ func (q *Queries) ListBooksForDownload(ctx context.Context, site sql.NullString)
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -772,7 +762,7 @@ func (q *Queries) ListBooksForDownload(ctx context.Context, site sql.NullString)
 
 const listBooksForUpdate = `-- name: ListBooksForUpdate :many
 select distinct on (books.site, books.id) 
-  books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -787,7 +777,6 @@ type ListBooksForUpdateRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -812,7 +801,6 @@ func (q *Queries) ListBooksForUpdate(ctx context.Context, site sql.NullString) (
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -836,7 +824,7 @@ func (q *Queries) ListBooksForUpdate(ctx context.Context, site sql.NullString) (
 }
 
 const listRandomBooks = `-- name: ListRandomBooks :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -861,7 +849,6 @@ type ListRandomBooksRow struct {
 	ID            sql.NullInt32
 	HashCode      sql.NullInt32
 	Title         sql.NullString
-	Checksum      sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
@@ -886,7 +873,6 @@ func (q *Queries) ListRandomBooks(ctx context.Context, arg ListRandomBooksParams
 			&i.ID,
 			&i.HashCode,
 			&i.Title,
-			&i.Checksum,
 			&i.WriterID,
 			&i.Name,
 			&i.Type,
@@ -922,24 +908,25 @@ func (q *Queries) NonErrorBooksStat(ctx context.Context, site sql.NullString) (i
 
 const updateBook = `-- name: UpdateBook :one
 Update books SET 
-title=$4, writer_id=$5, type=$6, update_date=$7, update_chapter=$8,
+title=$4, writer_id=$5, writer_checksum=$12, type=$6, update_date=$7, update_chapter=$8,
 status=$9, is_downloaded=$10, checksum=$11
 WHERE site=$1 and id=$2 and hash_code=$3
 RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded, checksum, writer_checksum
 `
 
 type UpdateBookParams struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
-	Title         sql.NullString
-	WriterID      sql.NullInt32
-	Type          sql.NullString
-	UpdateDate    sql.NullString
-	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
-	Checksum      sql.NullString
+	Site           sql.NullString
+	ID             sql.NullInt32
+	HashCode       sql.NullInt32
+	Title          sql.NullString
+	WriterID       sql.NullInt32
+	Type           sql.NullString
+	UpdateDate     sql.NullString
+	UpdateChapter  sql.NullString
+	Status         sql.NullString
+	IsDownloaded   sql.NullBool
+	Checksum       sql.NullString
+	WriterChecksum sql.NullString
 }
 
 func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, error) {
@@ -955,6 +942,7 @@ func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, e
 		arg.Status,
 		arg.IsDownloaded,
 		arg.Checksum,
+		arg.WriterChecksum,
 	)
 	var i Book
 	err := row.Scan(

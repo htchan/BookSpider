@@ -46,16 +46,17 @@ func NewRepo(site string, db *sql.DB) *SqlcRepo {
 
 func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 	result, err := r.queries.CreateBookWithZeroHash(r.ctx, sqlc.CreateBookWithZeroHashParams{
-		Site:          toSqlString(bk.Site),
-		ID:            toSqlInt(bk.ID),
-		Title:         toSqlString(bk.Title),
-		WriterID:      toSqlInt(bk.Writer.ID),
-		Type:          toSqlString(bk.Type),
-		UpdateDate:    toSqlString(bk.UpdateDate),
-		UpdateChapter: toSqlString(bk.UpdateChapter),
-		Status:        toSqlString(bk.Status.String()),
-		IsDownloaded:  toSqlBool(bk.IsDownloaded),
-		Checksum:      toSqlString(bk.Checksum()),
+		Site:           toSqlString(bk.Site),
+		ID:             toSqlInt(bk.ID),
+		Title:          toSqlString(bk.Title),
+		WriterID:       toSqlInt(bk.Writer.ID),
+		WriterChecksum: toSqlString(bk.Writer.Checksum()),
+		Type:           toSqlString(bk.Type),
+		UpdateDate:     toSqlString(bk.UpdateDate),
+		UpdateChapter:  toSqlString(bk.UpdateChapter),
+		Status:         toSqlString(bk.Status.String()),
+		IsDownloaded:   toSqlBool(bk.IsDownloaded),
+		Checksum:       toSqlString(bk.Checksum()),
 	})
 	if err == nil {
 		bk.HashCode = int(result.HashCode.Int32)
@@ -63,17 +64,18 @@ func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 	}
 
 	_, err = r.queries.CreateBookWithHash(r.ctx, sqlc.CreateBookWithHashParams{
-		Site:          toSqlString(bk.Site),
-		ID:            toSqlInt(bk.ID),
-		HashCode:      toSqlInt(bk.HashCode),
-		Title:         toSqlString(bk.Title),
-		WriterID:      toSqlInt(bk.Writer.ID),
-		Type:          toSqlString(bk.Type),
-		UpdateDate:    toSqlString(bk.UpdateDate),
-		UpdateChapter: toSqlString(bk.UpdateChapter),
-		Status:        toSqlString(bk.Status.String()),
-		IsDownloaded:  toSqlBool(bk.IsDownloaded),
-		Checksum:      toSqlString(bk.Checksum()),
+		Site:           toSqlString(bk.Site),
+		ID:             toSqlInt(bk.ID),
+		HashCode:       toSqlInt(bk.HashCode),
+		Title:          toSqlString(bk.Title),
+		WriterID:       toSqlInt(bk.Writer.ID),
+		WriterChecksum: toSqlString(bk.Writer.Checksum()),
+		Type:           toSqlString(bk.Type),
+		UpdateDate:     toSqlString(bk.UpdateDate),
+		UpdateChapter:  toSqlString(bk.UpdateChapter),
+		Status:         toSqlString(bk.Status.String()),
+		IsDownloaded:   toSqlBool(bk.IsDownloaded),
+		Checksum:       toSqlString(bk.Checksum()),
 	})
 	if err != nil {
 		return fmt.Errorf("fail to insert book: %v", err)
@@ -84,17 +86,18 @@ func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 
 func (r *SqlcRepo) UpdateBook(bk *model.Book) error {
 	_, err := r.queries.UpdateBook(r.ctx, sqlc.UpdateBookParams{
-		Site:          toSqlString(bk.Site),
-		ID:            toSqlInt(bk.ID),
-		HashCode:      toSqlInt(bk.HashCode),
-		Title:         toSqlString(bk.Title),
-		WriterID:      toSqlInt(bk.Writer.ID),
-		Type:          toSqlString(bk.Type),
-		UpdateDate:    toSqlString(bk.UpdateDate),
-		UpdateChapter: toSqlString(bk.UpdateChapter),
-		Status:        toSqlString(bk.Status.String()),
-		IsDownloaded:  toSqlBool(bk.IsDownloaded),
-		Checksum:      toSqlString(bk.Checksum()),
+		Site:           toSqlString(bk.Site),
+		ID:             toSqlInt(bk.ID),
+		HashCode:       toSqlInt(bk.HashCode),
+		Title:          toSqlString(bk.Title),
+		WriterID:       toSqlInt(bk.Writer.ID),
+		WriterChecksum: toSqlString(bk.Writer.Checksum()),
+		Type:           toSqlString(bk.Type),
+		UpdateDate:     toSqlString(bk.UpdateDate),
+		UpdateChapter:  toSqlString(bk.UpdateChapter),
+		Status:         toSqlString(bk.Status.String()),
+		IsDownloaded:   toSqlBool(bk.IsDownloaded),
+		Checksum:       toSqlString(bk.Checksum()),
 	})
 	if err != nil {
 		return fmt.Errorf("fail to update book: %w", err)

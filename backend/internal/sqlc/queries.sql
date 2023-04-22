@@ -1,28 +1,28 @@
 -- name: CreateBookWithZeroHash :one
 INSERT INTO books
-(site, id, hash_code, title, writer_id, type, 
+(site, id, hash_code, title, writer_id, writer_checksum, type, 
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
-($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, $10)
+($1, $2, 0, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING *;
 
 -- name: CreateBookWithHash :one
 INSERT INTO books
-(site, id, hash_code, title, writer_id, type, 
+(site, id, hash_code, title, writer_id, writer_checksum, type, 
 update_date, update_chapter, status, is_downloaded, checksum)
 VALUES
-($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: UpdateBook :one
 Update books SET 
-title=$4, writer_id=$5, type=$6, update_date=$7, update_chapter=$8,
+title=$4, writer_id=$5, writer_checksum=$12, type=$6, update_date=$7, update_chapter=$8,
 status=$9, is_downloaded=$10, checksum=$11
 WHERE site=$1 and id=$2 and hash_code=$3
 RETURNING *;
 
 -- name: GetBookByID :one
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -31,7 +31,7 @@ from books left join writers on books.writer_id=writers.id
 where books.site=$1 and books.id=$2 order by books.hash_code desc;
 
 -- name: GetBookByIDHash :one
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -41,7 +41,7 @@ where books.site=$1 and books.id=$2 and books.hash_code=$3
 order by hash_code desc;
 
 -- name: ListBooksByStatus :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -50,7 +50,7 @@ from books left join writers on books.writer_id=writers.id
 where books.site=$1 and books.status=$2 order by hash_code desc;
 
 -- name: ListBooks :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -61,7 +61,7 @@ order by books.site, books.id, books.hash_code;
 
 -- name: ListBooksForUpdate :many
 select distinct on (books.site, books.id) 
-  books.site, books.id, books.hash_code, books.title, books.checksum,
+  books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -71,7 +71,7 @@ where books.site=$1
 order by books.site, books.id desc, books.hash_code desc;
 
 -- name: ListBooksForDownload :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -81,11 +81,11 @@ where books.site=$1 and books.status='END' and books.is_downloaded=false
 order by books.update_date desc, books.id desc;
 
 -- name: ListBooksByTitleWriter :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books left join writers on books.writer_id=writers.id
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status != 'ERROR' and 
   (($2 != '%%' and books.title like $2) or
@@ -93,7 +93,7 @@ where books.site=$1 and books.status != 'ERROR' and
 order by books.update_date desc, books.id desc limit $4 offset $5;
 
 -- name: ListRandomBooks :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
@@ -108,27 +108,29 @@ limit $2 offset RANDOM() *
 );
 
 -- name: GetBookGroupByID :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books
+  left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.checksum = (
-  select bks.checksum from books as bks 
+where (books.checksum, books.writer_checksum) = (
+  select bks.checksum, bks.writer_checksum from books as bks 
   where books.site=$1 and books.id=$2 
   order by books.hash_code desc limit 1
 );
 
 -- name: GetBookGroupByIDHash :many
-select books.site, books.id, books.hash_code, books.title, books.checksum,
+select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
-from books left join writers on books.writer_id=writers.id 
+from books
+  left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.checksum = (
-  select bks.checksum from books as bks 
+where (books.checksum, books.writer_checksum) = (
+  select bks.checksum, bks.writer_checksum from books as bks 
   where bks.site=$1 and bks.id=$2 and bks.hash_code=$3
   order by bks.hash_code desc limit 1
 );
