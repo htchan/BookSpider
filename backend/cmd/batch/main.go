@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	config "github.com/htchan/BookSpider/internal/config_new"
-	repo "github.com/htchan/BookSpider/internal/repo/psql"
+	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
 	"golang.org/x/sync/semaphore"
 )
@@ -35,7 +35,8 @@ func main() {
 
 		db, err := repo.OpenDatabase(siteName)
 		if err != nil {
-			log.Error().Err(err).Str("site", siteName).Msg("load db fail")
+			// log.Error().Err(err).Str("site", siteName).Msg("load db fail")
+			log.Fatalf("load db fail. site: %v, err: %v", siteName, err)
 			return
 		}
 
