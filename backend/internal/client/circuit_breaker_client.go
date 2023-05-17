@@ -11,6 +11,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/config"
 	config_new "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -148,6 +149,7 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
 		if err != nil {
+			log.Error().Err(err).Str("url", url).Int("trial", i).Msg("send request failed")
 			if (err.Error() == "code 503" || err.Error() == "code 502") && i >= retryUnavailable {
 				return html, err
 			} else if i >= retryErr {

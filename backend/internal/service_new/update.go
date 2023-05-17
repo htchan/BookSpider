@@ -2,11 +2,11 @@ package service
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
+	"github.com/rs/zerolog/log"
 )
 
 func (serv *ServiceImp) baseURL(bk *model.Book) string {
@@ -37,13 +37,13 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 			return err
 		}
 
-		log.Printf("[%v] new book found: title: %v", bk, bk.Title)
+		log.Info().Str("book", bk.String()).Str("title", bk.Title).Msg("new book found")
 	} else if parse.IsUpdatedBook(parsedBookFields, bk) {
 		// TODO: log updated
 		bk.Status = model.InProgress
 		bk.Error = nil
 		parsedBookFields.Populate(bk)
-		log.Printf("[%v] updated book found: title: %v", bk, bk.Title)
+		log.Info().Str("book", bk.String()).Str("title", bk.Title).Msg("updated book found")
 		err := serv.rpo.SaveWriter(&bk.Writer)
 		if err != nil {
 			return err
@@ -53,7 +53,7 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 			return err
 		}
 	} else {
-		// TODO: log not updated, should I?
+		log.Debug().Str("book", bk.String()).Msg("book not updated")
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (serv *ServiceImp) Update() error {
 
 			err := serv.UpdateBook(bk)
 			if err != nil {
-				log.Printf("[%v] update failed: %v", bk, err)
+				log.Error().Err(err).Str("book", bk.String()).Msg("update book failed")
 			}
 		}(&bk)
 	}

@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,16 +11,19 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/htchan/BookSpider/internal/model"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/rs/zerolog/log"
 )
 
+type ContextKey string
+
 const (
-	SERV_KEY       = "serv"
-	BOOK_KEY       = "book"
-	BOOK_GROUP_KEY = "book_group"
-	TITLE_KEY      = "title"
-	WRITER_KEY     = "writer"
-	LIMIT_KEY      = "limit"
-	OFFSET_KEY     = "offset"
+	SERV_KEY       ContextKey = "serv"
+	BOOK_KEY       ContextKey = "book"
+	BOOK_GROUP_KEY ContextKey = "book_group"
+	TITLE_KEY      ContextKey = "title"
+	WRITER_KEY     ContextKey = "writer"
+	LIMIT_KEY      ContextKey = "limit"
+	OFFSET_KEY     ContextKey = "offset"
 )
 
 func GetSiteMiddleware(services map[string]service_new.Service) func(http.Handler) http.Handler {
@@ -27,9 +31,18 @@ func GetSiteMiddleware(services map[string]service_new.Service) func(http.Handle
 		return http.HandlerFunc(
 			func(res http.ResponseWriter, req *http.Request) {
 				siteName := chi.URLParam(req, "siteName")
+				availableSites := make([]string, len(services), 0)
+				for key := range services {
+					availableSites = append(availableSites, key)
+				}
 				serv, ok := services[siteName]
 				if !ok {
-					fmt.Println(services, siteName, serv, ok)
+					log.
+						Error().
+						Err(errors.New("site not found")).
+						Str("site", siteName).
+						Strs("available sites", availableSites).
+						Msg("get site middleware failed")
 					fmt.Fprint(res, `{"error": "site not found"}`)
 					return
 				}
@@ -60,7 +73,12 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 				bk, group, err = serv.BookGroup(id, hash)
 			}
 			if err != nil {
-				fmt.Printf("cannot query book. site: %v; id-hash: %v; err: %v\n", serv.Name(), idHash, err)
+				log.
+					Error().
+					Err(err).
+					Str("site", serv.Name()).
+					Str("id-hash", idHash).
+					Msg("get book middleware failed")
 				fmt.Fprintf(res, `{"error": "book not found"}`)
 				return
 			}
@@ -95,6 +113,19 @@ func GetPageParamsMiddleware(next http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, OFFSET_KEY, offset)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
+		},
+	)
+}
+
+func ZerologMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			log.
+				Info().
+				Str("method", req.Method).
+				Str("endpoint", req.RequestURI).
+				Msg("API called")
+			next.ServeHTTP(res, req)
 		},
 	)
 }

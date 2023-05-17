@@ -7,6 +7,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
+	"github.com/rs/zerolog/log"
 )
 
 func (serv *ServiceImp) ExploreBook(bk *model.Book) error {
@@ -21,8 +22,8 @@ func (serv *ServiceImp) ExploreBook(bk *model.Book) error {
 
 	err := serv.UpdateBook(bk)
 	if err != nil {
+		log.Error().Err(err).Str("book", bk.String()).Msg("explore book fail")
 		bk.Error = err
-		fmt.Println(bk.Error)
 		saveErr := serv.rpo.SaveError(bk, bk.Error)
 		if saveErr != nil {
 			return fmt.Errorf("save error fail: %w", saveErr)

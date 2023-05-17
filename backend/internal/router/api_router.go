@@ -22,6 +22,7 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 
 func AddAPIRoutes(router chi.Router, conf config.APIConfig, services map[string]service_new.Service) {
 	router.Route(conf.APIRoutePrefix, func(router chi.Router) {
+		router.Use(ZerologMiddleware)
 		router.Use(
 			cors.Handler(
 				cors.Options{

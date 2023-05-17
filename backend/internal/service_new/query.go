@@ -2,10 +2,10 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/htchan/BookSpider/internal/model"
+	"github.com/rs/zerolog/log"
 )
 
 func (serv *ServiceImp) Book(id int, hash string) (*model.Book, error) {
@@ -51,9 +51,22 @@ func (serv *ServiceImp) BookGroup(id int, hash string) (*model.Book, *model.Book
 			break
 		}
 	}
+
+	groupIDs := make([]string, len(group), 0)
+	for _, bk := range group {
+		groupIDs = append(groupIDs, bk.String())
+	}
+
 	if bkIndex < 0 {
-		fmt.Println(id, hashcode, group)
-		return nil, nil, errors.New("books not found")
+		err := errors.New("books not found")
+		log.
+			Error().
+			Err(err).
+			Int("id", id).
+			Int64("hashcode", hashcode).
+			Strs("book group id", groupIDs).
+			Msg("find book group failed")
+		return nil, nil, err
 	}
 
 	bk := group[bkIndex]

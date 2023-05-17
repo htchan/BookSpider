@@ -3,12 +3,13 @@ package model
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/siongui/gojianfan"
 )
 
@@ -91,10 +92,15 @@ func strToShortHex(s string) string {
 
 func (bk Book) Checksum() string {
 	if len(bk.Title) > 100 {
-		log.Printf("[%v-%v-%v] title: %v is too long", bk.Site, bk.ID, bk.HashCode, bk.Title)
+		log.
+			Error().
+			Err(errors.New("book title is too long")).
+			Str("book", bk.String()).
+			Str("title", bk.Title).
+			Msg("generate checksum failed")
 		return ""
 	}
 
 	title := strings.ReplaceAll(bk.Title, " ", "")
-	return strToShortHex(simplified(fmt.Sprintf("%s", title)))
+	return strToShortHex(simplified(title))
 }

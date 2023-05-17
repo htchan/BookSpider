@@ -3,13 +3,13 @@ package repo
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -43,7 +43,7 @@ func OpenDatabase(site string) (*sql.DB, error) {
 	// database.SetMaxOpenConns(10)
 	// database.SetConnMaxIdleTime(5 * time.Second)
 	// database.SetConnMaxLifetime(5 * time.Second)
-	log.Printf("postgres_database.open; %v", database)
+	log.Info().Str("site", site).Msg("postgres database opened")
 	return database, err
 }
 
@@ -60,7 +60,7 @@ func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
 	// database.SetMaxOpenConns(10)
 	// database.SetConnMaxIdleTime(5 * time.Second)
 	// database.SetConnMaxLifetime(5 * time.Second)
-	log.Printf("postgres_database.open; %v", database)
+	log.Info().Msg("postgres database opened")
 	return database, err
 }
 
@@ -77,9 +77,9 @@ func Migrate(db *sql.DB) error {
 	}
 	defer m.Close()
 
-	err = m.Up()
-	if err != nil {
-		log.Printf("migration: %s", err)
+	upErr := m.Up()
+	if upErr != nil {
+		log.Error().Err(upErr).Msg("migration up failed")
 	}
 	return nil
 }
