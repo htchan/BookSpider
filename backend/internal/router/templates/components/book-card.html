@@ -1,5 +1,5 @@
 {{ define "book-card" }}
-  <div class="book-box" onclick="location.href='books/{{.ID}}-{{.HashCode}}/'">
+  <div class="book-box" onclick="location.href+='books/{{.ID}}-{{.HashCode}}/'">
     <p>{{ .Title }} - {{ .Writer.Name }}</p>
     <p>{{ .UpdateDate }}</p>
     <p>{{ .UpdateChapter }}</p>
