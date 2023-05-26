@@ -90,61 +90,64 @@ func Test_GetBookMiddleware(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		setupServ  func(ctrl *gomock.Controller) service_new.Service
-		idHash     string
-		expectBook *model.Book
-		wantRes    string
+		name            string
+		setupServ       func(ctrl *gomock.Controller) service_new.Service
+		idHash          string
+		expectBook      *model.Book
+		expectBookGroup *model.BookGroup
+		wantRes         string
 	}{
 		{
 			name: "set request context book for existing id",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
 				serv := mock.NewMockService(ctrl)
-				serv.EXPECT().Book(1, "").Return(&model.Book{ID: 1}, nil)
+				serv.EXPECT().BookGroup(1, "").Return(
+					&model.Book{ID: 1},
+					&model.BookGroup{{ID: 1}, {ID: 2}},
+					nil,
+				)
 
 				return serv
 			},
-			idHash:     "1",
-			expectBook: &model.Book{ID: 1},
-			wantRes:    "ok",
+			idHash:          "1",
+			expectBook:      &model.Book{ID: 1},
+			expectBookGroup: &model.BookGroup{{ID: 1}, {ID: 2}},
+			wantRes:         "ok",
 		},
 		{
 			name: "set request context book for existing id-hash",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
 				serv := mock.NewMockService(ctrl)
-				serv.EXPECT().Book(1, "2s").Return(&model.Book{ID: 1, HashCode: 100}, nil)
+				serv.EXPECT().BookGroup(1, "2s").Return(
+					&model.Book{ID: 1, HashCode: 100},
+					&model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
+					nil,
+				)
 
 				return serv
 			},
-			idHash:     "1-2s",
-			expectBook: &model.Book{ID: 1, HashCode: 100},
-			wantRes:    "ok",
+			idHash:          "1-2s",
+			expectBook:      &model.Book{ID: 1, HashCode: 100},
+			expectBookGroup: &model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
+			wantRes:         "ok",
 		},
 		{
 			name: "return error for not exist id",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
 				serv := mock.NewMockService(ctrl)
-				serv.EXPECT().Book(1, "").Return(nil, errors.New("some error"))
+				serv.EXPECT().BookGroup(1, "").Return(
+					nil,
+					nil,
+					errors.New("some error"),
+				)
 				serv.EXPECT().Name().Return("")
 
 				return serv
 			},
-			idHash:     "1",
-			expectBook: nil,
-			wantRes:    `{"error": "book not found"}`,
-		},
-		{
-			name: "return error for not exist id",
-			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
-				serv.EXPECT().Book(1, "2s").Return(nil, errors.New("some error"))
-				serv.EXPECT().Name().Return("")
-
-				return serv
-			},
-			idHash:     "1-2s",
-			expectBook: &model.Book{ID: 1, HashCode: 100},
-			wantRes:    `{"error": "book not found"}`,
+			idHash:          "1",
+			expectBook:      nil,
+			expectBookGroup: nil,
+			wantRes:         `{"error": "book not found"}`,
 		},
 	}
 
@@ -161,6 +164,11 @@ func Test_GetBookMiddleware(t *testing.T) {
 					bk := r.Context().Value(BOOK_KEY).(*model.Book)
 					if !cmp.Equal(bk, test.expectBook) {
 						t.Errorf("site diff: %v", cmp.Diff(bk, test.expectBook))
+					}
+
+					bkGroup := r.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
+					if !cmp.Equal(bkGroup, test.expectBookGroup) {
+						t.Errorf("site diff: %v", cmp.Diff(bkGroup, test.expectBookGroup))
 					}
 					fmt.Fprintln(w, test.wantRes)
 				},
