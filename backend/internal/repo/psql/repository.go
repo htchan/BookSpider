@@ -2,14 +2,12 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
@@ -25,26 +23,6 @@ var _ repo.Repostory = &PsqlRepo{}
 
 func NewRepo(site string, db *sql.DB) *PsqlRepo {
 	return &PsqlRepo{site: site, db: db}
-}
-
-func (r *PsqlRepo) Migrate() error {
-	db := *r.db
-	driver, err := postgres.WithInstance(&db, &postgres.Config{})
-	if err != nil {
-		return fmt.Errorf("migrate fail: %w", err)
-	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file:///migrations",
-		"postgres", driver)
-	if err != nil {
-		return fmt.Errorf("migrate fail: %w", err)
-	}
-	err = m.Up()
-	if err != nil {
-		log.Printf("migration: %s", err)
-	}
-	defer m.Close()
-	return nil
 }
 
 func (r *PsqlRepo) CreateBook(bk *model.Book) error {
@@ -285,6 +263,14 @@ func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	}
 
 	return bks, nil
+}
+
+func (r *PsqlRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
+	return nil, errors.New("Not implemented error")
+}
+
+func (r *PsqlRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
+	return nil, errors.New("Not implemented error")
 }
 
 func generateUpdateStatusCondition(length int) string {

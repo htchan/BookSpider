@@ -20,6 +20,7 @@ services:
             - ./backend/migrations:/migrations
         env_file:
             - .env
+            - .env.db
             - ./backend/assets/.env
         networks:
             - router

@@ -120,6 +120,16 @@ func (serv *ServiceImp) DownloadBook(bk *model.Book) error {
 		return fmt.Errorf("Download chapters fail: %w", err)
 	}
 
+	totalFailedChapter := 0
+	for _, chapter := range chapters {
+		if chapter.Error != nil {
+			totalFailedChapter += 1
+		}
+	}
+	if totalFailedChapter > 50 || totalFailedChapter*10 > len(chapters) {
+		return fmt.Errorf("Download chapters fail: too many failed chapters (%v/%v)", totalFailedChapter, len(chapters))
+	}
+
 	log.Printf("[%v] save content", bk)
 	err = serv.saveContent(serv.BookFileLocation(bk), bk, chapters)
 	if err != nil {

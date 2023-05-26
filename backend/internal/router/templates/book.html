@@ -18,6 +18,10 @@
       <p>{{ .Book.Status }}</p>
       {{ end }}
   </div>
+  <h2>Book Group</h2>
+  {{ range $index, $value := .Books }}
+    {{ template "book-card" $value }}
+  {{ end}}
 </body>
 
 </html>

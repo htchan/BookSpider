@@ -1,0 +1,38 @@
+hjwzw: &hjwzw
+  decode_method: utf8
+
+  urls: #desktop
+    base: https://tw.hjwzw.com/Book/%v/
+    download: https://tw.hjwzw.com/Book/Chapter/%v/
+    chapter_prefix: https://tw.hjwzw.com
+    availability: https://tw.hjwzw.com
+
+  goquery_selectors:
+    title:
+      selector: meta[property="og:novel:book_name"]
+      attr: content
+    writer:
+      selector: meta[property="og:novel:author"]
+      attr: content
+    book_type:
+      selector: meta[property="og:novel:category"]
+      attr: content
+    update_date:
+      selector: meta[property="og:novel:update_time"]
+      attr: content
+    update_chapter:
+      selector: meta[property="og:novel:latest_chapter_name"]
+      attr: content
+    book_chapter_url:
+      selector: div#tbchapterlist>table>tbody>tr>td>a
+      attr: href
+    book_chapter_title:
+      selector: div#tbchapterlist>table>tbody>tr>td>a
+    chapter_title:
+      selector: td>h1
+    chapter_content:
+      selector: div>p
+
+  availability:
+    url: https://tw.hjwzw.com
+    check_string: 黃金屋

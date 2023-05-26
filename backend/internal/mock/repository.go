@@ -137,6 +137,36 @@ func (mr *MockRepostoryMockRecorder) FindBookByIdHash(id, hash interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookByIdHash", reflect.TypeOf((*MockRepostory)(nil).FindBookByIdHash), id, hash)
 }
 
+// FindBookGroupByID mocks base method.
+func (m *MockRepostory) FindBookGroupByID(id int) (model.BookGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindBookGroupByID", id)
+	ret0, _ := ret[0].(model.BookGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindBookGroupByID indicates an expected call of FindBookGroupByID.
+func (mr *MockRepostoryMockRecorder) FindBookGroupByID(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByID", reflect.TypeOf((*MockRepostory)(nil).FindBookGroupByID), id)
+}
+
+// FindBookGroupByIDHash mocks base method.
+func (m *MockRepostory) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindBookGroupByIDHash", id, hashCode)
+	ret0, _ := ret[0].(model.BookGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindBookGroupByIDHash indicates an expected call of FindBookGroupByIDHash.
+func (mr *MockRepostoryMockRecorder) FindBookGroupByIDHash(id, hashCode interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByIDHash", reflect.TypeOf((*MockRepostory)(nil).FindBookGroupByIDHash), id, hashCode)
+}
+
 // FindBooksByRandom mocks base method.
 func (m *MockRepostory) FindBooksByRandom(limit int) ([]model.Book, error) {
 	m.ctrl.T.Helper()
@@ -210,20 +240,6 @@ func (m *MockRepostory) FindBooksForUpdate() (<-chan model.Book, error) {
 func (mr *MockRepostoryMockRecorder) FindBooksForUpdate() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksForUpdate", reflect.TypeOf((*MockRepostory)(nil).FindBooksForUpdate))
-}
-
-// Migrate mocks base method.
-func (m *MockRepostory) Migrate() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Migrate")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Migrate indicates an expected call of Migrate.
-func (mr *MockRepostoryMockRecorder) Migrate() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockRepostory)(nil).Migrate))
 }
 
 // SaveError mocks base method.

@@ -1,0 +1,37 @@
+xqishu: &xqishu
+  decode_method: utf8
+
+  urls: #desktop
+    base: http://www.aidusk.com/txt%v/
+    download: http://www.aidusk.com/t/%v/
+    chapter_prefix: http://www.aidusk.com
+    availability: http://www.aidusk.com
+
+  goquery_selectors:
+    title:
+      selector: div.tit1>h1
+    writer:
+      selector: div.date>span:nth-child(1)
+      unwanted_content:
+        - 小说作者：
+    book_type:
+      selector: div.crumbs>a:nth-child(2)
+    update_date:
+      selector: div.date>span:nth-child(3)
+      unwanted_content:
+        - 更新日期：
+    update_chapter:
+      selector: a.zx_zhang
+    book_chapter_url:
+      selector: div.book_con_list>ul>li>a
+      attr: href
+    book_chapter_title:
+      selector: div.book_con_list>ul>li>a
+    chapter_title:
+      selector: div.date>h1
+    chapter_content:
+      selector: div.book_content
+  
+  availability:
+    url: http://www.aidusk.com
+    check_string: 求书网

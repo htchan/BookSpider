@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/caarlos0/env/v6"
 	"gopkg.in/yaml.v2"
@@ -11,11 +13,11 @@ import (
 )
 
 type Config struct {
-	APIConfig      APIConfig             `yaml:"api"`
-	BatchConfig    BatchConfig           `yaml:"batch"`
-	SiteConfigs    map[string]SiteConfig `yaml:"sites" validate:"dive"`
-	DatabaseConfig DatabaseConfig        `yaml:"database"`
-	ConfigLocation string                `env:"CONFIG_LOCATION,required" validate:"file"`
+	APIConfig       APIConfig             `yaml:"api"`
+	BatchConfig     BatchConfig           `yaml:"batch"`
+	SiteConfigs     map[string]SiteConfig `yaml:"sites" validate:"dive"`
+	DatabaseConfig  DatabaseConfig        `yaml:"database"`
+	ConfigDirectory string                `env:"CONFIG_DIRECTORY,required" validate:"dir"`
 }
 
 type APIConfig struct {
@@ -46,15 +48,33 @@ func LoadConfig() (*Config, error) {
 		func() error { return env.Parse(&conf.BatchConfig) },
 		func() error { return env.Parse(&conf.DatabaseConfig) },
 		func() error {
-			data, err := os.ReadFile(conf.ConfigLocation)
+			var referenceData []byte
+
+			filepath.Walk(conf.ConfigDirectory, func(path string, file fs.FileInfo, _ error) error {
+				if filepath.Ext(path) == ".yaml" && file.Name() != "main.yaml" {
+					data, err := os.ReadFile(path)
+					if err == nil {
+						referenceData = append(referenceData, data...)
+					}
+				}
+				return nil
+			})
+
+			configData, err := os.ReadFile(conf.ConfigDirectory + "/main.yaml")
 			if err != nil {
 				return err
 			}
 
-			err = yaml.Unmarshal(data, &conf.SiteConfigs)
+			fullConfig := struct {
+				Sites map[string]SiteConfig `yaml:"sites"`
+			}{}
+
+			err = yaml.Unmarshal(append(referenceData, configData...), &fullConfig)
 			if err != nil {
 				return err
 			}
+
+			conf.SiteConfigs = fullConfig.Sites
 
 			return nil
 		},

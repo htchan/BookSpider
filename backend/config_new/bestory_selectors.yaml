@@ -1,0 +1,41 @@
+bestory: &bestory
+  decode_method: big5
+
+  urls: #desktop
+    base: https://www.book100.com/book/book%v.html
+    download: https://www.book100.com/book/book%v.html
+    chapter_prefix: https://www.book100.com
+    availability: https://www.book100.com
+
+  goquery_selectors:
+    title:
+      selector: "placeholder"
+      attr: ""
+    writer:
+      selector: "placeholder"
+      attr: ""
+    book_type:
+      selector: "placeholder"
+      attr: ""
+    update_date:
+      selector: "placeholder"
+      attr: ""
+    update_chapter:
+      selector: "placeholder"
+      attr: ""
+    book_chapter_url:
+      selector: "placeholder"
+      attr: ""
+    book_chapter_title:
+      selector: "placeholder"
+      attr: ""
+    chapter_title:
+      selector: "placeholder"
+      attr: ""
+    chapter_content:
+      selector: "placeholder"
+      attr: ""
+  
+  availability:
+    url: https://www.book100.com
+    check_string: 八零电子书

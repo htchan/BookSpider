@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	repo "github.com/htchan/BookSpider/internal/repo/psql"
+	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/router"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
 	"golang.org/x/sync/semaphore"
@@ -29,10 +29,24 @@ func main() {
 	ctx := context.Background()
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.APIConfig.AvailableSiteNames {
-		db, err := repo.OpenDatabase(siteName)
+		migrateDB, err := repo.OpenDatabase(siteName)
 		if err != nil {
 			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
 		}
+
+		err = repo.Migrate(migrateDB)
+		if err != nil {
+			log.Println(err)
+		}
+
+		db, err := repo.OpenDatabase(siteName)
+		if err != nil {
+			// log.Error().Err(err).Str("site", siteName).Msg("load db fail")
+			log.Fatalf("load db fail. site: %v, err: %v", siteName, err)
+			return
+		}
+
+		defer db.Close()
 
 		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
 

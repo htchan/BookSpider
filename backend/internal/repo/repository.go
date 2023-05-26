@@ -22,7 +22,6 @@ var BookNotExist = errors.New("no records found")
 
 //go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
 type Repostory interface {
-	Migrate() error
 	// book related
 	CreateBook(*model.Book) error
 	UpdateBook(*model.Book) error
@@ -37,6 +36,9 @@ type Repostory interface {
 	FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error)
 	FindBooksByRandom(limit int) ([]model.Book, error)
 	UpdateBooksStatus() error
+
+	FindBookGroupByID(id int) (model.BookGroup, error)
+	FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error)
 
 	// writer related
 	SaveWriter(*model.Writer) error // create and update id in writer

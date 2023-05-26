@@ -1,0 +1,38 @@
+80txt: &80txt
+  decode_method: utf8
+
+  urls: #desktop
+    base: https://www.80xs.la/txtml_%v.html
+    download: http://www.80xs.la/txtml_%v.html
+    chapter_prefix: http://www.80xs.la
+    availability: http://www.80xs.la
+
+  goquery_selectors:
+    title:
+      selector: meta[property="og:novel:book_name"]
+      attr: content
+    writer:
+      selector: meta[property="og:novel:author"]
+      attr: content
+    book_type:
+      selector: meta[property="og:novel:category"]
+      attr: content
+    update_date:
+      selector: div.txt_info:nth-child(4)
+      unwanted_content:
+        - 更新时间：
+    update_chapter:
+      selector: div.yulan:last-child>a
+    book_chapter_url:
+      selector: div.yulan>li>a
+      attr: href
+    book_chapter_title:
+      selector: div.yulan>li>a
+    chapter_title:
+      selector: div.date>h1
+    chapter_content:
+      selector: div.book_content
+  
+  availability:
+    url: https://www.80xs.la/
+    check_string: 八零电子书
