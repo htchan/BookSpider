@@ -45,29 +45,20 @@ func main() {
 		return
 	}
 
+	repo.Migrate(conf.DatabaseConfig)
+
+	db, dbErr := repo.OpenDatabaseByConfig(conf.DatabaseConfig)
+	if dbErr != nil {
+		log.Error().Err(dbErr).Msg("load db fail")
+		return
+	}
+
+	defer db.Close()
+
 	ctx := context.Background()
 	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.APIConfig.AvailableSiteNames {
-		migrateDB, migrateDBErr := repo.OpenDatabase(siteName)
-		if migrateDBErr != nil {
-			log.Error().Err(migrateDBErr).Str("site", siteName).Msg("load db for migration Fail")
-			return
-		}
-
-		migrateErr := repo.Migrate(migrateDB)
-		if migrateErr != nil {
-			log.Error().Err(migrateErr).Str("site", siteName).Msg("migrate fail")
-		}
-
-		db, dbErr := repo.OpenDatabase(siteName)
-		if dbErr != nil {
-			log.Error().Err(dbErr).Str("site", siteName).Msg("load db fail")
-			return
-		}
-
-		defer db.Close()
-
 		serv, loadServErr := service_new.LoadService(
 			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
 		)

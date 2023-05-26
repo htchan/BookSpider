@@ -64,23 +64,33 @@ func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
 	return database, err
 }
 
-func Migrate(db *sql.DB) error {
+func Migrate(conf config.DatabaseConfig) error {
+	db, dbErr := OpenDatabaseByConfig(conf)
+	if dbErr != nil {
+		return fmt.Errorf("load db for migration failed: %v", dbErr)
+	}
+
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		return fmt.Errorf("migrate fail: %w", err)
 	}
+
 	m, err := migrate.NewWithDatabaseInstance(
 		"file:///migrations",
-		"postgres", driver)
+		"postgres",
+		driver,
+	)
 	if err != nil {
 		return fmt.Errorf("migrate fail: %w", err)
 	}
+
 	defer m.Close()
 
 	upErr := m.Up()
 	if upErr != nil {
 		log.Error().Err(upErr).Msg("migration up failed")
 	}
+
 	return nil
 }
 
