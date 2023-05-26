@@ -355,7 +355,7 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 				return
 			}
 			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
-			ctx = context.WithValue(ctx, "book", test.bk)
+			ctx = context.WithValue(ctx, BOOK_KEY, test.bk)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
