@@ -140,27 +140,39 @@ func (client *CircuitBreakerClient) Get(url string) (string, error) {
 		html string
 		err  error
 	)
-	retryErr, retryUnavailable := client.conf.RetryErr, client.conf.RetryUnavailable
 	intervalSleep := time.Duration(client.conf.IntervalSleep) * time.Second
 	if client.confV2 != nil {
-		retryErr, retryUnavailable = client.retryConf["default"], client.retryConf["unavailable"]
 		intervalSleep = client.confV2.SleepInterval
 	}
 	for i := 0; true; i++ {
 		html, err = client.SendRequestWithCircuitBreaker(url)
 		if err != nil {
-			log.Error().Err(err).Str("url", url).Int("trial", i).Msg("send request failed")
-			if (err.Error() == "code 503" || err.Error() == "code 502") && i >= retryUnavailable {
-				return html, err
-			} else if i >= retryErr {
+			if client.shouldRetryRequest(err, i) {
+				log.Warn().Err(err).Str("url", url).Int("trial", i).Msg("send request failed")
+				time.Sleep(time.Duration(i+1) * intervalSleep)
+				continue
+			} else {
+				log.Error().Err(err).Str("url", url).Int("trial", i).Msg("send request failed")
 				return html, err
 			}
-			time.Sleep(time.Duration(i+1) * intervalSleep)
-			continue
 		}
 		break
 	}
 	return html, err
+}
+
+func (client *CircuitBreakerClient) shouldRetryRequest(err error, trial int) bool {
+	retryErr, retryUnavailable := client.conf.RetryErr, client.conf.RetryUnavailable
+
+	if client.confV2 != nil {
+		retryErr, retryUnavailable = client.retryConf["default"], client.retryConf["unavailable"]
+	}
+
+	if err.Error() == "code 503" || err.Error() == "code 502" {
+		return trial < retryUnavailable
+	}
+
+	return trial < retryErr
 }
 
 func (client *CircuitBreakerClient) Close() error {
