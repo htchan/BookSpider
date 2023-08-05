@@ -7,16 +7,27 @@ import (
 	"golang.org/x/text/transform"
 )
 
+type DecodeMethod string
+
+const (
+	DecodeMethodGBK  DecodeMethod = "gbk"
+	DecodeMethodBig5 DecodeMethod = "big5"
+	DecodeMethodUTF8 DecodeMethod = "utf8"
+)
+
 type Decoder struct {
 	decoder *encoding.Decoder
 }
 
-func NewDecoder(decodeMethod string) Decoder {
+func NewDecoder(decodeMethod DecodeMethod) Decoder {
 	var decoder *encoding.Decoder
-	if decodeMethod == "big5" {
-		decoder = traditionalchinese.Big5.NewDecoder()
-	} else if decodeMethod == "gbk" {
+	switch decodeMethod {
+	case DecodeMethodGBK:
 		decoder = simplifiedchinese.GBK.NewDecoder()
+	case DecodeMethodBig5:
+		decoder = traditionalchinese.Big5.NewDecoder()
+	default:
+		decoder = nil
 	}
 
 	return Decoder{decoder: decoder}

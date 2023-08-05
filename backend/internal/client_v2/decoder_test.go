@@ -13,7 +13,7 @@ func Test_NewDecoder(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		decodeMethod  string
+		decodeMethod  DecodeMethod
 		expectDecoder Decoder
 	}{
 		{
