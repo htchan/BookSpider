@@ -23,7 +23,7 @@ func TestNewClient(t *testing.T) {
 		bookClient client.BookClient
 	}
 
-	simpleClient := simple.NewClient(simple.SimpleClientConfig{})
+	simpleClient := simple.NewClient(&simple.SimpleClientConfig{})
 
 	var atomicStatusClosed atomic.Value
 	atomicStatusClosed.Store(StatusClosed)
@@ -536,7 +536,7 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 					{Type: CheckTypeStatusCodes, Value: []int{500}},
 				},
 			},
-			simple.NewClient(simple.SimpleClientConfig{
+			simple.NewClient(&simple.SimpleClientConfig{
 				RequestTimeout: time.Second,
 			}),
 		)

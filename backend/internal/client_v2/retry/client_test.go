@@ -77,7 +77,7 @@ func TestRetryClient_Get(t *testing.T) {
 		url        string
 	}
 
-	simpleClient := simple.NewClient(simple.SimpleClientConfig{
+	simpleClient := simple.NewClient(&simple.SimpleClientConfig{
 		RequestTimeout: 5 * time.Millisecond,
 		DecodeMethod:   "",
 	})

@@ -17,7 +17,7 @@ type SimpleClient struct {
 
 var _ client.BookClient = (*SimpleClient)(nil)
 
-func NewClient(conf SimpleClientConfig) *SimpleClient {
+func NewClient(conf *SimpleClientConfig) *SimpleClient {
 	return &SimpleClient{
 		decoder: client.NewDecoder(conf.DecodeMethod),
 		client:  http.Client{Timeout: conf.RequestTimeout},

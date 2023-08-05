@@ -30,6 +30,7 @@ func main() {
 	}
 
 	ctx := context.Background()
+	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
 		migrateDB, migrateDBErr := repo.OpenDatabase(siteName)
@@ -51,10 +52,8 @@ func main() {
 
 		defer db.Close()
 
-		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
-
 		serv, loadServErr := service_new.LoadService(
-			siteName, conf.SiteConfigs[siteName], db, sema, &ctx,
+			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
 		)
 		if loadServErr != nil {
 			log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")

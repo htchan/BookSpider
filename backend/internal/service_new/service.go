@@ -84,7 +84,6 @@ func LoadService(
 	name string,
 	conf config.SiteConfig,
 	db *sql.DB,
-	weight *semaphore.Weighted,
 	ctx context.Context,
 	sema *semaphore.Weighted,
 ) (Service, error) {

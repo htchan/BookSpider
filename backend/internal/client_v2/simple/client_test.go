@@ -17,12 +17,12 @@ func TestNewClient(t *testing.T) {
 
 	tests := []struct {
 		name string
-		conf SimpleClientConfig
+		conf *SimpleClientConfig
 		want *SimpleClient
 	}{
 		{
 			name: "happy path",
-			conf: SimpleClientConfig{
+			conf: &SimpleClientConfig{
 				RequestTimeout: 1 * time.Second,
 				DecodeMethod:   client.DecodeMethodBig5,
 			},
@@ -60,7 +60,7 @@ func TestSimpleClient_Get(t *testing.T) {
 	}{
 		{
 			name: "happy path/empty decode method",
-			client: NewClient(SimpleClientConfig{
+			client: NewClient(&SimpleClientConfig{
 				RequestTimeout: 1 * time.Second,
 				DecodeMethod:   client.DecodeMethodUTF8,
 			}),
@@ -74,7 +74,7 @@ func TestSimpleClient_Get(t *testing.T) {
 		},
 		{
 			name: "happy path/big5 decode method",
-			client: NewClient(SimpleClientConfig{
+			client: NewClient(&SimpleClientConfig{
 				RequestTimeout: 1 * time.Second,
 				DecodeMethod:   client.DecodeMethodBig5,
 			}),
@@ -89,7 +89,7 @@ func TestSimpleClient_Get(t *testing.T) {
 		},
 		{
 			name: "return status code error",
-			client: NewClient(SimpleClientConfig{
+			client: NewClient(&SimpleClientConfig{
 				RequestTimeout: 1 * time.Second,
 				DecodeMethod:   client.DecodeMethodUTF8,
 			}),
@@ -103,7 +103,7 @@ func TestSimpleClient_Get(t *testing.T) {
 		},
 		{
 			name: "return timeout error",
-			client: NewClient(SimpleClientConfig{
+			client: NewClient(&SimpleClientConfig{
 				RequestTimeout: 1 * time.Millisecond,
 				DecodeMethod:   client.DecodeMethodUTF8,
 			}),

@@ -145,7 +145,7 @@ func Test_LoadService(t *testing.T) {
 
 			serv, err := LoadService(
 				test.args.name, test.args.conf,
-				test.args.db, test.args.weight,
+				test.args.db,
 				test.args.ctx, test.args.weight,
 			)
 
