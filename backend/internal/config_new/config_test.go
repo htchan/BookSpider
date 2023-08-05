@@ -512,8 +512,9 @@ func Test_LoadConfig(t *testing.T) {
 				"PSQL_NAME":                      "name",
 			},
 			stubConfFileFunc: func() {
-				os.WriteFile("./xbiquge.yaml", []byte(strings.ReplaceAll(siteSelectorData1, "\t", "  ")), 0644)
-				os.WriteFile("./xqishu.yaml", []byte(strings.ReplaceAll(siteSelectorData2, "\t", "  ")), 0644)
+				os.Mkdir("./selectors", os.ModePerm)
+				os.WriteFile("./selectors/xbiquge.yaml", []byte(strings.ReplaceAll(siteSelectorData1, "\t", "  ")), 0644)
+				os.WriteFile("./selectors/xqishu.yaml", []byte(strings.ReplaceAll(siteSelectorData2, "\t", "  ")), 0644)
 
 				confData := `sites:
 	xbiquge:
@@ -557,8 +558,7 @@ func Test_LoadConfig(t *testing.T) {
 				os.WriteFile(`./main.yaml`, []byte(strings.ReplaceAll(confData, "\t", "  ")), 0644)
 			},
 			cleanupConfFileFunc: func() {
-				os.Remove("./xqishu.yaml")
-				os.Remove("./xbiquge.yaml")
+				os.RemoveAll("./selectors")
 				os.Remove("./main.yaml")
 			},
 			expectedConf: &Config{
