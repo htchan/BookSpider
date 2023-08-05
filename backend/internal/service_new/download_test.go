@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/semaphore"
 )
 
 func TestServiceImp_downloadURL(t *testing.T) {
@@ -123,8 +125,8 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/chapters/1").Return("some result", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("some result", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseChapter("some result").Return(parse.NewParsedChapterFields(
@@ -151,8 +153,8 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "fail to send request",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/chapters/1").Return("", errors.New("new error"))
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("", errors.New("new error"))
 
 				p := mock.NewMockParser(ctrl)
 
@@ -173,8 +175,8 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "fail to parse chapter",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/chapters/1").Return("some result", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("some result", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseChapter("some result").Return(nil, errors.New("some error"))
@@ -232,11 +234,9 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1/download").Return("chapter list", nil)
-				c.EXPECT().Acquire().Return(nil)
-				c.EXPECT().Get("http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
-				c.EXPECT().Release()
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
@@ -248,6 +248,8 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 				)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					conf: config.SiteConfig{
@@ -266,12 +268,14 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "fail to send request",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1/download").Return("", errors.New("some error"))
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("", errors.New("some error"))
 
 				p := mock.NewMockParser(ctrl)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					conf: config.SiteConfig{
@@ -288,13 +292,15 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "fail to parse chapter list",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1/download").Return("chapter list", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(nil, errors.New("some error"))
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					conf: config.SiteConfig{
@@ -311,12 +317,10 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "some download chapter failed",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1/download").Return("chapter list", nil)
-				c.EXPECT().Acquire().Return(nil).Times(2)
-				c.EXPECT().Get("http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
-				c.EXPECT().Get("http://test.com/bk/1/chapter/2").Return("chapter 2", nil)
-				c.EXPECT().Release().Times(2)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/2").Return("chapter 2", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
@@ -332,6 +336,8 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 				)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					conf: config.SiteConfig{
@@ -488,11 +494,9 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1/download").Return("chapter list", nil)
-				c.EXPECT().Acquire().Return(nil)
-				c.EXPECT().Get("http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
-				c.EXPECT().Release()
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
@@ -507,6 +511,8 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any()).Return(nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -584,10 +590,12 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to fetch chapter list",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/4/download").Return("", errors.New("url invalid"))
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/4/download").Return("", errors.New("url invalid"))
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					conf: config.SiteConfig{
 						URL:     config.URLConfig{Download: "http://test.com/book/%v/download"},
@@ -616,11 +624,9 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to save content to file",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/5/download").Return("chapter list", nil)
-				c.EXPECT().Acquire().Return(nil)
-				c.EXPECT().Get("http://test.com/bk/5/chapter/1").Return("chapter 1", nil)
-				c.EXPECT().Release()
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5/download").Return("chapter list", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/5/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/5/chapter/1", "test chapter 1")
@@ -632,6 +638,8 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 				)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					conf: config.SiteConfig{
@@ -661,11 +669,9 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to update book in DB",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/6/download").Return("chapter list", nil)
-				c.EXPECT().Acquire().Return(nil)
-				c.EXPECT().Get("http://test.com/bk/6/chapter/1").Return("chapter 1", nil)
-				c.EXPECT().Release()
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/6/download").Return("chapter list", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/6/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/6/chapter/1", "test chapter 1")
@@ -680,6 +686,8 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any()).Return(errors.New("update bk error"))
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -767,7 +775,7 @@ func TestServiceImp_Download(t *testing.T) {
 			name: "some book download success and some book failed",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 				p := mock.NewMockParser(ctrl)
 				rpo := mock.NewMockRepostory(ctrl)
 				n := 2
@@ -776,8 +784,6 @@ func TestServiceImp_Download(t *testing.T) {
 				defer close(downloadBookChan)
 				rpo.EXPECT().FindBooksForDownload().Return(downloadBookChan, nil)
 
-				c.EXPECT().Acquire().Return(nil).AnyTimes() // Times(n + 1)
-				c.EXPECT().Release().AnyTimes()             // Times(n + 1)
 				for i := 0; i < n; i++ {
 					downloadBookChan <- model.Book{
 						ID:     i,
@@ -786,7 +792,7 @@ func TestServiceImp_Download(t *testing.T) {
 						Status: model.End,
 					}
 
-					c.EXPECT().Get(fmt.Sprintf("http://test.com/book/%v/download", i)).Return(fmt.Sprintf("chapter list %v", i), nil)
+					c.EXPECT().Get(gomock.Any(), fmt.Sprintf("http://test.com/book/%v/download", i)).Return(fmt.Sprintf("chapter list %v", i), nil)
 
 					if i%2 == 1 {
 						parsedChapterList := parse.ParsedChapterList{}
@@ -794,7 +800,7 @@ func TestServiceImp_Download(t *testing.T) {
 
 						p.EXPECT().ParseChapterList(fmt.Sprintf("chapter list %v", i)).Return(&parsedChapterList, nil)
 
-						c.EXPECT().Get(fmt.Sprintf("http://test.com/bk/%v/chapter/1", i)).Return("chapter 1", nil)
+						c.EXPECT().Get(gomock.Any(), fmt.Sprintf("http://test.com/bk/%v/chapter/1", i)).Return("chapter 1", nil)
 
 						p.EXPECT().ParseChapter("chapter 1").Return(
 							parse.NewParsedChapterFields("title 1", "content 1"), nil,
@@ -816,6 +822,8 @@ func TestServiceImp_Download(t *testing.T) {
 
 				return ServiceImp{
 					client: c,
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(2),
 					parser: p,
 					rpo:    rpo,
 					conf: config.SiteConfig{

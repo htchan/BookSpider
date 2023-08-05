@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/htchan/BookSpider/internal/client"
+	client "github.com/htchan/BookSpider/internal/client_v2"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client_v2/retry"
+	"github.com/htchan/BookSpider/internal/client_v2/simple"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
@@ -57,7 +60,9 @@ var (
 
 type ServiceImp struct {
 	name   string
-	client client.Client
+	ctx    context.Context
+	client client.BookClient
+	sema   *semaphore.Weighted
 	parser parse.Parser
 	conf   config.SiteConfig
 	rpo    repo.Repostory
@@ -80,7 +85,8 @@ func LoadService(
 	conf config.SiteConfig,
 	db *sql.DB,
 	weight *semaphore.Weighted,
-	ctx *context.Context,
+	ctx context.Context,
+	sema *semaphore.Weighted,
 ) (Service, error) {
 	parser, err := goquery.LoadParser(&conf.GoquerySelectorsConfig)
 	if err != nil {
@@ -88,9 +94,17 @@ func LoadService(
 	}
 
 	return &ServiceImp{
-		name:   name,
-		conf:   conf,
-		client: client.NewClientV2(&conf, weight, ctx),
+		name: name,
+		conf: conf,
+		ctx:  ctx,
+		client: retry.NewClient(
+			&conf.ClientConfig.Retry,
+			circuitbreaker.NewClient(
+				&conf.ClientConfig.CircuitBreaker,
+				simple.NewClient(&conf.ClientConfig.Simple),
+			),
+		),
+		sema:   sema,
 		parser: parser,
 		rpo:    sqlc.NewRepo(name, db),
 	}, nil

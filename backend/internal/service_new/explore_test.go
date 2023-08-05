@@ -30,8 +30,8 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "happy flow with new book (error == nil)",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/1").Return("basic book info", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1").Return("basic book info", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
@@ -87,8 +87,8 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "happy flow with existing book (error != nil)",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/2").Return("basic book info", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/2").Return("basic book info", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
@@ -154,8 +154,8 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "parse book fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/4").Return("basic book info", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/4").Return("basic book info", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(nil, parse.ErrParseBookFieldsNotFound)
@@ -186,8 +186,8 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "update book fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/5").Return("basic book info", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5").Return("basic book info", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
@@ -244,8 +244,8 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "update book fail and save error fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/book/5").Return("basic book info", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5").Return("basic book info", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
@@ -337,7 +337,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
@@ -349,9 +349,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 						Error: errors.New("not found"),
 					}, nil)
 
-					c.EXPECT().Get(fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
-					c.EXPECT().Acquire()
-					c.EXPECT().Release()
+					c.EXPECT().Get(gomock.Any(), fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
 
 					p.EXPECT().ParseBook(fmt.Sprintf("content %v", i)).Return(parse.NewParsedBookFields(
 						"title", "writer", "type", "date", "chapter",
@@ -374,6 +372,8 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 				}
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -393,14 +393,14 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "update error count if fail to load book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Acquire()
-				c.EXPECT().Release()
+				c := mock.NewMockBookClient(ctrl)
 
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().FindBookById(201).Return(nil, errors.New("db error"))
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					rpo:    rpo,
 					conf: config.SiteConfig{
@@ -419,7 +419,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "update error count if fail to parse book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
@@ -430,9 +430,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 					Error: errors.New("not found"),
 				}, nil)
 
-				c.EXPECT().Get("https://test.com/book/301").Return("content", nil)
-				c.EXPECT().Acquire()
-				c.EXPECT().Release()
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/301").Return("content", nil)
 
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -445,6 +443,8 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 				}, err).Return(nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -464,14 +464,11 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "clear error count if explore book success",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
 				rpo := mock.NewMockRepostory(ctrl)
-
-				sema := semaphore.NewWeighted(1)
-				ctx := context.Background()
 
 				rpo.EXPECT().FindBookById(401).Return(&model.Book{
 					Site:  "test-explore-existing",
@@ -479,9 +476,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 					Error: errors.New("not found"),
 				}, nil)
 
-				c.EXPECT().Get("https://test.com/book/401").Return("content", nil)
-				c.EXPECT().Acquire().DoAndReturn(func() interface{} { return sema.Acquire(ctx, 1) }).Times(2)
-				c.EXPECT().Release().DoAndReturn(func() { sema.Release(1) }).Times(2)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/401").Return("content", nil)
 
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -499,7 +494,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 					Error: errors.New("not found"),
 				}, nil)
 
-				c.EXPECT().Get("https://test.com/book/402").Return("content 402", nil)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/402").Return("content 402", nil)
 
 				p.EXPECT().ParseBook("content 402").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date", "chapter",
@@ -521,6 +516,8 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 				rpo.EXPECT().SaveError(bk, nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -540,19 +537,15 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "stop before reaching Max Book ID if it reach the Max fail count",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-
-				sema := semaphore.NewWeighted(1)
-				ctx := context.Background()
-
-				c.EXPECT().Acquire().DoAndReturn(func() interface{} { return sema.Acquire(ctx, 1) }).Times(2)
-				c.EXPECT().Release().DoAndReturn(func() { sema.Release(1) }).Times(2)
+				c := mock.NewMockBookClient(ctrl)
 
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().FindBookById(201).Return(nil, errors.New("db error"))
 				rpo.EXPECT().FindBookById(202).Return(nil, errors.New("db error"))
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					rpo:    rpo,
 					conf: config.SiteConfig{
@@ -599,7 +592,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
@@ -607,14 +600,8 @@ func TestServiceImp_exploreNew(t *testing.T) {
 
 				err := fmt.Errorf("parse html fail: %w", parse.ErrParseBookFieldsNotFound)
 
-				sema := semaphore.NewWeighted(1)
-				ctx := context.Background()
-
-				c.EXPECT().Acquire().DoAndReturn(func() interface{} { return sema.Acquire(ctx, 1) }).AnyTimes()
-				c.EXPECT().Release().DoAndReturn(func() { sema.Release(1) }).AnyTimes()
-
 				for i := 301; i < 303; i++ {
-					c.EXPECT().Get(fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
+					c.EXPECT().Get(gomock.Any(), fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
 
 					p.EXPECT().ParseBook(fmt.Sprintf("content %v", i)).Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -628,6 +615,8 @@ func TestServiceImp_exploreNew(t *testing.T) {
 
 				return ServiceImp{
 					name:   "test-explore-new",
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -646,7 +635,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 		{
 			name: "clear error if explore book success",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
@@ -654,13 +643,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 
 				err := fmt.Errorf("parse html fail: %w", parse.ErrParseBookFieldsNotFound)
 
-				sema := semaphore.NewWeighted(1)
-				ctx := context.Background()
-
-				c.EXPECT().Acquire().DoAndReturn(func() interface{} { return sema.Acquire(ctx, 1) }).AnyTimes()
-				c.EXPECT().Release().DoAndReturn(func() { sema.Release(1) }).AnyTimes()
-
-				c.EXPECT().Get("https://test.com/book/301").Return("content 301", nil)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/301").Return("content 301", nil)
 
 				p.EXPECT().ParseBook("content 301").Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -671,7 +654,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveError(&model.Book{Site: "test-explore-new", ID: 301, HashCode: model.GenerateHash(), Error: err}, err).Return(nil)
 
-				c.EXPECT().Get("https://test.com/book/302").Return("content 302", nil)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/302").Return("content 302", nil)
 
 				p.EXPECT().ParseBook("content 302").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date", "chapter",
@@ -698,7 +681,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 				rpo.EXPECT().SaveError(bk, nil).Return(nil)
 
 				for i := 303; i <= 305; i++ {
-					c.EXPECT().Get(fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
+					c.EXPECT().Get(gomock.Any(), fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
 
 					p.EXPECT().ParseBook(fmt.Sprintf("content %v", i)).Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -712,6 +695,8 @@ func TestServiceImp_exploreNew(t *testing.T) {
 
 				return ServiceImp{
 					name:   "test-explore-new",
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,
@@ -774,7 +759,7 @@ func TestServiceImp_Explore(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
+				c := mock.NewMockBookClient(ctrl)
 
 				p := mock.NewMockParser(ctrl)
 
@@ -784,19 +769,13 @@ func TestServiceImp_Explore(t *testing.T) {
 					MaxBookID:       402,
 				})
 
-				sema := semaphore.NewWeighted(1)
-				ctx := context.Background()
-
-				c.EXPECT().Acquire().DoAndReturn(func() interface{} { return sema.Acquire(ctx, 1) }).AnyTimes()
-				c.EXPECT().Release().DoAndReturn(func() { sema.Release(1) }).AnyTimes()
-
 				rpo.EXPECT().FindBookById(401).Return(&model.Book{
 					Site:  "test-explore",
 					ID:    401,
 					Error: errors.New("not found"),
 				}, nil)
 
-				c.EXPECT().Get("https://test.com/book/401").Return("content 401", nil)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/401").Return("content 401", nil)
 
 				p.EXPECT().ParseBook("content 401").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date", "chapter",
@@ -825,14 +804,14 @@ func TestServiceImp_Explore(t *testing.T) {
 					Error: errors.New("not found"),
 				}, nil)
 
-				c.EXPECT().Get("https://test.com/book/402").Return("content 402", nil)
+				c.EXPECT().Get(gomock.Any(), "https://test.com/book/402").Return("content 402", nil)
 
 				p.EXPECT().ParseBook("content 402").Return(nil, parse.ErrParseBookFieldsNotFound)
 
 				rpo.EXPECT().SaveError(&model.Book{Site: "test-explore", ID: 402, Error: err}, err).Return(nil)
 
 				for i := 403; i < 405; i++ {
-					c.EXPECT().Get(fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
+					c.EXPECT().Get(gomock.Any(), fmt.Sprintf("https://test.com/book/%v", i)).Return(fmt.Sprintf("content %v", i), nil)
 
 					p.EXPECT().ParseBook(fmt.Sprintf("content %v", i)).Return(nil, parse.ErrParseBookFieldsNotFound)
 
@@ -846,6 +825,8 @@ func TestServiceImp_Explore(t *testing.T) {
 
 				return ServiceImp{
 					name:   "test-explore",
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					client: c,
 					parser: p,
 					rpo:    rpo,

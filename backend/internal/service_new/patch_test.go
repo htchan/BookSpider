@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/semaphore"
 )
 
 func TestServiceImp_checkBookStorate(t *testing.T) {
@@ -92,9 +94,7 @@ func TestServiceImp_PatchDownloadStatus(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Acquire().Times(4)
-				c.EXPECT().Release().Times(4)
+				c := mock.NewMockBookClient(ctrl)
 
 				rpo := mock.NewMockRepostory(ctrl)
 
@@ -109,6 +109,8 @@ func TestServiceImp_PatchDownloadStatus(t *testing.T) {
 				rpo.EXPECT().UpdateBook(&model.Book{ID: 1, IsDownloaded: true})
 				rpo.EXPECT().UpdateBook(&model.Book{ID: 2, IsDownloaded: false})
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					conf:   config.SiteConfig{Storage: "./test-patch-status"},
@@ -167,9 +169,7 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 		{
 			name: "no records missing",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Acquire().Times(5)
-				c.EXPECT().Release().Times(5)
+				c := mock.NewMockBookClient(ctrl)
 
 				rpo := mock.NewMockRepostory(ctrl)
 				rpo.EXPECT().Stats().Return(repo.Summary{
@@ -180,6 +180,8 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 				}
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					conf:   config.SiteConfig{Storage: "./test-patch-status"},
@@ -191,10 +193,8 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 		{
 			name: "patch missing record in middle",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Acquire().Times(5)
-				c.EXPECT().Release().Times(5)
-				c.EXPECT().Get("http://test.com/5").Return("content", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/5").Return("content", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
@@ -215,6 +215,8 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 
 				return ServiceImp{
 					name:   "test-patch-missing-records",
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
