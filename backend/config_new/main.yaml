@@ -1,6 +1,7 @@
 sites:
   xbiquge:
     <<: *xbiquge_selector
+    client: *xbiquge_client
     max_threads: 1500
     request_timeout: 30s
     circuit_breaker:
@@ -20,6 +21,7 @@ sites:
 
   xqishu:
     <<: *xqishu_selector
+    client: *xqishu_client
     max_threads: 500
     request_timeout: 30s
     circuit_breaker:
@@ -39,6 +41,7 @@ sites:
 
   80txt:
     <<: *80txt_selector
+    client: *80txt_client
     max_threads: 1500
     request_timeout: 30s
     circuit_breaker:
@@ -58,6 +61,7 @@ sites:
 
   bestory:
     <<: *bestory_selector
+    client: *bestory_client
     max_threads: 1500
     request_timeout: 30s
     circuit_breaker:
@@ -77,6 +81,7 @@ sites:
 
   ck101:
     <<: *ck101_selector
+    client: *ck101_client
     decode_method: big5
     max_threads: 1500
     request_timeout: 30s
@@ -97,6 +102,7 @@ sites:
 
   hjwzw:
     <<: *hjwzw_selector
+    client: *hjwzw_client
     max_threads: 1500
     request_timeout: 30s
     circuit_breaker:

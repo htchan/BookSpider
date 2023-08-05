@@ -1,4 +1,4 @@
-bestory: &bestory_selector
+bestory_selector: &bestory_selector
   decode_method: big5
 
   urls: #desktop

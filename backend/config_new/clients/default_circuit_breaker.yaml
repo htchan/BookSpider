@@ -1,0 +1,10 @@
+default_circuit_breaker_config:
+  open_threshold: 1000
+  acquire_timeout: 500ms
+  max_concurrency_threads: 1000
+  recover_threads: [1, 2, 5, 10, 50, 100, 500]
+  open_duration: 30s
+  recover_duration: 10s
+  check_configs:
+  - type: status-codes
+    value: [502]

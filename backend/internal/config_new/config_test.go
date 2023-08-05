@@ -8,6 +8,9 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/go-cmp/cmp"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client_v2/retry"
+	"github.com/htchan/BookSpider/internal/client_v2/simple"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -409,7 +412,7 @@ func Test_validate_DatabaseConfig(t *testing.T) {
 }
 
 func Test_LoadConfig(t *testing.T) {
-	siteSelectorData1 := `xbiquge: &xbiquge
+	siteSelectorData1 := `xbiquge_selector: &xbiquge_selector
 	decode_method: gbk
 	urls: #desktop
 		base: https://www.xbiquge.so/book/%%v/
@@ -449,7 +452,7 @@ func Test_LoadConfig(t *testing.T) {
 		url: availability
 		check_string: check
 `
-	siteSelectorData2 := `xqishu: &xqishu
+	siteSelectorData2 := `xqishu_selector: &xqishu_selector
 	decode_method: utf8
 	urls: #desktop
 		base: http://www.aidusk.com/txt%%v/
@@ -487,6 +490,56 @@ func Test_LoadConfig(t *testing.T) {
 		url: availability
 		check_string: check
 `
+	siteClientData1 := `default_circuit_breaker_config: &default_circuit_breaker_config
+  open_threshold: 1000
+  acquire_timeout: 500ms
+  max_concurrency_threads: 1000
+  recover_threads: [1, 2, 5, 10, 50, 100, 500]
+  open_duration: 30s
+  recover_duration: 10s
+  check_configs:
+  - type: status-codes
+    value: [502]
+default_retry_config: &default_retry_config
+	max_retry_weight: 1000
+	retry_conditions:
+	- type: status-code
+		value: [500, 502]
+		weight: 10
+		pause_interval: 1s
+		pause_interval_type: exponential
+	- type: body-contains
+		value: []
+		weight: 100
+		pause_interval: 1s
+		pause_interval_type: linear
+	- type: error
+		weight: 100
+		pause_interval: 1s
+		pause_interval_type: linear
+xbiquge_client: &xbiquge_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: gbk
+`
+	siteClientData2 := `xqishu_client: &xqishu_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: 
+    <<: *default_circuit_breaker_config
+    open_threshold: 10
+    max_concurrency_threads: 200
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: utf8
+`
 
 	tests := []struct {
 		name                string
@@ -516,9 +569,14 @@ func Test_LoadConfig(t *testing.T) {
 				os.WriteFile("./selectors/xbiquge.yaml", []byte(strings.ReplaceAll(siteSelectorData1, "\t", "  ")), 0644)
 				os.WriteFile("./selectors/xqishu.yaml", []byte(strings.ReplaceAll(siteSelectorData2, "\t", "  ")), 0644)
 
+				os.Mkdir("./clients", os.ModePerm)
+				os.WriteFile("./clients/xbiquge.yaml", []byte(strings.ReplaceAll(siteClientData1, "\t", "  ")), 0644)
+				os.WriteFile("./clients/xqishu.yaml", []byte(strings.ReplaceAll(siteClientData2, "\t", "  ")), 0644)
+
 				confData := `sites:
 	xbiquge:
-		<<: *xbiquge
+		<<: *xbiquge_selector
+		client: *xbiquge_client
 		max_threads: 1000
 		request_timeout: 30s
 		circuit_breaker:
@@ -537,7 +595,8 @@ func Test_LoadConfig(t *testing.T) {
 		update_date_layout: null
 
 	xqishu:
-		<<: *xqishu
+		<<: *xqishu_selector
+		client: *xqishu_client
 		max_threads: 200
 		request_timeout: 30s
 		circuit_breaker:
@@ -558,6 +617,7 @@ func Test_LoadConfig(t *testing.T) {
 				os.WriteFile(`./main.yaml`, []byte(strings.ReplaceAll(confData, "\t", "  ")), 0644)
 			},
 			cleanupConfFileFunc: func() {
+				os.RemoveAll("./clients")
 				os.RemoveAll("./selectors")
 				os.Remove("./main.yaml")
 			},
@@ -575,6 +635,48 @@ func Test_LoadConfig(t *testing.T) {
 					"xbiquge": {
 						DecodeMethod: "gbk",
 						MaxThreads:   1000,
+						ClientConfig: ClientConfig{
+							Simple: simple.SimpleClientConfig{
+								RequestTimeout: 30 * time.Second,
+								DecodeMethod:   "gbk",
+							},
+							Retry: retry.RetryClientConfig{
+								RetryConditions: []retry.RetryCondition{
+									{
+										Type:              "status-code",
+										Value:             []any{500, 502},
+										Weight:            10,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "exponential",
+									},
+									{
+										Type:              "body-contains",
+										Value:             []any{},
+										Weight:            100,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "linear",
+									},
+									{
+										Type:              "error",
+										Weight:            100,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "linear",
+									},
+								},
+								MaxRetryWeight: 1000,
+							},
+							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
+								OpenThreshold:         1000,
+								AcquireTimeout:        500 * time.Millisecond,
+								MaxConcurrencyThreads: 1000,
+								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
+								OpenDuration:          30 * time.Second,
+								RecoverDuration:       10 * time.Second,
+								CheckConfigs: []circuitbreaker.CheckConfig{
+									{Type: "status-codes", Value: []any{502}},
+								},
+							},
+						},
 						CircuitBreakerConfig: CircuitBreakerClientConfig{
 							MaxFailCount:      1000,
 							MaxFailMultiplier: 1.5,
@@ -613,6 +715,48 @@ func Test_LoadConfig(t *testing.T) {
 					"xqishu": {
 						DecodeMethod: "utf8",
 						MaxThreads:   200,
+						ClientConfig: ClientConfig{
+							Simple: simple.SimpleClientConfig{
+								RequestTimeout: 30 * time.Second,
+								DecodeMethod:   "utf8",
+							},
+							Retry: retry.RetryClientConfig{
+								RetryConditions: []retry.RetryCondition{
+									{
+										Type:              "status-code",
+										Value:             []any{500, 502},
+										Weight:            10,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "exponential",
+									},
+									{
+										Type:              "body-contains",
+										Value:             []any{},
+										Weight:            100,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "linear",
+									},
+									{
+										Type:              "error",
+										Weight:            100,
+										PauseInterval:     time.Second,
+										PauseIntervalType: "linear",
+									},
+								},
+								MaxRetryWeight: 1000,
+							},
+							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
+								OpenThreshold:         10,
+								AcquireTimeout:        500 * time.Millisecond,
+								MaxConcurrencyThreads: 200,
+								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
+								OpenDuration:          30 * time.Second,
+								RecoverDuration:       10 * time.Second,
+								CheckConfigs: []circuitbreaker.CheckConfig{
+									{Type: "status-codes", Value: []any{502}},
+								},
+							},
+						},
 						CircuitBreakerConfig: CircuitBreakerClientConfig{
 							MaxFailCount:      10,
 							MaxFailMultiplier: 2,
