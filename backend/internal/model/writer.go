@@ -1,9 +1,10 @@
 package model
 
 import (
-	"fmt"
-	"log"
+	"errors"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Writer struct {
@@ -20,10 +21,15 @@ func NewWriter(name string) Writer {
 
 func (w Writer) Checksum() string {
 	if len(w.Name) > 100 {
-		log.Printf("id: %v; name: %v is too long", w.ID, w.Name)
+		log.
+			Error().
+			Err(errors.New("writer name is too long")).
+			Int("writer id", w.ID).
+			Str("name", w.Name).
+			Msg("generate checksum failed")
 		return ""
 	}
 
 	writerName := strings.ReplaceAll(w.Name, " ", "")
-	return strToShortHex(simplified(fmt.Sprintf("%s", writerName)))
+	return strToShortHex(simplified(writerName))
 }

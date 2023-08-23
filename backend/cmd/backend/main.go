@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -11,38 +11,43 @@ import (
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/router"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
 )
 
 func main() {
-	conf, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("load backend config: %v", err)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339Nano})
+
+	conf, confErr := config.LoadConfig()
+	if confErr != nil {
+		log.Error().Err(confErr).Msg("load backend config")
 		return
 	}
 
 	validErr := conf.Validate()
 	if validErr != nil {
-		log.Fatalf("validate config fail: %v", validErr)
+		log.Error().Err(validErr).Msg("validate config fail")
+		return
 	}
 
 	ctx := context.Background()
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.APIConfig.AvailableSiteNames {
-		migrateDB, err := repo.OpenDatabase(siteName)
-		if err != nil {
-			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
+		migrateDB, migrateDBErr := repo.OpenDatabase(siteName)
+		if migrateDBErr != nil {
+			log.Error().Err(migrateDBErr).Str("site", siteName).Msg("load db for migration Fail")
+			return
 		}
 
-		err = repo.Migrate(migrateDB)
-		if err != nil {
-			log.Println(err)
+		migrateErr := repo.Migrate(migrateDB)
+		if migrateErr != nil {
+			log.Error().Err(migrateErr).Str("site", siteName).Msg("migrate fail")
 		}
 
-		db, err := repo.OpenDatabase(siteName)
-		if err != nil {
-			// log.Error().Err(err).Str("site", siteName).Msg("load db fail")
-			log.Fatalf("load db fail. site: %v, err: %v", siteName, err)
+		db, dbErr := repo.OpenDatabase(siteName)
+		if dbErr != nil {
+			log.Error().Err(dbErr).Str("site", siteName).Msg("load db fail")
 			return
 		}
 
@@ -50,11 +55,12 @@ func main() {
 
 		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
 
-		serv, err := service_new.LoadService(
+		serv, loadServErr := service_new.LoadService(
 			siteName, conf.SiteConfigs[siteName], db, sema, &ctx,
 		)
-		if err != nil {
-			log.Fatalf("load service fail. site: %v, err: %v", siteName, err)
+		if loadServErr != nil {
+			log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
+			return
 		}
 
 		services[siteName] = serv
@@ -78,10 +84,11 @@ func main() {
 		IdleTimeout:  300 * time.Second,
 	}
 	// go func() {
-	log.Println("start http server")
+	log.Info().Msg("start http server")
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("backend stopped: %v", err)
+	if httpErr := server.ListenAndServe(); httpErr != nil {
+		log.Error().Err(httpErr).Msg("backend stopped")
+		return
 	}
 	// }()
 

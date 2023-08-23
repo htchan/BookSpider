@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/model"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -74,7 +74,12 @@ func (serv *ServiceImp) downloadChapterList(bk *model.Book) (model.Chapters, err
 			defer serv.client.Release()
 			err := serv.downloadChapter(bk, &chapters[i])
 			if err != nil {
-				log.Printf("download Chapter fail. URL: %v, Title: %v, error: %v", chapters[i].URL, chapters[i].Title, err)
+				log.
+					Error().
+					Err(err).
+					Str("url", chapters[i].URL).
+					Str("title", chapters[i].Title).
+					Msg("download chapter fail")
 			}
 		}(i)
 	}
@@ -88,13 +93,13 @@ func (serv *ServiceImp) downloadChapterList(bk *model.Book) (model.Chapters, err
 func (serv *ServiceImp) saveContent(location string, bk *model.Book, chapters model.Chapters) error {
 	file, err := os.Create(location)
 	if err != nil {
-		return fmt.Errorf("Save book fail: %w", err)
+		return fmt.Errorf("save book fail: %w", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(bk.HeaderInfo())
 	if err != nil {
-		return fmt.Errorf("Save book fail: %w", err)
+		return fmt.Errorf("save book fail: %w", err)
 	}
 
 	for _, chapter := range chapters {
@@ -114,7 +119,7 @@ func (serv *ServiceImp) DownloadBook(bk *model.Book) error {
 		return errors.New("book was downloaded")
 	}
 
-	log.Printf("[%v] download chapters", bk)
+	log.Info().Str("book", bk.String()).Msg("start download chapters")
 	chapters, err := serv.downloadChapterList(bk)
 	if err != nil {
 		return fmt.Errorf("Download chapters fail: %w", err)
@@ -130,7 +135,7 @@ func (serv *ServiceImp) DownloadBook(bk *model.Book) error {
 		return fmt.Errorf("Download chapters fail: too many failed chapters (%v/%v)", totalFailedChapter, len(chapters))
 	}
 
-	log.Printf("[%v] save content", bk)
+	log.Info().Str("book", bk.String()).Msg("save content")
 	err = serv.saveContent(serv.BookFileLocation(bk), bk, chapters)
 	if err != nil {
 		return fmt.Errorf("save content fail: %w", err)
@@ -167,7 +172,7 @@ func (serv *ServiceImp) Download() error {
 
 			err := serv.DownloadBook(bk)
 			if err != nil {
-				log.Printf("[%v] download failed: %v", bk, err)
+				log.Error().Err(err).Str("book", bk.String()).Msg("download failed")
 			}
 		}(&bk)
 	}

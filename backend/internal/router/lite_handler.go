@@ -3,13 +3,13 @@ package router
 import (
 	"embed"
 	"fmt"
-	"log"
 	"net/http"
 	"text/template"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed templates/*
@@ -20,7 +20,7 @@ func GeneralLiteHandler(services map[string]service_new.Service) http.HandlerFun
 		t, err := template.ParseFS(files, "templates/sites.html", "templates/components/site-card.html")
 		if err != nil {
 			res.WriteHeader(http.StatusNotFound)
-			log.Println(err)
+			log.Error().Err(err).Msg("general lite handler parse fs fail")
 			return
 		}
 		t.Execute(res, services)
@@ -31,7 +31,7 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFS(files, "templates/site.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Println(err)
+		log.Error().Err(err).Msg("site lite handler parse fs fail")
 		return
 	}
 
@@ -49,7 +49,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Println(err)
+		log.Error().Err(err).Msg("search lite handler parse fs fail")
 		return
 	}
 
@@ -88,7 +88,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Println(err)
+		log.Error().Err(err).Msg("random lite handler parse fs fail")
 		return
 	}
 
@@ -119,7 +119,7 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	t, err := template.ParseFS(files, "templates/book.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Println(err)
+		log.Error().Err(err).Msg("book lite handler parse fs fail")
 		return
 	}
 
@@ -144,7 +144,7 @@ func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	content, err := serv.BookContent(bk)
 	if err != nil {
 		res.WriteHeader(500)
-		fmt.Println(err)
+		log.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
 		return
 	} else {
 		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)

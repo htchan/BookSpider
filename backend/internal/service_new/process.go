@@ -2,9 +2,9 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/htchan/BookSpider/internal/model"
+	"github.com/rs/zerolog/log"
 )
 
 func (serv *ServiceImp) ProcessBook(bk *model.Book) error {
@@ -15,7 +15,7 @@ func (serv *ServiceImp) ProcessBook(bk *model.Book) error {
 
 	validateErr := serv.ValidateBookEnd(bk)
 	if validateErr != nil {
-		return fmt.Errorf("Validate book error: %w", validateErr)
+		return fmt.Errorf("validate book error: %w", validateErr)
 	}
 
 	bookStorageUpdated := serv.checkBookStorage(bk)
@@ -37,60 +37,60 @@ func (serv *ServiceImp) ProcessBook(bk *model.Book) error {
 }
 
 func (serv *ServiceImp) Process() error {
-	log.Printf("[operation.%v.backup] start", serv.name)
+	log.Trace().Str("operation", "backup").Str("site", serv.name).Msg("start")
 	backupErr := serv.Backup()
-	log.Printf("[operation.%v.backup] complete", serv.name)
+	log.Trace().Str("operation", "backup").Str("site", serv.name).Msg("complete")
 	if backupErr != nil {
 		return fmt.Errorf("Backup fail: %w", backupErr)
 	}
 
-	log.Printf("[operation.%v.check-availability] start", serv.name)
+	log.Trace().Str("operation", "check-availability").Str("site", serv.name).Msg("start")
 	checkAvailabilityErr := serv.CheckAvailability()
-	log.Printf("[operation.%v.check-availability] complete", serv.name)
+	log.Trace().Str("operation", "check-availability").Str("site", serv.name).Msg("complete")
 	if checkAvailabilityErr != nil {
-		return fmt.Errorf("Check Availability fail: %w", checkAvailabilityErr)
+		return fmt.Errorf("check availability fail: %w", checkAvailabilityErr)
 	}
 
-	log.Printf("[operation.%v.update] start", serv.name)
+	log.Trace().Str("operation", "update").Str("site", serv.name).Msg("start")
 	updateErr := serv.Update()
-	log.Printf("[operation.%v.update] complete", serv.name)
+	log.Trace().Str("operation", "update").Str("site", serv.name).Msg("complete")
 	if updateErr != nil {
 		return fmt.Errorf("Update fail: %w", updateErr)
 	}
 
-	log.Printf("[operation.%v.explore] start", serv.name)
+	log.Trace().Str("operation", "explore").Str("site", serv.name).Msg("start")
 	exploreErr := serv.Explore()
-	log.Printf("[operation.%v.explore] complete", serv.name)
+	log.Trace().Str("operation", "explore").Str("site", serv.name).Msg("complete")
 	if exploreErr != nil {
 		return fmt.Errorf("Explore fail: %w", exploreErr)
 	}
 
-	log.Printf("[operation.%v.update-status] start", serv.name)
+	log.Trace().Str("operation", "update-status").Str("site", serv.name).Msg("start")
 	checkErr := serv.ValidateEnd()
-	log.Printf("[operation.%v.update-status] complete", serv.name)
+	log.Trace().Str("operation", "update-status").Str("site", serv.name).Msg("complete")
 	if checkErr != nil {
 		return fmt.Errorf("Update Status fail: %w", checkErr)
 	}
 
-	log.Printf("[operation.%v.download] start", serv.name)
+	log.Trace().Str("operation", "download").Str("site", serv.name).Msg("start")
 	downloadErr := serv.Download()
-	log.Printf("[operation.%v.download] complete", serv.name)
+	log.Trace().Str("operation", "download").Str("site", serv.name).Msg("complete")
 	if downloadErr != nil {
 		return fmt.Errorf("Download fail: %w", downloadErr)
 	}
 
-	log.Printf("[operation.%v.patch-status] start", serv.name)
+	log.Trace().Str("operation", "patch-status").Str("site", serv.name).Msg("start")
 	patchDownloadStatusErr := serv.PatchDownloadStatus()
-	log.Printf("[operation.%v.patch-status] complete", serv.name)
+	log.Trace().Str("operation", "patch-status").Str("site", serv.name).Msg("complete")
 	if patchDownloadStatusErr != nil {
-		return fmt.Errorf("Patch Status fail: %w", patchDownloadStatusErr)
+		return fmt.Errorf("patch status fail: %w", patchDownloadStatusErr)
 	}
 
-	log.Printf("[operation.%v.patch-missing-records] start", serv.name)
+	log.Trace().Str("operation", "patch-missing-records").Str("site", serv.name).Msg("start")
 	patchMissingRecordsErr := serv.PatchMissingRecords()
-	log.Printf("[operation.%v.patch-missing-records] complete", serv.name)
+	log.Trace().Str("operation", "patch-missing-records").Str("site", serv.name).Msg("complete")
 	if patchMissingRecordsErr != nil {
-		return fmt.Errorf("Patch Status fail: %w", patchMissingRecordsErr)
+		return fmt.Errorf("patch status fail: %w", patchMissingRecordsErr)
 	}
 
 	return nil

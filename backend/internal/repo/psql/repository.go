@@ -124,13 +124,6 @@ func (r *PsqlRepo) FindBookById(id int) (*model.Book, error) {
 	return nil, fmt.Errorf("fail to query book by site id: %w", repo.BookNotExist)
 }
 func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
-	fmt.Printf(
-		`select %s from %s 
-		where books.site=$1 and books.id=$2 and books.hash_code=$3 
-		`,
-		QueryField, QueryTable,
-	)
-	fmt.Println(r.site, id, hash)
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s 

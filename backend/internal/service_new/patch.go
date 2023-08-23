@@ -3,12 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
+	"github.com/rs/zerolog/log"
 )
 
 func (serv *ServiceImp) checkBookStorage(bk *model.Book) bool {
@@ -19,11 +19,11 @@ func (serv *ServiceImp) checkBookStorage(bk *model.Book) bool {
 	}
 
 	if fileExist && !bk.IsDownloaded {
-		log.Printf("[%v] file exist for not downloaded book", bk)
+		log.Info().Str("book", bk.String()).Msg("file exist for not downloaded book")
 		bk.IsDownloaded = true
 		isUpdated = true
 	} else if !fileExist && bk.IsDownloaded {
-		log.Printf("[%v] file not exist for downloaded book", bk)
+		log.Info().Str("book", bk.String()).Msg("file not exist for downloaded book")
 		bk.IsDownloaded = false
 		isUpdated = true
 	}
@@ -33,11 +33,11 @@ func (serv *ServiceImp) checkBookStorage(bk *model.Book) bool {
 func (serv *ServiceImp) PatchDownloadStatus() error {
 	bks, err := serv.rpo.FindAllBooks()
 	if err != nil {
-		return fmt.Errorf("Patch download status fail: %w", err)
+		return fmt.Errorf("patch download status fail: %w", err)
 	}
 
 	var wg sync.WaitGroup
-	log.Printf("[%s] update books is_downloaded by storage", serv.name)
+	log.Info().Str("site", serv.name).Msg("update books is_downloaded by storage")
 
 	for bk := range bks {
 		bk := bk
@@ -61,7 +61,7 @@ func (serv *ServiceImp) PatchDownloadStatus() error {
 }
 
 func (serv *ServiceImp) PatchMissingRecords() error {
-	log.Printf("[%v] patch missing records", serv.name)
+	log.Info().Str("site", serv.name).Msg("patch missing records")
 
 	var wg sync.WaitGroup
 	maxBookID := serv.rpo.Stats().MaxBookID
@@ -75,11 +75,11 @@ func (serv *ServiceImp) PatchMissingRecords() error {
 			defer wg.Done()
 			_, err := serv.rpo.FindBookById(id)
 			if errors.Is(err, repo.BookNotExist) {
-				log.Printf("[%v] book <%v> not exist in database", serv.name, i)
+				log.Error().Err(err).Str("site", serv.name).Int("id", id).Msg("book not exist in database")
 				bk := model.NewBook(serv.name, id)
 				serv.ExploreBook(&bk)
 			} else if err != nil {
-				log.Printf("fail to fetch: id: %v; err: %v", id, err)
+				log.Error().Err(err).Str("site", serv.name).Int("id", id).Msg("fetch book failed")
 			}
 		}(i)
 	}
