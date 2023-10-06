@@ -27,7 +27,12 @@ func CalculatePauseDuration(i int, retryInterval time.Duration, intervalType Pau
 func NewRetryCheck(condition RetryCondition) RetryCheck {
 	switch condition.Type {
 	case RetryConditionTypeStatusCode:
-		statusCodes := condition.Value.([]int)
+		values := condition.Value.([]interface{})
+		statusCodes := make([]int, len(values))
+		for i := range values {
+			statusCodes[i] = values[i].(int)
+		}
+
 		return retryWhenStatusCodeRange(statusCodes, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)
 	case RetryConditionTypeTimeout:
 		return retryWhenError(client.ErrTimeout, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)

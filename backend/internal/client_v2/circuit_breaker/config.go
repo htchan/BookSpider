@@ -4,7 +4,7 @@ import "time"
 
 type CircuitBreakerClientConfig struct {
 	OpenThreshold         uint32        `yaml:"open_threshold" validate:"min=10"`
-	AcquireTimeout        time.Duration `yaml:"acquire_timeout" validate:"min=1s"`
+	AcquireTimeout        time.Duration `yaml:"acquire_timeout" validate:"min=100ms"`
 	MaxConcurrencyThreads int64         `yaml:"max_concurrency_threads" validate:"min=2"`
 	RecoverThreads        []int64       `yaml:"recover_threads" validate:"min=1,dive,min=1"`
 	OpenDuration          time.Duration `yaml:"open_duration" validate:"min=1s"`

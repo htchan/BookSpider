@@ -11,7 +11,13 @@ type FailCheck func(res string, err error) bool
 func newFailCheck(conf CheckConfig) FailCheck {
 	switch conf.Type {
 	default:
-		statusCodes := conf.Value.([]int)
+		values := conf.Value.([]interface{})
+
+		statusCodes := make([]int, len(values))
+		for i := range values {
+			statusCodes[i] = values[i].(int)
+		}
+
 		return newStatusFailCheck(statusCodes)
 	}
 }

@@ -1,4 +1,4 @@
-default_circuit_breaker_config:
+default_circuit_breaker_config: &default_circuit_breaker_config
   open_threshold: 1000
   acquire_timeout: 500ms
   max_concurrency_threads: 1000
