@@ -43,12 +43,12 @@ func (serv *ServiceImp) exploreExisting(summary repo.Summary, errorCount *int) {
 	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && *errorCount < serv.conf.MaxExploreError; i++ {
 		i := i
 
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		wg.Add(1)
 
 		go func(id int) {
 			defer wg.Done()
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 
 			bk, err := serv.rpo.FindBookById(id)
 			if err != nil {
@@ -74,12 +74,12 @@ func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *int) {
 	for i := summary.MaxBookID + 1; *errorCount < serv.conf.MaxExploreError; i++ {
 		i := i
 
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		wg.Add(1)
 
 		go func(id int) {
 			defer wg.Done()
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 
 			bk := model.NewBook(serv.name, i)
 			err := serv.ExploreBook(&bk)

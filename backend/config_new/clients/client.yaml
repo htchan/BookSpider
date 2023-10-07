@@ -1,0 +1,62 @@
+xbiquge_client: &xbiquge_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: gbk
+
+xqishu_client: &xqishu_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: 
+    <<: *default_circuit_breaker_config
+    open_threshold: 10
+    max_concurrency_threads: 200
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: utf8
+
+80txt_client: &80txt_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: utf8
+
+bestory_client: &bestory_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: big5
+
+ck101_client: &ck101_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: big5
+
+hjwzw_client: &hjwzw_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: utf8

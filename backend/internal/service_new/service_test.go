@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"testing"
 
-	"github.com/htchan/BookSpider/internal/client"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client_v2/retry"
+	"github.com/htchan/BookSpider/internal/client_v2/simple"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/parse/goquery"
-	psql "github.com/htchan/BookSpider/internal/repo/psql"
+	sqlc "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/semaphore"
 )
@@ -53,7 +54,7 @@ func Test_LoadService(t *testing.T) {
 		conf   config.SiteConfig
 		db     *sql.DB
 		weight *semaphore.Weighted
-		ctx    *context.Context
+		ctx    context.Context
 	}
 
 	tests := []struct {
@@ -98,7 +99,13 @@ func Test_LoadService(t *testing.T) {
 						ChapterContent:   config.GoquerySelectorConfig{Selector: "chapter-content", Attr: ""},
 					},
 				},
-				client: client.NewClientV2(&config.SiteConfig{}, nil, nil),
+				client: retry.NewClient(
+					&retry.RetryClientConfig{},
+					circuitbreaker.NewClient(
+						&circuitbreaker.CircuitBreakerClientConfig{},
+						simple.NewClient(&simple.SimpleClientConfig{}),
+					),
+				),
 				parser: func() *goquery.GoqueryParser {
 					parser, _ := goquery.LoadParser(&config.GoquerySelectorsConfig{
 						Title:            config.GoquerySelectorConfig{Selector: "title", Attr: ""},
@@ -113,7 +120,7 @@ func Test_LoadService(t *testing.T) {
 					})
 					return parser
 				}(),
-				rpo: psql.NewRepo("test service", nil),
+				rpo: sqlc.NewRepo("test service", nil),
 			},
 			expectError: nil,
 		},
@@ -138,23 +145,12 @@ func Test_LoadService(t *testing.T) {
 
 			serv, err := LoadService(
 				test.args.name, test.args.conf,
-				test.args.db, test.args.weight,
-				test.args.ctx,
+				test.args.db,
+				test.args.ctx, test.args.weight,
 			)
 
-			if !errors.Is(err, test.expectError) {
-				t.Errorf("err different:")
-				t.Errorf("%v", err)
-				t.Errorf("%v", test.expectError)
-			}
-
 			assert.Equal(t, test.expectService, serv)
-
-			// if !reflect.DeepEqual(serv, test.expectService) {
-			// 	t.Errorf("serv different:")
-			// 	t.Errorf("%v", serv)
-			// 	t.Errorf("%v", test.expectService)
-			// }
+			assert.ErrorIs(t, err, test.expectError)
 		})
 	}
 }

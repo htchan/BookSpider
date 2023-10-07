@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/semaphore"
 )
 
 func TestServiceImp_baseURL(t *testing.T) {
@@ -58,8 +60,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/books/1").Return("content", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
@@ -67,6 +69,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				), nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
@@ -99,8 +103,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{ID: 10, Name: "writer new"}).Return(nil)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/books/1").Return("content", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
@@ -108,6 +112,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				), nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
@@ -140,8 +146,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{ID: 10, Name: "writer"}).Return(nil)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/books/1").Return("content", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
@@ -149,6 +155,8 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				), nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
@@ -175,12 +183,14 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/books/1").Return("", errors.New("get web error"))
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("", errors.New("get web error"))
 
 				p := mock.NewMockParser(ctrl)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
@@ -207,13 +217,15 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mock.NewMockRepostory(ctrl)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Get("http://test.com/books/1").Return("content", nil)
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,
@@ -295,11 +307,9 @@ func TestServiceImp_Update(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 
-				c := mock.NewMockClient(ctrl)
-				c.EXPECT().Acquire().Times(2)
-				c.EXPECT().Release().Times(2)
-				c.EXPECT().Get("http://test.com/books/1").Return("content 1", nil)
-				c.EXPECT().Get("http://test.com/books/2").Return("", errors.New("get web fail"))
+				c := mock.NewMockBookClient(ctrl)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content 1", nil)
+				c.EXPECT().Get(gomock.Any(), "http://test.com/books/2").Return("", errors.New("get web fail"))
 
 				p := mock.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content 1").Return(parse.NewParsedBookFields(
@@ -307,6 +317,8 @@ func TestServiceImp_Update(t *testing.T) {
 				), nil)
 
 				return ServiceImp{
+					ctx:    context.Background(),
+					sema:   semaphore.NewWeighted(1),
 					rpo:    rpo,
 					client: c,
 					parser: p,

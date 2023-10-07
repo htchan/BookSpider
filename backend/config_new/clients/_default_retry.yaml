@@ -1,0 +1,17 @@
+default_retry_config: &default_retry_config
+  max_retry_weight: 1000
+  retry_conditions:
+  - type: status-codes
+    value: [500, 502]
+    weight: 10
+    pause_interval: 1s
+    pause_interval_type: exponential
+  # - type: body-contains
+  #   value: []
+  #   weight: 100
+  #   pause_interval: 1s
+  #   pause_interval_type: linear
+  - type: error
+    weight: 100
+    pause_interval: 1s
+    pause_interval_type: linear

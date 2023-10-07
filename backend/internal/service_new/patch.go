@@ -41,12 +41,12 @@ func (serv *ServiceImp) PatchDownloadStatus() error {
 
 	for bk := range bks {
 		bk := bk
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		wg.Add(1)
 
 		go func(bk *model.Book) {
 			defer wg.Done()
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 
 			isUpdated := serv.checkBookStorage(bk)
 			if isUpdated {
@@ -67,11 +67,11 @@ func (serv *ServiceImp) PatchMissingRecords() error {
 	maxBookID := serv.rpo.Stats().MaxBookID
 	for i := 1; i <= maxBookID; i++ {
 		i := i
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		wg.Add(1)
 
 		go func(id int) {
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 			defer wg.Done()
 			_, err := serv.rpo.FindBookById(id)
 			if errors.Is(err, repo.BookNotExist) {

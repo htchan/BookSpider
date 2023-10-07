@@ -91,14 +91,14 @@ func main() {
 				return
 			}
 
-			src.Title = strings.ReplaceAll(cachedSrc.Title, " ", "")
-			titleSum := strToShortHex(simplified(fmt.Sprintf("%s", cachedSrc.Title)))
+			cachedSrc.Title = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(cachedSrc.Title, " ", ""), "\t", ""), "\n", "")
+			titleSum := strToShortHex(simplified(cachedSrc.Title))
 
 			db.Exec("update books set checksum=$1 where site=$2 and id=$3 and hash_code=$4", titleSum, cachedSrc.Site, cachedSrc.ID, cachedSrc.Hash)
 		}(src)
 	}
 
-	writerRows, err := db.Query("select id, name from books where checksum=$1 or checksum is null", "")
+	writerRows, err := db.Query("select id, name from writers where checksum=$1 or checksum is null", "")
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +126,7 @@ func main() {
 			src.Name = strings.ReplaceAll(cachedSrc.Name, " ", "")
 			nameSum := strToShortHex(simplified(fmt.Sprintf("%s", cachedSrc.Name)))
 
-			db.Exec("update writers set checksum=$1 whereid=$2", nameSum, cachedSrc.ID)
+			db.Exec("update writers set checksum=$1 where id=$2", nameSum, cachedSrc.ID)
 		}(src)
 	}
 

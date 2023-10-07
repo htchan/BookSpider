@@ -33,7 +33,7 @@ func (serv *ServiceImp) chapterURL(bk *model.Book, chapter *model.Chapter) strin
 }
 
 func (serv *ServiceImp) downloadChapter(bk *model.Book, ch *model.Chapter) error {
-	html, err := serv.client.Get(serv.chapterURL(bk, ch))
+	html, err := serv.client.Get(serv.ctx, serv.chapterURL(bk, ch))
 	if err != nil {
 		ch.Error = fmt.Errorf("fetch chapter html fail: %w", err)
 		return ch.Error
@@ -53,7 +53,7 @@ func (serv *ServiceImp) downloadChapter(bk *model.Book, ch *model.Chapter) error
 }
 
 func (serv *ServiceImp) downloadChapterList(bk *model.Book) (model.Chapters, error) {
-	html, err := serv.client.Get(serv.downloadURL(bk))
+	html, err := serv.client.Get(serv.ctx, serv.downloadURL(bk))
 	if err != nil {
 		return nil, fmt.Errorf("fetch chapter list html fail: %w", err)
 	}
@@ -68,10 +68,10 @@ func (serv *ServiceImp) downloadChapterList(bk *model.Book) (model.Chapters, err
 	var wg sync.WaitGroup
 	for i := range chapters {
 		wg.Add(1)
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		go func(i int) {
 			defer wg.Done()
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 			err := serv.downloadChapter(bk, &chapters[i])
 			if err != nil {
 				log.
@@ -161,14 +161,14 @@ func (serv *ServiceImp) Download() error {
 
 	for bk := range bkChan {
 		bk := bk
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		s.Acquire(ctx, 1)
 		wg.Add(1)
 
 		go func(bk *model.Book) {
 			defer wg.Done()
 			defer s.Release(1)
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 
 			err := serv.DownloadBook(bk)
 			if err != nil {

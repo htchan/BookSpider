@@ -1,4 +1,4 @@
-xbiquge: &xbiquge_selector
+xbiquge_selector: &xbiquge_selector
   decode_method: gbk
 
   urls: #desktop

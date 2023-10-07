@@ -28,8 +28,8 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client response contains check string",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockClient(ctrl)
-				client.EXPECT().Get("test").Return("abc123def", nil)
+				client := mock.NewMockBookClient(ctrl)
+				client.EXPECT().Get(gomock.Any(), "test").Return("abc123def", nil)
 
 				return ServiceImp{
 					conf:   conf,
@@ -41,8 +41,8 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client response not contains check string",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockClient(ctrl)
-				client.EXPECT().Get("test").Return("abcdef", nil)
+				client := mock.NewMockBookClient(ctrl)
+				client.EXPECT().Get(gomock.Any(), "test").Return("abcdef", nil)
 
 				return ServiceImp{
 					conf:   conf,
@@ -54,8 +54,8 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client return error",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockClient(ctrl)
-				client.EXPECT().Get("test").Return("", http.ErrNotSupported)
+				client := mock.NewMockBookClient(ctrl)
+				client.EXPECT().Get(gomock.Any(), "test").Return("", http.ErrNotSupported)
 
 				return ServiceImp{
 					conf:   conf,

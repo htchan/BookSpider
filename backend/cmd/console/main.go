@@ -101,6 +101,7 @@ func main() {
 	}
 
 	ctx := context.Background()
+	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
 		db, err := repo.OpenDatabase(siteName)
@@ -108,10 +109,8 @@ func main() {
 			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
 		}
 
-		sema := semaphore.NewWeighted(int64(conf.SiteConfigs[siteName].MaxThreads))
-
 		serv, err := service_new.LoadService(
-			siteName, conf.SiteConfigs[siteName], db, sema, &ctx,
+			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
 		)
 		if err != nil {
 			log.Fatalf("load service fail. site: %v, err: %v", siteName, err)

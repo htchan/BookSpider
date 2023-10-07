@@ -1,4 +1,4 @@
-hjwzw: &hjwzw_selector
+hjwzw_selector: &hjwzw_selector
   decode_method: utf8
 
   urls: #desktop

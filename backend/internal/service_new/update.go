@@ -13,7 +13,7 @@ func (serv *ServiceImp) baseURL(bk *model.Book) string {
 	return fmt.Sprintf(serv.conf.URL.Base, bk.ID)
 }
 func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
-	html, err := serv.client.Get(serv.baseURL(bk))
+	html, err := serv.client.Get(serv.ctx, serv.baseURL(bk))
 	if err != nil {
 		return fmt.Errorf("fetch html fail: %w", err)
 	}
@@ -69,12 +69,12 @@ func (serv *ServiceImp) Update() error {
 
 	for bk := range bkChan {
 		bk := bk
-		serv.client.Acquire()
+		serv.sema.Acquire(serv.ctx, 1)
 		wg.Add(1)
 
 		go func(bk *model.Book) {
 			defer wg.Done()
-			defer serv.client.Release()
+			defer serv.sema.Release(1)
 
 			err := serv.UpdateBook(bk)
 			if err != nil {

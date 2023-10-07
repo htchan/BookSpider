@@ -6,7 +6,7 @@ import (
 )
 
 func (serv *ServiceImp) CheckAvailability() error {
-	html, err := serv.client.Get(serv.conf.AvailabilityConfig.URL)
+	html, err := serv.client.Get(serv.ctx, serv.conf.AvailabilityConfig.URL)
 	if err != nil {
 		return fmt.Errorf("validate fail: %w", err)
 	}

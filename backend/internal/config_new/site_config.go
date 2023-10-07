@@ -1,11 +1,18 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client_v2/retry"
+	"github.com/htchan/BookSpider/internal/client_v2/simple"
+)
 
 type SiteConfig struct {
 	DecodeMethod         string                     `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
 	MaxThreads           int                        `yaml:"max_threads" validate:"min=1"`
 	CircuitBreakerConfig CircuitBreakerClientConfig `yaml:"circuit_breaker"`
+	ClientConfig         ClientConfig               `yaml:"client" validate:"dive"`
 	RequestTimeout       time.Duration              `yaml:"request_timeout" validate:"min=1s"`
 	RetryConfig          map[string]int             `yaml:"retry_map" validate:"min=1,dive,min=1"`
 
@@ -18,6 +25,12 @@ type SiteConfig struct {
 	GoquerySelectorsConfig GoquerySelectorsConfig `yaml:"goquery_selectors"`
 	AvailabilityConfig     AvailabilityConfig     `yaml:"availability"`
 	// UpdateDateLayour string    `yaml:"update_date_layout"`
+}
+
+type ClientConfig struct {
+	Simple         simple.SimpleClientConfig                 `yaml:"simple" validate:"dive"`
+	Retry          retry.RetryClientConfig                   `yaml:"retry" validate:"dive"`
+	CircuitBreaker circuitbreaker.CircuitBreakerClientConfig `yaml:"circuit_breaker" validate:"dive"`
 }
 
 type CircuitBreakerClientConfig struct {

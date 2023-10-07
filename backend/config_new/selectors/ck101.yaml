@@ -1,4 +1,4 @@
-ck101: &ck101_selector
+ck101_selector: &ck101_selector
   decode_method: big5
 
   urls: #desktop

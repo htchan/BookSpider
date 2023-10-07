@@ -1,4 +1,4 @@
-xqishu: &xqishu_selector
+xqishu_selector: &xqishu_selector
   decode_method: utf8
 
   urls: #desktop

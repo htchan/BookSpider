@@ -1,4 +1,4 @@
-80txt: &80txt_selector
+80txt_selector: &80txt_selector
   decode_method: utf8
 
   urls: #desktop

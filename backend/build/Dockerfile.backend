@@ -1,4 +1,4 @@
-FROM golang:1.17.6-alpine3.14 as setup
+FROM golang:1.21.0-alpine3.18 as setup
 
 WORKDIR /go/src/github.com/htchan/BookSpider
 

@@ -47,6 +47,8 @@ func (s *Selector) Parse(selection *goquery.Selection) string {
 		result = strings.ReplaceAll(result, content, "")
 	}
 
+	result = strings.TrimSpace(result)
+
 	return result
 }
 
