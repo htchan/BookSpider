@@ -15,20 +15,16 @@ WORKDIR /go/src/github.com/htchan/BookSpider
 
 RUN apk add gcc musl-dev libc-dev
 
-COPY ./cmd/batch ./cmd/batch
+COPY ./cmd/api ./cmd/api
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -v ./cmd/batch
+    go build -v ./cmd/api
 
 
 FROM alpine
 
 WORKDIR /usr/src/app
 
-COPY --from=builder /go/src/github.com/htchan/BookSpider/batch .
-COPY ./assets/cron_job /etc/cron.d/cron_job
+COPY --from=builder /go/src/github.com/htchan/BookSpider/api .
 
-RUN chmod 0644 /etc/cron.d/cron_job
-RUN crontab /etc/cron.d/cron_job
-
-CMD "crond"
+ENTRYPOINT ["/usr/src/app/api"]

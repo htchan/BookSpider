@@ -9,3 +9,7 @@ backup-bin/
 .vscode/
 *.log
 temp/
+*/.env*
+POC/*
+backend/coverage.html
+backend/cmd/test/*

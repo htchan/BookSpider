@@ -1,10 +1,11 @@
 version: "3.7"
 
 services:
-    backend:
+    #TODO: build image and push to ghcr
+    api:
         build: 
             context: ./backend
-            dockerfile: ./build/Dockerfile.backend
+            dockerfile: ./build/Dockerfile.api
         deploy:
             resources:
                 limits:
@@ -19,19 +20,12 @@ services:
             - ./backend/config_new:/config
             - ./backend/migrations:/migrations
         env_file:
-            - .env
-            - .env.db
-            - ./backend/assets/.env
+            - ./backend/assets/.env.api
         networks:
             - router
             - database
-        profiles:
-            - all
-            - backend
-            - web
         ports:
             - 9427:9427
-        command: sh -c "./backend > /log/backend.log 2>&1"
 
     frontend:
         build:
@@ -53,10 +47,11 @@ services:
             - ./.env
         command: sh -c "flutter --version ; flutter pub get ; flutter build web --base-href $NOVEL_SPIDER_FE_ROUTE_PREFIX/ --dart-define=NOVEL_SPIDER_API_HOST=$NOVEL_SPIDER_API_HOST --dart-define=NOVEL_SPIDER_API_ROUTE_PREFIX=$NOVEL_SPIDER_API_ROUTE_PREFIX --dart-define=NOVEL_SPIDER_FE_ROUTE_PREFIX=$NOVEL_SPIDER_FE_ROUTE_PREFIX"
     
-    batch:
+    #TODO: build image and push to ghcr
+    worker:
         build: 
             context: ./backend
-            dockerfile: ./build/Dockerfile.batch
+            dockerfile: ./build/Dockerfile.worker
         deploy:
             resources:
                 limits:
@@ -72,14 +67,9 @@ services:
             # - ./backend/assets/api_parser:/api_parser
             - ./backend/migrations:/migrations
         env_file:
-            - ./backend/assets/.env
-            - .env
-            - .env.db
+            - ./backend/assets/.env.worker
         networks:
             - database
-        profiles:
-            - all
-            - batch
         command: sh -c "crond && tail -f /dev/null"
 
     console:
