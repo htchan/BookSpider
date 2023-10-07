@@ -100,14 +100,18 @@ func main() {
 		log.Fatalf("validate config fail: %v", validErr)
 	}
 
+	db, dbErr := repo.OpenDatabaseByConfig(conf.DatabaseConfig)
+	if dbErr != nil {
+		log.Fatalf("load db fail: %v", dbErr)
+		return
+	}
+
+	defer db.Close()
+
 	ctx := context.Background()
 	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
 	services := make(map[string]service_new.Service)
 	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
-		db, err := repo.OpenDatabase(siteName)
-		if err != nil {
-			log.Fatalf("load db Fail. site: %v; err: %v", siteName, err)
-		}
 
 		serv, err := service_new.LoadService(
 			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
