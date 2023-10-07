@@ -17,7 +17,21 @@ import (
 )
 
 func main() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339Nano})
+	outputPath := os.Getenv("OUTPUT_PATH")
+	if outputPath != "" {
+		writer, err := os.OpenFile(outputPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err == nil {
+			log.Logger = log.Logger.Output(writer)
+			defer writer.Close()
+		} else {
+			log.Fatal().
+				Err(err).
+				Str("output_path", outputPath).
+				Msg("set logger output failed")
+		}
+	}
+
+	zerolog.TimeFieldFormat = "2006-01-02T15:04:05.99999Z07:00"
 
 	conf, confErr := config.LoadConfig()
 	if confErr != nil {
