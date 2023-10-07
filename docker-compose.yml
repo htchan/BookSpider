@@ -34,13 +34,14 @@ services:
         command: sh -c "./backend > /log/backend.log 2>&1"
 
     frontend:
-        image: "flutter:stable"
+        build:
+            context: ./frontend
         deploy:
             resources:
                 limits:
                     memory: '1G'
         volumes:
-            - frontend_volume:/build/web
+            - frontend_volume:/build-result/web
             - ./frontend/src:/usr/src/app
         networks:
             - router
