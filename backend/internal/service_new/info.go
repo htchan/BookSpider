@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/htchan/BookSpider/internal/model"
 )
@@ -19,7 +18,7 @@ var (
 func (serv *ServiceImp) BookFileLocation(bk *model.Book) string {
 	filename := fmt.Sprintf("%d.txt", bk.ID)
 	if bk.HashCode > 0 {
-		filename = fmt.Sprintf("%d-v%s.txt", bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))
+		filename = fmt.Sprintf("%d-v%s.txt", bk.ID, bk.FormatHashCode())
 	}
 
 	return filepath.Join(serv.conf.Storage, filename)
@@ -28,7 +27,7 @@ func (serv *ServiceImp) BookFileLocation(bk *model.Book) string {
 func (serv *ServiceImp) BookInfo(bk *model.Book) string {
 	bytes, err := json.Marshal(bk)
 	if err != nil {
-		return fmt.Sprintf("%s-%v#%v", bk.Site, bk.ID, strconv.FormatInt(int64(bk.HashCode), 36))
+		return fmt.Sprintf("%s-%v#%v", bk.Site, bk.ID, bk.FormatHashCode())
 	}
 	return string(bytes)
 }
