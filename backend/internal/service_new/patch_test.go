@@ -10,7 +10,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
+	mockparser "github.com/htchan/BookSpider/internal/mock/parser"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/htchan/BookSpider/internal/repo"
@@ -94,9 +96,9 @@ func TestServiceImp_PatchDownloadStatus(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				bookChan := make(chan model.Book, 4)
 				bookChan <- model.Book{ID: 1, IsDownloaded: false}
@@ -122,7 +124,7 @@ func TestServiceImp_PatchDownloadStatus(t *testing.T) {
 		{
 			name: "fail to find all books",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				rpo.EXPECT().FindAllBooks().Return(nil, errors.New("some error"))
 				return ServiceImp{
@@ -169,9 +171,9 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 		{
 			name: "no records missing",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().Stats().Return(repo.Summary{
 					MaxBookID: 5,
 				})
@@ -193,13 +195,13 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 		{
 			name: "patch missing record in middle",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/5").Return("content", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().Stats().Return(repo.Summary{
 					MaxBookID: 5,
 				})
@@ -207,7 +209,7 @@ func TestServiceImp_PatchMissingRecords(t *testing.T) {
 				rpo.EXPECT().FindBookById(2).Return(&model.Book{ID: 2}, nil)
 				rpo.EXPECT().FindBookById(3).Return(&model.Book{ID: 3}, nil)
 				rpo.EXPECT().FindBookById(4).Return(nil, sql.ErrConnDone)
-				rpo.EXPECT().FindBookById(5).Return(nil, fmt.Errorf("fail to query book by site id: %w", repo.BookNotExist))
+				rpo.EXPECT().FindBookById(5).Return(nil, fmt.Errorf("fail to query book by site id: %w", repo.ErrBookNotExist))
 
 				err := fmt.Errorf("parse html fail: %w", parse.ErrParseBookFieldsNotFound)
 				rpo.EXPECT().CreateBook(&model.Book{Site: "test-patch-missing-records", ID: 5, HashCode: model.GenerateHash()})

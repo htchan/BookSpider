@@ -9,7 +9,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
+	mockparser "github.com/htchan/BookSpider/internal/mock/parser"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/stretchr/testify/assert"
@@ -125,10 +127,10 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("some result", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapter("some result").Return(parse.NewParsedChapterFields(
 					"parsed title",
 					"parsed content 1   \n\n\n\n   parsed content 2",
@@ -153,10 +155,10 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "fail to send request",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("", errors.New("new error"))
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
 				return ServiceImp{
 					client: c,
@@ -175,10 +177,10 @@ func TestServiceImp_downloadChapter(t *testing.T) {
 		{
 			name: "fail to parse chapter",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/chapters/1").Return("some result", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapter("some result").Return(nil, errors.New("some error"))
 
 				return ServiceImp{
@@ -234,14 +236,14 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(&parsedChapterList, nil)
 				p.EXPECT().ParseChapter("chapter 1").Return(
 					parse.NewParsedChapterFields("title 1", "content 1"), nil,
@@ -268,10 +270,10 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "fail to send request",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("", errors.New("some error"))
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
 				return ServiceImp{
 					ctx:    context.Background(),
@@ -292,10 +294,10 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "fail to parse chapter list",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(nil, errors.New("some error"))
 
 				return ServiceImp{
@@ -317,7 +319,7 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 		{
 			name: "some download chapter failed",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/2").Return("chapter 2", nil)
@@ -326,7 +328,7 @@ func TestServiceImp_downloadChapterList(t *testing.T) {
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
 				parsedChapterList.Append("http://test.com/bk/1/chapter/2", "test chapter 2")
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(&parsedChapterList, nil)
 				p.EXPECT().ParseChapter("chapter 1").Return(
 					nil, errors.New("chapter 1 fail"),
@@ -494,20 +496,20 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1/download").Return("chapter list", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/1/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/1/chapter/1", "test chapter 1")
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(&parsedChapterList, nil)
 				p.EXPECT().ParseChapter("chapter 1").Return(
 					parse.NewParsedChapterFields("title 1", "content 1"), nil,
 				)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(gomock.Any()).Return(nil)
 
 				return ServiceImp{
@@ -590,7 +592,7 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to fetch chapter list",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/4/download").Return("", errors.New("url invalid"))
 
 				return ServiceImp{
@@ -624,14 +626,14 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to save content to file",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5/download").Return("chapter list", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/5/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/5/chapter/1", "test chapter 1")
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(&parsedChapterList, nil)
 				p.EXPECT().ParseChapter("chapter 1").Return(
 					parse.NewParsedChapterFields("title 1", "content 1"), nil,
@@ -669,20 +671,20 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			name: "fail to update book in DB",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/6/download").Return("chapter list", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/bk/6/chapter/1").Return("chapter 1", nil)
 
 				parsedChapterList := parse.ParsedChapterList{}
 				parsedChapterList.Append("http://test.com/bk/6/chapter/1", "test chapter 1")
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseChapterList("chapter list").Return(&parsedChapterList, nil)
 				p.EXPECT().ParseChapter("chapter 1").Return(
 					parse.NewParsedChapterFields("title 1", "content 1"), nil,
 				)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(gomock.Any()).Return(errors.New("update bk error"))
 
 				return ServiceImp{
@@ -775,9 +777,9 @@ func TestServiceImp_Download(t *testing.T) {
 			name: "some book download success and some book failed",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 
-				c := mock.NewMockBookClient(ctrl)
-				p := mock.NewMockParser(ctrl)
-				rpo := mock.NewMockRepostory(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
+				p := mockparser.NewMockParser(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				n := 2
 
 				downloadBookChan := make(chan model.Book, n+1)
@@ -845,7 +847,7 @@ func TestServiceImp_Download(t *testing.T) {
 		{
 			name: "fail to find book for download",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksForDownload().Return(nil, errors.New("some error"))
 
 				return ServiceImp{

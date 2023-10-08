@@ -8,7 +8,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
+	mockparser "github.com/htchan/BookSpider/internal/mock/parser"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/htchan/BookSpider/internal/repo"
@@ -30,10 +32,10 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "happy flow with new book (error == nil)",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/1").Return("basic book info", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
 					"title",
 					"writer",
@@ -42,7 +44,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					"chapter",
 				), nil)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().CreateBook(&model.Book{Site: "test-explore-book", ID: 1})
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
@@ -87,10 +89,10 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "happy flow with existing book (error != nil)",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/2").Return("basic book info", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
 					"title",
 					"writer",
@@ -99,7 +101,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					"chapter",
 				), nil)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
 					ID:            2,
@@ -154,13 +156,13 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "parse book fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/4").Return("basic book info", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(nil, parse.ErrParseBookFieldsNotFound)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().SaveError(&model.Book{
 					Site:  "test-explore-book",
 					ID:    4,
@@ -186,10 +188,10 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "update book fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5").Return("basic book info", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
 					"title",
 					"writer",
@@ -198,7 +200,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					"chapter",
 				), nil)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"})
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
@@ -244,10 +246,10 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 		{
 			name: "update book fail and save error fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/book/5").Return("basic book info", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("basic book info").Return(parse.NewParsedBookFields(
 					"title",
 					"writer",
@@ -256,7 +258,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					"chapter",
 				), nil)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"})
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site:          "test-explore-book",
@@ -337,11 +339,11 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				for i := 101; i <= 105; i++ {
 					rpo.EXPECT().FindBookById(i).Return(&model.Book{
 						Site:  "test-explore-existing",
@@ -393,9 +395,9 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "update error count if fail to load book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(201).Return(nil, errors.New("db error"))
 
 				return ServiceImp{
@@ -419,11 +421,11 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "update error count if fail to parse book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(301).Return(&model.Book{
 					Site:  "test-explore-existing",
 					ID:    301,
@@ -464,11 +466,11 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "clear error count if explore book success",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				rpo.EXPECT().FindBookById(401).Return(&model.Book{
 					Site:  "test-explore-existing",
@@ -537,9 +539,9 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		{
 			name: "stop before reaching Max Book ID if it reach the Max fail count",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(201).Return(nil, errors.New("db error"))
 				rpo.EXPECT().FindBookById(202).Return(nil, errors.New("db error"))
 
@@ -592,11 +594,11 @@ func TestServiceImp_exploreNew(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				err := fmt.Errorf("parse html fail: %w", parse.ErrParseBookFieldsNotFound)
 
@@ -635,11 +637,11 @@ func TestServiceImp_exploreNew(t *testing.T) {
 		{
 			name: "clear error if explore book success",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				err := fmt.Errorf("parse html fail: %w", parse.ErrParseBookFieldsNotFound)
 
@@ -759,11 +761,11 @@ func TestServiceImp_Explore(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().Stats().Return(repo.Summary{
 					LatestSuccessID: 400,
 					MaxBookID:       402,

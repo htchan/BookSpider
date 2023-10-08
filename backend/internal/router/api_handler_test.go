@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockservice "github.com/htchan/BookSpider/internal/mock/service/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
@@ -30,11 +30,11 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 		{
 			name: "works",
 			setupServs: func(ctrl *gomock.Controller) map[string]service_new.Service {
-				serv1 := mock.NewMockService(ctrl)
+				serv1 := mockservice.NewMockService(ctrl)
 				serv1.EXPECT().Name().Return("test1")
 				serv1.EXPECT().Stats().Return(repo.Summary{})
 
-				serv2 := mock.NewMockService(ctrl)
+				serv2 := mockservice.NewMockService(ctrl)
 				serv2.EXPECT().Name().Return("test2")
 				serv2.EXPECT().Stats().Return(repo.Summary{})
 
@@ -82,7 +82,7 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 		{
 			name: "works",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().Stats().Return(repo.Summary{})
 
 				return serv
@@ -130,7 +130,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 		{
 			name: "works",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().QueryBooks("title 1", "writer 1", 10, 0).Return([]model.Book{}, nil)
 
 				return serv
@@ -145,7 +145,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 		{
 			name: "error",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().QueryBooks("title 1", "writer 1", 10, 0).Return(nil, errors.New("some error"))
 
 				return serv
@@ -200,7 +200,7 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 		{
 			name: "works",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().RandomBooks(10).Return([]model.Book{}, nil)
 
 				return serv
@@ -213,7 +213,7 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 		{
 			name: "error",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().RandomBooks(10).Return(nil, errors.New("some error"))
 
 				return serv
@@ -315,7 +315,7 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 			name: "works",
 			url:  "https://localhost/data",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().
 					BookContent(&model.Book{Site: "test", ID: 1, HashCode: 0, Status: model.End, IsDownloaded: true}).
 					Return("data", nil)
@@ -329,7 +329,7 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 			name: "bk is not download",
 			url:  "https://localhost/data",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().
 					BookContent(&model.Book{Site: "test", ID: 1, HashCode: 0}).
 					Return("", errors.New("some error"))
@@ -379,10 +379,10 @@ func Test_DBStatAPIHandler(t *testing.T) {
 			name: "works",
 			url:  "https://localhost/data",
 			setupServs: func(ctrl *gomock.Controller) map[string]service_new.Service {
-				serv1 := mock.NewMockService(ctrl)
+				serv1 := mockservice.NewMockService(ctrl)
 				serv1.EXPECT().DBStats().Return(sql.DBStats{})
 
-				serv2 := mock.NewMockService(ctrl)
+				serv2 := mockservice.NewMockService(ctrl)
 				serv2.EXPECT().DBStats().Return(sql.DBStats{})
 
 				return map[string]service_new.Service{

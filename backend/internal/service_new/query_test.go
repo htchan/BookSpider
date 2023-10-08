@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,7 @@ func TestServiceImp_Book(t *testing.T) {
 		{
 			name: "find book with empty hash",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(1).Return(&model.Book{
 					ID: 1,
 				}, nil)
@@ -43,7 +43,7 @@ func TestServiceImp_Book(t *testing.T) {
 		{
 			name: "find book with non empty hash",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookByIdHash(1, 100).Return(&model.Book{
 					ID:       1,
 					HashCode: 100,
@@ -62,7 +62,7 @@ func TestServiceImp_Book(t *testing.T) {
 		{
 			name: "getting error in find book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(1).Return(nil, errors.New("find book by id error"))
 
 				return ServiceImp{
@@ -117,7 +117,7 @@ func TestServiceImp_QueryBooks(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByTitleWriter("title", "writer", 1, 1).Return([]model.Book{
 					{ID: 1, Title: "title", Writer: model.Writer{Name: "somebody"}},
 					{ID: 1, Title: "some text", Writer: model.Writer{Name: "writer"}},
@@ -139,7 +139,7 @@ func TestServiceImp_QueryBooks(t *testing.T) {
 		{
 			name: "getting error",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByTitleWriter("title", "writer", 1, 1).Return(nil, errors.New("some error"))
 
 				return ServiceImp{rpo: rpo}
@@ -192,7 +192,7 @@ func TestServiceImp_RandomBooks(t *testing.T) {
 		{
 			name: "happy flow",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByRandom(10).Return([]model.Book{{ID: 1}}, nil)
 
 				return ServiceImp{rpo: rpo}
@@ -205,7 +205,7 @@ func TestServiceImp_RandomBooks(t *testing.T) {
 		{
 			name: "getting error",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByRandom(10).Return(nil, errors.New("some error"))
 
 				return ServiceImp{rpo: rpo}

@@ -23,7 +23,7 @@ type BookOperation func(*model.Book) error
 
 type SiteOperation func() error
 
-//go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
+//go:generate mockgen -destination=../mock/service/v2/service.go -package=mockservice . Service
 type Service interface {
 	Name() string
 	Backup() error

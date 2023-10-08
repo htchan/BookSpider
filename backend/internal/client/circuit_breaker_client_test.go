@@ -7,7 +7,6 @@ import (
 
 	"github.com/htchan/BookSpider/internal/config"
 	config_new "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
 	"golang.org/x/text/encoding/traditionalchinese"
 )
 
@@ -64,7 +63,7 @@ func TestCircuitBreakerClient_AcquireRelease(t *testing.T) {
 
 func TestCircuitBreakerClient_SendRequest(t *testing.T) {
 	t.Parallel()
-	server := mock.MockCircuitBreakerServer(2)
+	server := MockCircuitBreakerServer(2)
 	client := NewClient(config.CircuitBreakerClientConfig{Timeout: 1}, nil, nil)
 
 	t.Cleanup(func() {
@@ -144,7 +143,7 @@ func TestCircuitBreakerClient_SendRequest(t *testing.T) {
 
 func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 	t.Parallel()
-	server := mock.MockCircuitBreakerServer(2)
+	server := MockCircuitBreakerServer(2)
 	t.Cleanup(func() {
 		server.Close()
 	})
@@ -207,7 +206,7 @@ func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 func TestCircuitBreakerClient_Get(t *testing.T) {
 	t.Parallel()
 
-	server := mock.MockCircuitBreakerServer(1)
+	server := MockCircuitBreakerServer(1)
 
 	t.Cleanup(func() {
 		server.Close()
