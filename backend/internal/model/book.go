@@ -64,7 +64,7 @@ func (bk Book) MarshalJSON() ([]byte, error) {
 		IsDownloaded  bool   `json:"is_downloaded"`
 		Error         string `json:"error"`
 	}{
-		Site: bk.Site, ID: bk.ID, HashCode: strconv.FormatInt(int64(bk.HashCode), 36),
+		Site: bk.Site, ID: bk.ID, HashCode: bk.FormatHashCode(),
 		Title: bk.Title, Writer: bk.Writer.Name, Type: bk.Type,
 		UpdateDate: bk.UpdateDate, UpdateChapter: bk.UpdateChapter,
 		Status: bk.Status.String(), IsDownloaded: bk.IsDownloaded,
@@ -103,4 +103,8 @@ func (bk Book) Checksum() string {
 
 	title := strings.ReplaceAll(bk.Title, " ", "")
 	return strToShortHex(simplified(title))
+}
+
+func (bk *Book) FormatHashCode() string {
+	return strconv.FormatInt(int64(GenerateHash()), 36)
 }
