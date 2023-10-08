@@ -54,7 +54,7 @@ func (f *Arguement) GetBook(sites map[string]service_new.Service) *model.Book {
 	}
 
 	bk, err := st.Book(*f.ID, *f.HashCode)
-	if errors.Is(err, repo.BookNotExist) {
+	if errors.Is(err, repo.ErrBookNotExist) {
 		hash, _ := strconv.ParseInt(*f.HashCode, 36, 64)
 		bk = &model.Book{
 			Site:     *f.Site,
