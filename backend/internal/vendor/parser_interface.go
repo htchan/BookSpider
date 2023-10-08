@@ -26,7 +26,8 @@ type ChapterInfo struct {
 //go:generate mockgen -destination=../mock/vendor/parser.go -package=mockvendor . Parser
 type Parser interface {
 	ParseBook(body string) (*BookInfo, error)
-	ParseChapterList(body string) (*ChapterList, error)
+	ParseChapterList(body string) (ChapterList, error)
 	ParseChapter(body string) (*ChapterInfo, error)
 	IsAvailable(body string) bool
+	FindMissingIds(ids []int) []int
 }

@@ -3,6 +3,7 @@ package vendor
 import "errors"
 
 var (
+	ErrFieldsNotFound = errors.New("book fields not found")
 	// book fields not found error
 	ErrBookTitleNotFound   = errors.New("title not found")
 	ErrBookWriterNotFound  = errors.New("writer not found")
