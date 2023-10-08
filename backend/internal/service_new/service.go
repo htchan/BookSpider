@@ -65,7 +65,7 @@ type ServiceImp struct {
 	sema   *semaphore.Weighted
 	parser parse.Parser
 	conf   config.SiteConfig
-	rpo    repo.Repostory
+	rpo    repo.Repository
 }
 
 var _ Service = (*ServiceImp)(nil)

@@ -2,7 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/htchan/BookSpider/internal/model"
 )
@@ -17,8 +16,6 @@ var ChapterEndKeywords = []string{
 	"全书完", "全文完", "全文终", "全文结", "剧终", "（完）", "终章",
 	"外传", "结尾",
 }
-
-var BookNotExist = errors.New("no records found")
 
 //go:generate mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
 type Repository interface {

@@ -19,7 +19,7 @@ type PsqlRepo struct {
 	db   *sql.DB
 }
 
-var _ repo.Repostory = &PsqlRepo{}
+var _ repo.Repository = &PsqlRepo{}
 
 func NewRepo(site string, db *sql.DB) *PsqlRepo {
 	return &PsqlRepo{site: site, db: db}
@@ -121,7 +121,7 @@ func (r *PsqlRepo) FindBookById(id int) (*model.Book, error) {
 	if rows.Next() {
 		return rowsToBook(rows)
 	}
-	return nil, fmt.Errorf("fail to query book by site id: %w", repo.BookNotExist)
+	return nil, fmt.Errorf("fail to query book by site id: %w", repo.ErrBookNotExist)
 }
 func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 	rows, err := r.db.Query(
@@ -139,7 +139,7 @@ func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 	if rows.Next() {
 		return rowsToBook(rows)
 	}
-	return nil, fmt.Errorf("fail to query book by site id hash: %w", repo.BookNotExist)
+	return nil, fmt.Errorf("fail to query book by site id hash: %w", repo.ErrBookNotExist)
 }
 func (r *PsqlRepo) FindBooksByStatus(status model.StatusCode) (<-chan model.Book, error) {
 	rows, err := r.db.Query(

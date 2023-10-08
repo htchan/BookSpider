@@ -74,7 +74,7 @@ func (serv *ServiceImp) PatchMissingRecords() error {
 			defer serv.sema.Release(1)
 			defer wg.Done()
 			_, err := serv.rpo.FindBookById(id)
-			if errors.Is(err, repo.BookNotExist) {
+			if errors.Is(err, repo.ErrBookNotExist) {
 				log.Error().Err(err).Str("site", serv.name).Int("id", id).Msg("book not exist in database")
 				bk := model.NewBook(serv.name, id)
 				serv.ExploreBook(&bk)
