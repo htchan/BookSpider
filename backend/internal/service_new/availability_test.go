@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 )
 
 func TestServiceImp_CheckAvailability(t *testing.T) {
@@ -28,7 +28,7 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client response contains check string",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockBookClient(ctrl)
+				client := mockclient.NewMockBookClient(ctrl)
 				client.EXPECT().Get(gomock.Any(), "test").Return("abc123def", nil)
 
 				return ServiceImp{
@@ -41,7 +41,7 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client response not contains check string",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockBookClient(ctrl)
+				client := mockclient.NewMockBookClient(ctrl)
 				client.EXPECT().Get(gomock.Any(), "test").Return("abcdef", nil)
 
 				return ServiceImp{
@@ -54,7 +54,7 @@ func TestServiceImp_CheckAvailability(t *testing.T) {
 		{
 			name: "client return error",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				client := mock.NewMockBookClient(ctrl)
+				client := mockclient.NewMockBookClient(ctrl)
 				client.EXPECT().Get(gomock.Any(), "test").Return("", http.ErrNotSupported)
 
 				return ServiceImp{

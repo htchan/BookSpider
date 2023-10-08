@@ -21,7 +21,7 @@ type SqlcRepo struct {
 	queries *sqlc.Queries
 }
 
-var _ repo.Repostory = &SqlcRepo{}
+var _ repo.Repository = &SqlcRepo{}
 
 func toSqlString(s string) sql.NullString {
 	return sql.NullString{String: s, Valid: true}

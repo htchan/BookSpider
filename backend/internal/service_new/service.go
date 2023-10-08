@@ -23,7 +23,7 @@ type BookOperation func(*model.Book) error
 
 type SiteOperation func() error
 
-//go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
+//go:generate mockgen -destination=../mock/service/v2/service.go -package=mockservice . Service
 type Service interface {
 	Name() string
 	Backup() error
@@ -65,7 +65,7 @@ type ServiceImp struct {
 	sema   *semaphore.Weighted
 	parser parse.Parser
 	conf   config.SiteConfig
-	rpo    repo.Repostory
+	rpo    repo.Repository
 }
 
 var _ Service = (*ServiceImp)(nil)

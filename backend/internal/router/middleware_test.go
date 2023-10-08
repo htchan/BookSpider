@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockservice "github.com/htchan/BookSpider/internal/mock/service/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
 	"github.com/stretchr/testify/assert"
@@ -100,7 +100,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 		{
 			name: "set request context book for existing id",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().BookGroup(1, "").Return(
 					&model.Book{ID: 1},
 					&model.BookGroup{{ID: 1}, {ID: 2}},
@@ -117,7 +117,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 		{
 			name: "set request context book for existing id-hash",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().BookGroup(1, "2s").Return(
 					&model.Book{ID: 1, HashCode: 100},
 					&model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
@@ -134,7 +134,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 		{
 			name: "return error for not exist id",
 			setupServ: func(ctrl *gomock.Controller) service_new.Service {
-				serv := mock.NewMockService(ctrl)
+				serv := mockservice.NewMockService(ctrl)
 				serv.EXPECT().BookGroup(1, "").Return(
 					nil,
 					nil,

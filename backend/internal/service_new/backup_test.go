@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 )
 
 func TestServiceImp_Backup(t *testing.T) {
@@ -24,7 +24,7 @@ func TestServiceImp_Backup(t *testing.T) {
 		{
 			name: "calls rpo.Backup",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().Backup("some dir")
 
 				return ServiceImp{

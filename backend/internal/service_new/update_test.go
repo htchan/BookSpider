@@ -7,7 +7,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
+	mockparser "github.com/htchan/BookSpider/internal/mock/parser"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/parse"
 	"github.com/stretchr/testify/assert"
@@ -58,12 +60,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 		{
 			name: "happy flow without any changes",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date", "chapter",
 				), nil)
@@ -95,7 +97,7 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 		{
 			name: "happy flow for new book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().CreateBook(&model.Book{
 					ID: 1, HashCode: model.GenerateHash(), Status: model.InProgress,
 					Title: "title new", Writer: model.Writer{ID: 10, Name: "writer new"}, Type: "type new",
@@ -103,10 +105,10 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{ID: 10, Name: "writer new"}).Return(nil)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
 					"title new", "writer new", "type new", "date new", "chapter new",
 				), nil)
@@ -138,7 +140,7 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 		{
 			name: "happy flow for updated existing book",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Status: model.InProgress,
 					Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
@@ -146,10 +148,10 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{ID: 10, Name: "writer"}).Return(nil)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date new", "chapter new",
 				), nil)
@@ -181,12 +183,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 		{
 			name: "get website fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("", errors.New("get web error"))
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 
 				return ServiceImp{
 					ctx:    context.Background(),
@@ -215,12 +217,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 		{
 			name: "parse content fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content", nil)
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content").Return(nil, parse.ErrParseBookFieldsNotFound)
 
 				return ServiceImp{
@@ -285,7 +287,7 @@ func TestServiceImp_Update(t *testing.T) {
 		{
 			name: "happy flow that some book update success and some fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				bookChan := make(chan model.Book, 2)
 				bookChan <- model.Book{
@@ -307,11 +309,11 @@ func TestServiceImp_Update(t *testing.T) {
 				}).Return(nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 
-				c := mock.NewMockBookClient(ctrl)
+				c := mockclient.NewMockBookClient(ctrl)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/1").Return("content 1", nil)
 				c.EXPECT().Get(gomock.Any(), "http://test.com/books/2").Return("", errors.New("get web fail"))
 
-				p := mock.NewMockParser(ctrl)
+				p := mockparser.NewMockParser(ctrl)
 				p.EXPECT().ParseBook("content 1").Return(parse.NewParsedBookFields(
 					"title", "writer", "type", "date new", "chapter new",
 				), nil)
@@ -333,7 +335,7 @@ func TestServiceImp_Update(t *testing.T) {
 		{
 			name: "load book from DB got error",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksForUpdate().Return(nil, errors.New("some error"))
 				return ServiceImp{rpo: rpo}
 			},

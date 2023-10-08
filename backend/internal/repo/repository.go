@@ -2,7 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/htchan/BookSpider/internal/model"
 )
@@ -18,10 +17,8 @@ var ChapterEndKeywords = []string{
 	"外传", "结尾",
 }
 
-var BookNotExist = errors.New("no records found")
-
-//go:generate mockgen -source=./$GOFILE -destination=../mock/$GOFILE -package=mock
-type Repostory interface {
+//go:generate mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
+type Repository interface {
 	// book related
 	CreateBook(*model.Book) error
 	UpdateBook(*model.Book) error

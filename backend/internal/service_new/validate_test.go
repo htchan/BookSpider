@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	"github.com/htchan/BookSpider/internal/mock"
+	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -68,7 +68,7 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 		{
 			name: "update in progress book to end",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2),
 				})
@@ -83,7 +83,7 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 		{
 			name: "update end book to in progress",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				})
@@ -118,7 +118,7 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 		{
 			name: "update book fail",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				}).Return(errors.New("some error"))
@@ -171,7 +171,7 @@ func TestServiceImp_ValidateEnd(t *testing.T) {
 		{
 			name: "calls rpo.UpdateBooksStatus",
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
-				rpo := mock.NewMockRepostory(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBooksStatus()
 
 				return ServiceImp{

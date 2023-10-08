@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func stubData(r repo.Repostory, site string) []model.Book {
+func stubData(r repo.Repository, site string) []model.Book {
 	bks := []model.Book{
 		{
 			Site: site, ID: 1, HashCode: 0,
@@ -180,7 +180,7 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		r                 repo.Repostory
+		r                 repo.Repository
 		inputBook         *model.Book
 		expectErr         bool
 		expectQueryResult *model.Book
@@ -257,7 +257,7 @@ func TestSqlcRepo_FindBookByID(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		id           int
 		expectResult *model.Book
 		expectHash   int
@@ -316,7 +316,7 @@ func TestSqlcRepo_FindBookByIDHash(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		id           int
 		hashcode     int
 		expectResult *model.Book
@@ -380,7 +380,7 @@ func TestSqlcRepo_FindAllBooks(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		expectResult []model.Book
 		expectErr    bool
 	}{
@@ -436,7 +436,7 @@ func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		expectResult []model.Book
 		expectErr    bool
 	}{
@@ -486,7 +486,7 @@ func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		expectResult []model.Book
 		expectErr    bool
 	}{
@@ -537,7 +537,7 @@ func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		title        string
 		writer       string
 		limit        int
@@ -620,7 +620,7 @@ func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		limit        int
 		expectLength int
 		expectErr    bool
@@ -671,7 +671,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		r          repo.Repostory
+		r          repo.Repository
 		bkID       int
 		bkHash     int
 		expectErr  bool
@@ -790,7 +790,7 @@ func TestSqlcRepo_SaveWriter(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		r         repo.Repostory
+		r         repo.Repository
 		writer    *model.Writer
 		expectErr bool
 	}{
@@ -842,7 +842,7 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		r            repo.Repostory
+		r            repo.Repository
 		bk           *model.Book
 		e            error
 		expectErrStr string
@@ -918,7 +918,7 @@ func TestSqlcRepo_Backup(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		r         repo.Repostory
+		r         repo.Repository
 		path      string
 		expectErr bool
 	}{
@@ -962,7 +962,7 @@ func TestSqlcRepo_Stats(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		r      repo.Repostory
+		r      repo.Repository
 		expect repo.Summary
 	}{
 		{
