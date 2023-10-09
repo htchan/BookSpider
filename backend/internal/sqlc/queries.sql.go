@@ -247,6 +247,33 @@ func (q *Queries) ErrorBooksStat(ctx context.Context, site sql.NullString) (int6
 	return error_count, err
 }
 
+const findAllBookIDs = `-- name: FindAllBookIDs :many
+select distinct(id) as book_id from books where site=$1 order by book_id
+`
+
+func (q *Queries) FindAllBookIDs(ctx context.Context, site sql.NullString) ([]sql.NullInt32, error) {
+	rows, err := q.db.QueryContext(ctx, findAllBookIDs, site)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []sql.NullInt32
+	for rows.Next() {
+		var book_id sql.NullInt32
+		if err := rows.Scan(&book_id); err != nil {
+			return nil, err
+		}
+		items = append(items, book_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getBookByID = `-- name: GetBookByID :one
 select books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
