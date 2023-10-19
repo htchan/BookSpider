@@ -1,6 +1,7 @@
 package hjwzw
 
 const (
+	Host = "hjwzw"
 	// url template
 	vendorProtocol         = "https"
 	vendorHost             = "tw.hjwzw.com"

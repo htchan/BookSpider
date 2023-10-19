@@ -91,7 +91,7 @@ func (p *Parser) ParseChapterList(body string) (vendor.ChapterList, error) {
 			)
 		}
 
-		title := strings.TrimSpace(s.Children().Remove().End().Text())
+		title := vendor.GetGoqueryContent(s)
 		if title == "" {
 			parseErr = errors.Join(
 				parseErr,
@@ -127,13 +127,13 @@ func (p *Parser) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	// parse title
 	d, err := doc.Find(chapterTitleGoquerySelector).Html()
 	fmt.Println(chapterTitleGoquerySelector, d, err)
-	title := strings.TrimSpace(doc.Find(chapterTitleGoquerySelector).Children().Remove().End().Text())
+	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
 	}
 
 	// parse content
-	content := strings.TrimSpace(doc.Find(chapterContentGoquerySelector).Children().Remove().End().Text())
+	content := vendor.GetGoqueryContent(doc.Find(chapterContentGoquerySelector))
 	if content == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterContentNotFound)
 	}

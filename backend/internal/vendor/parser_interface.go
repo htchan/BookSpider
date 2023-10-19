@@ -1,6 +1,11 @@
 package vendor
 
-import "time"
+import (
+	"strings"
+	"time"
+
+	"github.com/PuerkitoBio/goquery"
+)
 
 type BookInfo struct {
 	Title         string
@@ -30,4 +35,8 @@ type Parser interface {
 	ParseChapter(body string) (*ChapterInfo, error)
 	IsAvailable(body string) bool
 	FindMissingIds(ids []int) []int
+}
+
+func GetGoqueryContent(s *goquery.Selection) string {
+	return strings.TrimSpace(s.Children().Remove().End().Text())
 }
