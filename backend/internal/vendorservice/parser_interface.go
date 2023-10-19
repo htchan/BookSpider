@@ -28,7 +28,7 @@ type ChapterInfo struct {
 	Body  string
 }
 
-//go:generate mockgen -destination=../mock/vendor/parser.go -package=mockvendor . Parser
+//go:generate mockgen -destination=../mock/vendorservice/parser.go -package=mockvendorservice . Parser
 type Parser interface {
 	ParseBook(body string) (*BookInfo, error)
 	ParseChapterList(body string) (ChapterList, error)

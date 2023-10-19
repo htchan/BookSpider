@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 )
 
 type Parser struct {

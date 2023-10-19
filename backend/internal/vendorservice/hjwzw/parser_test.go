@@ -3,7 +3,7 @@ package hjwzw
 import (
 	"testing"
 
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
 )
 

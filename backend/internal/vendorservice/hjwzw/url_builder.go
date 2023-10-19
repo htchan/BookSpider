@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog/log"
 )
 
