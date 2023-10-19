@@ -9,7 +9,7 @@ import (
 	config "github.com/htchan/BookSpider/internal/config_new"
 	clientmock "github.com/htchan/BookSpider/internal/mock/client/v2"
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
-	vendormock "github.com/htchan/BookSpider/internal/mock/vendor"
+	vendormock "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"

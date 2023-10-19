@@ -6,16 +6,15 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	client "github.com/htchan/BookSpider/internal/client_v2"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
-	mockvendor "github.com/htchan/BookSpider/internal/mock/vendor"
+	mockvendor "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
 	serv "github.com/htchan/BookSpider/internal/service"
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/semaphore"
 )
@@ -26,10 +25,11 @@ func TestNewService(t *testing.T) {
 	tests := []struct {
 		name       string
 		siteName   string
-		cli        client.BookClient
 		rpo        repo.Repository
 		parser     vendor.Parser
 		urlBuilder vendor.BookURLBuilder
+		sema       *semaphore.Weighted
+		conf       config.SiteConfig
 		want       *ServiceImpl
 	}{
 		{
@@ -43,7 +43,7 @@ func TestNewService(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewService(test.siteName, test.cli, test.rpo, test.parser, test.urlBuilder)
+			got := NewService(test.siteName, test.rpo, test.parser, test.urlBuilder, test.sema, test.conf)
 			assert.Equal(t, test.want, got)
 		})
 	}

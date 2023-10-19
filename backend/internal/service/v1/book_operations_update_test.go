@@ -7,10 +7,10 @@ import (
 	"github.com/golang/mock/gomock"
 	clientmock "github.com/htchan/BookSpider/internal/mock/client/v2"
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
-	vendormock "github.com/htchan/BookSpider/internal/mock/vendor"
+	vendormock "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
 	serv "github.com/htchan/BookSpider/internal/service"
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/semaphore"
 )

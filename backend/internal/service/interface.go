@@ -12,6 +12,7 @@ type BookOperation func(context.Context, *model.Book) error
 
 type SiteOperation func(context.Context) error
 
+//go:generate mockgen -destination=../mock/service/v1/service.go -package=mockservice . Service
 type Service interface {
 	Name() string
 	// Backup() error

@@ -8,11 +8,14 @@ import (
 	"sync"
 
 	client "github.com/htchan/BookSpider/internal/client_v2"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client_v2/retry"
+	"github.com/htchan/BookSpider/internal/client_v2/simple"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
@@ -32,15 +35,25 @@ type ServiceImpl struct {
 var _ serv.Service = (*ServiceImpl)(nil)
 
 func NewService(
-	name string, cli client.BookClient, rpo repo.Repository,
+	name string, rpo repo.Repository,
 	parser vendor.Parser, urlBuilder vendor.BookURLBuilder,
+	sema *semaphore.Weighted, conf config.SiteConfig,
 ) *ServiceImpl {
 	return &ServiceImpl{
-		name:       name,
-		cli:        cli,
+		name: name,
+		cli: retry.NewClient(
+			&conf.ClientConfig.Retry,
+			circuitbreaker.NewClient(
+				&conf.ClientConfig.CircuitBreaker,
+				simple.NewClient(&conf.ClientConfig.Simple),
+			),
+		),
 		rpo:        rpo,
 		parser:     parser,
 		urlBuilder: urlBuilder,
+
+		sema: sema,
+		conf: conf,
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
-	"github.com/htchan/BookSpider/internal/vendor"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
