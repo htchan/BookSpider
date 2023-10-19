@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
 )
 
 var UnauthorizedError = errors.New("unauthorized")
@@ -20,7 +20,7 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 	fmt.Fprintln(res, fmt.Sprintf(`{ "error": "%v" }`, err))
 }
 
-func AddAPIRoutes(router chi.Router, conf config.APIConfig, services map[string]service_new.Service) {
+func AddAPIRoutes(router chi.Router, conf config.APIConfig, services map[string]service.Service) {
 	router.Route(conf.APIRoutePrefix, func(router chi.Router) {
 		router.Use(ZerologMiddleware)
 		router.Use(
