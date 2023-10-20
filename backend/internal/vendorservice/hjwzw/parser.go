@@ -10,20 +10,11 @@ import (
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 )
 
-type Parser struct {
-}
-
-var _ vendor.Parser = (*Parser)(nil)
-
-func NewParser() *Parser {
-	return &Parser{}
-}
-
-func (p *Parser) ParseDoc(body string) (*goquery.Document, error) {
+func (p *VendorService) ParseDoc(body string) (*goquery.Document, error) {
 	return goquery.NewDocumentFromReader(strings.NewReader(body))
 }
 
-func (p *Parser) ParseBook(body string) (*vendor.BookInfo, error) {
+func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	doc, docErr := p.ParseDoc(body)
 	if docErr != nil {
 		return nil, fmt.Errorf("parse body fail: %w", docErr)
@@ -74,7 +65,7 @@ func (p *Parser) ParseBook(body string) (*vendor.BookInfo, error) {
 	}, parseErr
 }
 
-func (p *Parser) ParseChapterList(body string) (vendor.ChapterList, error) {
+func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error) {
 	doc, docErr := p.ParseDoc(body)
 	if docErr != nil {
 		return nil, fmt.Errorf("parse body fail: %w", docErr)
@@ -116,7 +107,7 @@ func (p *Parser) ParseChapterList(body string) (vendor.ChapterList, error) {
 	return chapterList, parseErr
 }
 
-func (p *Parser) ParseChapter(body string) (*vendor.ChapterInfo, error) {
+func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	doc, docErr := p.ParseDoc(body)
 	if docErr != nil {
 		return nil, fmt.Errorf("parse body fail: %w", docErr)
@@ -148,11 +139,11 @@ func (p *Parser) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	}, parseErr
 }
 
-func (p *Parser) IsAvailable(body string) bool {
+func (p *VendorService) IsAvailable(body string) bool {
 	return strings.Contains(body, "黃金屋")
 }
 
-func (p *Parser) FindMissingIds(ids []int) []int {
+func (p *VendorService) FindMissingIds(ids []int) []int {
 	var missingIDs []int
 
 	sort.Ints(ids)

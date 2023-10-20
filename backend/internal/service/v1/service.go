@@ -22,11 +22,10 @@ import (
 )
 
 type ServiceImpl struct {
-	name       string
-	cli        client.BookClient
-	rpo        repo.Repository
-	parser     vendor.Parser
-	urlBuilder vendor.BookURLBuilder
+	name          string
+	cli           client.BookClient
+	rpo           repo.Repository
+	vendorService vendor.VendorService
 
 	conf config.SiteConfig
 	sema *semaphore.Weighted
@@ -36,7 +35,7 @@ var _ serv.Service = (*ServiceImpl)(nil)
 
 func NewService(
 	name string, rpo repo.Repository,
-	parser vendor.Parser, urlBuilder vendor.BookURLBuilder,
+	vendorService vendor.VendorService,
 	sema *semaphore.Weighted, conf config.SiteConfig,
 ) *ServiceImpl {
 	return &ServiceImpl{
@@ -48,9 +47,8 @@ func NewService(
 				simple.NewClient(&conf.ClientConfig.Simple),
 			),
 		),
-		rpo:        rpo,
-		parser:     parser,
-		urlBuilder: urlBuilder,
+		rpo:           rpo,
+		vendorService: vendorService,
 
 		sema: sema,
 		conf: conf,
@@ -136,7 +134,7 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context) error {
 		return fmt.Errorf("find all book ids fail: %w", err)
 	}
 
-	missingIDs := s.parser.FindMissingIds(allBkIDs)
+	missingIDs := s.vendorService.FindMissingIds(allBkIDs)
 	for _, bookID := range missingIDs {
 		bookID := bookID
 		s.sema.Acquire(ctx, 1)
@@ -157,12 +155,12 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context) error {
 }
 
 func (s *ServiceImpl) CheckAvailability(ctx context.Context) error {
-	body, err := s.cli.Get(ctx, s.urlBuilder.AvailabilityURL())
+	body, err := s.cli.Get(ctx, s.vendorService.AvailabilityURL())
 	if err != nil {
 		return fmt.Errorf("get availability page failed: %w", err)
 	}
 
-	if !s.parser.IsAvailable(body) {
+	if !s.vendorService.IsAvailable(body) {
 		return serv.ErrUnavailable
 	}
 

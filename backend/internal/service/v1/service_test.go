@@ -26,14 +26,13 @@ func TestNewService(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		siteName   string
-		rpo        repo.Repository
-		parser     vendor.Parser
-		urlBuilder vendor.BookURLBuilder
-		sema       *semaphore.Weighted
-		conf       config.SiteConfig
-		want       *ServiceImpl
+		name          string
+		siteName      string
+		rpo           repo.Repository
+		vendorService vendor.VendorService
+		sema          *semaphore.Weighted
+		conf          config.SiteConfig
+		want          *ServiceImpl
 	}{
 		{
 			name: "happy flow",
@@ -54,7 +53,7 @@ func TestNewService(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewService(test.siteName, test.rpo, test.parser, test.urlBuilder, test.sema, test.conf)
+			got := NewService(test.siteName, test.rpo, test.vendorService, test.sema, test.conf)
 			assert.Equal(t, test.want, got)
 		})
 	}
@@ -266,18 +265,17 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				parser := mockvendor.NewMockParser(ctrl)
-				builder := mockvendor.NewMockBookURLBuilder(ctrl)
+				vendorService := mockvendor.NewMockVendorService(ctrl)
 				cli := mockclient.NewMockBookClient(ctrl)
 
 				hashcode := model.GenerateHash()
 
 				rpo.EXPECT().FindAllBookIDs().Return([]int{1, 2, 4}, nil)
-				parser.EXPECT().FindMissingIds([]int{1, 2, 4}).Return([]int{3})
+				vendorService.EXPECT().FindMissingIds([]int{1, 2, 4}).Return([]int{3})
 				rpo.EXPECT().CreateBook(&model.Book{Site: "serv", ID: 3, HashCode: hashcode}).Return(nil)
-				builder.EXPECT().BookURL("3").Return("http://testing.com/1234")
+				vendorService.EXPECT().BookURL("3").Return("http://testing.com/1234")
 				cli.EXPECT().Get(gomock.Any(), "http://testing.com/1234").Return("result", nil)
-				parser.EXPECT().ParseBook("result").Return(&vendor.BookInfo{
+				vendorService.EXPECT().ParseBook("result").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 				}, nil)
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
@@ -293,12 +291,11 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				}, nil).Return(nil)
 
 				return &ServiceImpl{
-					name:       "serv",
-					rpo:        rpo,
-					cli:        cli,
-					parser:     parser,
-					urlBuilder: builder,
-					sema:       semaphore.NewWeighted(1),
+					name:          "serv",
+					rpo:           rpo,
+					cli:           cli,
+					vendorService: vendorService,
+					sema:          semaphore.NewWeighted(1),
 				}
 			},
 			wantError: nil,
@@ -345,20 +342,18 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 		{
 			name: "site available",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				parser := mockvendor.NewMockParser(ctrl)
-				builder := mockvendor.NewMockBookURLBuilder(ctrl)
+				vendorService := mockvendor.NewMockVendorService(ctrl)
 				cli := mockclient.NewMockBookClient(ctrl)
 
-				builder.EXPECT().AvailabilityURL().Return("https://test.com")
+				vendorService.EXPECT().AvailabilityURL().Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
-				parser.EXPECT().IsAvailable("result").Return(true)
+				vendorService.EXPECT().IsAvailable("result").Return(true)
 
 				return &ServiceImpl{
-					name:       "serv",
-					cli:        cli,
-					parser:     parser,
-					urlBuilder: builder,
-					sema:       semaphore.NewWeighted(1),
+					name:          "serv",
+					cli:           cli,
+					vendorService: vendorService,
+					sema:          semaphore.NewWeighted(1),
 				}
 			},
 			wantError: nil,
@@ -366,20 +361,18 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 		{
 			name: "site unavailable",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				parser := mockvendor.NewMockParser(ctrl)
-				builder := mockvendor.NewMockBookURLBuilder(ctrl)
+				vendorService := mockvendor.NewMockVendorService(ctrl)
 				cli := mockclient.NewMockBookClient(ctrl)
 
-				builder.EXPECT().AvailabilityURL().Return("https://test.com")
+				vendorService.EXPECT().AvailabilityURL().Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
-				parser.EXPECT().IsAvailable("result").Return(false)
+				vendorService.EXPECT().IsAvailable("result").Return(false)
 
 				return &ServiceImpl{
-					name:       "serv",
-					cli:        cli,
-					parser:     parser,
-					urlBuilder: builder,
-					sema:       semaphore.NewWeighted(1),
+					name:          "serv",
+					cli:           cli,
+					vendorService: vendorService,
+					sema:          semaphore.NewWeighted(1),
 				}
 			},
 			wantError: serv.ErrUnavailable,

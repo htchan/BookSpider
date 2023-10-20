@@ -114,7 +114,7 @@ func TestParser_ParseBook(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			p := Parser{}
+			p := VendorService{}
 			got, err := p.ParseBook(test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
@@ -198,7 +198,7 @@ func TestParser_ParseChapterList(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			p := Parser{}
+			p := VendorService{}
 			got, err := p.ParseChapterList(test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
@@ -261,7 +261,7 @@ func TestParser_ParseChapter(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			p := Parser{}
+			p := VendorService{}
 			got, err := p.ParseChapter(test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
@@ -294,7 +294,7 @@ func TestParser_IsAvailable(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			p := Parser{}
+			p := VendorService{}
 			got := p.IsAvailable(test.body)
 			assert.Equal(t, test.want, got)
 		})
@@ -331,7 +331,7 @@ func TestParser_FindMissingIds(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			p := Parser{}
+			p := VendorService{}
 			got := p.FindMissingIds(test.ids)
 			assert.Equal(t, test.want, got)
 		})

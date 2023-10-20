@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBookURLBuilder_BookURL(t *testing.T) {
+func TestVendorService_BookURL(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -31,15 +31,15 @@ func TestBookURLBuilder_BookURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			builder := BookURLBuilder{}
-			got := builder.BookURL(test.bkID)
+			serv := VendorService{}
+			got := serv.BookURL(test.bkID)
 
 			assert.Equal(t, test.want, got)
 		})
 	}
 }
 
-func TestBookURLBuilder_ChapterListURL(t *testing.T) {
+func TestVendorService_ChapterListURL(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -64,15 +64,15 @@ func TestBookURLBuilder_ChapterListURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			builder := BookURLBuilder{}
-			got := builder.ChapterListURL(test.bkID)
+			serv := VendorService{}
+			got := serv.ChapterListURL(test.bkID)
 
 			assert.Equal(t, test.want, got)
 		})
 	}
 }
 
-func TestBookURLBuilder_ChapterURL(t *testing.T) {
+func TestVendorService_ChapterURL(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -112,15 +112,15 @@ func TestBookURLBuilder_ChapterURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			builder := BookURLBuilder{}
-			got := builder.ChapterURL(test.resources...)
+			serv := VendorService{}
+			got := serv.ChapterURL(test.resources...)
 
 			assert.Equal(t, test.want, got)
 		})
 	}
 }
 
-func TestBookURLBuilder_AvailabilityURL(t *testing.T) {
+func TestVendorService_AvailabilityURL(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -138,8 +138,8 @@ func TestBookURLBuilder_AvailabilityURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			builder := BookURLBuilder{}
-			got := builder.AvailabilityURL()
+			serv := VendorService{}
+			got := serv.AvailabilityURL()
 
 			assert.Equal(t, test.want, got)
 		})

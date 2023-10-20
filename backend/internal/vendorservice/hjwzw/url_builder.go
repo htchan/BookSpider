@@ -4,27 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog/log"
 )
 
-type BookURLBuilder struct{}
-
-var _ vendor.BookURLBuilder = (*BookURLBuilder)(nil)
-
-func NewURLBuilder() *BookURLBuilder {
-	return &BookURLBuilder{}
-}
-
-func (b *BookURLBuilder) BookURL(bookID string) string {
+func (b *VendorService) BookURL(bookID string) string {
 	return fmt.Sprintf(bookURLTemplate, bookID)
 }
 
-func (b *BookURLBuilder) ChapterListURL(bookID string) string {
+func (b *VendorService) ChapterListURL(bookID string) string {
 	return fmt.Sprintf(chapterListURLTemplate, bookID)
 }
 
-func (b *BookURLBuilder) ChapterURL(resources ...string) string {
+func (b *VendorService) ChapterURL(resources ...string) string {
 	if len(resources) == 1 {
 		res := resources[0]
 		if strings.HasPrefix(res, "http") {
@@ -42,6 +33,6 @@ func (b *BookURLBuilder) ChapterURL(resources ...string) string {
 	return ""
 }
 
-func (b *BookURLBuilder) AvailabilityURL() string {
+func (b *VendorService) AvailabilityURL() string {
 	return vendorProtocol + "://" + vendorHost
 }

@@ -28,8 +28,15 @@ type ChapterInfo struct {
 	Body  string
 }
 
-//go:generate mockgen -destination=../mock/vendorservice/parser.go -package=mockvendorservice . Parser
-type Parser interface {
+//go:generate mockgen -destination=../mock/vendorservice/vendor_service.go -package=mockvendorservice . VendorService
+type VendorService interface {
+	// url builder
+	BookURL(bookID string) string
+	ChapterListURL(bookID string) string
+	ChapterURL(resources ...string) string
+	AvailabilityURL() string
+
+	// content parser
 	ParseBook(body string) (*BookInfo, error)
 	ParseChapterList(body string) (ChapterList, error)
 	ParseChapter(body string) (*ChapterInfo, error)

@@ -28,12 +28,12 @@ func isBookUpdated(bk *model.Book, bkInfo *vendor.BookInfo) bool {
 }
 
 func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
-	body, err := s.cli.Get(ctx, s.urlBuilder.BookURL(strconv.FormatInt(int64(bk.ID), 10)))
+	body, err := s.cli.Get(ctx, s.vendorService.BookURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
 		return fmt.Errorf("get book page failed: %w", err)
 	}
 
-	bkInfo, err := s.parser.ParseBook(body)
+	bkInfo, err := s.vendorService.ParseBook(body)
 	if err != nil {
 		return fmt.Errorf("parse book page failed: %w", err)
 	}
@@ -218,7 +218,7 @@ func (s *ServiceImpl) downloadChapter(ctx context.Context, ch *model.Chapter) er
 		return fmt.Errorf("get chapter page failed: %w", err)
 	}
 
-	chapter, err := s.parser.ParseChapter(body)
+	chapter, err := s.vendorService.ParseChapter(body)
 	if err != nil {
 		ch.Error = err
 
@@ -241,12 +241,12 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 
 	logger.Info().Msg("get chapter list")
 
-	body, err := s.cli.Get(ctx, s.urlBuilder.ChapterListURL(strconv.FormatInt(int64(bk.ID), 10)))
+	body, err := s.cli.Get(ctx, s.vendorService.ChapterListURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
 		return fmt.Errorf("get chapter list failed: %w", err)
 	}
 
-	chapterList, err := s.parser.ParseChapterList(body)
+	chapterList, err := s.vendorService.ParseChapterList(body)
 	if err != nil {
 		return fmt.Errorf("parse chapter list failed: %w", err)
 	}
