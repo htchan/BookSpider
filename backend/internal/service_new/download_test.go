@@ -443,7 +443,7 @@ chapter content
 			expectFileLocation: "",
 			expectContent:      "",
 			expectedError:      true,
-			expectErrorStr:     "Save book fail: open ./test-save-content/test/2.txt: no such file or directory",
+			expectErrorStr:     "save book fail: open ./test-save-content/test/2.txt: no such file or directory",
 		},
 	}
 
@@ -665,7 +665,7 @@ func TestServiceImp_DownloadBook(t *testing.T) {
 			expectFileLocation: "./test-download-book/5.txt",
 			expectContent:      "",
 			expectedError:      true,
-			expectErrorStr:     "save content fail: Save book fail: open test-download-book/not-exist/5.txt: no such file or directory",
+			expectErrorStr:     "save content fail: save book fail: open test-download-book/not-exist/5.txt: no such file or directory",
 		},
 		{
 			name: "fail to update book in DB",

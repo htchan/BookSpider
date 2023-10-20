@@ -83,7 +83,7 @@ func TestNewRetryCheck(t *testing.T) {
 
 	retryCheckForStatusCode := NewRetryCheck(RetryCondition{
 		Type:              RetryConditionTypeStatusCode,
-		Value:             []int{100, 300, 400},
+		Value:             []interface{}{100, 300, 400},
 		Weight:            20,
 		PauseInterval:     2 * time.Second,
 		PauseIntervalType: PauseIntervalTypeConst,

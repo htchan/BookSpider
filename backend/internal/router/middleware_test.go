@@ -102,7 +102,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 			name: "set request context book for existing id",
 			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), 1, "").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
 					&model.Book{ID: 1},
 					&model.BookGroup{{ID: 1}, {ID: 2}},
 					nil,
@@ -119,7 +119,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 			name: "set request context book for existing id-hash",
 			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), 1, "2s").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "2s").Return(
 					&model.Book{ID: 1, HashCode: 100},
 					&model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
 					nil,
@@ -136,7 +136,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 			name: "return error for not exist id",
 			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), 1, "").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
 					nil,
 					nil,
 					errors.New("some error"),

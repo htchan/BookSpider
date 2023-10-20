@@ -86,7 +86,7 @@ func Test_validate_CircuitBreakerConfig(t *testing.T) {
 			name: "invalid acquire timeout",
 			conf: CircuitBreakerClientConfig{
 				OpenThreshold:         10,
-				AcquireTimeout:        999 * time.Millisecond,
+				AcquireTimeout:        99 * time.Millisecond,
 				MaxConcurrencyThreads: 2,
 				RecoverThreads:        []int64{1},
 				OpenDuration:          time.Second,

@@ -31,7 +31,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 		return http.HandlerFunc(
 			func(res http.ResponseWriter, req *http.Request) {
 				siteName := chi.URLParam(req, "siteName")
-				availableSites := make([]string, len(services), 0)
+				availableSites := make([]string, 0, len(services))
 				for key := range services {
 					availableSites = append(availableSites, key)
 				}
