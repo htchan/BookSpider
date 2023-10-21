@@ -45,5 +45,5 @@ type VendorService interface {
 }
 
 func GetGoqueryContent(s *goquery.Selection) string {
-	return strings.TrimSpace(s.Children().Remove().End().Text())
+	return strings.TrimSpace(s.Clone().Children().Remove().End().Text())
 }

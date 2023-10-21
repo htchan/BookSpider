@@ -1,4 +1,4 @@
-package hjwzw
+package bestory
 
 import (
 	"fmt"
