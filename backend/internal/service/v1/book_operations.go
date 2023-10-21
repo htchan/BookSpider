@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog"
@@ -354,7 +353,7 @@ func isEnd(bk *model.Book) bool {
 	}
 
 	chapter := strings.ReplaceAll(bk.UpdateChapter, " ", "")
-	for _, keyword := range repo.ChapterEndKeywords {
+	for _, keyword := range model.ChapterEndKeywords {
 		if strings.Contains(chapter, keyword) {
 			return true
 		}
