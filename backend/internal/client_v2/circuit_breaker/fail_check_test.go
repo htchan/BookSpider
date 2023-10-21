@@ -12,7 +12,7 @@ func Test_newFailCheck(t *testing.T) {
 
 	statusCodeConf := CheckConfig{
 		Type:  CheckTypeStatusCodes,
-		Value: []int{502},
+		Value: []interface{}{502},
 	}
 
 	type args struct {

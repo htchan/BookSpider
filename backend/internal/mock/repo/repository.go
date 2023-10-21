@@ -92,6 +92,21 @@ func (mr *MockRepositoryMockRecorder) DBStats() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBStats", reflect.TypeOf((*MockRepository)(nil).DBStats))
 }
 
+// FindAllBookIDs mocks base method.
+func (m *MockRepository) FindAllBookIDs() ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAllBookIDs")
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAllBookIDs indicates an expected call of FindAllBookIDs.
+func (mr *MockRepositoryMockRecorder) FindAllBookIDs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBookIDs", reflect.TypeOf((*MockRepository)(nil).FindAllBookIDs))
+}
+
 // FindAllBooks mocks base method.
 func (m *MockRepository) FindAllBooks() (<-chan model.Book, error) {
 	m.ctrl.T.Helper()

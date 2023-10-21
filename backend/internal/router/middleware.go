@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/htchan/BookSpider/internal/model"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,12 +26,12 @@ const (
 	OFFSET_KEY     ContextKey = "offset"
 )
 
-func GetSiteMiddleware(services map[string]service_new.Service) func(http.Handler) http.Handler {
+func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(res http.ResponseWriter, req *http.Request) {
 				siteName := chi.URLParam(req, "siteName")
-				availableSites := make([]string, len(services), 0)
+				availableSites := make([]string, 0, len(services))
 				for key := range services {
 					availableSites = append(availableSites, key)
 				}
@@ -56,7 +56,7 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {
 			idHash := chi.URLParam(req, "idHash")
-			serv := req.Context().Value(SERV_KEY).(service_new.Service)
+			serv := req.Context().Value(SERV_KEY).(service.Service)
 			var (
 				bk    *model.Book
 				group *model.BookGroup
@@ -65,12 +65,11 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 
 			idHashArray := strings.Split(idHash, "-")
 			if len(idHashArray) == 1 {
-				id, _ := strconv.Atoi(idHashArray[0])
-				bk, group, err = serv.BookGroup(id, "")
+				id := idHashArray[0]
+				bk, group, err = serv.BookGroup(req.Context(), id, "")
 			} else if len(idHashArray) == 2 {
-				id, _ := strconv.Atoi(idHashArray[0])
-				hash := idHashArray[1]
-				bk, group, err = serv.BookGroup(id, hash)
+				id, hash := idHashArray[0], idHashArray[1]
+				bk, group, err = serv.BookGroup(req.Context(), id, hash)
 			}
 			if err != nil {
 				log.

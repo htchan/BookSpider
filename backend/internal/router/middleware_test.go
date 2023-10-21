@@ -12,9 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
-	mockservice "github.com/htchan/BookSpider/internal/mock/service/v2"
+	mockservice "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
+	servicev1 "github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,23 +23,23 @@ func Test_GetSiteMiddleware(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name      string
-		servs     map[string]service_new.Service
+		servs     map[string]service.Service
 		siteName  string
-		wantServ  service_new.Service
+		wantServ  service.Service
 		expectRes string
 	}{
 		{
 			name: "set request context site if site found",
-			servs: map[string]service_new.Service{
-				"test": &service_new.ServiceImp{},
+			servs: map[string]service.Service{
+				"test": &servicev1.ServiceImpl{},
 			},
 			siteName:  "test",
-			wantServ:  &service_new.ServiceImp{},
+			wantServ:  &servicev1.ServiceImpl{},
 			expectRes: "site found",
 		},
 		{
 			name:      "return error if site not found",
-			servs:     map[string]service_new.Service{},
+			servs:     map[string]service.Service{},
 			siteName:  "unknown",
 			wantServ:  nil,
 			expectRes: `{"error": "site not found"}`,
@@ -53,7 +54,7 @@ func Test_GetSiteMiddleware(t *testing.T) {
 			handlerFunc := GetSiteMiddleware(test.servs)
 			handler := handlerFunc(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					serv := r.Context().Value(SERV_KEY).(service_new.Service)
+					serv := r.Context().Value(SERV_KEY).(service.Service)
 
 					assert.Equal(t, test.wantServ, serv)
 					// if !cmp.Equal(st, test.wantServ) {
@@ -91,7 +92,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		setupServ       func(ctrl *gomock.Controller) service_new.Service
+		setupServ       func(ctrl *gomock.Controller) service.Service
 		idHash          string
 		expectBook      *model.Book
 		expectBookGroup *model.BookGroup
@@ -99,9 +100,9 @@ func Test_GetBookMiddleware(t *testing.T) {
 	}{
 		{
 			name: "set request context book for existing id",
-			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(1, "").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
 					&model.Book{ID: 1},
 					&model.BookGroup{{ID: 1}, {ID: 2}},
 					nil,
@@ -116,9 +117,9 @@ func Test_GetBookMiddleware(t *testing.T) {
 		},
 		{
 			name: "set request context book for existing id-hash",
-			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(1, "2s").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "2s").Return(
 					&model.Book{ID: 1, HashCode: 100},
 					&model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
 					nil,
@@ -133,9 +134,9 @@ func Test_GetBookMiddleware(t *testing.T) {
 		},
 		{
 			name: "return error for not exist id",
-			setupServ: func(ctrl *gomock.Controller) service_new.Service {
+			setupServ: func(ctrl *gomock.Controller) service.Service {
 				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(1, "").Return(
+				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
 					nil,
 					nil,
 					errors.New("some error"),

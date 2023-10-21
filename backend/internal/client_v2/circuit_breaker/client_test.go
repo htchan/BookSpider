@@ -46,7 +46,7 @@ func TestNewClient(t *testing.T) {
 					CheckConfigs: []CheckConfig{
 						{
 							Type:  CheckTypeStatusCodes,
-							Value: []int{502},
+							Value: []interface{}{502},
 						},
 					},
 				},
@@ -63,7 +63,7 @@ func TestNewClient(t *testing.T) {
 					CheckConfigs: []CheckConfig{
 						{
 							Type:  CheckTypeStatusCodes,
-							Value: []int{502},
+							Value: []interface{}{502},
 						},
 					},
 				},
@@ -533,7 +533,7 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 				RecoverDuration:       100 * time.Millisecond,
 				OpenDuration:          200 * time.Millisecond,
 				CheckConfigs: []CheckConfig{
-					{Type: CheckTypeStatusCodes, Value: []int{500}},
+					{Type: CheckTypeStatusCodes, Value: []interface{}{500}},
 				},
 			},
 			simple.NewClient(&simple.SimpleClientConfig{

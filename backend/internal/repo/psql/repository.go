@@ -25,6 +25,10 @@ func NewRepo(site string, db *sql.DB) *PsqlRepo {
 	return &PsqlRepo{site: site, db: db}
 }
 
+func (r *PsqlRepo) FindAllBookIDs() ([]int, error) {
+	return nil, errors.New("not implemented")
+}
+
 func (r *PsqlRepo) CreateBook(bk *model.Book) error {
 	_, err := r.db.Exec(
 		`insert into books 

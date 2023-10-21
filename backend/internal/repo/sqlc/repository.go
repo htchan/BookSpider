@@ -477,6 +477,20 @@ func (r *SqlcRepo) UpdateBooksStatus() error {
 	})
 }
 
+func (r *SqlcRepo) FindAllBookIDs() ([]int, error) {
+	result, err := r.queries.FindAllBookIDs(r.ctx, toSqlString(r.site))
+	if err != nil {
+		return nil, fmt.Errorf("sql failed: %w", err)
+	}
+
+	results := make([]int, 0, len(result))
+	for _, res := range result {
+		results = append(results, int(res.Int32))
+	}
+
+	return results, nil
+}
+
 // writer related
 func (r *SqlcRepo) SaveWriter(writer *model.Writer) error {
 	result, err := r.queries.CreateWriter(r.ctx, sqlc.CreateWriterParams{

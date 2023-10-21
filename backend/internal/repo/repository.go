@@ -37,6 +37,8 @@ type Repository interface {
 	FindBookGroupByID(id int) (model.BookGroup, error)
 	FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error)
 
+	FindAllBookIDs() ([]int, error)
+
 	// writer related
 	SaveWriter(*model.Writer) error // create and update id in writer
 	// the system will not delete / update existing writers

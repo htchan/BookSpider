@@ -27,7 +27,7 @@ func TestNewClient(t *testing.T) {
 				RetryConditions: []RetryCondition{
 					{
 						Type:              RetryConditionTypeStatusCode,
-						Value:             []int{404},
+						Value:             []interface{}{404},
 						Weight:            1,
 						PauseInterval:     time.Second,
 						PauseIntervalType: PauseIntervalTypeConst,
@@ -45,7 +45,7 @@ func TestNewClient(t *testing.T) {
 					RetryConditions: []RetryCondition{
 						{
 							Type:              RetryConditionTypeStatusCode,
-							Value:             []int{404},
+							Value:             []interface{}{404},
 							Weight:            1,
 							PauseInterval:     time.Second,
 							PauseIntervalType: PauseIntervalTypeConst,

@@ -3,10 +3,10 @@ package router
 import (
 	"github.com/go-chi/chi/v5"
 	config "github.com/htchan/BookSpider/internal/config_new"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
 )
 
-func AddLiteRoutes(router chi.Router, conf config.APIConfig, services map[string]service_new.Service) {
+func AddLiteRoutes(router chi.Router, conf config.APIConfig, services map[string]service.Service) {
 	router.Route(conf.LiteRoutePrefix, func(router chi.Router) {
 		router.Route("/sites/{siteName}", func(router chi.Router) {
 			router.Use(ZerologMiddleware)

@@ -204,3 +204,6 @@ select status, count(*) from books where site=$1 group by status;
 select count(distinct writers.id) as writer_count 
 from books join writers on books.writer_id=writers.id 
 where site=$1;
+
+-- name: FindAllBookIDs :many
+select distinct(id) as book_id from books where site=$1 order by book_id;

@@ -106,5 +106,5 @@ func (bk Book) Checksum() string {
 }
 
 func (bk *Book) FormatHashCode() string {
-	return strconv.FormatInt(int64(GenerateHash()), 36)
+	return strconv.FormatInt(int64(bk.HashCode), 36)
 }

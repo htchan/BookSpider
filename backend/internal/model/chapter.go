@@ -1,8 +1,13 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+)
+
+var (
+	ErrCannotParseContent = errors.New("cannot parse content")
 )
 
 type Chapter struct {
@@ -47,6 +52,9 @@ func removeEmptyLines(lines []string) []string {
 
 func StringToChapters(content string) (Chapters, error) {
 	splitedContent := strings.Split(content, CONTENT_SEP)
+	if len(splitedContent) < 3 {
+		return nil, ErrCannotParseContent
+	}
 	chapters := make(Chapters, 0)
 	chapter := Chapter{
 		Index:   0,

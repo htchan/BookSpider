@@ -4,12 +4,14 @@ import "strings"
 
 type StatusCode int
 
+// TODO: update variable name to StatusXXX
 const (
 	Error = iota
 	InProgress
 	End
 )
 
+// TODO: update variable name to StatusErrorKey
 const (
 	ErrorKey      = "ERROR"
 	InProgressKey = "INPROGRESS"

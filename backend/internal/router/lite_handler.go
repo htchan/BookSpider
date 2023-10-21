@@ -8,14 +8,14 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
 	"github.com/rs/zerolog/log"
 )
 
 //go:embed templates/*
 var files embed.FS
 
-func GeneralLiteHandler(services map[string]service_new.Service) http.HandlerFunc {
+func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		t, err := template.ParseFS(files, "templates/sites.html", "templates/components/site-card.html")
 		if err != nil {
@@ -35,13 +35,13 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	serv := req.Context().Value(SERV_KEY).(service.Service)
 	t.Execute(res, struct {
 		Name    string
 		Summary repo.Summary
 	}{
 		Name:    serv.Name(),
-		Summary: serv.Stats(),
+		Summary: serv.Stats(req.Context()),
 	})
 }
 
@@ -53,7 +53,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	serv := req.Context().Value(SERV_KEY).(service.Service)
 	title := req.Context().Value(TITLE_KEY).(string)
 	writer := req.Context().Value(WRITER_KEY).(string)
 	limit := req.Context().Value(LIMIT_KEY).(int)
@@ -62,7 +62,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		limit = 10
 	}
 
-	bks, err := serv.QueryBooks(title, writer, limit, offset)
+	bks, err := serv.QueryBooks(req.Context(), title, writer, limit, offset)
 
 	if err != nil {
 		res.WriteHeader(404)
@@ -92,13 +92,13 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	serv := req.Context().Value(SERV_KEY).(service.Service)
 	limit := req.Context().Value(LIMIT_KEY).(int)
 	if limit == 0 {
 		limit = 10
 	}
 
-	bks, err := serv.RandomBooks(limit)
+	bks, err := serv.RandomBooks(req.Context(), limit)
 
 	if err != nil {
 		res.WriteHeader(404)
@@ -123,7 +123,7 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	group := req.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
 
@@ -139,9 +139,9 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
-	serv := req.Context().Value(SERV_KEY).(service_new.Service)
+	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
-	content, err := serv.BookContent(bk)
+	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {
 		res.WriteHeader(500)
 		log.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")

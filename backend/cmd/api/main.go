@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"net/http"
 	"os"
 	"time"
@@ -10,11 +10,27 @@ import (
 	config "github.com/htchan/BookSpider/internal/config_new"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/router"
-	service_new "github.com/htchan/BookSpider/internal/service_new"
+	"github.com/htchan/BookSpider/internal/service"
+	hjwzw "github.com/htchan/BookSpider/internal/vendorservice/hjwzw"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/semaphore"
 )
+
+func loadServices(vendors []string, db *sql.DB, conf *config.Config) map[string]service.Service {
+	result := make(map[string]service.Service)
+
+	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
+
+	if slices.Contains(vendors, hjwzw.Host) {
+		rpo := repo.NewRepo(hjwzw.Host, db)
+
+		result[hjwzw.Host] = hjwzw.NewService(rpo, publicSema, conf.SiteConfigs[hjwzw.Host])
+	}
+
+	return result
+}
 
 func main() {
 	outputPath := os.Getenv("OUTPUT_PATH")
@@ -55,20 +71,21 @@ func main() {
 
 	defer db.Close()
 
-	ctx := context.Background()
-	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
-	services := make(map[string]service_new.Service)
-	for _, siteName := range conf.APIConfig.AvailableSiteNames {
-		serv, loadServErr := service_new.LoadService(
-			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
-		)
-		if loadServErr != nil {
-			log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
-			return
-		}
+	// ctx := context.Background()
+	// publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
+	// services := make(map[string]service_new.Service)
+	// for _, siteName := range conf.APIConfig.AvailableSiteNames {
+	// 	serv, loadServErr := service_new.LoadService(
+	// 		siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
+	// 	)
+	// 	if loadServErr != nil {
+	// 		log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
+	// 		return
+	// 	}
 
-		services[siteName] = serv
-	}
+	// 	services[siteName] = serv
+	// }
+	services := loadServices(conf.APIConfig.AvailableSiteNames, db, conf)
 
 	// load routes
 	r := chi.NewRouter()

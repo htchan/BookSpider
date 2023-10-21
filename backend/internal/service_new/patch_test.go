@@ -133,7 +133,7 @@ func TestServiceImp_PatchDownloadStatus(t *testing.T) {
 				}
 			},
 			wantError:    true,
-			wantErrorStr: "Patch download status fail: some error",
+			wantErrorStr: "patch download status fail: some error",
 		},
 	}
 

@@ -770,6 +770,51 @@ func BenchmarkSqlcRepo_UpdateBooksStatus(b *testing.B) {
 	}
 }
 
+func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
+	t.Parallel()
+
+	StubPsqlConn()
+	db, err := OpenDatabase("")
+	if err != nil {
+		t.Fatalf("error in open database: %v", err)
+	}
+	site := "bk/find_all_ids"
+
+	t.Cleanup(func() {
+		db.Exec("delete from books where site=$1", site)
+		db.Close()
+	})
+
+	r := NewRepo(site, db)
+
+	stubData(NewRepo(site, db), site)
+
+	tests := []struct {
+		name      string
+		r         repo.Repository
+		wantError error
+		want      []int
+	}{
+		{
+			name:      "happy flow",
+			r:         r,
+			wantError: nil,
+			want:      []int{1, 2, 3, 4},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := test.r.FindAllBookIDs()
+			assert.Equal(t, test.want, got)
+			assert.ErrorIs(t, test.wantError, err)
+		})
+	}
+}
+
 func TestSqlcRepo_SaveWriter(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
