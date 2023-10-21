@@ -11,7 +11,7 @@ import (
 )
 
 func (serv *ServiceImp) ExploreBook(bk *model.Book) error {
-	if bk.Status != model.Error {
+	if bk.Status != model.StatusError {
 		return errors.New("book status is not error")
 	}
 

@@ -113,7 +113,7 @@ func (serv *ServiceImp) saveContent(location string, bk *model.Book, chapters mo
 }
 
 func (serv *ServiceImp) DownloadBook(bk *model.Book) error {
-	if bk.Status != model.End {
+	if bk.Status != model.StatusEnd {
 		return fmt.Errorf("book status not ready for download. status: %v", bk.Status)
 	} else if bk.IsDownloaded {
 		return errors.New("book was downloaded")

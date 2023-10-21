@@ -19,7 +19,7 @@ import (
 )
 
 func isNewBook(bk *model.Book, bkInfo *vendor.BookInfo) bool {
-	return bk.Status != model.Error && (bk.Title != bkInfo.Title || bk.Writer.Name != bkInfo.Writer || bk.Type != bkInfo.Type)
+	return bk.Status != model.StatusError && (bk.Title != bkInfo.Title || bk.Writer.Name != bkInfo.Writer || bk.Type != bkInfo.Type)
 }
 
 func isBookUpdated(bk *model.Book, bkInfo *vendor.BookInfo) bool {
@@ -48,7 +48,7 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
 		bk.HashCode = model.GenerateHash()
-		bk.Status = model.InProgress
+		bk.Status = model.StatusInProgress
 		bk.Error = nil
 
 		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
@@ -60,17 +60,17 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 
 		logger.Debug().Msg("new book found")
 	} else if isBookUpdated(bk, bkInfo) {
-		if bk.Status == model.Error {
+		if bk.Status == model.StatusError {
 			bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Writer, bkInfo.Type
 		}
 
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
-		bk.Status = model.InProgress
+		bk.Status = model.StatusInProgress
 		bk.Error = nil
 
-		if bk.Status == model.Error {
-			bk.Status = model.InProgress
+		if bk.Status == model.StatusError {
+			bk.Status = model.StatusInProgress
 		}
 
 		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
@@ -121,7 +121,7 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 }
 
 func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
-	if bk.Status != model.Error {
+	if bk.Status != model.StatusError {
 		return serv.ErrBookStatusNotError
 	}
 
@@ -230,7 +230,7 @@ func (s *ServiceImpl) downloadChapter(ctx context.Context, ch *model.Chapter) er
 }
 
 func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
-	if bk.Status != model.End {
+	if bk.Status != model.StatusEnd {
 		return serv.ErrBookStatusNotEnd
 	} else if bk.IsDownloaded {
 		return serv.ErrBookAlreadyDownloaded
@@ -363,12 +363,12 @@ func isEnd(bk *model.Book) bool {
 
 func (s *ServiceImpl) ValidateBookEnd(ctx context.Context, bk *model.Book) error {
 	isUpdated, isBookEnded := false, isEnd(bk)
-	if isBookEnded && bk.Status != model.End {
+	if isBookEnded && bk.Status != model.StatusEnd {
 		bk.IsDownloaded = false
-		bk.Status = model.End
+		bk.Status = model.StatusEnd
 		isUpdated = true
-	} else if !isBookEnded && bk.Status != model.InProgress {
-		bk.Status = model.InProgress
+	} else if !isBookEnded && bk.Status != model.StatusInProgress {
+		bk.Status = model.StatusInProgress
 		isUpdated = true
 	}
 

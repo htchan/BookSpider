@@ -80,7 +80,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Site: "test", ID: 1, HashCode: 0,
 				Title: "title", Writer: Writer{ID: 1, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
-				Status: InProgress, IsDownloaded: true,
+				Status: StatusInProgress, IsDownloaded: true,
 				Error: errors.New("error"),
 			},
 			expect:    `{"site":"test","id":1,"hash_code":"0","title":"title","writer":"writer","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"error":"error"}`,

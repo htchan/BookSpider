@@ -26,14 +26,14 @@ func Test_isNewBook(t *testing.T) {
 	}{
 		{
 			name:   "book is not new, because id not exist before",
-			bk:     &model.Book{Status: model.Error},
+			bk:     &model.Book{Status: model.StatusError},
 			bkInfo: &vendor.BookInfo{Title: "title", Writer: "writer", Type: "type"},
 			want:   false,
 		},
 		{
 			name: "book is not new, because key fields was not updated",
 			bk: &model.Book{
-				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type", Status: model.InProgress,
+				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type", Status: model.StatusInProgress,
 			},
 			bkInfo: &vendor.BookInfo{
 				Title: "title", Writer: "writer", Type: "type",
@@ -43,19 +43,19 @@ func Test_isNewBook(t *testing.T) {
 		},
 		{
 			name:   "book is new, because id existed before and title was updated",
-			bk:     &model.Book{Title: "title", Status: model.InProgress},
+			bk:     &model.Book{Title: "title", Status: model.StatusInProgress},
 			bkInfo: &vendor.BookInfo{Title: "title 2"},
 			want:   true,
 		},
 		{
 			name:   "book is new, because id existed before and writer was updated",
-			bk:     &model.Book{Writer: model.Writer{Name: "writer"}, Status: model.InProgress},
+			bk:     &model.Book{Writer: model.Writer{Name: "writer"}, Status: model.StatusInProgress},
 			bkInfo: &vendor.BookInfo{Writer: "writer 2"},
 			want:   true,
 		},
 		{
 			name:   "book is new, because id existed before and type was updated",
-			bk:     &model.Book{Type: "type", Status: model.InProgress},
+			bk:     &model.Book{Type: "type", Status: model.StatusInProgress},
 			bkInfo: &vendor.BookInfo{Type: "type 2"},
 			want:   true,
 		},
@@ -135,8 +135,8 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk:        &model.Book{ID: 1, Status: model.Error},
-			wantBk:    &model.Book{ID: 1, Status: model.Error},
+			bk:        &model.Book{ID: 1, Status: model.StatusError},
+			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
 		},
 		{
@@ -153,10 +153,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
 		},
@@ -172,7 +172,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				}, nil)
 				bk := &model.Book{
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().UpdateBook(bk).Return(nil)
@@ -180,9 +180,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk: &model.Book{ID: 1, Status: model.Error},
+			bk: &model.Book{ID: 1, Status: model.StatusError},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
 		},
@@ -198,7 +198,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				}, nil)
 				bk := &model.Book{
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.InProgress,
+					UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().UpdateBook(bk).Return(nil)
@@ -207,10 +207,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.InProgress,
+				UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
 			},
 			wantError: nil,
 		},
@@ -226,7 +226,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				}, nil)
 				bk := &model.Book{
 					ID: 1, HashCode: model.GenerateHash(), Title: "title 2", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().CreateBook(bk).Return(nil)
@@ -235,10 +235,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantBk: &model.Book{ID: 1, HashCode: model.GenerateHash(), Title: "title 2", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
 		},
@@ -252,8 +252,8 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk:        &model.Book{ID: 1, Status: model.Error},
-			wantBk:    &model.Book{ID: 1, Status: model.Error},
+			bk:        &model.Book{ID: 1, Status: model.StatusError},
+			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
 		},
 		{
@@ -267,8 +267,8 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk:        &model.Book{ID: 1, Status: model.Error},
-			wantBk:    &model.Book{ID: 1, Status: model.Error},
+			bk:        &model.Book{ID: 1, Status: model.StatusError},
+			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
 		},
 		{
@@ -283,7 +283,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				}, nil)
 				bk := &model.Book{
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().UpdateBook(bk).Return(serv.ErrUnavailable)
@@ -291,9 +291,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk: &model.Book{ID: 1, Status: model.Error},
+			bk: &model.Book{ID: 1, Status: model.StatusError},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: serv.ErrUnavailable,
 		},
@@ -309,7 +309,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				}, nil)
 				bk := &model.Book{
 					ID: 1, HashCode: model.GenerateHash(), Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().CreateBook(bk).Return(serv.ErrUnavailable)
@@ -317,9 +317,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
-			bk: &model.Book{ID: 1, Status: model.InProgress},
+			bk: &model.Book{ID: 1, Status: model.StatusInProgress},
 			wantBk: &model.Book{ID: 1, HashCode: model.GenerateHash(), Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: serv.ErrUnavailable,
 		},
@@ -355,7 +355,7 @@ func TestServiceImpl_Update(t *testing.T) {
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				bk := model.Book{
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				ch := make(chan model.Book)
 

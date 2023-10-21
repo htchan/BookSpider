@@ -141,7 +141,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 				}, nil)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-					Status: model.End, IsDownloaded: true,
+					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(nil)
 
 				return &ServiceImpl{
@@ -151,11 +151,11 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 			},
 			book: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantBook: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: true,
+				Status: model.StatusEnd, IsDownloaded: true,
 			},
 			wantError:            nil,
 			wantBookFileLocation: "./download-book/1.txt",
@@ -178,8 +178,8 @@ content 2 content 2 content 2
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				return &ServiceImpl{}
 			},
-			book:      &model.Book{Status: model.InProgress},
-			wantBook:  &model.Book{Status: model.InProgress},
+			book:      &model.Book{Status: model.StatusInProgress},
+			wantBook:  &model.Book{Status: model.StatusInProgress},
 			wantError: serv.ErrBookStatusNotEnd,
 		},
 		{
@@ -187,8 +187,8 @@ content 2 content 2 content 2
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				return &ServiceImpl{}
 			},
-			book:      &model.Book{Status: model.End, IsDownloaded: true},
-			wantBook:  &model.Book{Status: model.End, IsDownloaded: true},
+			book:      &model.Book{Status: model.StatusEnd, IsDownloaded: true},
+			wantBook:  &model.Book{Status: model.StatusEnd, IsDownloaded: true},
 			wantError: serv.ErrBookAlreadyDownloaded,
 		},
 		{
@@ -206,11 +206,11 @@ content 2 content 2 content 2
 			},
 			book: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantBook: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrUnavailable,
 		},
@@ -231,11 +231,11 @@ content 2 content 2 content 2
 			},
 			book: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantBook: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrUnavailable,
 		},
@@ -264,11 +264,11 @@ content 2 content 2 content 2
 			},
 			book: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantBook: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrTooManyFailedChapters,
 		},
@@ -295,7 +295,7 @@ content 2 content 2 content 2
 				}, nil)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-					Status: model.End, IsDownloaded: true,
+					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{
@@ -305,11 +305,11 @@ content 2 content 2 content 2
 			},
 			book: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantBook: &model.Book{
 				ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
-				Status: model.End, IsDownloaded: true,
+				Status: model.StatusEnd, IsDownloaded: true,
 			},
 			wantError: serv.ErrUnavailable,
 		},
@@ -357,8 +357,8 @@ func TestServiceImpl_Download(t *testing.T) {
 
 				ch := make(chan model.Book)
 				go func() {
-					ch <- model.Book{ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"}, Status: model.End}
-					ch <- model.Book{ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"}, Status: model.End}
+					ch <- model.Book{ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"}, Status: model.StatusEnd}
+					ch <- model.Book{ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"}, Status: model.StatusEnd}
 					close(ch)
 				}()
 
@@ -381,7 +381,7 @@ func TestServiceImpl_Download(t *testing.T) {
 				}, nil)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"},
-					Status: model.End, IsDownloaded: true,
+					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{

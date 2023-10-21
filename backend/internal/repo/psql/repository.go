@@ -200,7 +200,7 @@ func (r *PsqlRepo) FindBooksForDownload() (<-chan model.Book, error) {
 				strings.ReplaceAll(QueryTable, "books.", "bks."), "books ", "(select distinct on (site, id) * from books where site=$1 order by site, id, hash_code desc) as bks ",
 			),
 		),
-		r.site, model.StatusCode(model.End).String(), false,
+		r.site, model.StatusCode(model.StatusEnd).String(), false,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query books for update: %w", err)
@@ -225,7 +225,7 @@ func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 			order by books.update_date desc, books.id desc limit $5 offset $6`,
 			QueryField, QueryTable,
 		),
-		r.site, title, writer, model.StatusCode(model.Error).String(), limit, offset,
+		r.site, title, writer, model.StatusCode(model.StatusError).String(), limit, offset,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by title writer: %w", err)
@@ -294,12 +294,12 @@ func (r *PsqlRepo) UpdateBooksStatus() error {
 	conditions := generateUpdateStatusCondition(len(matchingKeywords))
 
 	params := append(
-		matchingKeywords, model.StatusCode(model.InProgress).String(), r.site,
+		matchingKeywords, model.StatusCode(model.StatusInProgress).String(), r.site,
 	)
 
 	_, err := r.db.Exec(
 		fmt.Sprintf("update books set is_downloaded=$1, status=$2 where %v", conditions),
-		append([]interface{}{false, model.StatusCode(model.End).String()}, params...)...,
+		append([]interface{}{false, model.StatusCode(model.StatusEnd).String()}, params...)...,
 	)
 	if err != nil {
 		return fmt.Errorf("update book status failed: %w", err)
@@ -424,7 +424,7 @@ func (r *PsqlRepo) Stats() repo.Summary {
 		}
 	}
 
-	rowsBkSuccess, err := r.db.Query("select max(id) from books where status<>$1 and site=$2", model.StatusCode(model.Error).String(), r.site)
+	rowsBkSuccess, err := r.db.Query("select max(id) from books where status<>$1 and site=$2", model.StatusCode(model.StatusError).String(), r.site)
 	if err == nil {
 		defer rowsBkSuccess.Close()
 		if rowsBkSuccess.Next() {
@@ -440,7 +440,7 @@ func (r *PsqlRepo) Stats() repo.Summary {
 		}
 	}
 
-	rowsErr, err := r.db.Query("select count(*) from books where site=$1 and status=$2", r.site, model.StatusCode(model.Error).String())
+	rowsErr, err := r.db.Query("select count(*) from books where site=$1 and status=$2", r.site, model.StatusCode(model.StatusError).String())
 	if err == nil {
 		defer rowsErr.Close()
 		if rowsErr.Next() {

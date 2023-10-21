@@ -70,13 +70,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2),
+					ID: 1, Status: model.StatusEnd, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2),
 				})
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "結尾", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
-			wantBook:     &model.Book{ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
+			bk:           &model.Book{ID: 1, Status: model.StatusInProgress, UpdateChapter: "結尾", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
+			wantBook:     &model.Book{ID: 1, Status: model.StatusEnd, UpdateChapter: "結尾", IsDownloaded: false, UpdateDate: strconv.Itoa(time.Now().Year() - 2)},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -85,13 +85,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
+					ID: 1, Status: model.StatusInProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				})
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.StatusEnd, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.StatusInProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -100,8 +100,8 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				return ServiceImp{}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "結尾", Status: model.End, IsDownloaded: false},
-			wantBook:     &model.Book{ID: 1, Status: model.End, UpdateChapter: "結尾", IsDownloaded: false},
+			bk:           &model.Book{ID: 1, UpdateChapter: "結尾", Status: model.StatusEnd, IsDownloaded: false},
+			wantBook:     &model.Book{ID: 1, Status: model.StatusEnd, UpdateChapter: "結尾", IsDownloaded: false},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -110,8 +110,8 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				return ServiceImp{}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.InProgress, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.StatusInProgress, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.StatusInProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    false,
 			wantErrorStr: "",
 		},
@@ -120,13 +120,13 @@ func TestServiceImp_ValidateBookEnd(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
+					ID: 1, Status: model.StatusInProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year()),
 				}).Return(errors.New("some error"))
 
 				return ServiceImp{rpo: rpo}
 			},
-			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.End, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
-			wantBook:     &model.Book{ID: 1, Status: model.InProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			bk:           &model.Book{ID: 1, UpdateChapter: "中間", Status: model.StatusEnd, IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
+			wantBook:     &model.Book{ID: 1, Status: model.StatusInProgress, UpdateChapter: "中間", IsDownloaded: true, UpdateDate: strconv.Itoa(time.Now().Year())},
 			wantError:    true,
 			wantErrorStr: "update book in DB fail: some error",
 		},
