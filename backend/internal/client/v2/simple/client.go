@@ -7,7 +7,7 @@ import (
 	"net"
 	"net/http"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type SimpleClient struct {

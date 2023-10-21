@@ -3,7 +3,7 @@ package circuitbreaker
 import (
 	"errors"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type FailCheck func(res string, err error) bool

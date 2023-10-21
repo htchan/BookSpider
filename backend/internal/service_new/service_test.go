@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"testing"
 
-	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client_v2/retry"
-	"github.com/htchan/BookSpider/internal/client_v2/simple"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client/v2/retry"
+	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	config "github.com/htchan/BookSpider/internal/config_new"
 	"github.com/htchan/BookSpider/internal/parse/goquery"
 	sqlc "github.com/htchan/BookSpider/internal/repo/sqlc"

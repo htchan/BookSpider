@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type RetryClient struct {

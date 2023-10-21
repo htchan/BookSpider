@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type RetryCheck func(int, string, error) (shouldRetry bool, retryWeight int, pauseDuration time.Duration)

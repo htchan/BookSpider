@@ -3,9 +3,9 @@ package config
 import (
 	"time"
 
-	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client_v2/retry"
-	"github.com/htchan/BookSpider/internal/client_v2/simple"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client/v2/retry"
+	"github.com/htchan/BookSpider/internal/client/v2/simple"
 )
 
 type SiteConfig struct {

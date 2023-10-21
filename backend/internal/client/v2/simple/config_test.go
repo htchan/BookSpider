@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 func Test_validate_SimpleConfig(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
-	"github.com/htchan/BookSpider/internal/client_v2/simple"
+	client "github.com/htchan/BookSpider/internal/client/v2"
+	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/semaphore"
 )

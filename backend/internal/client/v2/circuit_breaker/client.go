@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 	"golang.org/x/sync/semaphore"
 )
 

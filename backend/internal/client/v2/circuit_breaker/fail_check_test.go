@@ -3,7 +3,7 @@ package circuitbreaker
 import (
 	"testing"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 	"github.com/stretchr/testify/assert"
 )
 

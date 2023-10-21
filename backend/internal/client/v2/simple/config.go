@@ -3,7 +3,7 @@ package simple
 import (
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client_v2"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type SimpleClientConfig struct {

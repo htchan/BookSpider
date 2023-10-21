@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	client "github.com/htchan/BookSpider/internal/client_v2"
-	circuitbreaker "github.com/htchan/BookSpider/internal/client_v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client_v2/retry"
-	"github.com/htchan/BookSpider/internal/client_v2/simple"
+	client "github.com/htchan/BookSpider/internal/client/v2"
+	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
+	"github.com/htchan/BookSpider/internal/client/v2/retry"
+	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/stretchr/testify/assert"
 )
 
