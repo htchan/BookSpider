@@ -52,7 +52,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				})
@@ -63,7 +63,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}, nil)
@@ -79,7 +79,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 			},
 			bk: &model.Book{Site: "test-explore-book", ID: 1},
 			expectBk: &model.Book{
-				Site: "test-explore-book", ID: 1, Status: model.InProgress,
+				Site: "test-explore-book", ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"},
 				Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 			},
@@ -108,7 +108,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				})
@@ -119,7 +119,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}, nil)
@@ -135,7 +135,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 			},
 			bk: &model.Book{Site: "test-explore-book", ID: 2, Error: errors.New("existing error")},
 			expectBk: &model.Book{
-				Site: "test-explore-book", ID: 2, Status: model.InProgress,
+				Site: "test-explore-book", ID: 2, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"},
 				Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 			},
@@ -147,9 +147,9 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				return ServiceImp{}
 			},
-			bk: &model.Book{Site: "test-explore-book", ID: 3, Status: model.InProgress},
+			bk: &model.Book{Site: "test-explore-book", ID: 3, Status: model.StatusInProgress},
 			expectBk: &model.Book{
-				Site: "test-explore-book", ID: 3, Status: model.InProgress},
+				Site: "test-explore-book", ID: 3, Status: model.StatusInProgress},
 			expectedError:  true,
 			expectErrorStr: "book status is not error",
 		},
@@ -208,7 +208,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}).Return(errors.New("update book error"))
@@ -218,7 +218,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 					Error:         errors.New("update book error"),
@@ -235,7 +235,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 			},
 			bk: &model.Book{Site: "test-explore-book", ID: 5, Error: errors.New("existing error")},
 			expectBk: &model.Book{
-				Site: "test-explore-book", ID: 5, Status: model.InProgress,
+				Site: "test-explore-book", ID: 5, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 				Error: errors.New("update book error"),
@@ -266,7 +266,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}).Return(errors.New("update book error"))
@@ -276,7 +276,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 					Error:         errors.New("update book error"),
@@ -293,7 +293,7 @@ func TestServiceImp_ExploreBook(t *testing.T) {
 			},
 			bk: &model.Book{Site: "test-explore-book", ID: 5, Error: errors.New("existing error")},
 			expectBk: &model.Book{
-				Site: "test-explore-book", ID: 5, Status: model.InProgress,
+				Site: "test-explore-book", ID: 5, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 				Error: errors.New("update book error"),
@@ -363,7 +363,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 						Title:         "title",
 						Writer:        model.Writer{Name: "writer"},
 						Type:          "type",
-						Status:        model.InProgress,
+						Status:        model.StatusInProgress,
 						UpdateDate:    "date",
 						UpdateChapter: "chapter",
 					}
@@ -440,7 +440,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 				rpo.EXPECT().SaveError(&model.Book{
 					Site:   "test-explore-existing",
 					ID:     301,
-					Status: model.Error,
+					Status: model.StatusError,
 					Error:  err,
 				}, err).Return(nil)
 
@@ -486,7 +486,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 				rpo.EXPECT().SaveError(&model.Book{
 					Site:   "test-explore-existing",
 					ID:     401,
-					Status: model.Error,
+					Status: model.StatusError,
 					Error:  err,
 				}, err).Return(nil)
 
@@ -508,7 +508,7 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}
@@ -673,7 +673,7 @@ func TestServiceImp_exploreNew(t *testing.T) {
 					HashCode:      model.GenerateHash(),
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					Type:          "type",
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
@@ -789,7 +789,7 @@ func TestServiceImp_Explore(t *testing.T) {
 					Title:         "title",
 					Writer:        model.Writer{Name: "writer"},
 					Type:          "type",
-					Status:        model.InProgress,
+					Status:        model.StatusInProgress,
 					UpdateDate:    "date",
 					UpdateChapter: "chapter",
 				}

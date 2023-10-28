@@ -12,27 +12,27 @@ func Test_StatusFromString(t *testing.T) {
 		{
 			name:   "return error status case insensitive",
 			input:  "ErRoR",
-			expect: Error,
+			expect: StatusError,
 		},
 		{
 			name:   "return error status",
 			input:  "Error",
-			expect: Error,
+			expect: StatusError,
 		},
 		{
 			name:   "return in progress status",
 			input:  "inprogress",
-			expect: InProgress,
+			expect: StatusInProgress,
 		},
 		{
 			name:   "return end status",
 			input:  "end",
-			expect: End,
+			expect: StatusEnd,
 		},
 		{
 			name:   "return error status if input unrecognize",
 			input:  "unknown",
-			expect: Error,
+			expect: StatusError,
 		},
 	}
 
@@ -57,17 +57,17 @@ func TestStatusCode_String(t *testing.T) {
 	}{
 		{
 			name:   "error status",
-			status: Error,
+			status: StatusError,
 			expect: "ERROR",
 		},
 		{
 			name:   "in progress status",
-			status: InProgress,
+			status: StatusInProgress,
 			expect: "INPROGRESS",
 		},
 		{
 			name:   "end status",
-			status: End,
+			status: StatusEnd,
 			expect: "END",
 		},
 		{

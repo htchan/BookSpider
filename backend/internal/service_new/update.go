@@ -25,7 +25,7 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 
 	if parse.IsNewBook(parsedBookFields, bk) {
 		bk.HashCode = model.GenerateHash()
-		bk.Status = model.InProgress
+		bk.Status = model.StatusInProgress
 		bk.Error = nil
 		parsedBookFields.Populate(bk)
 		err := serv.rpo.SaveWriter(&bk.Writer)
@@ -40,7 +40,7 @@ func (serv *ServiceImp) UpdateBook(bk *model.Book) error {
 		log.Info().Str("book", bk.String()).Str("title", bk.Title).Msg("new book found")
 	} else if parse.IsUpdatedBook(parsedBookFields, bk) {
 		// TODO: log updated
-		bk.Status = model.InProgress
+		bk.Status = model.StatusInProgress
 		bk.Error = nil
 		parsedBookFields.Populate(bk)
 		log.Info().Str("book", bk.String()).Str("title", bk.Title).Msg("updated book found")

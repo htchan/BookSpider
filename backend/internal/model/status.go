@@ -4,30 +4,28 @@ import "strings"
 
 type StatusCode int
 
-// TODO: update variable name to StatusXXX
 const (
-	Error = iota
-	InProgress
-	End
+	StatusError = iota
+	StatusInProgress
+	StatusEnd
 )
 
-// TODO: update variable name to StatusErrorKey
 const (
-	ErrorKey      = "ERROR"
-	InProgressKey = "INPROGRESS"
-	EndKey        = "END"
+	StatusErrorKey      = "ERROR"
+	StatusInProgressKey = "INPROGRESS"
+	StatusEndKey        = "END"
 )
 
 var StatusCodeMap = map[string]StatusCode{
-	ErrorKey:      Error,
-	InProgressKey: InProgress,
-	EndKey:        End,
+	StatusErrorKey:      StatusError,
+	StatusInProgressKey: StatusInProgress,
+	StatusEndKey:        StatusEnd,
 }
 
 func StatusFromString(str string) StatusCode {
 	result, ok := StatusCodeMap[strings.ToUpper(str)]
 	if !ok {
-		return Error
+		return StatusError
 	}
 	return result
 }
@@ -38,5 +36,5 @@ func (status StatusCode) String() string {
 			return key
 		}
 	}
-	return ErrorKey
+	return StatusErrorKey
 }

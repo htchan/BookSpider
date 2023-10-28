@@ -66,13 +66,13 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 				rpo := repomock.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year() - 3),
-					Status:     model.End,
+					Status:     model.StatusEnd,
 				}).Return(nil)
 
 				return &ServiceImpl{rpo: rpo}
 			},
-			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.InProgress},
-			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.End},
+			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.StatusInProgress},
+			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.StatusEnd},
 			wantError: nil,
 		},
 		{
@@ -80,8 +80,8 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				return &ServiceImpl{}
 			},
-			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.End},
-			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.End},
+			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.StatusEnd},
+			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year() - 3), Status: model.StatusEnd},
 			wantError: nil,
 		},
 		{
@@ -89,8 +89,8 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				return &ServiceImpl{}
 			},
-			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.InProgress},
-			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.InProgress},
+			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusInProgress},
+			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusInProgress},
 			wantError: nil,
 		},
 		{
@@ -99,13 +99,13 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 				rpo := repomock.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year()),
-					Status:     model.InProgress,
+					Status:     model.StatusInProgress,
 				}).Return(nil)
 
 				return &ServiceImpl{rpo: rpo}
 			},
-			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.End},
-			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.InProgress},
+			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusEnd},
+			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusInProgress},
 			wantError: nil,
 		},
 		{
@@ -114,13 +114,13 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 				rpo := repomock.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year()),
-					Status:     model.InProgress,
+					Status:     model.StatusInProgress,
 				}).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{rpo: rpo}
 			},
-			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.End},
-			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.InProgress},
+			bk:        &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusEnd},
+			wantBk:    &model.Book{UpdateDate: strconv.Itoa(time.Now().Year()), Status: model.StatusInProgress},
 			wantError: serv.ErrUnavailable,
 		},
 	}

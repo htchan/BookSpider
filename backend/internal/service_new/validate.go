@@ -30,14 +30,14 @@ func isEnd(bk *model.Book) bool {
 func (serv *ServiceImp) ValidateBookEnd(bk *model.Book) error {
 	isUpdated := false
 	if isEnd(bk) {
-		if bk.Status != model.End {
+		if bk.Status != model.StatusEnd {
 			bk.IsDownloaded = false
-			bk.Status = model.End
+			bk.Status = model.StatusEnd
 			isUpdated = true
 		}
 	} else {
-		if bk.Status != model.InProgress {
-			bk.Status = model.InProgress
+		if bk.Status != model.StatusInProgress {
+			bk.Status = model.StatusInProgress
 			isUpdated = true
 		}
 	}

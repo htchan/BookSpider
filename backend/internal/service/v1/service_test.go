@@ -282,12 +282,12 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				rpo.EXPECT().UpdateBook(&model.Book{
 					Site: "serv", ID: 3, HashCode: hashcode,
 					Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}).Return(nil)
 				rpo.EXPECT().SaveError(&model.Book{
 					Site: "serv", ID: 3, HashCode: hashcode,
 					Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date", UpdateChapter: "chapter", Status: model.InProgress,
+					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}, nil).Return(nil)
 
 				return &ServiceImpl{

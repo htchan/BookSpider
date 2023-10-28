@@ -18,31 +18,31 @@ func stubData(r repo.Repository, site string) []model.Book {
 			Site: site, ID: 1, HashCode: 0,
 			Title: "title 1", Writer: model.Writer{Name: site + " writer 1"}, Type: "type 1",
 			UpdateDate: "date 1", UpdateChapter: "chapter 1",
-			Status: model.End, IsDownloaded: true, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: true, Error: nil,
 		},
 		{
 			Site: site, ID: 2, HashCode: 0,
 			Title: "title 2", Writer: model.Writer{Name: site + " writer 2"}, Type: "type 2",
 			UpdateDate: "date 2", UpdateChapter: "chapter 2",
-			Status: model.End, IsDownloaded: true, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: true, Error: nil,
 		},
 		{
 			Site: site, ID: 2, HashCode: 100,
 			Title: "title 2 new", Writer: model.Writer{Name: site + " writer 2 new"}, Type: "type 2 new",
 			UpdateDate: "date 2.1", UpdateChapter: "chapter 2 new",
-			Status: model.End, IsDownloaded: false, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: false, Error: nil,
 		},
 		{
 			Site: site, ID: 3, HashCode: 0,
 			Title: "title 3", Writer: model.Writer{Name: site + " writer 3"}, Type: "type 3",
 			UpdateDate: "date 3", UpdateChapter: "chapter 3",
-			Status: model.InProgress, IsDownloaded: false, Error: nil,
+			Status: model.StatusInProgress, IsDownloaded: false, Error: nil,
 		},
 		{
 			Site: site, ID: 4, HashCode: 0,
 			Title: "", Writer: model.Writer{Name: ""}, Type: "",
 			UpdateDate: "", UpdateChapter: "",
-			Status: model.Error, IsDownloaded: false, Error: errors.New("error"),
+			Status: model.StatusError, IsDownloaded: false, Error: errors.New("error"),
 		},
 	}
 
@@ -203,14 +203,14 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 				Site: bksDB[4].Site, ID: bksDB[4].ID, HashCode: bksDB[4].HashCode,
 				Title: "t", Writer: model.Writer{Name: bksDB[0].Writer.Name}, Type: "t",
 				UpdateDate: "d", UpdateChapter: "c",
-				Status: model.InProgress, IsDownloaded: false, Error: nil,
+				Status: model.StatusInProgress, IsDownloaded: false, Error: nil,
 			},
 			expectErr: false,
 			expectQueryResult: &model.Book{
 				Site: bksDB[4].Site, ID: bksDB[4].ID, HashCode: bksDB[4].HashCode,
 				Title: "t", Writer: model.Writer{ID: 0, Name: ""}, Type: "t",
 				UpdateDate: "d", UpdateChapter: "c",
-				Status: model.InProgress, IsDownloaded: false, Error: errors.New("error"),
+				Status: model.StatusInProgress, IsDownloaded: false, Error: errors.New("error"),
 			},
 			expectQueryErr: false,
 		},
@@ -687,7 +687,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 				Site: site, ID: 3, HashCode: 0,
 				Title: "title 3", Writer: bksDB[3].Writer,
 				Type: "type 3", UpdateDate: "date 3", UpdateChapter: "end " + model.ChapterEndKeywords[0] + " end",
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 		},
 		{
@@ -700,7 +700,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 				Site: site, ID: 1, HashCode: 0,
 				Title: "title 1", Writer: bksDB[0].Writer,
 				Type: "type 1", UpdateDate: "date 1", UpdateChapter: "end " + model.ChapterEndKeywords[0] + " end",
-				Status: model.End, IsDownloaded: false,
+				Status: model.StatusEnd, IsDownloaded: false,
 			},
 		},
 		{
@@ -713,7 +713,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 				Site: site, ID: 2, HashCode: 100,
 				Title: "title 2 new", Writer: bksDB[2].Writer, Type: "type 2 new",
 				UpdateDate: "date 2.1", UpdateChapter: bksDB[2].UpdateChapter,
-				Status: model.InProgress, IsDownloaded: false,
+				Status: model.StatusInProgress, IsDownloaded: false,
 			},
 		},
 	}
@@ -723,12 +723,12 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			bksDB[2].Status = model.InProgress
+			bksDB[2].Status = model.StatusInProgress
 			r.UpdateBook(&bksDB[2])
 			bksDB[3].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
 			r.UpdateBook(&bksDB[3])
 			bksDB[0].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
-			bksDB[0].Status = model.InProgress
+			bksDB[0].Status = model.StatusInProgress
 			r.UpdateBook(&bksDB[0])
 
 			err := test.r.UpdateBooksStatus()
@@ -1017,9 +1017,9 @@ func TestSqlcRepo_Stats(t *testing.T) {
 				BookCount: 5, WriterCount: 5, ErrorCount: 1, DownloadCount: 2,
 				UniqueBookCount: 4, MaxBookID: 4,
 				LatestSuccessID: 3, StatusCount: map[model.StatusCode]int{
-					model.Error:      1,
-					model.InProgress: 1,
-					model.End:        3,
+					model.StatusError:      1,
+					model.StatusInProgress: 1,
+					model.StatusEnd:        3,
 				},
 			},
 		},

@@ -82,12 +82,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}
 			},
 			bk: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
 			wantBook: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
@@ -99,7 +99,7 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().CreateBook(&model.Book{
-					ID: 1, HashCode: model.GenerateHash(), Status: model.InProgress,
+					ID: 1, HashCode: model.GenerateHash(), Status: model.StatusInProgress,
 					Title: "title new", Writer: model.Writer{ID: 10, Name: "writer new"}, Type: "type new",
 					UpdateDate: "date new", UpdateChapter: "chapter new",
 				}).Return(nil)
@@ -125,12 +125,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}
 			},
 			bk: &model.Book{
-				ID: 1, Status: model.End,
+				ID: 1, Status: model.StatusEnd,
 				Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
 			wantBook: &model.Book{
-				ID: 1, HashCode: model.GenerateHash(), Status: model.InProgress,
+				ID: 1, HashCode: model.GenerateHash(), Status: model.StatusInProgress,
 				Title: "title new", Writer: model.Writer{ID: 10, Name: "writer new"}, Type: "type new",
 				UpdateDate: "date new", UpdateChapter: "chapter new",
 			},
@@ -142,7 +142,7 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 			setupServ: func(ctrl *gomock.Controller) ServiceImp {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress,
+					ID: 1, Status: model.StatusInProgress,
 					Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 					UpdateDate: "date new", UpdateChapter: "chapter new",
 				}).Return(nil)
@@ -168,12 +168,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}
 			},
 			bk: &model.Book{
-				ID: 1, Status: model.End,
+				ID: 1, Status: model.StatusEnd,
 				Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
 			wantBook: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 				UpdateDate: "date new", UpdateChapter: "chapter new",
 			},
@@ -202,12 +202,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}
 			},
 			bk: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
 			wantBook: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{ID: 10, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
@@ -237,12 +237,12 @@ func TestServiceImp_UpdateBook(t *testing.T) {
 				}
 			},
 			bk: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
 			wantBook: &model.Book{
-				ID: 1, Status: model.InProgress,
+				ID: 1, Status: model.StatusInProgress,
 				Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 			},
@@ -291,19 +291,19 @@ func TestServiceImp_Update(t *testing.T) {
 
 				bookChan := make(chan model.Book, 2)
 				bookChan <- model.Book{
-					ID: 1, Status: model.InProgress, Type: "type",
+					ID: 1, Status: model.StatusInProgress, Type: "type",
 					Title: "title", Writer: model.Writer{Name: "writer"},
 					UpdateDate: "date", UpdateChapter: "chapter",
 				}
 				bookChan <- model.Book{
-					ID: 2, Status: model.InProgress, Type: "type",
+					ID: 2, Status: model.StatusInProgress, Type: "type",
 					Title: "title", Writer: model.Writer{Name: "writer"},
 					UpdateDate: "date", UpdateChapter: "chapter",
 				}
 				close(bookChan)
 				rpo.EXPECT().FindBooksForUpdate().Return(bookChan, nil)
 				rpo.EXPECT().UpdateBook(&model.Book{
-					ID: 1, Status: model.InProgress, Type: "type",
+					ID: 1, Status: model.StatusInProgress, Type: "type",
 					Title: "title", Writer: model.Writer{Name: "writer"},
 					UpdateDate: "date new", UpdateChapter: "chapter new",
 				}).Return(nil)
