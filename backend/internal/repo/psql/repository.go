@@ -286,8 +286,8 @@ func generateUpdateStatusCondition(length int) string {
 }
 
 func (r *PsqlRepo) UpdateBooksStatus() error {
-	matchingKeywords := make([]interface{}, 0, len(repo.ChapterEndKeywords))
-	for _, keyword := range repo.ChapterEndKeywords {
+	matchingKeywords := make([]interface{}, 0, len(model.ChapterEndKeywords))
+	for _, keyword := range model.ChapterEndKeywords {
 		matchingKeywords = append(matchingKeywords, fmt.Sprintf("%%%v%%", keyword))
 	}
 

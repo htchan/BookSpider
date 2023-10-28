@@ -686,7 +686,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 			expectBook: &model.Book{
 				Site: site, ID: 3, HashCode: 0,
 				Title: "title 3", Writer: bksDB[3].Writer,
-				Type: "type 3", UpdateDate: "date 3", UpdateChapter: "end " + repo.ChapterEndKeywords[0] + " end",
+				Type: "type 3", UpdateDate: "date 3", UpdateChapter: "end " + model.ChapterEndKeywords[0] + " end",
 				Status: model.End, IsDownloaded: false,
 			},
 		},
@@ -699,7 +699,7 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 			expectBook: &model.Book{
 				Site: site, ID: 1, HashCode: 0,
 				Title: "title 1", Writer: bksDB[0].Writer,
-				Type: "type 1", UpdateDate: "date 1", UpdateChapter: "end " + repo.ChapterEndKeywords[0] + " end",
+				Type: "type 1", UpdateDate: "date 1", UpdateChapter: "end " + model.ChapterEndKeywords[0] + " end",
 				Status: model.End, IsDownloaded: false,
 			},
 		},
@@ -725,9 +725,9 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 
 			bksDB[2].Status = model.InProgress
 			r.UpdateBook(&bksDB[2])
-			bksDB[3].UpdateChapter = fmt.Sprintf("end %v end", repo.ChapterEndKeywords[0])
+			bksDB[3].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
 			r.UpdateBook(&bksDB[3])
-			bksDB[0].UpdateChapter = fmt.Sprintf("end %v end", repo.ChapterEndKeywords[0])
+			bksDB[0].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
 			bksDB[0].Status = model.InProgress
 			r.UpdateBook(&bksDB[0])
 

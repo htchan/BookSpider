@@ -6,17 +6,6 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 )
 
-var ChapterEndKeywords = []string{
-	// traditional chinese
-	"番外", "結局", "新書", "完結", "尾聲", "感言", "後記", "完本",
-	"全書完", "全文完", "全文終", "全文結", "劇終", "（完）", "終章",
-	"外傳", "結尾",
-	// simplified chinese
-	"番外", "结局", "新书", "完结", "尾声", "感言", "后记", "完本",
-	"全书完", "全文完", "全文终", "全文结", "剧终", "（完）", "终章",
-	"外传", "结尾",
-}
-
 //go:generate mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
 type Repository interface {
 	// book related
