@@ -15,5 +15,5 @@ const (
 	bookChapterGoquerySelector     = `meta[property="og:novel:latest_chapter_name"]`
 	chapterListItemGoquerySelector = `div#tbchapterlist>table>tbody>tr>td>a`
 	chapterTitleGoquerySelector    = `td>h1`
-	chapterContentGoquerySelector  = `div>p`
+	chapterContentGoquerySelector  = `table>tbody>tr>td>div:nth-child(6)`
 )

@@ -1,10 +1,12 @@
-package xbiquge
+package uukanshu
 
 import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
@@ -23,31 +25,47 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	var parseErr error
 
 	// parse title
-	title := doc.Find(bookTitleGoquerySelector).AttrOr("content", "")
+	title := doc.Find(bookTitleGoquerySelector).AttrOr("title", "")
+	title = strings.ReplaceAll(title, "最新章节", "")
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookTitleNotFound)
 	}
 
 	// parse writer
-	writer := doc.Find(bookWriterGoquerySelector).AttrOr("content", "")
+	writer := vendor.GetGoqueryContent(doc.Find(bookWriterGoquerySelector))
 	if writer == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookWriterNotFound)
 	}
 
 	// parse type
-	bookType := doc.Find(bookTypeGoquerySelector).AttrOr("content", "")
+	bookType := vendor.GetGoqueryContent(doc.Find(bookTypeGoquerySelector))
 	if bookType == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookTypeNotFound)
 	}
 
-	// parse date
-	date := doc.Find(bookDateGoquerySelector).AttrOr("content", "")
-	if date == "" {
+	// parse dateStr
+	dateStr := vendor.GetGoqueryContent(doc.Find(bookDateGoquerySelector))
+	dateStr = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(dateStr, "更新时间：", ""), " ", ""), "\t", ""), "\n", "")
+	if dateStr == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookDateNotFound)
 	}
 
+	date := time.Now().UTC().Truncate(24 * time.Hour)
+	if strings.Contains(dateStr, "年") {
+		yr, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "年")])
+		date = date.AddDate(-yr, 0, 0)
+		date = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
+	} else if strings.Contains(dateStr, "月") {
+		mn, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "月")])
+		date = date.AddDate(0, -mn, 0)
+		date = time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
+	} else if strings.Contains(dateStr, "日") {
+		day, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "日")])
+		date = date.AddDate(0, 0, -day)
+	}
+
 	// parse chapter
-	chapter := doc.Find(bookChapterGoquerySelector).AttrOr("content", "")
+	chapter := vendor.GetGoqueryContent(doc.Find(bookChapterGoquerySelector))
 	if chapter == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookChapterNotFound)
 	}
@@ -60,7 +78,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 		Title:         title,
 		Writer:        writer,
 		Type:          bookType,
-		UpdateDate:    date,
+		UpdateDate:    date.Format(time.DateOnly),
 		UpdateChapter: chapter,
 	}, parseErr
 }
@@ -104,24 +122,12 @@ func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error
 		parseErr = errors.Join(parseErr, vendor.ErrFieldsNotFound)
 	}
 
-	for i := 0; i < 12; i++ {
-		targetChapterTitle := chapterList[0].Title
-		found := false
-
-		for _, ch := range chapterList[1:] {
-			if ch.Title == targetChapterTitle {
-				found = true
-
-				break
-			}
-		}
-
-		if found {
-			chapterList = chapterList[1:]
-		}
+	resultChapterList := make(vendor.ChapterList, len(chapterList))
+	for i := range chapterList {
+		resultChapterList[i] = chapterList[len(chapterList)-1-i]
 	}
 
-	return chapterList, parseErr
+	return resultChapterList, parseErr
 }
 
 func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
@@ -133,6 +139,8 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	var parseErr error
 
 	// parse title
+	d, err := doc.Find(chapterTitleGoquerySelector).Html()
+	fmt.Println(chapterTitleGoquerySelector, d, err)
 	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
@@ -155,7 +163,7 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 }
 
 func (p *VendorService) IsAvailable(body string) bool {
-	return strings.Contains(body, "笔趣阁")
+	return strings.Contains(body, "黃金屋")
 }
 
 func (p *VendorService) FindMissingIds(ids []int) []int {

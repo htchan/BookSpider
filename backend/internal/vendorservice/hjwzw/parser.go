@@ -116,8 +116,6 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	var parseErr error
 
 	// parse title
-	d, err := doc.Find(chapterTitleGoquerySelector).Html()
-	fmt.Println(chapterTitleGoquerySelector, d, err)
 	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
