@@ -104,6 +104,23 @@ func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error
 		parseErr = errors.Join(parseErr, vendor.ErrFieldsNotFound)
 	}
 
+	for i := 0; i < 12; i++ {
+		targetChapterTitle := chapterList[0].Title
+		found := false
+
+		for _, ch := range chapterList[1:] {
+			if ch.Title == targetChapterTitle {
+				found = true
+
+				break
+			}
+		}
+
+		if found {
+			chapterList = chapterList[1:]
+		}
+	}
+
 	return chapterList, parseErr
 }
 

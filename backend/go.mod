@@ -1,6 +1,6 @@
 module github.com/htchan/BookSpider
 
-go 1.18
+go 1.21
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
@@ -15,9 +15,9 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/sync v0.1.0
-	golang.org/x/text v0.9.0
+	go.uber.org/goleak v1.1.12
+	golang.org/x/sync v0.4.0
+	golang.org/x/text v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -33,8 +33,9 @@ require (
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
