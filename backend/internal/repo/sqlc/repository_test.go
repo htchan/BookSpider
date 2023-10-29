@@ -94,16 +94,14 @@ func Test_NewRepo(t *testing.T) {
 func TestSqlcRepo_CreateBook(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
+
 	site := "bk/create"
 	db.Exec("ALTER SEQUENCE writers_id_seq RESTART WITH 1;")
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
-		db.Close()
+
 	})
 
 	tests := []struct {
@@ -163,17 +161,14 @@ func TestSqlcRepo_CreateBook(t *testing.T) {
 func TestSqlcRepo_UpdateBook(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bk/update"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -240,17 +235,14 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 func TestSqlcRepo_FindBookByID(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bk_id/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -299,17 +291,14 @@ func TestSqlcRepo_FindBookByID(t *testing.T) {
 func TestSqlcRepo_FindBookByIDHash(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bk_id_hash/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -363,17 +352,14 @@ func TestSqlcRepo_FindBookByStatus(t *testing.T) {
 func TestSqlcRepo_FindAllBooks(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "all_bk/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -419,17 +405,14 @@ func TestSqlcRepo_FindAllBooks(t *testing.T) {
 func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "update_bk/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -469,17 +452,14 @@ func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "down_bk/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -520,17 +500,14 @@ func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
 	t.Parallel()
 	//TODO: fill in testcase
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bk_tit_wrt/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -603,17 +580,14 @@ func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
 	t.Parallel()
 
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "random_bk/find"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	stubData(NewRepo(site, db), site)
@@ -652,17 +626,14 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 	t.Parallel()
 
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "stat_bk/update"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	r := NewRepo(site, db)
@@ -748,17 +719,14 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 
 func BenchmarkSqlcRepo_UpdateBooksStatus(b *testing.B) {
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		b.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bm/bk_st/update"
 
 	b.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	r := NewRepo(site, db)
@@ -774,15 +742,12 @@ func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
 	t.Parallel()
 
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "bk/find_all_ids"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
-		db.Close()
+
 	})
 
 	r := NewRepo(site, db)
@@ -818,17 +783,14 @@ func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
 func TestSqlcRepo_SaveWriter(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "writer/save"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	bksDB := stubData(NewRepo(site, db), site)
@@ -870,17 +832,14 @@ func TestSqlcRepo_SaveWriter(t *testing.T) {
 func TestSqlcRepo_SaveError(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "error/save"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	stubData(NewRepo(site, db), site)
@@ -946,17 +905,14 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 func TestSqlcRepo_Backup(t *testing.T) {
 	t.Parallel()
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "backup"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	stubData(NewRepo(site, db), site)
@@ -990,17 +946,14 @@ func TestSqlcRepo_Stats(t *testing.T) {
 	t.Parallel()
 
 	StubPsqlConn()
-	db, err := OpenDatabase("")
-	if err != nil {
-		t.Fatalf("error in open database: %v", err)
-	}
+	db := testDB
 	site := "stats"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
-		db.Close()
+
 	})
 
 	stubData(NewRepo(site, db), site)

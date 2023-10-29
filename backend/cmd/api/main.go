@@ -43,7 +43,7 @@ func main() {
 		return
 	}
 
-	repo.Migrate(conf.DatabaseConfig)
+	repo.Migrate(conf.DatabaseConfig, "/migrations")
 
 	db, dbErr := repo.OpenDatabaseByConfig(conf.DatabaseConfig)
 	if dbErr != nil {
