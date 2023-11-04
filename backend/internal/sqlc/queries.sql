@@ -118,6 +118,7 @@ from books
 where (books.checksum, books.writer_checksum) = (
   select bks.checksum, bks.writer_checksum from books as bks 
   where books.site=$1 and books.id=$2 
+  and books.checksum != '' and books.writer_checksum != ''
   order by books.hash_code desc limit 1
 );
 
@@ -131,7 +132,8 @@ from books
   left join errors on books.site=errors.site and books.id=errors.id
 where (books.checksum, books.writer_checksum) = (
   select bks.checksum, bks.writer_checksum from books as bks 
-  where bks.site=$1 and bks.id=$2 and bks.hash_code=$3
+  where bks.site=$1 and bks.id=$2 and bks.hash_code=$3 
+  and books.checksum != '' and books.writer_checksum != ''
   order by bks.hash_code desc limit 1
 );
 
