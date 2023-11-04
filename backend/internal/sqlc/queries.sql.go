@@ -389,7 +389,7 @@ where (books.checksum, books.writer_checksum) = (
   where books.site=$1 and books.id=$2 
   and books.checksum != '' and books.writer_checksum != ''
   order by books.hash_code desc limit 1
-)
+) or books.site=$1 and books.id=$2
 `
 
 type GetBookGroupByIDParams struct {
@@ -461,7 +461,7 @@ where (books.checksum, books.writer_checksum) = (
   where bks.site=$1 and bks.id=$2 and bks.hash_code=$3 
   and books.checksum != '' and books.writer_checksum != ''
   order by bks.hash_code desc limit 1
-)
+) or books.site=$1 and books.id=$2
 `
 
 type GetBookGroupByIDHashParams struct {
