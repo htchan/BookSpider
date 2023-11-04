@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	config "github.com/htchan/BookSpider/internal/config_new"
-	repo "github.com/htchan/BookSpider/internal/repo/psql"
+	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/service"
 	"github.com/htchan/BookSpider/internal/vendorservice/baling"
 	"github.com/htchan/BookSpider/internal/vendorservice/bestory"
