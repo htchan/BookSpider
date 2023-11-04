@@ -60,3 +60,13 @@ hjwzw_client: &hjwzw_client
   simple:
     request_timeout: 30s
     decode_method: utf8
+
+uukanshu_client: &uukanshu_client
+  # retry client
+  retry: *default_retry_config
+  # circuit breaker client
+  circuit_breaker: *default_circuit_breaker_config
+  # simple client
+  simple:
+    request_timeout: 30s
+    decode_method: gbk

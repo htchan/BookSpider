@@ -119,3 +119,23 @@ sites:
     max_explore_error: 100
     max_download_concurrency: 5
     update_date_layout: null
+
+  uukanshu:
+    <<: *uukanshu_selector
+    client: *uukanshu_client
+    max_threads: 1000
+    request_timeout: 30s
+    circuit_breaker:
+      max_fail_count: 1000
+      max_fail_multiplier: 1.5
+      sleep_interval: 10s
+    retry_map:
+      default: 10
+      unavailable: 100
+
+    storage: "/books/uukanshu"
+    backup_directory: /backup/book_spider
+
+    max_explore_error: 100
+    max_download_concurrency: 5
+    update_date_layout: null
