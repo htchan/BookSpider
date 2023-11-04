@@ -1,20 +1,13 @@
-FROM golang:1.21.0-alpine3.18 as setup
+FROM golang:1.21.0-alpine3.18 as builder
 
 WORKDIR /go/src/github.com/htchan/BookSpider
 
 COPY ./go.mod ./go.sum .
 
 RUN --mount=type=cache,target=$GOPATH/pkg \
-    go mod download -x
+    apk add gcc musl-dev libc-dev ; go mod download -x
 
 COPY ./internal ./internal
-
-FROM setup as builder
-
-WORKDIR /go/src/github.com/htchan/BookSpider
-
-RUN apk add gcc musl-dev libc-dev
-
 COPY ./cmd/worker ./cmd/worker
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
