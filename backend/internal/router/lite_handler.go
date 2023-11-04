@@ -32,7 +32,7 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 			res.Write([]byte(err.Error()))
 			return
 		}
-		execErr := t.Templates()[0].Execute(res, struct {
+		execErr := t.ExecuteTemplate(res, "sites.html", struct {
 			Services  map[string]service.Service
 			UriPrefix string
 		}{Services: services, UriPrefix: uriPrefix})
@@ -56,7 +56,7 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	}
 
 	serv := req.Context().Value(SERV_KEY).(service.Service)
-	execErr := t.Templates()[0].Execute(res, struct {
+	execErr := t.ExecuteTemplate(res, "site.html", struct {
 		Name      string
 		UriPrefix string
 		Summary   repo.Summary
@@ -100,7 +100,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	pageNo := (offset / limit)
 
-	execErr := t.Templates()[0].Execute(res, struct {
+	execErr := t.ExecuteTemplate(res, "result.html", struct {
 		Name       string
 		UriPrefix  string
 		Books      []model.Book
@@ -145,7 +145,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	execErr := t.Templates()[0].Execute(res, struct {
+	execErr := t.ExecuteTemplate(res, "result.html", struct {
 		Name      string
 		UriPrefix string
 		Books     []model.Book
@@ -175,7 +175,7 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	group := req.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
 
-	execErr := t.Templates()[0].Execute(res, struct {
+	execErr := t.ExecuteTemplate(res, "book.html", struct {
 		Name      string
 		UriPrefix string
 		Book      *model.Book
