@@ -161,7 +161,7 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 }
 
 func (p *VendorService) IsAvailable(body string) bool {
-	return strings.Contains(body, "黃金屋")
+	return strings.Contains(body, "UU看书")
 }
 
 func (p *VendorService) FindMissingIds(ids []int) []int {
