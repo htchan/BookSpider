@@ -14,8 +14,9 @@
 <body>
   <h1>{{ .Name }}</h1>
   <div>
+    {{ $uriPrefix := .UriPrefix }}
     {{ range $index, $value := .Books }}
-      {{ template "book-card" $value }}
+      {{ template "book-card" (arr $uriPrefix $value) }}
     {{else}}
     <p>No Books Found</p>
     {{ end }}

@@ -1,8 +1,10 @@
 {{ define "book-card" }}
-  <div class="book-box" onclick="location.href+='books/{{.ID}}-{{.HashCode}}/'">
-    <p>{{ .Title }} - {{ .Writer.Name }}</p>
-    <p>{{ .UpdateDate }}</p>
-    <p>{{ .UpdateChapter }}</p>
-    <p>{{ if .IsDownloaded }}Downloaded{{ else }}{{ .Status }}{{ end }}</p>
+  {{ $uriPrefix := index . 0 }}
+  {{ $book := index . 1}}
+  <div class="book-box" onclick="location.href='{{$uriPrefix}}/books/{{$book.ID}}-{{$book.HashCode}}/'">
+    <p>{{ $book.Title }} - {{ $book.Writer.Name }}</p>
+    <p>{{ $book.UpdateDate }}</p>
+    <p>{{ $book.UpdateChapter }}</p>
+    <p>{{ if $book.IsDownloaded }}Downloaded{{ else }}{{ $book.Status }}{{ end }}</p>
   </div>
 {{ end}}

@@ -24,6 +24,7 @@ const (
 	WRITER_KEY     ContextKey = "writer"
 	LIMIT_KEY      ContextKey = "limit"
 	OFFSET_KEY     ContextKey = "offset"
+	URI_PREFIX_KEY ContextKey = "uri_prefix"
 )
 
 func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
@@ -127,4 +128,15 @@ func ZerologMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(res, req)
 		},
 	)
+}
+
+func SetUriPrefixMiddleware(uriPrefix string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(res http.ResponseWriter, req *http.Request) {
+				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, uriPrefix)
+				next.ServeHTTP(res, req.WithContext(ctx))
+			},
+		)
+	}
 }
