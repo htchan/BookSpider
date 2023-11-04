@@ -152,7 +152,7 @@ func TestSiteLiteHandler(t *testing.T) {
 			      <input type="hidden" id="per_page" name="per_page" value="10"><br>
 			      <input type="submit" value="Submit">
 			    </form>
-			    <button onclick="location.href='/lite/novel/random?per_page=10'">Random</button>
+			    <button onclick="location.href='/lite/novel/sites/test/random?per_page=10'">Random</button>
 			  </div>
 			</body>
 			
@@ -245,7 +245,9 @@ func TestSearchLiteHandler(t *testing.T) {
 			      
 			  
 			  
-			  <div class="book-box" onclick="location.href='/lite/novel/books/123-100/'">
+
+
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
 			    <p>title - writer</p>
 			    <p>date</p>
 			    <p>chapter</p>
@@ -333,10 +335,11 @@ func TestBookLiteHandler(t *testing.T) {
 						<p>date</p>
 						<p>chapter</p>
 						
-						<a href="/lite/novel/download">Downloaded</a>
+						<a href="/lite/novel/sites/test/books/123-100/download">Downloaded</a>
 						
 				</div>
 				<h2>Book Group</h2>
+				
 				
 				
 				</body>

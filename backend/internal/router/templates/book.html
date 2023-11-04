@@ -13,15 +13,16 @@
       <p>{{ .Book.UpdateDate }}</p>
       <p>{{ .Book.UpdateChapter }}</p>
       {{ if .Book.IsDownloaded }}
-      <a href="{{.UriPrefix}}/download">Downloaded</a>
+      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download">Downloaded</a>
       {{ else }}
       <p>{{ .Book.Status }}</p>
       {{ end }}
   </div>
   <h2>Book Group</h2>
   {{ $uriPrefix := .UriPrefix }}
+  {{ $siteName := .Name }}
   {{ range $index, $value := .Group }}
-    {{ template "book-card" (arr $uriPrefix $value) }}
+    {{ template "book-card" (arr $uriPrefix $siteName $value) }}
   {{ end}}
 </body>
 
