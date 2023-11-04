@@ -1,0 +1,44 @@
+uukanshu_selector: &uukanshu_selector
+  decode_method: utf8
+  urls: #desktop
+    base: https://www.uukanshu.com/b/%v/
+    download: https://www.uukanshu.com/b/%v/
+    chapter_prefix: https://www.uukanshu.com
+    availability: https://www.uukanshu.com
+  # urls: #mobile
+  #   base: https://t.uukanshu.com/book.aspx?id=%v
+  #   download: https://t.uukanshu.com/book.aspx?id=%v
+  #   chapter_prefix: https://t.uukanshu.com/read.aspx
+  #   availability: https://t.uukanshu.com
+
+  goquery_selectors:
+    title:
+      selector: div.xiaoshuo_content>dl.jieshao>dd.jieshao_content>h1>a
+      attr: title
+      unwanted_content:
+        - 最新章节
+    writer:
+      selector: div.xiaoshuo_content>dl.jieshao>dd.jieshao_content>h2>a
+    book_type:
+      selector: div.weizhi>div.path>a:nth-child(2)
+    update_date:
+      selector: div.xiaoshuo_content>dl.jieshao>dd.jieshao_content>div.shijian
+      unwanted_content:
+        - " "
+        - "\t"
+        - "\n"
+    update_chapter:
+      selector: div.zhangjie>ul#chapterList>li:first-child>a
+    book_chapter_url:
+      selector: div.zhangjie>ul#chapterList>li>a
+      attr: href
+    book_chapter_title:
+      selector: div.zhangjie>ul#chapterList>li>a
+    chapter_title:
+      selector: div.zhengwen_box>div.box_left>div.w_main>div.h1title>hi#timu
+    chapter_content:
+      selector: div.zhengwen_box>div.box_left>div.w_main>div.contentbox>div#contentbox
+
+  availability:
+    url: https://www.uukanshu.com
+    check_string: UU看书

@@ -2,10 +2,10 @@ xbiquge_selector: &xbiquge_selector
   decode_method: gbk
 
   urls: #desktop
-    base: https://www.xbiquge.so/book/%v/
-    download: https://www.xbiquge.so/book/%v/
-    chapter_prefix: https://www.xbiquge.so
-    availability: https://www.xbiquge.so
+    base: https://www.xbiquge.bz/book/%v/
+    download: https://www.xbiquge.bz/book/%v/
+    chapter_prefix: https://www.xbiquge.bz
+    availability: https://www.xbiquge.bz
 
   goquery_selectors:
     title:
@@ -34,5 +34,5 @@ xbiquge_selector: &xbiquge_selector
       selector: div#content
   
   availability:
-    url: https://www.xbiquge.so/
+    url: https://www.xbiquge.bz/
     check_string: 笔趣阁
