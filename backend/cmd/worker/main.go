@@ -79,7 +79,8 @@ func main() {
 		wg.Add(1)
 		go func(serv service.Service) {
 			defer wg.Done()
-			processErr := serv.Process(context.Background())
+			ctx := log.Logger.WithContext(context.Background())
+			processErr := serv.Process(ctx)
 			if processErr != nil {
 				log.Error().Err(processErr).Str("site", serv.Name()).Msg("process failed")
 			}

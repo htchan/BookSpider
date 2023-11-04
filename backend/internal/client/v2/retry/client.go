@@ -2,10 +2,10 @@ package retry
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	client "github.com/htchan/BookSpider/internal/client/v2"
+	"github.com/rs/zerolog/log"
 )
 
 type RetryClient struct {
@@ -47,7 +47,12 @@ func (c *RetryClient) Get(ctx context.Context, url string) (string, error) {
 		)
 		for _, check := range c.RetryChecks {
 			shouldRetry, weight, pauseDuration = check(i, body, err)
-			fmt.Println(url, i, shouldRetry, weight, pauseDuration)
+			log.Debug().
+				Str("url", url).Int("count", i).
+				Bool("should_retry", shouldRetry).
+				Int("retry_weight", retryWeight).
+				Str("pause_duration", pauseDuration.String()).
+				Msg("request result")
 			if shouldRetry {
 				retryWeight += weight
 				time.Sleep(pauseDuration)
