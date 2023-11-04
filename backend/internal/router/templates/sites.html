@@ -12,8 +12,9 @@
   </head>
   <body>
     <h1>Novel</h1>
-    {{ range $key, $value := . }}
-      {{ template "site-card" $key }}
+    {{ $uriPrefix := .UriPrefix }}
+    {{ range $key, $value := .Services }}
+      {{ template "site-card" (arr $uriPrefix $key)}}
     {{ end }}
   </body>
 </html>
