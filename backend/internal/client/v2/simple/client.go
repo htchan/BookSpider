@@ -28,7 +28,7 @@ func (c *SimpleClient) Get(ctx context.Context, url string) (string, error) {
 	res, reqErr := c.client.Get(url)
 	if reqErr != nil {
 		var timeoutError net.Error
-		if errors.As(reqErr, &timeoutError); timeoutError.Timeout() {
+		if errors.As(reqErr, &timeoutError); timeoutError.Timeout() || errors.Is(reqErr, context.DeadlineExceeded) {
 			return "", client.ErrTimeout
 		}
 

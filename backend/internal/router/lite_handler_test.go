@@ -143,7 +143,7 @@ func TestSiteLiteHandler(t *testing.T) {
 			  <hr/>
 			  <h2>Search</h2>
 			  <div class="search_panel">
-			    <form action="search">
+			    <form action="/lite/novel/sites/test/search">
 			      <label for="fname">Title:</label><br>
 			      <input type="text" id="title" name="title"><br>
 			      <label for="lname">Writer:</label><br>

@@ -555,11 +555,11 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 	}
 
 	prepareServer := func(resps []respFunc) *httptest.Server {
-		i := 0
+		var i atomic.Int64
 		return httptest.NewServer(http.HandlerFunc(
 			func(w http.ResponseWriter, r *http.Request) {
-				resps[i](w)
-				i += 1
+				resps[i.Load()](w)
+				i.Add(1)
 			},
 		))
 	}
