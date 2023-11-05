@@ -127,7 +127,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
-				vendorService.EXPECT().ParseChapterList("chapter list response").Return(vendor.ChapterList{
+				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
@@ -222,7 +222,7 @@ content 2 content 2 content 2
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
-				vendorService.EXPECT().ParseChapterList("chapter list response").Return(nil, serv.ErrUnavailable)
+				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1),
@@ -248,7 +248,7 @@ content 2 content 2 content 2
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
-				vendorService.EXPECT().ParseChapterList("chapter list response").Return(vendor.ChapterList{
+				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
@@ -281,7 +281,7 @@ content 2 content 2 content 2
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
-				vendorService.EXPECT().ParseChapterList("chapter list response").Return(vendor.ChapterList{
+				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
@@ -367,7 +367,7 @@ func TestServiceImpl_Download(t *testing.T) {
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-1").Return("", serv.ErrUnavailable)
 				vendorService.EXPECT().ChapterListURL("2").Return("https://test.com/chapter-list-2")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-2").Return("chapter list response", nil)
-				vendorService.EXPECT().ParseChapterList("chapter list response").Return(vendor.ChapterList{
+				vendorService.EXPECT().ParseChapterList("2", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)

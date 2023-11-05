@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/htchan/BookSpider/internal/model"
@@ -153,11 +154,11 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
 
 func (s *ServiceImpl) Explore(ctx context.Context) error {
 	summary := s.rpo.Stats()
-	errorCount := 0
+	var errorCount atomic.Int64
 
 	var wg sync.WaitGroup
 
-	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && errorCount < s.conf.MaxExploreError; i++ {
+	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && int(errorCount.Load()) < s.conf.MaxExploreError; i++ {
 		i := i
 
 		s.sema.Acquire(ctx, 1)
@@ -169,22 +170,22 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 
 			bk, err := s.rpo.FindBookById(id)
 			if err != nil {
-				errorCount += 1
+				errorCount.Add(1)
 				return
 			}
 
 			err = s.ExploreBook(ctx, bk)
 			if err != nil {
-				errorCount += 1
+				errorCount.Add(1)
 			} else {
-				errorCount = 0
+				errorCount.Store(0)
 			}
 		}(i)
 	}
 
 	wg.Wait()
 
-	for i := summary.MaxBookID + 1; errorCount < s.conf.MaxExploreError; i++ {
+	for i := summary.MaxBookID + 1; int(errorCount.Load()) < s.conf.MaxExploreError; i++ {
 		i := i
 
 		s.sema.Acquire(ctx, 1)
@@ -197,9 +198,9 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 			bk := model.NewBook(s.name, i)
 			err := s.ExploreBook(ctx, &bk)
 			if err != nil {
-				errorCount += 1
+				errorCount.Add(1)
 			} else {
-				errorCount = 0
+				errorCount.Store(0)
 			}
 		}(i)
 	}
@@ -226,6 +227,8 @@ func (s *ServiceImpl) downloadChapter(ctx context.Context, ch *model.Chapter) er
 
 	ch.Title, ch.Content = chapter.Title, chapter.Body
 
+	ch.OptimizeContent()
+
 	return nil
 }
 
@@ -245,7 +248,7 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 		return fmt.Errorf("get chapter list failed: %w", err)
 	}
 
-	chapterList, err := s.vendorService.ParseChapterList(body)
+	chapterList, err := s.vendorService.ParseChapterList(strconv.Itoa(bk.ID), body)
 	if err != nil {
 		return fmt.Errorf("parse chapter list failed: %w", err)
 	}
