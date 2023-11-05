@@ -32,19 +32,19 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	}
 
 	// parse writer
-	writer := vendor.GetGoqueryContent(doc.Find(bookWriterGoquerySelector))
+	writer := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookWriterGoquerySelector))
 	if writer == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookWriterNotFound)
 	}
 
 	// parse type
-	bookType := vendor.GetGoqueryContent(doc.Find(bookTypeGoquerySelector))
+	bookType := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookTypeGoquerySelector))
 	if bookType == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookTypeNotFound)
 	}
 
 	// parse dateStr
-	dateStr := vendor.GetGoqueryContent(doc.Find(bookDateGoquerySelector))
+	dateStr := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookDateGoquerySelector))
 	dateStr = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(dateStr, "更新时间：", ""), " ", ""), "\t", ""), "\n", "")
 	if dateStr == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookDateNotFound)
@@ -65,7 +65,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	}
 
 	// parse chapter
-	chapter := vendor.GetGoqueryContent(doc.Find(bookChapterGoquerySelector))
+	chapter := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookChapterGoquerySelector))
 	if chapter == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookChapterNotFound)
 	}
@@ -100,7 +100,7 @@ func (p *VendorService) ParseChapterList(_, body string) (vendor.ChapterList, er
 			)
 		}
 
-		title := vendor.GetGoqueryContent(s)
+		title := vendor.GetGoqueryContentWithoutChildren(s)
 		if title == "" {
 			parseErr = errors.Join(
 				parseErr,
@@ -139,22 +139,13 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	var parseErr error
 
 	// parse title
-	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
+	title := vendor.GetGoqueryContentWithoutChildren(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
 	}
 
 	// parse content
-	contentNode := doc.Find(chapterContentGoquerySelector)
-	fmt.Println(contentNode.Html())
-	fmt.Println(contentNode.Find("p"))
-	fmt.Println(contentNode.Find("p").Text())
-	if html, err := contentNode.Find("p").Html(); html != "" && err == nil {
-		contentNode = contentNode.Find("p")
-	}
-
-	content := vendor.GetGoqueryContent(contentNode)
-
+	content := vendor.GetGoqueryContentWithChildren(doc.Find(chapterContentGoquerySelector))
 	if content == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterContentNotFound)
 	}

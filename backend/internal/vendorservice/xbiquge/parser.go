@@ -82,7 +82,7 @@ func (p *VendorService) ParseChapterList(bookID, body string) (vendor.ChapterLis
 			)
 		}
 
-		title := vendor.GetGoqueryContent(s)
+		title := vendor.GetGoqueryContentWithoutChildren(s)
 		if title == "" {
 			parseErr = errors.Join(
 				parseErr,
@@ -133,13 +133,13 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	var parseErr error
 
 	// parse title
-	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
+	title := vendor.GetGoqueryContentWithoutChildren(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
 	}
 
 	// parse content
-	content := vendor.GetGoqueryContent(doc.Find(chapterContentGoquerySelector))
+	content := vendor.GetGoqueryContentWithoutChildren(doc.Find(chapterContentGoquerySelector))
 	if content == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterContentNotFound)
 	}

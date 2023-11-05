@@ -44,7 +44,7 @@ type VendorService interface {
 	FindMissingIds(ids []int) []int
 }
 
-func GetGoqueryContent(s *goquery.Selection) string {
+func GetGoqueryContentWithoutChildren(s *goquery.Selection) string {
 	html, err := s.Html()
 	if err == nil {
 		replaceItems := []struct {
@@ -56,7 +56,7 @@ func GetGoqueryContent(s *goquery.Selection) string {
 			{"<b>", ""},
 			{"</b>", ""},
 			{"<p>", ""},
-			{"</p>", ""},
+			{"</p>", "\n"},
 			{"                ", ""},
 			{"<p/>", "\n"},
 		}
@@ -69,4 +69,31 @@ func GetGoqueryContent(s *goquery.Selection) string {
 	}
 
 	return strings.TrimSpace(s.Clone().Children().Remove().End().Text())
+}
+
+func GetGoqueryContentWithChildren(s *goquery.Selection) string {
+	html, err := s.Html()
+	if err == nil {
+		replaceItems := []struct {
+			old, new string
+		}{
+			{"<br/>", "\n"},
+			{"&nbsp;", ""},
+			{"\u00a0", ""},
+			{"<b>", ""},
+			{"</b>", ""},
+			{"<p>", ""},
+			{"</p>", "\n"},
+			{"                ", ""},
+			{"<p/>", "\n"},
+		}
+		for _, replaceItem := range replaceItems {
+			html = strings.ReplaceAll(
+				html, replaceItem.old, replaceItem.new)
+		}
+
+		s.SetHtml(html)
+	}
+
+	return strings.TrimSpace(s.Clone().Text())
 }

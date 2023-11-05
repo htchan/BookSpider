@@ -41,14 +41,14 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	}
 
 	// parse date
-	date := vendor.GetGoqueryContent(doc.Find(bookDateGoquerySelector))
+	date := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookDateGoquerySelector))
 	date = strings.ReplaceAll(date, "更新时间：", "")
 	if date == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookDateNotFound)
 	}
 
 	// parse chapter
-	chapter := vendor.GetGoqueryContent(doc.Find(bookChapterGoquerySelector))
+	chapter := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookChapterGoquerySelector))
 	if chapter == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrBookChapterNotFound)
 	}
@@ -83,7 +83,7 @@ func (p *VendorService) ParseChapterList(_, body string) (vendor.ChapterList, er
 			)
 		}
 
-		title := vendor.GetGoqueryContent(s)
+		title := vendor.GetGoqueryContentWithoutChildren(s)
 		if title == "" {
 			parseErr = errors.Join(
 				parseErr,
@@ -117,13 +117,13 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	var parseErr error
 
 	// parse title
-	title := vendor.GetGoqueryContent(doc.Find(chapterTitleGoquerySelector))
+	title := vendor.GetGoqueryContentWithoutChildren(doc.Find(chapterTitleGoquerySelector))
 	if title == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterTitleNotFound)
 	}
 
 	// parse content
-	content := vendor.GetGoqueryContent(doc.Find(chapterContentGoquerySelector))
+	content := vendor.GetGoqueryContentWithoutChildren(doc.Find(chapterContentGoquerySelector))
 	if content == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterContentNotFound)
 	}
