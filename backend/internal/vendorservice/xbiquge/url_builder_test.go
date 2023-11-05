@@ -93,7 +93,7 @@ func TestVendorService_ChapterURL(t *testing.T) {
 		{
 			name:      "single url resource input without slash",
 			resources: []string{"testing"},
-			want:      "",
+			want:      "testing",
 		},
 		{
 			name:      "zero resources input",
@@ -103,7 +103,7 @@ func TestVendorService_ChapterURL(t *testing.T) {
 		{
 			name:      "multiple resources input",
 			resources: []string{"1234", "abcd"},
-			want:      "",
+			want:      "https://www.xbiquge.bz/book/abcd/1234",
 		},
 	}
 

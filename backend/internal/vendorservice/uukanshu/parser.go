@@ -83,7 +83,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	}, parseErr
 }
 
-func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error) {
+func (p *VendorService) ParseChapterList(_, body string) (vendor.ChapterList, error) {
 	doc, docErr := p.ParseDoc(body)
 	if docErr != nil {
 		return nil, fmt.Errorf("parse body fail: %w", docErr)
@@ -109,7 +109,7 @@ func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error
 		}
 
 		chapterList = append(chapterList, vendor.ChapterListInfo{
-			URL:   url,
+			URL:   p.ChapterURL(url),
 			Title: title,
 		})
 	})
@@ -145,7 +145,16 @@ func (p *VendorService) ParseChapter(body string) (*vendor.ChapterInfo, error) {
 	}
 
 	// parse content
-	content := vendor.GetGoqueryContent(doc.Find(chapterContentGoquerySelector))
+	contentNode := doc.Find(chapterContentGoquerySelector)
+	fmt.Println(contentNode.Html())
+	fmt.Println(contentNode.Find("p"))
+	fmt.Println(contentNode.Find("p").Text())
+	if html, err := contentNode.Find("p").Html(); html != "" && err == nil {
+		contentNode = contentNode.Find("p")
+	}
+
+	content := vendor.GetGoqueryContent(contentNode)
+
 	if content == "" {
 		parseErr = errors.Join(parseErr, vendor.ErrChapterContentNotFound)
 	}

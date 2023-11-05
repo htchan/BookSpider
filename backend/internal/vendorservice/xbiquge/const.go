@@ -7,6 +7,7 @@ const (
 	vendorHost             = "www.xbiquge.bz"
 	bookURLTemplate        = vendorProtocol + "://" + vendorHost + "/book/%v/"
 	chapterListURLTemplate = vendorProtocol + "://" + vendorHost + "/book/%v/"
+	chapterURLTemplate     = vendorProtocol + "://" + vendorHost + "/book/%v/%v"
 	// go query selectors
 	bookTitleGoquerySelector       = `meta[property="og:novel:book_name"]`
 	bookWriterGoquerySelector      = `meta[property="og:novel:author"]`

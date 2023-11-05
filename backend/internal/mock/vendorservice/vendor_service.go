@@ -153,16 +153,16 @@ func (mr *MockVendorServiceMockRecorder) ParseChapter(arg0 interface{}) *gomock.
 }
 
 // ParseChapterList mocks base method.
-func (m *MockVendorService) ParseChapterList(arg0 string) (vendor.ChapterList, error) {
+func (m *MockVendorService) ParseChapterList(arg0, arg1 string) (vendor.ChapterList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseChapterList", arg0)
+	ret := m.ctrl.Call(m, "ParseChapterList", arg0, arg1)
 	ret0, _ := ret[0].(vendor.ChapterList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ParseChapterList indicates an expected call of ParseChapterList.
-func (mr *MockVendorServiceMockRecorder) ParseChapterList(arg0 interface{}) *gomock.Call {
+func (mr *MockVendorServiceMockRecorder) ParseChapterList(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseChapterList", reflect.TypeOf((*MockVendorService)(nil).ParseChapterList), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseChapterList", reflect.TypeOf((*MockVendorService)(nil).ParseChapterList), arg0, arg1)
 }

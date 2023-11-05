@@ -147,23 +147,23 @@ func TestParser_ParseChapterList(t *testing.T) {
 			name: "happy flow with real data",
 			body: string(testChapterListBytes),
 			want: vendor.ChapterList{
-				{URL: "/Book/Read/37656,16491126", Title: "第1章 黑暗恐懼"}, {URL: "/Book/Read/37656,16491127", Title: "第2章 陰鬼"},
-				{URL: "/Book/Read/37656,16491128", Title: "第3章 小燈符"}, {URL: "/Book/Read/37656,16491129", Title: "第4章 怪夢"},
-				{URL: "/Book/Read/37656,16491130", Title: "第5章 束發日"}, {URL: "/Book/Read/37656,16491131", Title: "第6章 血色字數"},
-				{URL: "/Book/Read/37656,16491132", Title: "第7章 壽命天定"}, {URL: "/Book/Read/37656,16491133", Title: "第8章 短命種的義務"},
-				{URL: "/Book/Read/37656,17898429", Title: "第998章 陰隱線"}, {URL: "/Book/Read/37656,17900924", Title: "第999章 蝕日與千譎"},
-				{URL: "/Book/Read/37656,17900925", Title: "第1000章 想當黃雀?"}, {URL: "/Book/Read/37656,17900926", Title: "第1001章 我咒你"},
-				{URL: "/Book/Read/37656,17903108", Title: "第1002章 遲來的人"}, {URL: "/Book/Read/37656,17903109", Title: "第1003章 吞食"},
-				{URL: "/Book/Read/37656,17903110", Title: "第1004章 收獲與筆記"}, {URL: "/Book/Read/37656,17903111", Title: "第1005章 吃骨頭"},
-				{URL: "/Book/Read/37656,20061604", Title: "第1998章 回歸"}, {URL: "/Book/Read/37656,20061706", Title: "第1999章 名字"},
-				{URL: "/Book/Read/37656,20061707", Title: "第2000章 攤牌了"}, {URL: "/Book/Read/37656,20065889", Title: "第2001章 小時間"},
-				{URL: "/Book/Read/37656,20065890", Title: "第2002章 大道選擇"}, {URL: "/Book/Read/37656,20065916", Title: "第2003章 重返主星界"},
-				{URL: "/Book/Read/37656,20065920", Title: "第2004章 云元子"}, {URL: "/Book/Read/37656,20070318", Title: "第2005章 造神宗的邀請"},
-				{URL: "/Book/Read/37656,20202511", Title: "第2066章 再進階"}, {URL: "/Book/Read/37656,20202512", Title: "第2067章 蘇醒"},
-				{URL: "/Book/Read/37656,20206411", Title: "第2068章 各自對手"}, {URL: "/Book/Read/37656,20206412", Title: "第2069章 釣竿"},
-				{URL: "/Book/Read/37656,20209393", Title: "第2070章 譎元紀"}, {URL: "/Book/Read/37656,20209394", Title: "第2071章 唯有超脫"},
-				{URL: "/Book/Read/37656,20209409", Title: "第2072章 第三刀"}, {URL: "/Book/Read/37656,20209874", Title: "第2073章 最終"},
-				{URL: "/Book/Read/37656,20212949", Title: "完本感言"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,16491126", Title: "第1章 黑暗恐懼"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,16491127", Title: "第2章 陰鬼"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,16491128", Title: "第3章 小燈符"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,16491129", Title: "第4章 怪夢"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,16491130", Title: "第5章 束發日"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,16491131", Title: "第6章 血色字數"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,16491132", Title: "第7章 壽命天定"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,16491133", Title: "第8章 短命種的義務"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,17898429", Title: "第998章 陰隱線"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,17900924", Title: "第999章 蝕日與千譎"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,17900925", Title: "第1000章 想當黃雀?"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,17900926", Title: "第1001章 我咒你"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,17903108", Title: "第1002章 遲來的人"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,17903109", Title: "第1003章 吞食"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,17903110", Title: "第1004章 收獲與筆記"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,17903111", Title: "第1005章 吃骨頭"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20061604", Title: "第1998章 回歸"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20061706", Title: "第1999章 名字"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20061707", Title: "第2000章 攤牌了"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20065889", Title: "第2001章 小時間"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20065890", Title: "第2002章 大道選擇"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20065916", Title: "第2003章 重返主星界"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20065920", Title: "第2004章 云元子"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20070318", Title: "第2005章 造神宗的邀請"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20202511", Title: "第2066章 再進階"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20202512", Title: "第2067章 蘇醒"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20206411", Title: "第2068章 各自對手"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20206412", Title: "第2069章 釣竿"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20209393", Title: "第2070章 譎元紀"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20209394", Title: "第2071章 唯有超脫"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20209409", Title: "第2072章 第三刀"}, {URL: "https://tw.hjwzw.com/Book/Read/37656,20209874", Title: "第2073章 最終"},
+				{URL: "https://tw.hjwzw.com/Book/Read/37656,20212949", Title: "完本感言"},
 			},
 			wantError: nil,
 		},
@@ -235,7 +235,7 @@ func TestParser_ParseChapterList(t *testing.T) {
 			t.Parallel()
 
 			p := VendorService{}
-			got, err := p.ParseChapterList(test.body)
+			got, err := p.ParseChapterList("", test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
 		})

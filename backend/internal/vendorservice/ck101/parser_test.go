@@ -207,7 +207,7 @@ func TestParser_ParseChapterList(t *testing.T) {
 			t.Parallel()
 
 			p := VendorService{}
-			got, err := p.ParseChapterList(test.body)
+			got, err := p.ParseChapterList(test.body, "")
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
 		})

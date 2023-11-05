@@ -139,35 +139,37 @@ func TestParser_ParseChapterList(t *testing.T) {
 
 	tests := []struct {
 		name      string
+		bookID    string
 		body      string
 		want      vendor.ChapterList
 		wantError error
 	}{
 		{
-			name: "happy flow with real data",
-			body: string(testChapterListBytes),
+			name:   "happy flow with real data",
+			body:   string(testChapterListBytes),
+			bookID: "45525",
 			want: vendor.ChapterList{
-				{URL: "40007993.html", Title: "引子：皓月当空"}, {URL: "40007994.html", Title: "第一章 龙当当与龙空空"},
-				{URL: "40007995.html", Title: "第二章 魔法圣殿"}, {URL: "40007996.html", Title: "第三章 光明庇护体质"},
-				{URL: "40007997.html", Title: "第四章 龙家的“两大天才”"}, {URL: "40007998.html", Title: "第五章 第一堂课"},
-				{URL: "40007999.html", Title: "第六章 圣殿大礼包"}, {URL: "40008000.html", Title: "第七章 灵炉，意外"},
-				{URL: "40008001.html", Title: "第八章 骑士圣殿也来了"}, {URL: "40008002.html", Title: "第九章 灵炉，再见灵炉"},
-				{URL: "40008003.html", Title: "第十章 绝望周末？"}, {URL: "40064650.html", Title: "第一百章 不可能完成的任务"},
-				{URL: "40064651.html", Title: "第一百零一章 禁！光之礼赞"}, {URL: "40065639.html", Title: "第一百零二章 战后"},
-				{URL: "40065640.html", Title: "第一百零三章 三姐弟的秘聊"}, {URL: "40066003.html", Title: "第一百零四章 要去获得坐骑了？"},
-				{URL: "40066396.html", Title: "第一百零五章 骑士圣山"}, {URL: "40066397.html", Title: "第一百零六章 我不配和你不配"},
-				{URL: "40067405.html", Title: "第一百零七章 五爪金龙"}, {URL: "40068006.html", Title: "第一百零八章 龙皇相邀"},
-				{URL: "40068047.html", Title: "第一百零九章 龙当当的坐骑伙伴"}, {URL: "40068048.html", Title: "第一百一十章 龙空空的坐骑伙伴"},
-				{URL: "40178727.html", Title: "第二百章 五层精神之海?"}, {URL: "40178728.html", Title: "第二百零一章 分身的精神边际"},
-				{URL: "40178856.html", Title: "第二百零二章 龙当当的恐怖之处"}, {URL: "40178857.html", Title: "第二百零三章 我们缺功勋值吗?"},
-				{URL: "40182283.html", Title: "第二百零四章 很贵的一战"}, {URL: "40182284.html", Title: "第二百零五章 龙当当的布局"},
-				{URL: "40182285.html", Title: "第二百零六章 强势过关"}, {URL: "40182286.html", Title: "第二百零七章 正心殿"},
-				{URL: "40182287.html", Title: "第二百零八章 守心"}, {URL: "40182288.html", Title: "第二百零九章 正式成为猎魔者"},
-				{URL: "40182289.html", Title: "第二百一十章 士级猎魔团"}, {URL: "40221749.html", Title: "第二百一十一章 兑换奖励"},
-				{URL: "40222892.html", Title: "第二百一十二章 套装，圣耀之心"}, {URL: "40224052.html", Title: "第二百一十四章 龙当当想要的奖励"},
-				{URL: "40226906.html", Title: "第二百一十五章 幸福中翱翔"}, {URL: "40228397.html", Title: "第二百一十六章 新装备"},
-				{URL: "40235866.html", Title: "第二百一十七章 突破六阶"}, {URL: "40260038.html", Title: "第二百一十八章 紧急任务"},
-				{URL: "40283912.html", Title: "第二百一十九章 神女之威"}, {URL: "40290770.html", Title: "第二百二十章 陷阱，绝境？"},
+				{URL: "https://www.xbiquge.bz/book/45525/40007993.html", Title: "引子：皓月当空"}, {URL: "https://www.xbiquge.bz/book/45525/40007994.html", Title: "第一章 龙当当与龙空空"},
+				{URL: "https://www.xbiquge.bz/book/45525/40007995.html", Title: "第二章 魔法圣殿"}, {URL: "https://www.xbiquge.bz/book/45525/40007996.html", Title: "第三章 光明庇护体质"},
+				{URL: "https://www.xbiquge.bz/book/45525/40007997.html", Title: "第四章 龙家的“两大天才”"}, {URL: "https://www.xbiquge.bz/book/45525/40007998.html", Title: "第五章 第一堂课"},
+				{URL: "https://www.xbiquge.bz/book/45525/40007999.html", Title: "第六章 圣殿大礼包"}, {URL: "https://www.xbiquge.bz/book/45525/40008000.html", Title: "第七章 灵炉，意外"},
+				{URL: "https://www.xbiquge.bz/book/45525/40008001.html", Title: "第八章 骑士圣殿也来了"}, {URL: "https://www.xbiquge.bz/book/45525/40008002.html", Title: "第九章 灵炉，再见灵炉"},
+				{URL: "https://www.xbiquge.bz/book/45525/40008003.html", Title: "第十章 绝望周末？"}, {URL: "https://www.xbiquge.bz/book/45525/40064650.html", Title: "第一百章 不可能完成的任务"},
+				{URL: "https://www.xbiquge.bz/book/45525/40064651.html", Title: "第一百零一章 禁！光之礼赞"}, {URL: "https://www.xbiquge.bz/book/45525/40065639.html", Title: "第一百零二章 战后"},
+				{URL: "https://www.xbiquge.bz/book/45525/40065640.html", Title: "第一百零三章 三姐弟的秘聊"}, {URL: "https://www.xbiquge.bz/book/45525/40066003.html", Title: "第一百零四章 要去获得坐骑了？"},
+				{URL: "https://www.xbiquge.bz/book/45525/40066396.html", Title: "第一百零五章 骑士圣山"}, {URL: "https://www.xbiquge.bz/book/45525/40066397.html", Title: "第一百零六章 我不配和你不配"},
+				{URL: "https://www.xbiquge.bz/book/45525/40067405.html", Title: "第一百零七章 五爪金龙"}, {URL: "https://www.xbiquge.bz/book/45525/40068006.html", Title: "第一百零八章 龙皇相邀"},
+				{URL: "https://www.xbiquge.bz/book/45525/40068047.html", Title: "第一百零九章 龙当当的坐骑伙伴"}, {URL: "https://www.xbiquge.bz/book/45525/40068048.html", Title: "第一百一十章 龙空空的坐骑伙伴"},
+				{URL: "https://www.xbiquge.bz/book/45525/40178727.html", Title: "第二百章 五层精神之海?"}, {URL: "https://www.xbiquge.bz/book/45525/40178728.html", Title: "第二百零一章 分身的精神边际"},
+				{URL: "https://www.xbiquge.bz/book/45525/40178856.html", Title: "第二百零二章 龙当当的恐怖之处"}, {URL: "https://www.xbiquge.bz/book/45525/40178857.html", Title: "第二百零三章 我们缺功勋值吗?"},
+				{URL: "https://www.xbiquge.bz/book/45525/40182283.html", Title: "第二百零四章 很贵的一战"}, {URL: "https://www.xbiquge.bz/book/45525/40182284.html", Title: "第二百零五章 龙当当的布局"},
+				{URL: "https://www.xbiquge.bz/book/45525/40182285.html", Title: "第二百零六章 强势过关"}, {URL: "https://www.xbiquge.bz/book/45525/40182286.html", Title: "第二百零七章 正心殿"},
+				{URL: "https://www.xbiquge.bz/book/45525/40182287.html", Title: "第二百零八章 守心"}, {URL: "https://www.xbiquge.bz/book/45525/40182288.html", Title: "第二百零九章 正式成为猎魔者"},
+				{URL: "https://www.xbiquge.bz/book/45525/40182289.html", Title: "第二百一十章 士级猎魔团"}, {URL: "https://www.xbiquge.bz/book/45525/40221749.html", Title: "第二百一十一章 兑换奖励"},
+				{URL: "https://www.xbiquge.bz/book/45525/40222892.html", Title: "第二百一十二章 套装，圣耀之心"}, {URL: "https://www.xbiquge.bz/book/45525/40224052.html", Title: "第二百一十四章 龙当当想要的奖励"},
+				{URL: "https://www.xbiquge.bz/book/45525/40226906.html", Title: "第二百一十五章 幸福中翱翔"}, {URL: "https://www.xbiquge.bz/book/45525/40228397.html", Title: "第二百一十六章 新装备"},
+				{URL: "https://www.xbiquge.bz/book/45525/40235866.html", Title: "第二百一十七章 突破六阶"}, {URL: "https://www.xbiquge.bz/book/45525/40260038.html", Title: "第二百一十八章 紧急任务"},
+				{URL: "https://www.xbiquge.bz/book/45525/40283912.html", Title: "第二百一十九章 神女之威"}, {URL: "https://www.xbiquge.bz/book/45525/40290770.html", Title: "第二百二十章 陷阱，绝境？"},
 			},
 			wantError: nil,
 		},
@@ -181,11 +183,12 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<dd><a href="chapter url 4">chapter name 4</a></dd>
 				</div>
 			</data>`,
+			bookID: "1234",
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
-				{URL: "chapter url 2", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: "chapter name 3"},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 2", Title: "chapter name 2"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 3", Title: "chapter name 3"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: nil,
 		},
@@ -199,11 +202,12 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<dd><a href="chapter url 4">chapter name 4</a></dd>
 				</div>
 			</data>`,
+			bookID: "1234",
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 1", Title: "chapter name 1"},
 				{URL: "", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: "chapter name 3"},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 3", Title: "chapter name 3"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: vendor.ErrChapterListUrlNotFound,
 		},
@@ -217,11 +221,12 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<dd><a href="chapter url 4">chapter name 4</a></dd>
 				</div>
 			</data>`,
+			bookID: "1234",
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
-				{URL: "chapter url 2", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: ""},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 2", Title: "chapter name 2"},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 3", Title: ""},
+				{URL: "https://www.xbiquge.bz/book/1234/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: vendor.ErrChapterListTitleNotFound,
 		},
@@ -239,7 +244,7 @@ func TestParser_ParseChapterList(t *testing.T) {
 			t.Parallel()
 
 			p := VendorService{}
-			got, err := p.ParseChapterList(test.body)
+			got, err := p.ParseChapterList(test.bookID, test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
 		})

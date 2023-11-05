@@ -151,17 +151,17 @@ func TestParser_ParseChapterList(t *testing.T) {
 			name: "happy flow",
 			body: `<data>
 				<div class="book_con_list"><ul>
-					<li><a href="chapter url 1">chapter name 1</a></li>
-					<li><a href="chapter url 2">chapter name 2</a></li>
-					<li><a href="chapter url 3">chapter name 3</a></li>
-					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="/chapter url 1">chapter name 1</a></li>
+					<li><a href="/chapter url 2">chapter name 2</a></li>
+					<li><a href="/chapter url 3">chapter name 3</a></li>
+					<li><a href="/chapter url 4">chapter name 4</a></li>
 				</ul></div>
 			</data>`,
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
-				{URL: "chapter url 2", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: "chapter name 3"},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.aidusk.com/chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.aidusk.com/chapter url 2", Title: "chapter name 2"},
+				{URL: "https://www.aidusk.com/chapter url 3", Title: "chapter name 3"},
+				{URL: "https://www.aidusk.com/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: nil,
 		},
@@ -169,17 +169,17 @@ func TestParser_ParseChapterList(t *testing.T) {
 			name: "2nd chapter missing href",
 			body: `<data>
 				<div class="book_con_list"><ul>
-					<li><a href="chapter url 1">chapter name 1</a></li>
+					<li><a href="/chapter url 1">chapter name 1</a></li>
 					<li><a href="">chapter name 2</a></li>
-					<li><a href="chapter url 3">chapter name 3</a></li>
-					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="/chapter url 3">chapter name 3</a></li>
+					<li><a href="/chapter url 4">chapter name 4</a></li>
 				</ul></div>
 			</data>`,
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.aidusk.com/chapter url 1", Title: "chapter name 1"},
 				{URL: "", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: "chapter name 3"},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.aidusk.com/chapter url 3", Title: "chapter name 3"},
+				{URL: "https://www.aidusk.com/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: vendor.ErrChapterListUrlNotFound,
 		},
@@ -187,17 +187,17 @@ func TestParser_ParseChapterList(t *testing.T) {
 			name: "3nd chapter missing title",
 			body: `<data>
 				<div class="book_con_list"><ul>
-					<li><a href="chapter url 1">chapter name 1</a></li>
-					<li><a href="chapter url 2">chapter name 2</a></li>
-					<li><a href="chapter url 3"></a></li>
-					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="/chapter url 1">chapter name 1</a></li>
+					<li><a href="/chapter url 2">chapter name 2</a></li>
+					<li><a href="/chapter url 3"></a></li>
+					<li><a href="/chapter url 4">chapter name 4</a></li>
 				</ul></div>
 			</data>`,
 			want: vendor.ChapterList{
-				{URL: "chapter url 1", Title: "chapter name 1"},
-				{URL: "chapter url 2", Title: "chapter name 2"},
-				{URL: "chapter url 3", Title: ""},
-				{URL: "chapter url 4", Title: "chapter name 4"},
+				{URL: "https://www.aidusk.com/chapter url 1", Title: "chapter name 1"},
+				{URL: "https://www.aidusk.com/chapter url 2", Title: "chapter name 2"},
+				{URL: "https://www.aidusk.com/chapter url 3", Title: ""},
+				{URL: "https://www.aidusk.com/chapter url 4", Title: "chapter name 4"},
 			},
 			wantError: vendor.ErrChapterListTitleNotFound,
 		},
@@ -215,7 +215,7 @@ func TestParser_ParseChapterList(t *testing.T) {
 			t.Parallel()
 
 			p := VendorService{}
-			got, err := p.ParseChapterList(test.body)
+			got, err := p.ParseChapterList("", test.body)
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)
 		})

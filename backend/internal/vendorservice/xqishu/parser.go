@@ -67,7 +67,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 	}, parseErr
 }
 
-func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error) {
+func (p *VendorService) ParseChapterList(_, body string) (vendor.ChapterList, error) {
 	doc, docErr := p.ParseDoc(body)
 	if docErr != nil {
 		return nil, fmt.Errorf("parse body fail: %w", docErr)
@@ -93,7 +93,7 @@ func (p *VendorService) ParseChapterList(body string) (vendor.ChapterList, error
 		}
 
 		chapterList = append(chapterList, vendor.ChapterListInfo{
-			URL:   url,
+			URL:   p.ChapterURL(url),
 			Title: title,
 		})
 	})

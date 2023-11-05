@@ -38,7 +38,7 @@ type VendorService interface {
 
 	// content parser
 	ParseBook(body string) (*BookInfo, error)
-	ParseChapterList(body string) (ChapterList, error)
+	ParseChapterList(bookID string, body string) (ChapterList, error)
 	ParseChapter(body string) (*ChapterInfo, error)
 	IsAvailable(body string) bool
 	FindMissingIds(ids []int) []int

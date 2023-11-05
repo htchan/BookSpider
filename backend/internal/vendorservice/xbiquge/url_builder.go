@@ -16,13 +16,19 @@ func (b *VendorService) ChapterListURL(bookID string) string {
 }
 
 func (b *VendorService) ChapterURL(resources ...string) string {
-	if len(resources) == 1 {
-		res := resources[0]
-		if strings.HasPrefix(res, "http") {
-			return res
-		} else if strings.HasPrefix(res, "/") {
-			return vendorProtocol + "://" + vendorHost + res
-		}
+	if len(resources) == 0 {
+		return ""
+	}
+
+	uri := resources[0]
+	if uri == "" {
+		return ""
+	} else if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return uri
+	} else if strings.HasPrefix(uri, "/") {
+		return vendorProtocol + "://" + vendorHost + uri
+	} else if len(resources) == 2 {
+		return fmt.Sprintf(chapterURLTemplate, resources[1], resources[0])
 	}
 
 	log.Error().
@@ -30,7 +36,7 @@ func (b *VendorService) ChapterURL(resources ...string) string {
 		Strs("resources", resources).
 		Msg("unexpected resources for building chapter url")
 
-	return ""
+	return uri
 }
 
 func (b *VendorService) AvailabilityURL() string {
