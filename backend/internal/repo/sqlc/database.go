@@ -56,10 +56,10 @@ func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
 	if err != nil {
 		return database, err
 	}
-	// database.SetMaxIdleConns(5)
-	// database.SetMaxOpenConns(10)
-	// database.SetConnMaxIdleTime(5 * time.Second)
-	// database.SetConnMaxLifetime(5 * time.Second)
+
+	database.SetMaxOpenConns(conf.MaxOpenConns)
+	database.SetMaxIdleConns(conf.MaxIdleConns)
+	database.SetConnMaxIdleTime(conf.ConnMaxIdleTime)
 	log.Info().Msg("postgres database opened")
 	return database, err
 }
