@@ -47,14 +47,16 @@ func (c *RetryClient) Get(ctx context.Context, url string) (string, error) {
 		)
 		for _, check := range c.RetryChecks {
 			shouldRetry, weight, pauseDuration = check(i, body, err)
-			if shouldRetry {
+			if err != nil || shouldRetry {
 				log.Debug().
 					Str("url", url).Int("count", i).
 					Bool("should_retry", shouldRetry).
 					Int("retry_weight", retryWeight).
 					Str("pause_duration", pauseDuration.String()).
 					Msg("request result")
+			}
 
+			if shouldRetry {
 				retryWeight += weight
 				time.Sleep(pauseDuration)
 
