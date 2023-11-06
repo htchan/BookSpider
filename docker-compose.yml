@@ -17,7 +17,7 @@ services:
             - type: bind
               source: /mnt/addition/download/Books
               target: /books
-            - ./backend/config_new:/config
+            - ./backend/config/v2:/config
             - ./backend/database/migrations:/migrations
         env_file:
             - ./backend/assets/.env.api
@@ -63,7 +63,7 @@ services:
               source: /mnt/addition/download/Books
               target: /books
             - ./bin/backup:/backup
-            - ./backend/config_new:/config
+            - ./backend/config/v2:/config
             # - ./backend/assets/api_parser:/api_parser
             - ./backend/database/migrations:/migrations
         env_file:
@@ -87,7 +87,7 @@ services:
               source: /mnt/addition/download/Books
               target: /books
             - ./bin/backup:/backup
-            - ./backend/config_new:/config
+            - ./backend/config/v2:/config
             # - ./backend/assets/api_parser:/api_parser
             - ./backend/database/migrations:/migrations
         env_file:
