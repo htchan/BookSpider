@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"slices"
 
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/service"
 	"github.com/htchan/BookSpider/internal/vendorservice/baling"

@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/service"
 )
 

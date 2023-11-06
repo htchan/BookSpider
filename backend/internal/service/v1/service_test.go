@@ -9,7 +9,7 @@ import (
 	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
 	"github.com/htchan/BookSpider/internal/client/v2/retry"
 	"github.com/htchan/BookSpider/internal/client/v2/simple"
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	mockvendor "github.com/htchan/BookSpider/internal/mock/vendorservice"

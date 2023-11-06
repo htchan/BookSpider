@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/repo"
 	"go.uber.org/goleak"
 )

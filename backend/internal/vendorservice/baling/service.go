@@ -1,7 +1,7 @@
 package baling
 
 import (
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"

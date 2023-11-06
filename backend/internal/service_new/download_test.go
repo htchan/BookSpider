@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 	mockparser "github.com/htchan/BookSpider/internal/mock/parser"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/htchan/BookSpider/internal/common"
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/router"
 	"github.com/rs/zerolog"

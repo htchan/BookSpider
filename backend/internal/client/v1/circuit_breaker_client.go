@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/htchan/BookSpider/internal/config"
-	config_new "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v1"
+	config_new "github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
 )

@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/htchan/BookSpider/internal/arguement"
-	config "github.com/htchan/BookSpider/internal/config_new"
+	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	repo "github.com/htchan/BookSpider/internal/repo/psql"
 	service_new "github.com/htchan/BookSpider/internal/service_new"
