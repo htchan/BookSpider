@@ -68,7 +68,7 @@ select distinct on (books.site, books.id)
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1
-order by books.site, books.id desc, books.hash_code desc;
+order by books.id desc, books.hash_code desc;
 
 -- name: ListBooksForDownload :many
 select books.site, books.id, books.hash_code, books.title,
@@ -78,7 +78,7 @@ select books.site, books.id, books.hash_code, books.title,
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status='END' and books.is_downloaded=false
-order by books.update_date desc, books.id desc;
+order by books.id desc, books.hash_code desc;
 
 -- name: ListBooksByTitleWriter :many
 select books.site, books.id, books.hash_code, books.title,
