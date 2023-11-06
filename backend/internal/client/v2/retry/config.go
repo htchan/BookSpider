@@ -7,9 +7,10 @@ import (
 type RetryConditionType string
 
 const (
-	RetryConditionTypeStatusCode   RetryConditionType = "status-codes"
-	RetryConditionTypeTimeout      RetryConditionType = "error"
-	RetryConditionTypeBodyContains RetryConditionType = "body-contains"
+	RetryConditionTypeStatusCode      RetryConditionType = "status-codes"
+	RetryConditionTypeTimeout         RetryConditionType = "timeout"
+	RetryConditionTypeConnectionReset RetryConditionType = "connection-reset"
+	RetryConditionTypeBodyContains    RetryConditionType = "body-contains"
 )
 
 type RetryCondition struct {

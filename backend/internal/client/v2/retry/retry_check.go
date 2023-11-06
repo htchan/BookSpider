@@ -3,6 +3,7 @@ package retry
 import (
 	"errors"
 	"regexp"
+	"syscall"
 	"time"
 
 	client "github.com/htchan/BookSpider/internal/client/v2"
@@ -36,6 +37,8 @@ func NewRetryCheck(condition RetryCondition) RetryCheck {
 		return retryWhenStatusCodeRange(statusCodes, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)
 	case RetryConditionTypeTimeout:
 		return retryWhenError(client.ErrTimeout, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)
+	case RetryConditionTypeConnectionReset:
+		return retryWhenError(syscall.ECONNRESET, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)
 	case RetryConditionTypeBodyContains:
 		target := condition.Value.(string)
 		return retryWhenBodyContains(target, condition.Weight, condition.PauseInterval, condition.PauseIntervalType)

@@ -2,6 +2,7 @@ package retry
 
 import (
 	"fmt"
+	"syscall"
 	"testing"
 	"time"
 
@@ -81,6 +82,13 @@ func TestNewRetryCheck(t *testing.T) {
 		PauseIntervalType: PauseIntervalTypeLinear,
 	})
 
+	retryCheckForConnectionReset := NewRetryCheck(RetryCondition{
+		Type:              RetryConditionTypeConnectionReset,
+		Weight:            10,
+		PauseInterval:     1 * time.Second,
+		PauseIntervalType: PauseIntervalTypeLinear,
+	})
+
 	retryCheckForStatusCode := NewRetryCheck(RetryCondition{
 		Type:              RetryConditionTypeStatusCode,
 		Value:             []interface{}{100, 300, 400},
@@ -123,6 +131,20 @@ func TestNewRetryCheck(t *testing.T) {
 				err:     fmt.Errorf("stub error: %w", client.ErrTimeout),
 			},
 			retryCheck: retryCheckForTimeout,
+			want: result{
+				shouldRetry:   true,
+				weight:        10,
+				pauseDuration: 4 * time.Second,
+			},
+		},
+		{
+			name: "retry for error/connection reset",
+			args: args{
+				attempt: 3,
+				body:    "body",
+				err:     fmt.Errorf("stub error: %w", syscall.ECONNRESET),
+			},
+			retryCheck: retryCheckForConnectionReset,
 			want: result{
 				shouldRetry:   true,
 				weight:        10,
