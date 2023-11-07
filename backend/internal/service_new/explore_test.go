@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -333,8 +334,8 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 		name             string
 		setupServ        func(ctrl *gomock.Controller) ServiceImp
 		summary          repo.Summary
-		errorCount       int
-		expectErrorCount int
+		errorCount       int32
+		expectErrorCount int32
 	}{
 		{
 			name: "happy flow",
@@ -573,10 +574,13 @@ func TestServiceImp_exploreExisting(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := test.setupServ(ctrl)
-			serv.exploreExisting(test.summary, &test.errorCount)
+			var errorCount atomic.Int32
+			errorCount.Store(test.errorCount)
 
-			assert.Equal(t, test.expectErrorCount, test.errorCount)
+			serv := test.setupServ(ctrl)
+			serv.exploreExisting(test.summary, &errorCount)
+
+			assert.Equal(t, test.expectErrorCount, errorCount.Load())
 		})
 	}
 }
@@ -588,8 +592,8 @@ func TestServiceImp_exploreNew(t *testing.T) {
 		name             string
 		setupServ        func(ctrl *gomock.Controller) ServiceImp
 		summary          repo.Summary
-		errorCount       int
-		expectErrorCount int
+		errorCount       int32
+		expectErrorCount int32
 	}{
 		{
 			name: "happy flow",
@@ -741,10 +745,13 @@ func TestServiceImp_exploreNew(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := test.setupServ(ctrl)
-			serv.exploreNew(test.summary, &test.errorCount)
+			var errorCount atomic.Int32
+			errorCount.Store(test.errorCount)
 
-			assert.Equal(t, test.expectErrorCount, test.errorCount)
+			serv := test.setupServ(ctrl)
+			serv.exploreNew(test.summary, &errorCount)
+
+			assert.Equal(t, test.expectErrorCount, errorCount.Load())
 		})
 	}
 }

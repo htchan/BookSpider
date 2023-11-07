@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -156,11 +157,11 @@ func TestRetryClient_Get(t *testing.T) {
 				simpleClient,
 			),
 			serverHandler: func() http.HandlerFunc {
-				i := 0
+				var i atomic.Int32
 				return func(w http.ResponseWriter, r *http.Request) {
-					if i < 4 {
+					if i.Load() < 4 {
 						time.Sleep(10 * time.Millisecond)
-						i += 1
+						i.Add(1)
 					}
 					w.Write([]byte("hello"))
 				}

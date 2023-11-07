@@ -20,8 +20,7 @@ build:
 
 ## test: test packages and show coverage
 test:
-	# go clean --testcache
-	go test ${target}
+	go test ./... --cover --race --leak
 
 ## benchmark: benchmark packages and show coverage
 benchmark:
@@ -57,11 +56,15 @@ generate:
 clean:
 	rm ./build/ -r
 
+create_migrate:
+	migrate create -ext sql -dir migrations $(NAME)
+
+
 include ../.env.db
 export $(shell sed 's/=.*//' ../.env.db)
 sqlc:
 	PGPASSWORD=${PSQL_PASSWORD} pg_dump \
 		-h ${PSQL_HOST} -p ${PSQL_PORT} -U ${PSQL_USER} -d ${PSQL_NAME} \
 		-t books -t writers -t errors --schema-only \
-		> ./internal/sqlc/schema.sql
+		> ./database/sqlc/schema.sql
 	sqlc generate

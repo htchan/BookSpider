@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"database/sql"
+	"flag"
+	"os"
 	"testing"
 
 	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
@@ -12,8 +14,20 @@ import (
 	"github.com/htchan/BookSpider/internal/parse/goquery"
 	sqlc "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 	"golang.org/x/sync/semaphore"
 )
+
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "check for memory leaks")
+	flag.Parse()
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+	} else {
+		os.Exit(m.Run())
+	}
+}
 
 func TestServiceImp_Name(t *testing.T) {
 	t.Parallel()
