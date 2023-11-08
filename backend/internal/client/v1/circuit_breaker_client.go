@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/htchan/BookSpider/internal/config/v1"
@@ -28,7 +29,7 @@ type CircuitBreakerClient struct {
 	weighted       *semaphore.Weighted
 	commonCtx      *context.Context
 	commonWeighted *semaphore.Weighted
-	failCount      int
+	failCount      atomic.Int32
 	waitGroup      sync.WaitGroup
 	client         *http.Client
 }
@@ -118,19 +119,19 @@ func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (s
 		circuitBreakingSleep = client.confV2.SleepInterval
 	}
 	if err != nil && err.Error() == "code 503" {
-		client.failCount++
-		if client.failCount > maxFailCount {
+		client.failCount.Add(1)
+		if client.failCount.Load() > int32(maxFailCount) {
 			client.waitGroup.Add(1)
 			go func() {
 				defer client.waitGroup.Done()
 				time.Sleep(circuitBreakingSleep)
-				if client.failCount > int(float64(maxFailCount)*maxFailMultiplier) {
-					client.failCount = maxFailCount / 2
+				if client.failCount.Load() > int32(float64(maxFailCount)*maxFailMultiplier) {
+					client.failCount.Store(int32(maxFailCount) / 2)
 				}
 			}()
 		}
 	} else {
-		client.failCount = 0
+		client.failCount.Store(0)
 	}
 	return response, err
 }

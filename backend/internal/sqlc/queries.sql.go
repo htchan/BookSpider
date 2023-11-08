@@ -20,7 +20,7 @@ type BooksStatRow struct {
 	MaxBookID       interface{}
 }
 
-func (q *Queries) BooksStat(ctx context.Context, site sql.NullString) (BooksStatRow, error) {
+func (q *Queries) BooksStat(ctx context.Context, site string) (BooksStatRow, error) {
 	row := q.db.QueryRowContext(ctx, booksStat, site)
 	var i BooksStatRow
 	err := row.Scan(&i.BookCount, &i.UniqueBookCount, &i.MaxBookID)
@@ -32,11 +32,11 @@ select status, count(*) from books where site=$1 group by status
 `
 
 type BooksStatusStatRow struct {
-	Status sql.NullString
+	Status string
 	Count  int64
 }
 
-func (q *Queries) BooksStatusStat(ctx context.Context, site sql.NullString) ([]BooksStatusStatRow, error) {
+func (q *Queries) BooksStatusStat(ctx context.Context, site string) ([]BooksStatusStatRow, error) {
 	rows, err := q.db.QueryContext(ctx, booksStatusStat, site)
 	if err != nil {
 		return nil, err
@@ -69,17 +69,17 @@ RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapt
 `
 
 type CreateBookWithHashParams struct {
-	Site           sql.NullString
-	ID             sql.NullInt32
-	HashCode       sql.NullInt32
+	Site           string
+	ID             int32
+	HashCode       int32
 	Title          sql.NullString
 	WriterID       sql.NullInt32
 	WriterChecksum sql.NullString
 	Type           sql.NullString
 	UpdateDate     sql.NullString
 	UpdateChapter  sql.NullString
-	Status         sql.NullString
-	IsDownloaded   sql.NullBool
+	Status         string
+	IsDownloaded   bool
 	Checksum       sql.NullString
 }
 
@@ -126,16 +126,16 @@ RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapt
 `
 
 type CreateBookWithZeroHashParams struct {
-	Site           sql.NullString
-	ID             sql.NullInt32
+	Site           string
+	ID             int32
 	Title          sql.NullString
 	WriterID       sql.NullInt32
 	WriterChecksum sql.NullString
 	Type           sql.NullString
 	UpdateDate     sql.NullString
 	UpdateChapter  sql.NullString
-	Status         sql.NullString
-	IsDownloaded   sql.NullBool
+	Status         string
+	IsDownloaded   bool
 	Checksum       sql.NullString
 }
 
@@ -229,7 +229,7 @@ const downloadedBooksStat = `-- name: DownloadedBooksStat :one
 select count(*) as downloaded_count from books where site=$1 and is_downloaded=true
 `
 
-func (q *Queries) DownloadedBooksStat(ctx context.Context, site sql.NullString) (int64, error) {
+func (q *Queries) DownloadedBooksStat(ctx context.Context, site string) (int64, error) {
 	row := q.db.QueryRowContext(ctx, downloadedBooksStat, site)
 	var downloaded_count int64
 	err := row.Scan(&downloaded_count)
@@ -240,7 +240,7 @@ const errorBooksStat = `-- name: ErrorBooksStat :one
 select count(*) as error_count from books where site=$1 and status='ERROR'
 `
 
-func (q *Queries) ErrorBooksStat(ctx context.Context, site sql.NullString) (int64, error) {
+func (q *Queries) ErrorBooksStat(ctx context.Context, site string) (int64, error) {
 	row := q.db.QueryRowContext(ctx, errorBooksStat, site)
 	var error_count int64
 	err := row.Scan(&error_count)
@@ -251,15 +251,15 @@ const findAllBookIDs = `-- name: FindAllBookIDs :many
 select distinct(id) as book_id from books where site=$1 order by book_id
 `
 
-func (q *Queries) FindAllBookIDs(ctx context.Context, site sql.NullString) ([]sql.NullInt32, error) {
+func (q *Queries) FindAllBookIDs(ctx context.Context, site string) ([]int32, error) {
 	rows, err := q.db.QueryContext(ctx, findAllBookIDs, site)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []sql.NullInt32
+	var items []int32
 	for rows.Next() {
-		var book_id sql.NullInt32
+		var book_id int32
 		if err := rows.Scan(&book_id); err != nil {
 			return nil, err
 		}
@@ -285,22 +285,22 @@ where books.site=$1 and books.id=$2 order by books.hash_code desc
 `
 
 type GetBookByIDParams struct {
-	Site sql.NullString
-	ID   sql.NullInt32
+	Site string
+	ID   int32
 }
 
 type GetBookByIDRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -336,23 +336,23 @@ order by hash_code desc
 `
 
 type GetBookByIDHashParams struct {
-	Site     sql.NullString
-	ID       sql.NullInt32
-	HashCode sql.NullInt32
+	Site     string
+	ID       int32
+	HashCode int32
 }
 
 type GetBookByIDHashRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -393,22 +393,22 @@ where (books.checksum, books.writer_checksum) = (
 `
 
 type GetBookGroupByIDParams struct {
-	Site sql.NullString
-	ID   sql.NullInt32
+	Site string
+	ID   int32
 }
 
 type GetBookGroupByIDRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -465,23 +465,23 @@ where (books.checksum, books.writer_checksum) = (
 `
 
 type GetBookGroupByIDHashParams struct {
-	Site     sql.NullString
-	ID       sql.NullInt32
-	HashCode sql.NullInt32
+	Site     string
+	ID       int32
+	HashCode int32
 }
 
 type GetBookGroupByIDHashRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -533,21 +533,21 @@ order by books.site, books.id, books.hash_code
 `
 
 type ListBooksRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
-func (q *Queries) ListBooks(ctx context.Context, site sql.NullString) ([]ListBooksRow, error) {
+func (q *Queries) ListBooks(ctx context.Context, site string) ([]ListBooksRow, error) {
 	rows, err := q.db.QueryContext(ctx, listBooks, site)
 	if err != nil {
 		return nil, err
@@ -594,22 +594,22 @@ where books.site=$1 and books.status=$2 order by hash_code desc
 `
 
 type ListBooksByStatusParams struct {
-	Site   sql.NullString
-	Status sql.NullString
+	Site   string
+	Status string
 }
 
 type ListBooksByStatusRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -663,7 +663,7 @@ order by books.update_date desc, books.id desc limit $4 offset $5
 `
 
 type ListBooksByTitleWriterParams struct {
-	Site    sql.NullString
+	Site    string
 	Column2 interface{}
 	Column3 interface{}
 	Limit   int32
@@ -671,17 +671,17 @@ type ListBooksByTitleWriterParams struct {
 }
 
 type ListBooksByTitleWriterRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -739,21 +739,21 @@ order by books.id desc, books.hash_code desc
 `
 
 type ListBooksForDownloadRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
-func (q *Queries) ListBooksForDownload(ctx context.Context, site sql.NullString) ([]ListBooksForDownloadRow, error) {
+func (q *Queries) ListBooksForDownload(ctx context.Context, site string) ([]ListBooksForDownloadRow, error) {
 	rows, err := q.db.QueryContext(ctx, listBooksForDownload, site)
 	if err != nil {
 		return nil, err
@@ -802,21 +802,21 @@ order by books.id desc, books.hash_code desc
 `
 
 type ListBooksForUpdateRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
-func (q *Queries) ListBooksForUpdate(ctx context.Context, site sql.NullString) ([]ListBooksForUpdateRow, error) {
+func (q *Queries) ListBooksForUpdate(ctx context.Context, site string) ([]ListBooksForUpdateRow, error) {
 	rows, err := q.db.QueryContext(ctx, listBooksForUpdate, site)
 	if err != nil {
 		return nil, err
@@ -869,22 +869,22 @@ limit $2 offset RANDOM() *
 `
 
 type ListRandomBooksParams struct {
-	Site    sql.NullString
+	Site    string
 	Column2 interface{}
 }
 
 type ListRandomBooksRow struct {
-	Site          sql.NullString
-	ID            sql.NullInt32
-	HashCode      sql.NullInt32
+	Site          string
+	ID            int32
+	HashCode      int32
 	Title         sql.NullString
 	WriterID      sql.NullInt32
 	Name          string
 	Type          sql.NullString
 	UpdateDate    sql.NullString
 	UpdateChapter sql.NullString
-	Status        sql.NullString
-	IsDownloaded  sql.NullBool
+	Status        string
+	IsDownloaded  bool
 	Data          string
 }
 
@@ -928,7 +928,7 @@ const nonErrorBooksStat = `-- name: NonErrorBooksStat :one
 select max(id) as latest_success_id from books where status<>'ERROR' and site=$1
 `
 
-func (q *Queries) NonErrorBooksStat(ctx context.Context, site sql.NullString) (interface{}, error) {
+func (q *Queries) NonErrorBooksStat(ctx context.Context, site string) (interface{}, error) {
 	row := q.db.QueryRowContext(ctx, nonErrorBooksStat, site)
 	var latest_success_id interface{}
 	err := row.Scan(&latest_success_id)
@@ -944,16 +944,16 @@ RETURNING site, id, hash_code, title, writer_id, type, update_date, update_chapt
 `
 
 type UpdateBookParams struct {
-	Site           sql.NullString
-	ID             sql.NullInt32
-	HashCode       sql.NullInt32
+	Site           string
+	ID             int32
+	HashCode       int32
 	Title          sql.NullString
 	WriterID       sql.NullInt32
 	Type           sql.NullString
 	UpdateDate     sql.NullString
 	UpdateChapter  sql.NullString
-	Status         sql.NullString
-	IsDownloaded   sql.NullBool
+	Status         string
+	IsDownloaded   bool
 	Checksum       sql.NullString
 	WriterChecksum sql.NullString
 }
@@ -1016,7 +1016,7 @@ where (update_date < $1 or
 
 type UpdateBooksStatusParams struct {
 	UpdateDate sql.NullString
-	Site       sql.NullString
+	Site       string
 }
 
 func (q *Queries) UpdateBooksStatus(ctx context.Context, arg UpdateBooksStatusParams) error {
@@ -1030,7 +1030,7 @@ from books join writers on books.writer_id=writers.id
 where site=$1
 `
 
-func (q *Queries) WritersStat(ctx context.Context, site sql.NullString) (int64, error) {
+func (q *Queries) WritersStat(ctx context.Context, site string) (int64, error) {
 	row := q.db.QueryRowContext(ctx, writersStat, site)
 	var writer_count int64
 	err := row.Scan(&writer_count)

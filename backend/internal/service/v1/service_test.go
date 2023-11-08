@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"flag"
 	"os"
 	"testing"
 
@@ -19,8 +20,20 @@ import (
 	serv "github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 	"golang.org/x/sync/semaphore"
 )
+
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "check for memory leaks")
+	flag.Parse()
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+	} else {
+		os.Exit(m.Run())
+	}
+}
 
 func TestNewService(t *testing.T) {
 	t.Parallel()

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"os"
 	"strings"
 	"testing"
@@ -12,7 +13,19 @@ import (
 	"github.com/htchan/BookSpider/internal/client/v2/retry"
 	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/goleak"
 )
+
+func TestMain(m *testing.M) {
+	leak := flag.Bool("leak", false, "check for memory leaks")
+	flag.Parse()
+
+	if *leak {
+		goleak.VerifyTestMain(m)
+	} else {
+		os.Exit(m.Run())
+	}
+}
 
 func Test_validate_Config(t *testing.T) {
 	t.Parallel()

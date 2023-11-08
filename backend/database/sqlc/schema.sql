@@ -25,16 +25,16 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.books (
-    site character varying(15),
-    id integer,
-    hash_code integer,
+    site character varying(15) NOT NULL,
+    id integer NOT NULL,
+    hash_code integer NOT NULL,
     title text,
     writer_id integer,
     type character varying(20),
     update_date character varying(30),
     update_chapter text,
-    status character varying(10),
-    is_downloaded boolean DEFAULT false,
+    status character varying(10) NOT NULL,
+    is_downloaded boolean DEFAULT false NOT NULL,
     checksum text,
     writer_checksum text
 );
@@ -106,6 +106,27 @@ ALTER TABLE ONLY public.writers
 
 
 --
+-- Name: books__checksum; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX books__checksum ON public.books USING btree (checksum, writer_checksum);
+
+
+--
+-- Name: books__status; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX books__status ON public.books USING btree (status, is_downloaded);
+
+
+--
+-- Name: books__vendor_reference; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX books__vendor_reference ON public.books USING btree (site, id, hash_code DESC);
+
+
+--
 -- Name: books_index; Type: INDEX; Schema: public; Owner: test
 --
 
@@ -152,6 +173,13 @@ CREATE INDEX checksum_index ON public.books USING btree (checksum);
 --
 
 CREATE UNIQUE INDEX errors_index ON public.errors USING btree (site, id);
+
+
+--
+-- Name: writers__name; Type: INDEX; Schema: public; Owner: test
+--
+
+CREATE INDEX writers__name ON public.writers USING btree (name);
 
 
 --

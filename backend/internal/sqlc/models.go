@@ -9,16 +9,16 @@ import (
 )
 
 type Book struct {
-	Site           sql.NullString
-	ID             sql.NullInt32
-	HashCode       sql.NullInt32
+	Site           string
+	ID             int32
+	HashCode       int32
 	Title          sql.NullString
 	WriterID       sql.NullInt32
 	Type           sql.NullString
 	UpdateDate     sql.NullString
 	UpdateChapter  sql.NullString
-	Status         sql.NullString
-	IsDownloaded   sql.NullBool
+	Status         string
+	IsDownloaded   bool
 	Checksum       sql.NullString
 	WriterChecksum sql.NullString
 }

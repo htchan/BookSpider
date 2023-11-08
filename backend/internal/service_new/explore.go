@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
@@ -37,10 +38,10 @@ func (serv *ServiceImp) ExploreBook(bk *model.Book) error {
 	return err
 }
 
-func (serv *ServiceImp) exploreExisting(summary repo.Summary, errorCount *int) {
+func (serv *ServiceImp) exploreExisting(summary repo.Summary, errorCount *atomic.Int32) {
 	var wg sync.WaitGroup
 
-	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && *errorCount < serv.conf.MaxExploreError; i++ {
+	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && errorCount.Load() < int32(serv.conf.MaxExploreError); i++ {
 		i := i
 
 		serv.sema.Acquire(serv.ctx, 1)
@@ -52,15 +53,15 @@ func (serv *ServiceImp) exploreExisting(summary repo.Summary, errorCount *int) {
 
 			bk, err := serv.rpo.FindBookById(id)
 			if err != nil {
-				*errorCount += 1
+				errorCount.Add(1)
 				return
 			}
 
 			err = serv.ExploreBook(bk)
 			if err != nil {
-				*errorCount += 1
+				errorCount.Add(1)
 			} else {
-				*errorCount = 0
+				errorCount.Store(0)
 			}
 		}(i)
 	}
@@ -68,10 +69,10 @@ func (serv *ServiceImp) exploreExisting(summary repo.Summary, errorCount *int) {
 	wg.Wait()
 }
 
-func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *int) {
+func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *atomic.Int32) {
 	var wg sync.WaitGroup
 
-	for i := summary.MaxBookID + 1; *errorCount < serv.conf.MaxExploreError; i++ {
+	for i := summary.MaxBookID + 1; errorCount.Load() < int32(serv.conf.MaxExploreError); i++ {
 		i := i
 
 		serv.sema.Acquire(serv.ctx, 1)
@@ -84,9 +85,9 @@ func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *int) {
 			bk := model.NewBook(serv.name, i)
 			err := serv.ExploreBook(&bk)
 			if err != nil {
-				*errorCount += 1
+				errorCount.Add(1)
 			} else {
-				*errorCount = 0
+				errorCount.Store(0)
 			}
 		}(i)
 	}
@@ -96,7 +97,7 @@ func (serv *ServiceImp) exploreNew(summary repo.Summary, errorCount *int) {
 
 func (serv *ServiceImp) Explore() error {
 	summary := serv.rpo.Stats()
-	errorCount := 0
+	var errorCount atomic.Int32
 
 	// explore error books in db
 	serv.exploreExisting(summary, &errorCount)

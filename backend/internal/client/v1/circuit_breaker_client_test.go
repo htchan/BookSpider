@@ -174,11 +174,11 @@ func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 		tempClient := client
 		t.Parallel()
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
-		if tempClient.failCount == 0 {
+		if tempClient.failCount.Load() == 0 {
 			t.Errorf("send request with circuit breaker does not update fail count when if get 503")
 		}
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/200")
-		if tempClient.failCount != 0 {
+		if tempClient.failCount.Load() != 0 {
 			t.Errorf("send request with circuit breaker does not reset fail count when if get 503")
 		}
 	})
@@ -191,12 +191,12 @@ func TestCircuitBreakerClient_SendRequestWithCircuitBreaker(t *testing.T) {
 		t.Parallel()
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
-		if tempClient.failCount != 2 {
+		if tempClient.failCount.Load() != 2 {
 			t.Errorf("send request with circuit breaker does not update fail count when if get 503")
 		}
 		tempClient.SendRequestWithCircuitBreaker(server.URL + "/503")
 		time.Sleep(1 * time.Millisecond)
-		if tempClient.failCount != 1 {
+		if tempClient.failCount.Load() != 1 {
 			t.Error(tempClient.failCount)
 			t.Errorf("send request with circuit breaker does not half fail count when if get 503")
 		}
