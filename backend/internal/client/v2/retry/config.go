@@ -14,7 +14,7 @@ const (
 )
 
 type RetryCondition struct {
-	Type              RetryConditionType `yaml:"type" validate:"oneof=status-codes error body-contains"`
+	Type              RetryConditionType `yaml:"type" validate:"oneof=status-codes timeout connection-reset body-contains"`
 	Value             any                `yaml:"value"`
 	Weight            int                `yaml:"weight" validate:"min=1"`
 	PauseInterval     time.Duration      `yaml:"pause_interval" validate:"min=1s"`
