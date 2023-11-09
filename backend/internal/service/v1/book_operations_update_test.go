@@ -194,11 +194,11 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
-					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter 2", UpdateDate: "date 2",
+					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter 2", UpdateDate: "date 2", IsEnd: true,
 				}, nil)
 				bk := &model.Book{
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-					UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
+					UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusEnd,
 				}
 				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
 				rpo.EXPECT().UpdateBook(bk).Return(nil)
@@ -210,7 +210,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
-				UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
+				UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusEnd,
 			},
 			wantError: nil,
 		},

@@ -25,6 +25,7 @@ func TestParser_ParseBook(t *testing.T) {
 				Type:          "仙俠",
 				UpdateDate:    "2021-04-06",
 				UpdateChapter: "完本感言",
+				IsEnd:         true,
 			},
 			wantError: nil,
 		},
