@@ -17,51 +17,51 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func LoadServices(vendors []string, db *sql.DB, conf *config.Config) map[string]service.Service {
+func LoadServices(vendors []string, db *sql.DB, siteConf map[string]config.SiteConfig, maxThreads int64) map[string]service.Service {
 	result := make(map[string]service.Service)
 
-	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
+	publicSema := semaphore.NewWeighted(maxThreads)
 
 	if slices.Contains(vendors, baling.Host) {
 		rpo := repo.NewRepo(baling.Host, db)
 
-		result[baling.Host] = baling.NewService(rpo, publicSema, conf.SiteConfigs[baling.Host])
+		result[baling.Host] = baling.NewService(rpo, publicSema, siteConf[baling.Host])
 	}
 
 	if slices.Contains(vendors, bestory.Host) {
 		rpo := repo.NewRepo(bestory.Host, db)
 
-		result[bestory.Host] = bestory.NewService(rpo, publicSema, conf.SiteConfigs[bestory.Host])
+		result[bestory.Host] = bestory.NewService(rpo, publicSema, siteConf[bestory.Host])
 	}
 
 	if slices.Contains(vendors, ck101.Host) {
 		rpo := repo.NewRepo(ck101.Host, db)
 
-		result[ck101.Host] = ck101.NewService(rpo, publicSema, conf.SiteConfigs[ck101.Host])
+		result[ck101.Host] = ck101.NewService(rpo, publicSema, siteConf[ck101.Host])
 	}
 
 	if slices.Contains(vendors, hjwzw.Host) {
 		rpo := repo.NewRepo(hjwzw.Host, db)
 
-		result[hjwzw.Host] = hjwzw.NewService(rpo, publicSema, conf.SiteConfigs[hjwzw.Host])
+		result[hjwzw.Host] = hjwzw.NewService(rpo, publicSema, siteConf[hjwzw.Host])
 	}
 
 	if slices.Contains(vendors, xbiquge.Host) {
 		rpo := repo.NewRepo(xbiquge.Host, db)
 
-		result[xbiquge.Host] = xbiquge.NewService(rpo, publicSema, conf.SiteConfigs[xbiquge.Host])
+		result[xbiquge.Host] = xbiquge.NewService(rpo, publicSema, siteConf[xbiquge.Host])
 	}
 
 	if slices.Contains(vendors, xqishu.Host) {
 		rpo := repo.NewRepo(xqishu.Host, db)
 
-		result[xqishu.Host] = xqishu.NewService(rpo, publicSema, conf.SiteConfigs[xqishu.Host])
+		result[xqishu.Host] = xqishu.NewService(rpo, publicSema, siteConf[xqishu.Host])
 	}
 
 	if slices.Contains(vendors, uukanshu.Host) {
 		rpo := repo.NewRepo(uukanshu.Host, db)
 
-		result[uukanshu.Host] = uukanshu.NewService(rpo, publicSema, conf.SiteConfigs[uukanshu.Host])
+		result[uukanshu.Host] = uukanshu.NewService(rpo, publicSema, siteConf[uukanshu.Host])
 	}
 
 	return result

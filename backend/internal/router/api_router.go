@@ -20,7 +20,7 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 	fmt.Fprintln(res, fmt.Sprintf(`{ "error": "%v" }`, err))
 }
 
-func AddAPIRoutes(router chi.Router, conf config.APIConfig, services map[string]service.Service) {
+func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service) {
 	router.Route(conf.APIRoutePrefix, func(router chi.Router) {
 		router.Use(ZerologMiddleware)
 		router.Use(
