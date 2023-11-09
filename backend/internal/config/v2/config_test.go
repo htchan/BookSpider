@@ -144,12 +144,12 @@ func Test_validate_BatchConfig(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		conf  BatchConfig
+		conf  WorkerConfig
 		valid bool
 	}{
 		{
 			name: "valid conf",
-			conf: BatchConfig{
+			conf: WorkerConfig{
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
@@ -166,7 +166,7 @@ func Test_validate_BatchConfig(t *testing.T) {
 		},
 		{
 			name: "invalid BatchConfig",
-			conf: BatchConfig{
+			conf: WorkerConfig{
 				MaxWorkingThreads:  0,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
@@ -183,7 +183,7 @@ func Test_validate_BatchConfig(t *testing.T) {
 		},
 		{
 			name: "invalid SiteConfig",
-			conf: BatchConfig{
+			conf: WorkerConfig{
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{"data": {}},
@@ -200,7 +200,7 @@ func Test_validate_BatchConfig(t *testing.T) {
 		},
 		{
 			name: "invalid DatabaseConfig",
-			conf: BatchConfig{
+			conf: WorkerConfig{
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
@@ -217,7 +217,7 @@ func Test_validate_BatchConfig(t *testing.T) {
 		},
 		{
 			name: "invalid ConfigDirectory",
-			conf: BatchConfig{
+			conf: WorkerConfig{
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
@@ -1041,7 +1041,7 @@ xbiquge_client: &xbiquge_client
 		envMap              map[string]string
 		stubConfFileFunc    func()
 		cleanupConfFileFunc func()
-		expectedConf        *BatchConfig
+		expectedConf        *WorkerConfig
 		expectError         bool
 	}{
 		{
@@ -1113,7 +1113,7 @@ xbiquge_client: &xbiquge_client
 				os.RemoveAll("./selectors")
 				os.Remove("./main.yaml")
 			},
-			expectedConf: &BatchConfig{
+			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge", "xqishu"},
 				SiteConfigs: map[string]SiteConfig{
@@ -1335,7 +1335,7 @@ xbiquge_client: &xbiquge_client
 				os.Remove("./xbiquge.yaml")
 				os.Remove("./main.yaml")
 			},
-			expectedConf: &BatchConfig{
+			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge"},
 				SiteConfigs: map[string]SiteConfig{
@@ -1396,7 +1396,7 @@ xbiquge_client: &xbiquge_client
 			cleanupConfFileFunc: func() {
 				os.Remove("./main.yaml")
 			},
-			expectedConf: &BatchConfig{
+			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge"},
 				DatabaseConfig: DatabaseConfig{

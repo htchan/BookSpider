@@ -22,7 +22,7 @@ type APIConfig struct {
 	ConfigDirectory    string                `env:"CONFIG_DIRECTORY,required" validate:"dir"`
 }
 
-type BatchConfig struct {
+type WorkerConfig struct {
 	MaxWorkingThreads  int                   `env:"MAX_WORKING_THREADS" validate:"min=1"`
 	AvailableSiteNames []string              `env:"BATCH_AVAILABLE_SITES,required" validate:"min=1,dive,min=1"`
 	SiteConfigs        map[string]SiteConfig `yaml:"sites" validate:"dive"`
@@ -93,8 +93,8 @@ func (conf *APIConfig) Validate() error {
 	return validator.New().Struct(conf)
 }
 
-func LoadWorkerConfig() (*BatchConfig, error) {
-	var conf BatchConfig
+func LoadWorkerConfig() (*WorkerConfig, error) {
+	var conf WorkerConfig
 
 	loadConfigFuncs := []func() error{
 		func() error { return env.Parse(&conf) },
@@ -141,6 +141,6 @@ func LoadWorkerConfig() (*BatchConfig, error) {
 	return &conf, nil
 }
 
-func (conf *BatchConfig) Validate() error {
+func (conf *WorkerConfig) Validate() error {
 	return validator.New().Struct(conf)
 }
