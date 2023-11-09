@@ -60,9 +60,15 @@ create_migrate:
 	migrate create -ext sql -dir migrations $(NAME)
 
 
-include ../.env.db
-export $(shell sed 's/=.*//' ../.env.db)
+define setup_env
+	$(eval ENV_FILE := ../.env.db)
+	@echo " - setup env $(ENV_FILE)"
+	$(eval include ../.env.db)
+	$(eval export sed 's/=.*//' ../.env.db)
+endef
+
 sqlc:
+	${call setup_env}
 	PGPASSWORD=${PSQL_PASSWORD} pg_dump \
 		-h ${PSQL_HOST} -p ${PSQL_PORT} -U ${PSQL_USER} -d ${PSQL_NAME} \
 		-t books -t writers -t errors --schema-only \
