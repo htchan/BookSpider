@@ -114,6 +114,9 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 					Msg("update book failed")
 			}
 		}(&bk)
+
+		// give chance to others service running at the same time
+		time.Sleep(time.Millisecond)
 	}
 
 	wg.Wait()
@@ -181,6 +184,9 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 				errorCount.Store(0)
 			}
 		}(i)
+
+		// give chance to others service running at the same time
+		time.Sleep(time.Millisecond)
 	}
 
 	wg.Wait()
@@ -203,6 +209,9 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 				errorCount.Store(0)
 			}
 		}(i)
+
+		// give chance to others service running at the same time
+		time.Sleep(time.Millisecond)
 	}
 
 	wg.Wait()
@@ -339,6 +348,9 @@ func (s *ServiceImpl) Download(ctx context.Context) error {
 				log.Error().Err(err).Str("site", s.name).Int("bk_id", bk.ID).Str("bk_hash_code", bk.FormatHashCode()).Msg("download book failed")
 			}
 		}(&bk)
+
+		// give chance to others service running at the same time
+		time.Sleep(time.Millisecond)
 	}
 
 	wg.Wait()
