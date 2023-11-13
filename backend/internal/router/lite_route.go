@@ -6,7 +6,7 @@ import (
 	"github.com/htchan/BookSpider/internal/service"
 )
 
-func AddLiteRoutes(router chi.Router, conf config.APIConfig, services map[string]service.Service) {
+func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service) {
 	router.Route(conf.LiteRoutePrefix, func(router chi.Router) {
 		router.Use(SetUriPrefixMiddleware(conf.LiteRoutePrefix))
 

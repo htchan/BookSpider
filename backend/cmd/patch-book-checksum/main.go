@@ -109,7 +109,7 @@ func main() {
 		sema.Acquire(ctx, 1)
 		var src WriterSource
 		err := writerRows.Scan(&src.ID, &src.Name)
-		fmt.Println(src.ID)
+		fmt.Println("writer", src.ID)
 		go func(src WriterSource) {
 			defer writerWg.Done()
 			defer sema.Release(1)

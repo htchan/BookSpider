@@ -30,7 +30,7 @@ func main() {
 
 	zerolog.TimeFieldFormat = "2006-01-02T15:04:05.99999Z07:00"
 
-	conf, confErr := config.LoadConfig()
+	conf, confErr := config.LoadWorkerConfig()
 	if confErr != nil {
 		log.Error().Err(confErr).Msg("load backend config")
 		return
@@ -68,7 +68,7 @@ func main() {
 	// 	services[siteName] = serv
 	// }
 
-	services := common.LoadServices(conf.BatchConfig.AvailableSiteNames, db, conf)
+	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, int64(conf.MaxWorkingThreads))
 
 	// loop all sites by calling process
 	var wg sync.WaitGroup

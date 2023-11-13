@@ -89,7 +89,7 @@ func OperateBook(serv service_new.Service, bk *model.Book, operation string) err
 }
 
 func main() {
-	conf, err := config.LoadConfig()
+	conf, err := config.LoadWorkerConfig()
 	if err != nil {
 		log.Fatalf("load backend config: %v", err)
 		return
@@ -109,9 +109,9 @@ func main() {
 	defer db.Close()
 
 	ctx := context.Background()
-	publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
+	publicSema := semaphore.NewWeighted(int64(conf.MaxWorkingThreads))
 	services := make(map[string]service_new.Service)
-	for _, siteName := range conf.BatchConfig.AvailableSiteNames {
+	for _, siteName := range conf.AvailableSiteNames {
 
 		serv, err := service_new.LoadService(
 			siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,

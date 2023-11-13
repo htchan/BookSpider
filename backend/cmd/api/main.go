@@ -31,7 +31,7 @@ func main() {
 
 	zerolog.TimeFieldFormat = "2006-01-02T15:04:05.99999Z07:00"
 
-	conf, confErr := config.LoadConfig()
+	conf, confErr := config.LoadAPIConfig()
 	if confErr != nil {
 		log.Error().Err(confErr).Msg("load backend config")
 		return
@@ -67,16 +67,16 @@ func main() {
 
 	// 	services[siteName] = serv
 	// }
-	services := common.LoadServices(conf.APIConfig.AvailableSiteNames, db, conf)
+	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, 1)
 
 	// load routes
 	r := chi.NewRouter()
 	// if conf.APIConfig.ContainsRoute(config.RouteAPIKey) {
-	router.AddAPIRoutes(r, conf.APIConfig, services)
+	router.AddAPIRoutes(r, conf, services)
 	// }
 
 	// if backendConfig.ContainsRoute(config.RouteLiteKey) {
-	router.AddLiteRoutes(r, conf.APIConfig, services)
+	router.AddLiteRoutes(r, conf, services)
 	// }
 
 	server := http.Server{
