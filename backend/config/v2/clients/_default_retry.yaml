@@ -11,7 +11,11 @@ default_retry_config: &default_retry_config
   #   weight: 100
   #   pause_interval: 1s
   #   pause_interval_type: linear
-  - type: error
+  - type: timeout
+    weight: 100
+    pause_interval: 1s
+    pause_interval_type: linear
+  - type: connection-reset
     weight: 100
     pause_interval: 1s
     pause_interval_type: linear

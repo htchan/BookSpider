@@ -123,7 +123,7 @@ sites:
   uukanshu:
     <<: *uukanshu_selector
     client: *uukanshu_client
-    max_threads: 1000
+    max_threads: 1500
     request_timeout: 30s
     circuit_breaker:
       max_fail_count: 1000
@@ -137,5 +137,5 @@ sites:
     backup_directory: /backup/book_spider
 
     max_explore_error: 100
-    max_download_concurrency: 5
+    max_download_concurrency: 20
     update_date_layout: null

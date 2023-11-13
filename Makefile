@@ -1,4 +1,4 @@
-.PHONY: frontend backend controller build
+.PHONY: frontend backend controller build start
 
 service ?= all
 
@@ -30,3 +30,7 @@ api:
 ## batch: deploy batch container
 worker:
 	docker compose up -d --force-recreate worker
+
+start:
+	docker compose pull api worker
+	docker compose up -d api worker
