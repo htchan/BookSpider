@@ -2,15 +2,18 @@ FROM golang:1.21.0-alpine3.18 as builder
 
 WORKDIR /go/src/github.com/htchan/BookSpider
 
-COPY ./go.mod ./go.sum .
+RUN go env -w GOMODCACHE=/root/.cache/go-build
 
-RUN --mount=type=cache,target=$GOPATH/pkg \
+RUN --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    --mount=type=cache,target=/root/.cache/go-build \
     apk add gcc musl-dev libc-dev ; go mod download -x
 
-COPY ./internal ./internal
-COPY ./cmd/api ./cmd/api
-
-RUN --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    --mount=type=bind,source=internal,target=internal \
+    --mount=type=bind,source=cmd,target=cmd \
+    --mount=type=cache,target=/root/.cache/go-build \
     go build -v ./cmd/api
 
 
@@ -20,4 +23,4 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /go/src/github.com/htchan/BookSpider/api .
 
-ENTRYPOINT ["/usr/src/app/api"]
+CMD "/usr/src/app/api"

@@ -70,7 +70,6 @@ services:
             - ./backend/assets/.env.worker
         networks:
             - database
-        command: sh -c "crond && tail -f /dev/null"
 
     console:
         build: 
