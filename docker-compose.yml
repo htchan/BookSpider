@@ -3,9 +3,7 @@ version: "3.7"
 services:
     #TODO: build image and push to ghcr
     api:
-        build: 
-            context: ./backend
-            dockerfile: ./build/Dockerfile.api
+        image: ghcr.io/htchan/book-spider:api-latest
         deploy:
             resources:
                 limits:
@@ -49,9 +47,7 @@ services:
     
     #TODO: build image and push to ghcr
     worker:
-        build: 
-            context: ./backend
-            dockerfile: ./build/Dockerfile.worker
+        image: ghcr.io/htchan/book-spider:worker-latest
         deploy:
             resources:
                 limits:

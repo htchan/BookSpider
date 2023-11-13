@@ -13,7 +13,7 @@ backend-%:
 
 ## build service=<service>: build docker image of specified service (default all)
 build:
-	DOCKER_BUILDKIT=1 docker-compose --profile ${service} build
+	docker buildx bake backend
 
 ## build_flutter: build the image for compile flutter frontend
 build_flutter:
@@ -21,20 +21,12 @@ build_flutter:
 
 ## frontend: compile flutter frontend
 frontend:
-	docker-compose --profile frontend up
+	docker compose --profile frontend up
 
 ## backend: deploy backend container
-backend:
-	docker-compose --profile backend up -d
-
-## controller: deploy controller container
-console:
-	command=${command} params="${params}" docker-compose --profile console up --force-recreate
+api:
+	docker compose up -d api
 
 ## batch: deploy batch container
-batch:
-	docker-compose --profile batch up -d --force-recreate
-
-## test: deploy test container
-test:
-	docker-compose --profile test up
+worker:
+	docker compose up -d --force-recreate worker
