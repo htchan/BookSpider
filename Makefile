@@ -21,12 +21,12 @@ build_flutter:
 
 ## frontend: compile flutter frontend
 frontend:
-	docker-compose --profile frontend up
+	docker compose --profile frontend up
 
 ## backend: deploy backend container
 api:
-	docker-compose up -d api
+	docker compose up -d api
 
 ## batch: deploy batch container
 worker:
-	docker-compose up -d --force-recreate worker
+	docker compose up -d --force-recreate worker
