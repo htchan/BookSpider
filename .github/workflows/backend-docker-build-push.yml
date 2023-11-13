@@ -1,0 +1,43 @@
+name: Push Docker Image
+run-name: ${{github.actor}} trigger docker image build and push for BE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Build-Push-Backend-Image:
+    if: contains('["htchan"]', github.actor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Log in Container Registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        env:
+          REGISTRY: ghcr.io
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Go build Cache for docker
+        uses: actions/cache@v3
+        with:
+          path: go-build-cache
+          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+      - name: Inject go-build-cache-to-docker
+        uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+        with:
+          cache-resource: go-build-cache
+      - name: Build and Push
+        uses: docker/bake-action@v4
+        env:
+          BAKE_CI: true
+          HASH: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        with:
+          targets: backend
+          files: ./docker-bake.hcl
+
