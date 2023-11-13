@@ -52,7 +52,7 @@ func (serv *ServiceImp) BookGroup(id int, hash string) (*model.Book, *model.Book
 		}
 	}
 
-	groupIDs := make([]string, len(group), 0)
+	groupIDs := make([]string, 0, len(group))
 	for _, bk := range group {
 		groupIDs = append(groupIDs, bk.String())
 	}
