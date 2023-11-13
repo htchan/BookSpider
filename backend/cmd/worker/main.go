@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/htchan/BookSpider/internal/common"
 	"github.com/htchan/BookSpider/internal/config/v2"
@@ -12,6 +13,22 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+func CalculateNextRunTime() time.Time {
+	result := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 1, 0)
+	result = time.Date(result.Year(), result.Month(), 1, 20, 0, 0, 0, time.UTC)
+
+	if result.Weekday() != time.Friday {
+		nDaysLater := int(time.Friday - result.Weekday())
+		if nDaysLater < 0 {
+			nDaysLater += 7
+		}
+
+		result = result.AddDate(0, 0, nDaysLater)
+	}
+
+	return result
+}
 
 func main() {
 	outputPath := os.Getenv("OUTPUT_PATH")
@@ -52,41 +69,29 @@ func main() {
 
 	defer db.Close()
 
-	// ctx := context.Background()
-	// publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
-	// services := make(map[string]service_new.Service)
-	// for _, siteName := range conf.BatchConfig.AvailableSiteNames {
-
-	// 	serv, loadServErr := service_new.LoadService(
-	// 		siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
-	// 	)
-	// 	if loadServErr != nil {
-	// 		log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
-	// 		return
-	// 	}
-
-	// 	services[siteName] = serv
-	// }
-
 	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, int64(conf.MaxWorkingThreads))
 
 	// loop all sites by calling process
 	var wg sync.WaitGroup
-	log.Log().Msg("start regular batch process")
 
-	for _, serv := range services {
-		serv := serv
-		wg.Add(1)
-		go func(serv service.Service) {
-			defer wg.Done()
-			ctx := log.Logger.WithContext(context.Background())
-			processErr := serv.Process(ctx)
-			if processErr != nil {
-				log.Error().Err(processErr).Str("site", serv.Name()).Msg("process failed")
-			}
-		}(serv)
+	for true {
+		time.Sleep(time.Until(CalculateNextRunTime()))
+		log.Log().Msg("start regular batch process")
+
+		for _, serv := range services {
+			serv := serv
+			wg.Add(1)
+			go func(serv service.Service) {
+				defer wg.Done()
+				ctx := log.Logger.WithContext(context.Background())
+				processErr := serv.Process(ctx)
+				if processErr != nil {
+					log.Error().Err(processErr).Str("site", serv.Name()).Msg("process failed")
+				}
+			}(serv)
+		}
+
+		wg.Wait()
+		log.Log().Msg("completed regular batch process")
 	}
-
-	wg.Wait()
-	log.Log().Msg("completed regular batch process")
 }
