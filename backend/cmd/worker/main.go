@@ -19,10 +19,6 @@ func CalculateNextRunTime(conf *config.ScheduleConfig) time.Time {
 
 	for true {
 		result = time.Date(result.Year(), result.Month(), conf.InitDate, conf.InitHour, conf.InitMinute, 0, 0, time.UTC)
-		if time.Now().Before(result) {
-			return result
-		}
-
 		if result.Weekday() != conf.MatchWeekday {
 			nDaysLater := int(conf.MatchWeekday - result.Weekday())
 			if nDaysLater < 0 {
