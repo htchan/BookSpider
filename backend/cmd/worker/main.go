@@ -16,9 +16,9 @@ import (
 
 func CalculateNextRunTime(conf *config.ScheduleConfig) time.Time {
 	result := time.Now().UTC().Truncate(24 * time.Hour)
-	result = time.Date(result.Year(), result.Month(), conf.InitDate, conf.InitHour, conf.InitMinute, 0, 0, time.UTC)
 
 	for true {
+		result = time.Date(result.Year(), result.Month(), conf.InitDate, conf.InitHour, conf.InitMinute, 0, 0, time.UTC)
 		if time.Now().Before(result) {
 			return result
 		}
