@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -27,6 +28,7 @@ type WorkerConfig struct {
 	AvailableSiteNames []string              `env:"BATCH_AVAILABLE_SITES,required" validate:"min=1,dive,min=1"`
 	SiteConfigs        map[string]SiteConfig `yaml:"sites" validate:"dive"`
 	DatabaseConfig     DatabaseConfig        `yaml:"database"`
+	ScheduleConfig     ScheduleConfig        `yaml:"schedule"`
 	ConfigDirectory    string                `env:"CONFIG_DIRECTORY,required" validate:"dir"`
 }
 
@@ -99,6 +101,7 @@ func LoadWorkerConfig() (*WorkerConfig, error) {
 	loadConfigFuncs := []func() error{
 		func() error { return env.Parse(&conf) },
 		func() error { return env.Parse(&conf.DatabaseConfig) },
+		func() error { return env.Parse(&conf.ScheduleConfig) },
 		func() error {
 			var referenceData []byte
 
@@ -142,5 +145,14 @@ func LoadWorkerConfig() (*WorkerConfig, error) {
 }
 
 func (conf *WorkerConfig) Validate() error {
-	return validator.New().Struct(conf)
+	validStruct := validator.New().Struct(conf)
+	if validStruct != nil {
+		return validStruct
+	}
+
+	if conf.ScheduleConfig.IntervalMonth+conf.ScheduleConfig.IntervalMonth <= 0 {
+		return errors.New("interval is zero")
+	}
+
+	return nil
 }

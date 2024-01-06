@@ -14,17 +14,29 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CalculateNextRunTime() time.Time {
-	result := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 1, 0)
-	result = time.Date(result.Year(), result.Month(), 1, 20, 0, 0, 0, time.UTC)
+func CalculateNextRunTime(conf *config.ScheduleConfig) time.Time {
+	result := time.Now().UTC().Truncate(24 * time.Hour)
+	result = time.Date(result.Year(), result.Month(), conf.InitDate, conf.InitHour, conf.InitMinute, 0, 0, time.UTC)
 
-	if result.Weekday() != time.Friday {
-		nDaysLater := int(time.Friday - result.Weekday())
-		if nDaysLater < 0 {
-			nDaysLater += 7
+	for true {
+		if time.Now().Before(result) {
+			return result
 		}
 
-		result = result.AddDate(0, 0, nDaysLater)
+		if result.Weekday() != conf.MatchWeekday {
+			nDaysLater := int(conf.MatchWeekday - result.Weekday())
+			if nDaysLater < 0 {
+				nDaysLater += 7
+			}
+
+			result = result.AddDate(0, 0, nDaysLater)
+		}
+
+		if time.Now().Before(result) {
+			return result
+		}
+
+		result = result.AddDate(0, conf.IntervalMonth, conf.IntervalDay)
 	}
 
 	return result
@@ -75,7 +87,9 @@ func main() {
 	var wg sync.WaitGroup
 
 	for true {
-		time.Sleep(time.Until(CalculateNextRunTime()))
+		until := CalculateNextRunTime(&conf.ScheduleConfig)
+		log.Log().Time("scheduled_at", until).Msg("start sleep")
+		time.Sleep(time.Until(until))
 		log.Log().Msg("start regular batch process")
 
 		for _, serv := range services {
