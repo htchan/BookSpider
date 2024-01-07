@@ -728,14 +728,15 @@ func (q *Queries) ListBooksByTitleWriter(ctx context.Context, arg ListBooksByTit
 }
 
 const listBooksForDownload = `-- name: ListBooksForDownload :many
-select books.site, books.id, books.hash_code, books.title,
+select distinct on (books.site, books.id) 
+  books.site, books.id, books.hash_code, books.title,
   books.writer_id, coalesce(writers.name, ''), books.type,
   books.update_date, books.update_chapter, 
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1 and books.status='END' and books.is_downloaded=false
-order by books.id desc, books.hash_code desc
+order by books.site, books.id desc, books.hash_code desc
 `
 
 type ListBooksForDownloadRow struct {
@@ -798,7 +799,7 @@ select distinct on (books.site, books.id)
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
 where books.site=$1
-order by books.id desc, books.hash_code desc
+order by books.site, books.id desc, books.hash_code desc
 `
 
 type ListBooksForUpdateRow struct {
