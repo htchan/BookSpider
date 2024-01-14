@@ -64,6 +64,11 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 		date = date.AddDate(0, 0, -day)
 	}
 
+	// update the date to beginning of that year if the book is older than a year.
+	if time.Since(date) > 365*36*time.Hour {
+		date = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
 	// parse chapter
 	chapter := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookChapterGoquerySelector))
 	if chapter == "" {
