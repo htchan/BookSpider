@@ -9,6 +9,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
+	"github.com/rs/zerolog"
 )
 
 func GeneralInfoAPIHandler(services map[string]service.Service) http.HandlerFunc {
@@ -27,6 +28,7 @@ func SiteInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
 	title := req.Context().Value(TITLE_KEY).(string)
 	writer := req.Context().Value(WRITER_KEY).(string)
@@ -35,6 +37,7 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 
 	bks, err := serv.QueryBooks(req.Context(), title, writer, limit, offset)
 	if err != nil {
+		logger.Error().Err(err).Msg("query books failed")
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
 		json.NewEncoder(res).Encode(map[string][]model.Book{"books": bks})
@@ -42,11 +45,13 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
 	limit := req.Context().Value(LIMIT_KEY).(int)
 
 	bks, err := serv.RandomBooks(req.Context(), limit)
 	if err != nil {
+		logger.Error().Err(err).Msg("random books railed")
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
 		json.NewEncoder(res).Encode(map[string][]model.Book{"books": bks})
@@ -59,10 +64,12 @@ func BookInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {
+		logger.Error().Err(err).Msg("book content failed")
 		json.NewEncoder(res).Encode(map[string]string{"error": err.Error()})
 	} else {
 		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
