@@ -9,8 +9,10 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/service"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,6 +33,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(res http.ResponseWriter, req *http.Request) {
+				logger := zerolog.Ctx(req.Context())
 				siteName := chi.URLParam(req, "siteName")
 				availableSites := make([]string, 0, len(services))
 				for key := range services {
@@ -38,7 +41,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 				}
 				serv, ok := services[siteName]
 				if !ok {
-					log.
+					logger.
 						Error().
 						Err(errors.New("site not found")).
 						Str("site", siteName).
@@ -56,6 +59,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 func GetBookMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {
+			logger := zerolog.Ctx(req.Context())
 			idHash := chi.URLParam(req, "idHash")
 			serv := req.Context().Value(SERV_KEY).(service.Service)
 			var (
@@ -73,7 +77,7 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 				bk, group, err = serv.BookGroup(req.Context(), id, hash)
 			}
 			if err != nil {
-				log.
+				logger.
 					Error().
 					Err(err).
 					Str("site", serv.Name()).
@@ -120,12 +124,14 @@ func GetPageParamsMiddleware(next http.Handler) http.Handler {
 func ZerologMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {
-			log.
-				Info().
+			requestUUID := uuid.New()
+			logger := log.With().
+				Str("request_uuid", requestUUID.String()).
 				Str("method", req.Method).
-				Str("endpoint", req.RequestURI).
-				Msg("API called")
-			next.ServeHTTP(res, req)
+				Str("endpoint", req.RequestURI).Logger()
+			logger.Info().Msg("API called")
+
+			next.ServeHTTP(res, req.WithContext(logger.WithContext(req.Context())))
 		},
 	)
 }

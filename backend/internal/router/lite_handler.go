@@ -9,7 +9,7 @@ import (
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 //go:embed templates/*
@@ -21,6 +21,7 @@ var customTemplateFunc = template.FuncMap{
 
 func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		logger := zerolog.Ctx(req.Context())
 		uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
 		t, err :=
 			new(template.Template).
@@ -28,7 +29,7 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 				ParseFS(files, "templates/sites.html", "templates/components/site-card.html")
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
-			log.Error().Err(err).Msg("general lite handler parse fs fail")
+			logger.Error().Err(err).Msg("general lite handler parse fs fail")
 			res.Write([]byte(err.Error()))
 			return
 		}
@@ -38,19 +39,20 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 		}{Services: services, UriPrefix: uriPrefix})
 		if execErr != nil {
 			res.WriteHeader(http.StatusInternalServerError)
-			log.Error().Err(execErr).Msg("compute response failed")
+			logger.Error().Err(execErr).Msg("compute response failed")
 		}
 	}
 }
 
 func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/site.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Error().Err(err).Msg("site lite handler parse fs fail")
+		logger.Error().Err(err).Msg("site lite handler parse fs fail")
 		res.Write([]byte(err.Error()))
 		return
 	}
@@ -67,18 +69,19 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		log.Error().Err(execErr).Msg("compute response failed")
+		logger.Error().Err(execErr).Msg("compute response failed")
 	}
 }
 
 func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Error().Err(err).Msg("search lite handler parse fs fail")
+		logger.Error().Err(err).Msg("search lite handler parse fs fail")
 		return
 	}
 
@@ -115,19 +118,20 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		log.Error().Err(execErr).Msg("compute response failed")
+		logger.Error().Err(execErr).Msg("compute response failed")
 		res.Write([]byte(execErr.Error()))
 	}
 }
 
 func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Error().Err(err).Msg("random lite handler parse fs fail")
+		logger.Error().Err(err).Msg("random lite handler parse fs fail")
 		return
 	}
 
@@ -156,18 +160,19 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		log.Error().Err(execErr).Msg("compute response failed")
+		logger.Error().Err(execErr).Msg("compute response failed")
 	}
 }
 
 func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/book.html", "templates/components/book-card.html")
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		log.Error().Err(err).Msg("book lite handler parse fs fail")
+		logger.Error().Err(err).Msg("book lite handler parse fs fail")
 		return
 	}
 
@@ -188,17 +193,18 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
-		log.Error().Err(execErr).Msg("compute response failed")
+		logger.Error().Err(execErr).Msg("compute response failed")
 	}
 }
 
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
+	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {
 		res.WriteHeader(500)
-		log.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
+		logger.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
 		return
 	} else {
 		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
