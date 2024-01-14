@@ -11,11 +11,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/htchan/BookSpider/internal/model"
 	serv "github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -38,13 +38,13 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 		return fmt.Errorf("parse book page failed: %w", err)
 	}
 
-	logger := zerolog.Ctx(ctx).With().
-		Int("bk_id", bk.ID).
-		Str("bk_hash_code", bk.FormatHashCode()).
-		Str("bk_title", bkInfo.Title).
-		Logger()
+	logger := zerolog.Ctx(ctx).With().Str("bk_title", bkInfo.Title).Logger()
 
 	if isNewBook(bk, bkInfo) {
+		logger.Debug().
+			Interface("existing_book", bk).
+			Interface("new_book", bkInfo).
+			Msg("Found new book")
 		bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Writer, bkInfo.Type
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
@@ -58,9 +58,12 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr)
 		}
-
-		logger.Debug().Msg("new book found")
 	} else if isBookUpdated(bk, bkInfo) {
+		logger.Debug().
+			Str("old_updated_data", bk.UpdateDate).Str("new_updated_data", bkInfo.UpdateDate).
+			Str("old_updated_chapter", bk.UpdateChapter).Str("new_updated_chapter", bkInfo.UpdateChapter).
+			Msg("Found updated book")
+
 		if bk.Status == model.StatusError {
 			bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Writer, bkInfo.Type
 		}
@@ -80,8 +83,6 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr)
 		}
-
-		logger.Debug().Msg("book updated")
 	} else {
 		logger.Debug().Msg("book not updated")
 	}
@@ -106,11 +107,14 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 			defer wg.Done()
 			defer s.sema.Release(1)
 
-			err := s.UpdateBook(ctx, bk)
+			logger := zerolog.Ctx(ctx).With().
+				Int("bk_id", bk.ID).
+				Str("bk_hash_code", bk.FormatHashCode()).
+				Str("worker_id", uuid.New().String()).
+				Logger()
+			err := s.UpdateBook(logger.WithContext(ctx), bk)
 			if err != nil {
-				zerolog.Ctx(ctx).Error().Err(err).
-					Int("bk_id", bk.ID).
-					Str("bk_hash_code", bk.FormatHashCode()).
+				logger.Error().Err(err).
 					Msg("update book failed")
 			}
 		}(&bk)
@@ -135,18 +139,12 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
 		s.rpo.CreateBook(bk)
 	}
 
-	logger := zerolog.Ctx(ctx).With().
-		Int("bk_id", bk.ID).
-		Str("bk_hash_code", bk.FormatHashCode()).
-		Logger()
-
 	err := s.UpdateBook(ctx, bk)
 	if err != nil {
-		logger.Error().Err(err).Msg("explore book fail")
 		bk.Error = err
 		saveErr := s.rpo.SaveError(bk, bk.Error)
 		if saveErr != nil {
-			return fmt.Errorf("save error fail: %w", saveErr)
+			return fmt.Errorf("explore book fail: %w; save error fail: %w", err, saveErr)
 		}
 
 		return fmt.Errorf("explore book fail: %w", err)
@@ -177,8 +175,15 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 				return
 			}
 
-			err = s.ExploreBook(ctx, bk)
+			logger := zerolog.Ctx(ctx).With().
+				Str("worker_id", uuid.New().String()).
+				Int("bk_id", bk.ID).
+				Str("bk_hash_code", bk.FormatHashCode()).
+				Logger()
+			err = s.ExploreBook(logger.WithContext(ctx), bk)
 			if err != nil {
+				logger.Error().Err(err).
+					Msg("explore book failed")
 				errorCount.Add(1)
 			} else {
 				errorCount.Store(0)
@@ -202,8 +207,16 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 			defer s.sema.Release(1)
 
 			bk := model.NewBook(s.name, i)
-			err := s.ExploreBook(ctx, &bk)
+			logger := zerolog.Ctx(ctx).With().
+				Str("worker_id", uuid.New().String()).
+				Int("bk_id", bk.ID).
+				Str("bk_hash_code", bk.FormatHashCode()).
+				Logger()
+
+			err := s.ExploreBook(logger.WithContext(ctx), &bk)
 			if err != nil {
+				logger.Error().Err(err).
+					Msg("explore book failed")
 				errorCount.Add(1)
 			} else {
 				errorCount.Store(0)
@@ -248,7 +261,7 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 		return serv.ErrBookAlreadyDownloaded
 	}
 
-	logger := zerolog.Ctx(ctx).With().Str("site", s.name).Int("bk_id", bk.ID).Str("bk_hash_code", bk.FormatHashCode()).Logger()
+	logger := zerolog.Ctx(ctx)
 
 	logger.Info().Msg("get chapter list")
 
@@ -277,11 +290,14 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 			defer wg.Done()
 			defer s.sema.Release(1)
 
-			err := s.downloadChapter(ctx, ch)
+			chapterLogger := logger.With().
+				Str("chapter_worker_id", uuid.New().String()).
+				Str("chapter_url", ch.URL).
+				Logger()
+			err := s.downloadChapter(chapterLogger.WithContext(ctx), ch)
 			if err != nil {
 				failedChapterCount += 1
-				logger.Error().Err(err).
-					Str("chapter_url", ch.URL).
+				chapterLogger.Error().Err(err).
 					Str("chapter_title", ch.Title).
 					Msg("download chapter failed")
 			}
@@ -297,19 +313,19 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 	logger.Info().Msg("save chapters")
 	file, err := os.Create(s.bookFileLocation(bk))
 	if err != nil {
-		return fmt.Errorf("save book fail: %w", err)
+		return fmt.Errorf("create file to save chapters fail: %w", err)
 	}
 	defer file.Close()
 
 	_, err = file.WriteString(bk.HeaderInfo())
 	if err != nil {
-		return fmt.Errorf("save book fail: %w", err)
+		return fmt.Errorf("write book header in save chapter fail: %w", err)
 	}
 
 	for _, chapter := range chapters {
 		_, err := file.WriteString(chapter.ContentString())
 		if err != nil {
-			return fmt.Errorf("save book fail: %w", err)
+			return fmt.Errorf("write chapter %s in save chapters fail: %w", chapter.URL, err)
 		}
 	}
 
@@ -317,7 +333,7 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 	bk.IsDownloaded = true
 	err = s.rpo.UpdateBook(bk)
 	if err != nil {
-		return fmt.Errorf("update book download fail: %w", err)
+		return fmt.Errorf("update book is_downloaded fail: %w", err)
 	}
 
 	return nil
@@ -343,9 +359,15 @@ func (s *ServiceImpl) Download(ctx context.Context) error {
 			defer se.Release(1)
 			defer s.sema.Release(1)
 
-			err := s.DownloadBook(ctx, bk)
+			logger := zerolog.Ctx(ctx).With().
+				Str("worker_id", uuid.New().String()).
+				Int("bk_id", bk.ID).
+				Str("bk_hash_code", bk.FormatHashCode()).
+				Logger()
+
+			err := s.DownloadBook(logger.WithContext(ctx), bk)
 			if err != nil {
-				log.Error().Err(err).Str("site", s.name).Int("bk_id", bk.ID).Str("bk_hash_code", bk.FormatHashCode()).Msg("download book failed")
+				logger.Error().Err(err).Msg("download book failed")
 			}
 		}(&bk)
 
