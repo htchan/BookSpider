@@ -5,7 +5,7 @@ import (
 	"time"
 
 	client "github.com/htchan/BookSpider/internal/client/v2"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 type RetryClient struct {
@@ -35,6 +35,7 @@ func (c *RetryClient) Get(ctx context.Context, url string) (string, error) {
 		retryWeight = 0
 		body        string
 		err         error
+		logger      = zerolog.Ctx(ctx).With().Str("url", url).Str("client", "RetryClient").Logger()
 	)
 
 	for i := 0; retryWeight < c.conf.MaxRetryWeight; i++ {
@@ -48,12 +49,11 @@ func (c *RetryClient) Get(ctx context.Context, url string) (string, error) {
 		for _, check := range c.RetryChecks {
 			shouldRetry, weight, pauseDuration = check(i, body, err)
 			if err != nil || shouldRetry {
-				log.Debug().
-					Str("url", url).Int("count", i).
-					Bool("should_retry", shouldRetry).
+				logger.Debug().Int("count", i).
+					Err(err).Bool("should_retry", shouldRetry).
 					Int("retry_weight", retryWeight).
 					Str("pause_duration", pauseDuration.String()).
-					Msg("request result")
+					Msg("request failed")
 			}
 
 			if shouldRetry {
