@@ -1,10 +1,7 @@
 package uukanshu
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
-	"time"
 
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +23,7 @@ func TestParser_ParseBook(t *testing.T) {
 				Title:         "从零开始",
 				Writer:        "雷云风暴",
 				Type:          "网游竞技小说",
-				UpdateDate:    strconv.Itoa(time.Now().Year()-7) + "-01-01",
+				UpdateDate:    "0000-01-01",
 				UpdateChapter: "第二十三卷 第6章 放飞希望（完结篇）",
 			},
 			wantError: nil,
@@ -44,7 +41,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate:    strconv.Itoa(time.Now().AddDate(0, -5, 0).Year()) + "-" + fmt.Sprintf("%02d", time.Now().AddDate(0, -5, 0).Month()) + "-01",
+				UpdateDate:    "0000-01-01",
 				UpdateChapter: "chapter name",
 			},
 			wantError: nil,
@@ -62,7 +59,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate: time.Now().AddDate(0, 0, -5).Format(time.DateOnly), UpdateChapter: "chapter name",
+				UpdateDate: "0000-01-01", UpdateChapter: "chapter name",
 			},
 			wantError: nil,
 		},
@@ -79,7 +76,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Writer: "author", Type: "type",
-				UpdateDate: time.Now().Format(time.DateOnly), UpdateChapter: "chapter name",
+				UpdateDate: "0000-01-01", UpdateChapter: "chapter name",
 			},
 			wantError: vendor.ErrBookTitleNotFound,
 		},
@@ -97,7 +94,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Type: "type",
-				UpdateDate: time.Now().Format(time.DateOnly), UpdateChapter: "chapter name",
+				UpdateDate: "0000-01-01", UpdateChapter: "chapter name",
 			},
 			wantError: vendor.ErrBookWriterNotFound,
 		},
@@ -114,7 +111,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Writer: "author",
-				UpdateDate: time.Now().Format(time.DateOnly), UpdateChapter: "chapter name",
+				UpdateDate: "0000-01-01", UpdateChapter: "chapter name",
 			},
 			wantError: vendor.ErrBookTypeNotFound,
 		},
@@ -130,7 +127,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate: time.Now().Format(time.DateOnly), UpdateChapter: "chapter name",
+				UpdateDate: "0000-01-01", UpdateChapter: "chapter name",
 			},
 			wantError: vendor.ErrBookDateNotFound,
 		},
@@ -147,14 +144,14 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &vendor.BookInfo{
 				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate: time.Now().Format(time.DateOnly),
+				UpdateDate: "0000-01-01",
 			},
 			wantError: vendor.ErrBookChapterNotFound,
 		},
 		{
 			name:      "all fields not found",
 			body:      "<data></data>",
-			want:      &vendor.BookInfo{UpdateDate: time.Now().Format(time.DateOnly)},
+			want:      &vendor.BookInfo{UpdateDate: "0000-01-01"},
 			wantError: vendor.ErrFieldsNotFound,
 		},
 	}
