@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -50,19 +49,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 		parseErr = errors.Join(parseErr, vendor.ErrBookDateNotFound)
 	}
 
-	date := time.Now().UTC().Truncate(24 * time.Hour)
-	if strings.Contains(dateStr, "年") {
-		yr, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "年")])
-		date = date.AddDate(-yr, 0, 0)
-		date = time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
-	} else if strings.Contains(dateStr, "月") {
-		mn, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "月")])
-		date = date.AddDate(0, -mn, 0)
-		date = time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
-	} else if strings.Contains(dateStr, "日") {
-		day, _ := strconv.Atoi(dateStr[:strings.Index(dateStr, "日")])
-		date = date.AddDate(0, 0, -day)
-	}
+	date := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	// parse chapter
 	chapter := vendor.GetGoqueryContentWithoutChildren(doc.Find(bookChapterGoquerySelector))
