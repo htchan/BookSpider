@@ -1,10 +1,13 @@
 package vendor
 
 import (
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/htchan/BookSpider/internal/model"
 )
 
 type BookInfo struct {
@@ -15,6 +18,7 @@ type BookInfo struct {
 	UpdateChapter string
 	// TODO: move update_date to udpate_datetime so we can save specific data to DB instead of a string
 	UpdateDateTime time.Time
+	IsEnd          bool
 }
 
 type ChapterListInfo struct {
@@ -96,4 +100,25 @@ func GetGoqueryContentWithChildren(s *goquery.Selection) string {
 	}
 
 	return strings.TrimSpace(s.Clone().Text())
+}
+
+func CheckChapterEnd(chapter string) bool {
+	for _, word := range model.ChapterEndKeywords {
+		if strings.Contains(chapter, word) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func CheckDateEnd(date string) bool {
+	re := regexp.MustCompile(`^\d{4}`)
+	validFormat := re.MatchString(date)
+	if !validFormat {
+		return false
+	}
+
+	return date < strconv.Itoa(time.Now().Year()-1)
+
 }
