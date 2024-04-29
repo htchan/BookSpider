@@ -8,7 +8,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 50Gi
+    storage: 100Mi
   accessModes:
     - ReadOnlyMany
   hostPath:
@@ -24,7 +24,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 50Gi
+    storage: 100Mi
   accessModes:
     - ReadOnlyMany
   hostPath:
@@ -40,7 +40,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 50Gi
+    storage: 10Gi
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -56,8 +56,8 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 50Gi
+    storage: 2000Gi
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /volumes/book-spider-data/data
+    path: /volumes-mnt/addition/download/Books

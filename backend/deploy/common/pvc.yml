@@ -7,10 +7,10 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-    - ReadWriteOnce # Sets read and write access
+    - ReadOnlyMany # Sets read and write access
   resources:
     requests:
-      storage: 50Gi # Sets volume size
+      storage: 100Mi # Sets volume size
   volumeName: book-spider.config-volume
 ---
 apiVersion: v1
@@ -22,10 +22,10 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-    - ReadWriteOnce # Sets read and write access
+    - ReadOnlyMany # Sets read and write access
   resources:
     requests:
-      storage: 50Gi # Sets volume size
+      storage: 100Mi # Sets volume size
   volumeName: book-spider.migrations-volume
 ---
 apiVersion: v1
@@ -37,10 +37,10 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-    - ReadWriteOnce # Sets read and write access
+    - ReadWriteMany # Sets read and write access
   resources:
     requests:
-      storage: 50Gi # Sets volume size
+      storage: 10Gi # Sets volume size
   volumeName: book-spider.log-volume
 ---
 apiVersion: v1
@@ -52,8 +52,8 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-    - ReadWriteOnce # Sets read and write access
+    - ReadWriteMany # Sets read and write access
   resources:
     requests:
-      storage: 50Gi # Sets volume size
+      storage: 2000Gi # Sets volume size
   volumeName: book-spider.data-volume
