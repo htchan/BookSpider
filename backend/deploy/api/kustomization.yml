@@ -29,3 +29,8 @@ secretGenerator:
   type: Opaque
   envs:
   - ./patch/.env
+configMapGenerator:
+- name: book-spider.fluent-bit.config
+  files:
+    - ./patch/fluent-bit-config/fluent-bit.conf
+    - ./patch/fluent-bit-config/parsers.conf

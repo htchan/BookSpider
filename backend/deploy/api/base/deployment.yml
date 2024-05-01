@@ -37,6 +37,27 @@ spec:
               name: book-spider-log-volume
             - mountPath: /books
               name: book-spider-data-volume
+        - name: book-spider-log-collector
+          image: grafana/fluent-bit-plugin-loki
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            limits:
+              memory: 30M
+            requests:
+              memory: 10M
+          args:
+            - "/fluent-bit/bin/fluent-bit"
+            - "-R"
+            - "/fluent-bit/etc/fluent-bit-config/parsers.conf"
+            - "-e"
+            - "/fluent-bit/bin/out_grafana_loki.so"
+            - "-c"
+            - "/fluent-bit/etc/fluent-bit-config/fluent-bit.conf"
+          volumeMounts:
+            - mountPath: /log
+              name: book-spider-log-volume
+            - mountPath: /fluent-bit/etc/fluent-bit-config
+              name: book-spider-flunt-bit-config-volume
       volumes:
         - name: book-spider-config-volume
           persistentVolumeClaim:
@@ -50,4 +71,7 @@ spec:
         - name: book-spider-data-volume
           persistentVolumeClaim:
             claimName: book-spider.data-claim
+        - name: book-spider-flunt-bit-config-volume
+          configMap:
+            name: book-spider.fluent-bit.config
       restartPolicy: Always
