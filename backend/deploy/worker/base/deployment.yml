@@ -33,8 +33,6 @@ spec:
               name: book-spider-config-volume
             - mountPath: /migrations
               name: book-spider-migrations-volume
-            - mountPath: /log
-              name: book-spider-log-volume
             - mountPath: /books
               name: book-spider-data-volume
       volumes:
@@ -44,9 +42,6 @@ spec:
         - name: book-spider-migrations-volume
           persistentVolumeClaim:
             claimName: book-spider.migrations-claim
-        - name: book-spider-log-volume
-          persistentVolumeClaim:
-            claimName: book-spider.log-claim
         - name: book-spider-data-volume
           persistentVolumeClaim:
             claimName: book-spider.data-claim

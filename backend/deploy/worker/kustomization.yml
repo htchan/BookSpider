@@ -8,17 +8,13 @@ metadata:
     project: book-spider
 resources:
   - ./base/deployment.yml
-  - ./base/service.yml
-  - ./base/ingress.yml
-  - ./base/pv.yml
-  - ./base/pvc.yml
 patches:
   - target:
       group: apps
       version: v1
       kind: Deployment
-      name: book-spider.api
-      labelSelector: "app=api,project=book-spider"
+      name: book-spider.worker
+      labelSelector: "app=worker,project=book-spider"
     path: ./patch/deployment.yml
 secretGenerator:
 - name: book-spider.worker.secret
