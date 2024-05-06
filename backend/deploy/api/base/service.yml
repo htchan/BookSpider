@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: book-spider-api-service
+  labels:
+    app: api
+    project: book-spider
+spec:
+  ports:
+    - protocol: TCP
+      port: 9427
+      targetPort: 9427
+      name: database
+  selector:
+    app: api
+    project: book-spider

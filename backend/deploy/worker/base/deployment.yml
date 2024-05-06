@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-spider.worker  # Sets Deployment name
+  labels:
+    app: worker
+    project: book-spider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        project: book-spider
+    spec:
+      containers:
+        - name: book-spider-worker
+          image: ghcr.io/htchan/book-spider:initial # Sets Image
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            limits:
+              memory: 500M
+            requests:
+              memory: 50M
+          envFrom:
+            - secretRef:
+                name: book-spider.worker.secret
+          volumeMounts:
+            - mountPath: /config
+              name: book-spider-config-volume
+            - mountPath: /migrations
+              name: book-spider-migrations-volume
+            - mountPath: /books
+              name: book-spider-data-volume
+      volumes:
+        - name: book-spider-config-volume
+          persistentVolumeClaim:
+            claimName: book-spider.config-claim
+        - name: book-spider-migrations-volume
+          persistentVolumeClaim:
+            claimName: book-spider.migrations-claim
+        - name: book-spider-data-volume
+          persistentVolumeClaim:
+            claimName: book-spider.data-claim
+      restartPolicy: Always
