@@ -22,9 +22,9 @@ spec:
           imagePullPolicy: "IfNotPresent"
           resources:
             limits:
-              memory: 50M
+              memory: 500M
             requests:
-              memory: 15M
+              memory: 50M
           envFrom:
             - secretRef:
                 name: book-spider.worker.secret
