@@ -13,7 +13,8 @@
       <p>{{ .Book.UpdateDate }}</p>
       <p>{{ .Book.UpdateChapter }}</p>
       {{ if .Book.IsDownloaded }}
-      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download">Downloaded</a>
+      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=txt">Download TXT</a>
+      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=epub">Download EPUB</a>
       {{ else }}
       <p>{{ .Book.Status }}</p>
       {{ end }}

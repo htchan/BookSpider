@@ -335,7 +335,8 @@ func TestBookLiteHandler(t *testing.T) {
 						<p>date</p>
 						<p>chapter</p>
 						
-						<a href="/lite/novel/sites/test/books/123-100/download">Downloaded</a>
+						<a href="/lite/novel/sites/test/books/123-100/download?format=txt">Download TXT</a>
+						<a href="/lite/novel/sites/test/books/123-100/download?format=epub">Download EPUB</a>
 						
 				</div>
 				<h2>Book Group</h2>

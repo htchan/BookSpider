@@ -27,6 +27,7 @@ const (
 	LIMIT_KEY      ContextKey = "limit"
 	OFFSET_KEY     ContextKey = "offset"
 	URI_PREFIX_KEY ContextKey = "uri_prefix"
+	FORMAT_KEY     ContextKey = "format"
 )
 
 func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
@@ -115,6 +116,19 @@ func GetPageParamsMiddleware(next http.Handler) http.Handler {
 
 			ctx := context.WithValue(req.Context(), LIMIT_KEY, perPage)
 			ctx = context.WithValue(ctx, OFFSET_KEY, offset)
+
+			next.ServeHTTP(res, req.WithContext(ctx))
+		},
+	)
+}
+func GetDownloadParamsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			format := req.URL.Query().Get("format")
+			if format == "" {
+				format = "txt"
+			}
+			ctx := context.WithValue(req.Context(), FORMAT_KEY, format)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},

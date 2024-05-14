@@ -4,8 +4,10 @@ import (
 	"embed"
 	"fmt"
 	"net/http"
+	"strings"
 	"text/template"
 
+	"github.com/htchan/BookSpider/internal/format/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
@@ -201,12 +203,29 @@ func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
+	formatStr := req.Context().Value(FORMAT_KEY).(string)
+
 	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {
 		res.WriteHeader(500)
 		logger.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
 		return
-	} else {
+	}
+
+	switch formatStr {
+	case "epub":
+		formatServ := format.NewService()
+		chapters, err := formatServ.ChaptersFromTxt(req.Context(), strings.NewReader(content))
+		if err != nil {
+			res.WriteHeader(500)
+			logger.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
+			return
+		}
+		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
+		res.Header().Set("Content-Type", "application/epub+zip; charset=utf-8")
+		res.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
+		formatServ.WriteBookEpub(req.Context(), bk, chapters, res)
+	default:
 		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
 		res.Header().Set("Content-Type", "text/txt; charset=utf-8")
 		res.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
