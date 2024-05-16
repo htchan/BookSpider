@@ -33,10 +33,19 @@ func (serv *serviceImpl) ChaptersFromTxt(ctx context.Context, reader io.Reader) 
 	chapters := make(model.Chapters, 0)
 	// look the remaining content from index 1 to find content
 	for i := 3; i < len(content); i++ {
-		if content[i] == "--------------------" {
+		if content[i] == model.CONTENT_SEP {
+			if content[i+1] == model.CONTENT_SEP && len(chapters) > 0 {
+				chapters[len(chapters)-1].Content += "\n"
+			}
 			continue
-		} else if i < len(content)-3 && content[i+1] == "--------------------" && content[i+3] != "--------------------" {
-			chapters = append(chapters, model.Chapter{Title: content[i], Index: len(chapters)})
+		} else if i < len(content)-3 && content[i+1] == model.CONTENT_SEP {
+			if len(chapters) > 0 && chapters[len(chapters)-1].Content == "" {
+				chapters[len(chapters)-1].Content += content[i] + "\n"
+			} else if len(chapters) > 0 && content[i+3] == model.CONTENT_SEP && content[i-1] != model.CONTENT_SEP {
+				chapters[len(chapters)-1].Content += content[i] + "\n"
+			} else {
+				chapters = append(chapters, model.Chapter{Title: content[i], Index: len(chapters)})
+			}
 		} else if len(chapters) > 0 {
 			chapters[len(chapters)-1].Content += content[i] + "\n"
 		}
