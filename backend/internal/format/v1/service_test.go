@@ -104,6 +104,99 @@ content 2
 			wantChapters: model.Chapters{},
 			wantError:    nil,
 		},
+		{
+			name: "happy flow/format 1 with one line content",
+			serv: &serviceImpl{},
+			reader: strings.NewReader(`title
+writer
+--------------------
+
+chapter 1
+--------------------
+content 1
+--------------------
+chapter 2
+--------------------
+content 2
+--------------------
+`),
+			wantChapters: model.Chapters{
+				{Index: 0, Title: "chapter 1", Content: "content 1\n"},
+				{Index: 1, Title: "chapter 2", Content: "content 2\n\n"},
+			},
+			wantError: nil,
+		},
+		{
+			name: "happy flow/format 2 with one line content",
+			serv: &serviceImpl{},
+			reader: strings.NewReader(`title
+writer
+--------------------
+
+chapter 1
+--------------------
+content 1
+
+chapter 2
+--------------------
+content 2
+`),
+			wantChapters: model.Chapters{
+				{Index: 0, Title: "chapter 1", Content: "content 1\n\n"},
+				{Index: 1, Title: "chapter 2", Content: "content 2\n\n"},
+			},
+			wantError: nil,
+		},
+		{
+			name: "happy flow/format 1 with empty content",
+			serv: &serviceImpl{},
+			reader: strings.NewReader(`title
+writer
+--------------------
+
+chapter 1
+--------------------
+
+--------------------
+chapter 2
+--------------------
+
+--------------------
+`),
+			wantChapters: model.Chapters{
+				{Index: 0, Title: "chapter 1", Content: "\n"},
+				{Index: 1, Title: "chapter 2", Content: "\n\n"},
+			},
+			wantError: nil,
+		},
+		{
+			name: "happy flow/format 2 with empty content",
+			serv: &serviceImpl{},
+			reader: strings.NewReader(`title
+writer
+--------------------
+
+chapter 1
+--------------------
+
+
+chapter 2
+--------------------
+
+`),
+			wantChapters: model.Chapters{
+				{Index: 0, Title: "chapter 1", Content: "\n\n"},
+				{Index: 1, Title: "chapter 2", Content: "\n\n"},
+			},
+			wantError: nil,
+		},
+		{
+			name:         "invalid flow/invalid format",
+			serv:         &serviceImpl{},
+			reader:       strings.NewReader(""),
+			wantChapters: model.Chapters{},
+			wantError:    nil,
+		},
 	}
 
 	for _, test := range tests {
