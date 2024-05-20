@@ -221,7 +221,7 @@ func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 			logger.Error().Err(err).Str("book", bk.String()).Msg("download lite handler failed")
 			return
 		}
-		fileName := fmt.Sprintf("%s-%s.txt", bk.Title, bk.Writer.Name)
+		fileName := fmt.Sprintf("%s-%s.epub", bk.Title, bk.Writer.Name)
 		res.Header().Set("Content-Type", "application/epub+zip; charset=utf-8")
 		res.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 		formatServ.WriteBookEpub(req.Context(), bk, chapters, res)
