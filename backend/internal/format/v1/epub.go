@@ -7,6 +7,8 @@ import (
 	"io"
 	"strings"
 
+	"html"
+
 	"github.com/htchan/BookSpider/internal/model"
 )
 
@@ -161,7 +163,7 @@ func reformatChaptersForEpub(lines []string) []string {
 	for _, line := range lines {
 		data := strings.TrimSpace(line)
 		if len(data) > 0 {
-			result = append(result, fmt.Sprintf("<p>%s</p>", data))
+			result = append(result, fmt.Sprintf("<p>%s</p>", html.EscapeString(data)))
 		}
 	}
 
