@@ -23,7 +23,7 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 					// idHash format is <id>-<hash>
 					router.Use(GetBookMiddleware)
 					router.Get("/", BookLiteHandler)
-					router.Get("/download", DownloadLiteHandler)
+					router.With(GetDownloadParamsMiddleware).Get("/download", DownloadLiteHandler)
 				})
 			})
 		})
