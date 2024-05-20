@@ -33,22 +33,6 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: book-spider.log-volume
-  labels:
-    label: local
-    project: book-spider
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteMany
-  hostPath:
-    path: /volumes/book-spider-data/log
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
   name: book-spider.data-volume
   labels:
     label: local
