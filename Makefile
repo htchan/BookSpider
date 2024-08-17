@@ -13,7 +13,7 @@ backend-%:
 
 ## build service=<service>: build docker image of specified service (default all)
 build:
-	docker buildx bake backend
+	docker buildx bake backend -f docker-bake.hcl --check
 
 ## build_flutter: build the image for compile flutter frontend
 build_flutter:
