@@ -68,8 +68,11 @@ func (s *ServiceImpl) bookFileLocation(bk *model.Book) string {
 	return filepath.Join(s.conf.Storage, filename)
 }
 
-func (s *ServiceImpl) checkBookStorage(bk *model.Book) bool {
+func (s *ServiceImpl) checkBookStorage(bk *model.Book, stats *serv.PatchStorageStats) bool {
 	isDownloadUpdated, fileExist := false, true
+	if stats == nil {
+		stats = new(serv.PatchStorageStats)
+	}
 
 	if _, err := os.Stat(s.bookFileLocation(bk)); err != nil {
 		fileExist = false
@@ -79,16 +82,22 @@ func (s *ServiceImpl) checkBookStorage(bk *model.Book) bool {
 		log.Info().Str("book", bk.String()).Msg("file exist for not downloaded book")
 		bk.IsDownloaded = true
 		isDownloadUpdated = true
+		stats.FileExist.Add(1)
 	} else if !fileExist && bk.IsDownloaded {
 		log.Info().Str("book", bk.String()).Msg("file not exist for downloaded book")
 		bk.IsDownloaded = false
 		isDownloadUpdated = true
+		stats.FileMissing.Add(1)
 	}
 
 	return isDownloadUpdated
 }
 
-func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context) error {
+func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context, stats *serv.PatchStorageStats) error {
+	if stats == nil {
+		stats = new(serv.PatchStorageStats)
+	}
+
 	bks, err := s.rpo.FindAllBooks()
 	if err != nil {
 		return fmt.Errorf("patch download status fail: %w", err)
@@ -106,7 +115,7 @@ func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context) error {
 			defer wg.Done()
 			defer s.sema.Release(1)
 
-			needUpdate := s.checkBookStorage(bk)
+			needUpdate := s.checkBookStorage(bk, stats)
 			if needUpdate {
 				err := s.rpo.UpdateBook(bk)
 				if err != nil {
@@ -125,8 +134,12 @@ func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context) error {
 	return nil
 }
 
-func (s *ServiceImpl) PatchMissingRecords(ctx context.Context) error {
+func (s *ServiceImpl) PatchMissingRecords(ctx context.Context, stats *serv.UpdateStats) error {
 	zerolog.Ctx(ctx).Info().Msg("patch missing records")
+
+	if stats == nil {
+		stats = new(serv.UpdateStats)
+	}
 
 	var wg sync.WaitGroup
 	allBkIDs, err := s.rpo.FindAllBookIDs()
@@ -139,6 +152,7 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context) error {
 		bookID := bookID
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
+		stats.Total.Add(1)
 
 		go func(id int) {
 			defer s.sema.Release(1)
@@ -146,7 +160,7 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context) error {
 
 			zerolog.Ctx(ctx).Error().Err(err).Int("id", id).Msg("book not exist in database")
 			bk := model.NewBook(s.name, id)
-			s.ExploreBook(ctx, &bk)
+			s.ExploreBook(ctx, &bk, stats)
 		}(bookID)
 	}
 	wg.Wait()

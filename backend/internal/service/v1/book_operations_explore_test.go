@@ -83,7 +83,7 @@ func TestServiceImpl_ExploreBook(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).ExploreBook(context.Background(), test.bk)
+			err := test.getServ(ctrl).ExploreBook(context.Background(), test.bk, nil)
 			assert.Equal(t, test.wantBk, test.bk)
 			assert.ErrorIs(t, err, test.wantError)
 		})
@@ -151,7 +151,7 @@ func TestServiceImpl_Explore(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).Explore(context.Background())
+			err := test.getServ(ctrl).Explore(context.Background(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

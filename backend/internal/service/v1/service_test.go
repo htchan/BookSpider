@@ -144,11 +144,12 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		serv   *ServiceImpl
-		bk     *model.Book
-		want   bool
-		wantBk *model.Book
+		name      string
+		serv      *ServiceImpl
+		bk        *model.Book
+		want      bool
+		wantBk    *model.Book
+		wantStats func() *serv.PatchStorageStats
 	}{
 		{
 			name:   "book status is downloaded and file exists",
@@ -156,6 +157,9 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 			bk:     &model.Book{ID: 123, HashCode: 0, IsDownloaded: true},
 			want:   false,
 			wantBk: &model.Book{ID: 123, HashCode: 0, IsDownloaded: true},
+			wantStats: func() *serv.PatchStorageStats {
+				return new(serv.PatchStorageStats)
+			},
 		},
 		{
 			name:   "book status is downloaded and file does not exist",
@@ -163,6 +167,12 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 			bk:     &model.Book{ID: 456, HashCode: 0, IsDownloaded: true},
 			want:   true,
 			wantBk: &model.Book{ID: 456, HashCode: 0, IsDownloaded: false},
+			wantStats: func() *serv.PatchStorageStats {
+				stats := new(serv.PatchStorageStats)
+				stats.FileMissing.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name:   "book status is not downloaded and file does not exist",
@@ -170,6 +180,9 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 			bk:     &model.Book{ID: 456, HashCode: 0, IsDownloaded: false},
 			want:   false,
 			wantBk: &model.Book{ID: 456, HashCode: 0, IsDownloaded: false},
+			wantStats: func() *serv.PatchStorageStats {
+				return new(serv.PatchStorageStats)
+			},
 		},
 		{
 			name:   "book status is not downloaded and file exists",
@@ -177,6 +190,12 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 			bk:     &model.Book{ID: 123, HashCode: 0, IsDownloaded: false},
 			want:   true,
 			wantBk: &model.Book{ID: 123, HashCode: 0, IsDownloaded: true},
+			wantStats: func() *serv.PatchStorageStats {
+				stats := new(serv.PatchStorageStats)
+				stats.FileExist.Add(1)
+
+				return stats
+			},
 		},
 	}
 
@@ -185,9 +204,11 @@ func TestServiceImpl_checkBookStorage(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := test.serv.checkBookStorage(test.bk)
+			stats := new(serv.PatchStorageStats)
+			got := test.serv.checkBookStorage(test.bk, stats)
 			assert.Equal(t, test.want, got)
 			assert.Equal(t, test.wantBk, test.bk)
+			assert.Equal(t, test.wantStats(), stats)
 		})
 
 	}
@@ -259,8 +280,7 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := test.getService(ctrl)
-			err := serv.PatchDownloadStatus(context.Background())
+			err := test.getService(ctrl).PatchDownloadStatus(context.Background(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}
@@ -273,6 +293,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 		name       string
 		getService func(*gomock.Controller) *ServiceImpl
 		wantError  error
+		wantStats  func() *serv.UpdateStats
 	}{
 		{
 			name: "happy flow",
@@ -312,6 +333,12 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				}
 			},
 			wantError: nil,
+			wantStats: func() *serv.UpdateStats {
+				stats := new(serv.UpdateStats)
+				stats.Total.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name: "FindAllBooks returns error",
@@ -326,6 +353,9 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				}
 			},
 			wantError: service.ErrUnavailable,
+			wantStats: func() *serv.UpdateStats {
+				return new(serv.UpdateStats)
+			},
 		},
 	}
 
@@ -337,8 +367,8 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			serv := test.getService(ctrl)
-			err := serv.PatchMissingRecords(context.Background())
+			stats := new(serv.UpdateStats)
+			err := test.getService(ctrl).PatchMissingRecords(context.Background(), stats)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

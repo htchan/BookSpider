@@ -118,11 +118,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		getServ   func(ctrl *gomock.Controller) *ServiceImpl
-		bk        *model.Book
-		wantBk    *model.Book
-		wantError error
+		name            string
+		getServ         func(ctrl *gomock.Controller) *ServiceImpl
+		bk              *model.Book
+		wantBk          *model.Book
+		wantError       error
+		wantUpdateStats func() *serv.UpdateStats
 	}{
 		{
 			name: "no update for book with status error",
@@ -138,6 +139,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.Fail.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "no update for existing book",
@@ -159,6 +166,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.Unchanged.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "update book with status error",
@@ -185,6 +198,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.NewChapter.Add(1)
+				result.ErrorUpdated.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "update existing book",
@@ -213,6 +233,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
 			},
 			wantError: nil,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.NewChapter.Add(1)
+				result.InProgressUpdated.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "create new books",
@@ -241,6 +268,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: nil,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.NewEntity.Add(1)
+				result.InProgressUpdated.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "getting error when sending request",
@@ -255,6 +289,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.Fail.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "getting error when parsing book",
@@ -270,6 +310,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
 			wantError: serv.ErrUnavailable,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.Fail.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "getting error when updating book",
@@ -296,6 +342,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: serv.ErrUnavailable,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.NewChapter.Add(1)
+				result.ErrorUpdated.Add(1)
+
+				return result
+			},
 		},
 		{
 			name: "getting error when creating book",
@@ -322,6 +375,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 			},
 			wantError: serv.ErrUnavailable,
+			wantUpdateStats: func() *serv.UpdateStats {
+				result := new(serv.UpdateStats)
+				result.NewEntity.Add(1)
+				result.InProgressUpdated.Add(1)
+
+				return result
+			},
 		},
 	}
 
@@ -333,9 +393,11 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).UpdateBook(context.Background(), test.bk)
+			updateStats := new(serv.UpdateStats)
+			err := test.getServ(ctrl).UpdateBook(context.Background(), test.bk, updateStats)
 			assert.Equal(t, test.wantBk, test.bk)
 			assert.ErrorIs(t, err, test.wantError)
+			assert.Equal(t, updateStats, test.wantUpdateStats())
 		})
 	}
 }
@@ -404,7 +466,7 @@ func TestServiceImpl_Update(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).Update(context.Background())
+			err := test.getServ(ctrl).Update(context.Background(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

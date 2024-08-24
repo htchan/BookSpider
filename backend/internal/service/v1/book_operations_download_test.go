@@ -117,6 +117,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 		wantError            error
 		wantBookFileLocation string
 		wantBookContent      string
+		wantDownloadStats    func() *serv.DownloadStats
 	}{
 		{
 			name: "happy flow",
@@ -172,6 +173,12 @@ chapter title 2
 content 2 content 2 content 2
 --------------------
 `,
+			wantDownloadStats: func() *serv.DownloadStats {
+				stats := new(serv.DownloadStats)
+				stats.Success.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name: "book status is not end",
@@ -181,6 +188,9 @@ content 2 content 2 content 2
 			book:      &model.Book{Status: model.StatusInProgress},
 			wantBook:  &model.Book{Status: model.StatusInProgress},
 			wantError: serv.ErrBookStatusNotEnd,
+			wantDownloadStats: func() *serv.DownloadStats {
+				return new(serv.DownloadStats)
+			},
 		},
 		{
 			name: "book already downloaded",
@@ -190,6 +200,9 @@ content 2 content 2 content 2
 			book:      &model.Book{Status: model.StatusEnd, IsDownloaded: true},
 			wantBook:  &model.Book{Status: model.StatusEnd, IsDownloaded: true},
 			wantError: serv.ErrBookAlreadyDownloaded,
+			wantDownloadStats: func() *serv.DownloadStats {
+				return new(serv.DownloadStats)
+			},
 		},
 		{
 			name: "fail to send request",
@@ -213,6 +226,12 @@ content 2 content 2 content 2
 				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrUnavailable,
+			wantDownloadStats: func() *serv.DownloadStats {
+				stats := new(serv.DownloadStats)
+				stats.RequestFail.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name: "fail to parse chapter list",
@@ -238,6 +257,12 @@ content 2 content 2 content 2
 				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrUnavailable,
+			wantDownloadStats: func() *serv.DownloadStats {
+				stats := new(serv.DownloadStats)
+				stats.RequestFail.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name: "download chapter fails reach threshold",
@@ -271,6 +296,12 @@ content 2 content 2 content 2
 				Status: model.StatusEnd, IsDownloaded: false,
 			},
 			wantError: serv.ErrTooManyFailedChapters,
+			wantDownloadStats: func() *serv.DownloadStats {
+				stats := new(serv.DownloadStats)
+				stats.TooManyFailChapters.Add(1)
+
+				return stats
+			},
 		},
 		{
 			name: "fail to update book after download",
@@ -312,6 +343,9 @@ content 2 content 2 content 2
 				Status: model.StatusEnd, IsDownloaded: true,
 			},
 			wantError: serv.ErrUnavailable,
+			wantDownloadStats: func() *serv.DownloadStats {
+				return new(serv.DownloadStats)
+			},
 		},
 	}
 
@@ -323,9 +357,11 @@ content 2 content 2 content 2
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getService(ctrl).DownloadBook(context.Background(), test.book)
+			downloadStats := new(serv.DownloadStats)
+			err := test.getService(ctrl).DownloadBook(context.Background(), test.book, downloadStats)
 			assert.ErrorIs(t, err, test.wantError)
 			assert.Equal(t, test.wantBook, test.book)
+			assert.Equal(t, downloadStats, test.wantDownloadStats())
 
 			if test.wantBookFileLocation != "" {
 				content, err := os.ReadFile(test.wantBookFileLocation)
@@ -349,7 +385,7 @@ func TestServiceImpl_Download(t *testing.T) {
 		wantError  error
 	}{
 		{
-			name: "happy flow",
+			name: "happy flow with download failed",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
 				cli := clientmock.NewMockBookClient(ctrl)
@@ -412,7 +448,7 @@ func TestServiceImpl_Download(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getService(ctrl).Download(context.Background())
+			err := test.getService(ctrl).Download(context.Background(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}
