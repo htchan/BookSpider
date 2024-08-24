@@ -27,14 +27,20 @@ func isBookUpdated(bk *model.Book, bkInfo *vendor.BookInfo) bool {
 	return bk.UpdateDate != bkInfo.UpdateDate || bk.UpdateChapter != bkInfo.UpdateChapter
 }
 
-func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
+func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *serv.UpdateStats) error {
+	if stats == nil {
+		stats = new(serv.UpdateStats)
+	}
+
 	body, err := s.cli.Get(ctx, s.vendorService.BookURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
+		stats.Fail.Add(1)
 		return fmt.Errorf("get book page failed: %w", err)
 	}
 
 	bkInfo, err := s.vendorService.ParseBook(body)
 	if err != nil {
+		stats.Fail.Add(1)
 		return fmt.Errorf("parse book page failed: %w", err)
 	}
 
@@ -45,6 +51,21 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 			Interface("existing_book", bk).
 			Interface("new_book", bkInfo).
 			Msg("Found new book")
+
+		stats.NewEntity.Add(1)
+		switch bk.Status {
+		case model.StatusError:
+			stats.ErrorUpdated.Add(1)
+		case model.StatusInProgress:
+			stats.InProgressUpdated.Add(1)
+		case model.StatusEnd:
+			if bk.IsDownloaded {
+				stats.DownloadedUpdated.Add(1)
+			} else {
+				stats.EndUpdated.Add(1)
+			}
+		}
+
 		bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Writer, bkInfo.Type
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
@@ -63,6 +84,20 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 			Str("old_updated_data", bk.UpdateDate).Str("new_updated_data", bkInfo.UpdateDate).
 			Str("old_updated_chapter", bk.UpdateChapter).Str("new_updated_chapter", bkInfo.UpdateChapter).
 			Msg("Found updated book")
+
+		stats.NewChapter.Add(1)
+		switch bk.Status {
+		case model.StatusError:
+			stats.ErrorUpdated.Add(1)
+		case model.StatusInProgress:
+			stats.InProgressUpdated.Add(1)
+		case model.StatusEnd:
+			if bk.IsDownloaded {
+				stats.EndUpdated.Add(1)
+			} else {
+				stats.EndUpdated.Add(1)
+			}
+		}
 
 		if bk.Status == model.StatusError {
 			bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Writer, bkInfo.Type
@@ -85,13 +120,17 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 		}
 	} else {
 		logger.Debug().Msg("book not updated")
+		stats.Unchanged.Add(1)
 	}
 
 	return nil
 }
 
-func (s *ServiceImpl) Update(ctx context.Context) error {
+func (s *ServiceImpl) Update(ctx context.Context, stats *serv.UpdateStats) error {
 	var wg sync.WaitGroup
+	if stats == nil {
+		stats = new(serv.UpdateStats)
+	}
 
 	bkChan, err := s.rpo.FindBooksForUpdate()
 	if err != nil {
@@ -102,6 +141,7 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 		bk := bk
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
+		stats.Total.Add(1)
 
 		go func(bk *model.Book) {
 			defer wg.Done()
@@ -112,7 +152,7 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 				Str("bk_hash_code", bk.FormatHashCode()).
 				Str("worker_id", uuid.New().String()).
 				Logger()
-			err := s.UpdateBook(logger.WithContext(ctx), bk)
+			err := s.UpdateBook(logger.WithContext(ctx), bk, stats)
 			if err != nil {
 				logger.Error().Err(err).
 					Msg("update book failed")
@@ -128,7 +168,7 @@ func (s *ServiceImpl) Update(ctx context.Context) error {
 	return nil
 }
 
-func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
+func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book, stats *serv.UpdateStats) error {
 	if bk.Status != model.StatusError {
 		return serv.ErrBookStatusNotError
 	}
@@ -139,7 +179,7 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
 		s.rpo.CreateBook(bk)
 	}
 
-	err := s.UpdateBook(ctx, bk)
+	err := s.UpdateBook(ctx, bk, stats)
 	if err != nil {
 		bk.Error = err
 		saveErr := s.rpo.SaveError(bk, bk.Error)
@@ -153,9 +193,13 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book) error {
 	return err
 }
 
-func (s *ServiceImpl) Explore(ctx context.Context) error {
+func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) error {
 	summary := s.rpo.Stats()
 	var errorCount atomic.Int64
+
+	if stats == nil {
+		stats = new(serv.UpdateStats)
+	}
 
 	var wg sync.WaitGroup
 
@@ -180,7 +224,7 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 				Int("bk_id", bk.ID).
 				Str("bk_hash_code", bk.FormatHashCode()).
 				Logger()
-			err = s.ExploreBook(logger.WithContext(ctx), bk)
+			err = s.ExploreBook(logger.WithContext(ctx), bk, stats)
 			if err != nil {
 				logger.Error().Err(err).
 					Msg("explore book failed")
@@ -213,7 +257,7 @@ func (s *ServiceImpl) Explore(ctx context.Context) error {
 				Str("bk_hash_code", bk.FormatHashCode()).
 				Logger()
 
-			err := s.ExploreBook(logger.WithContext(ctx), &bk)
+			err := s.ExploreBook(logger.WithContext(ctx), &bk, stats)
 			if err != nil {
 				logger.Error().Err(err).
 					Msg("explore book failed")
@@ -254,7 +298,11 @@ func (s *ServiceImpl) downloadChapter(ctx context.Context, ch *model.Chapter) er
 	return nil
 }
 
-func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
+func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book, stats *serv.DownloadStats) error {
+	if stats == nil {
+		stats = new(serv.DownloadStats)
+	}
+
 	if bk.Status != model.StatusEnd {
 		return serv.ErrBookStatusNotEnd
 	} else if bk.IsDownloaded {
@@ -267,11 +315,19 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 
 	body, err := s.cli.Get(ctx, s.vendorService.ChapterListURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
+		stats.RequestFail.Add(1)
+
 		return fmt.Errorf("get chapter list failed: %w", err)
 	}
 
 	chapterList, err := s.vendorService.ParseChapterList(strconv.Itoa(bk.ID), body)
 	if err != nil {
+		if errors.Is(err, vendor.ErrChapterListEmpty) {
+			stats.NoChapter.Add(1)
+		} else {
+			stats.RequestFail.Add(1)
+		}
+
 		return fmt.Errorf("parse chapter list failed: %w", err)
 	}
 
@@ -307,6 +363,8 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 	wg.Wait()
 
 	if failedChapterCount > 50 || failedChapterCount*10 > len(chapters) {
+		stats.TooManyFailChapters.Add(1)
+
 		return fmt.Errorf("Download chapters fail: %w (%v/%v)", serv.ErrTooManyFailedChapters, failedChapterCount, len(chapters))
 	}
 
@@ -336,12 +394,18 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) error {
 		return fmt.Errorf("update book is_downloaded fail: %w", err)
 	}
 
+	stats.Success.Add(1)
+
 	return nil
 }
 
-func (s *ServiceImpl) Download(ctx context.Context) error {
+func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) error {
 	se := semaphore.NewWeighted(int64(s.conf.MaxDownloadConcurrency))
 	var wg sync.WaitGroup
+
+	if stats == nil {
+		stats = new(serv.DownloadStats)
+	}
 
 	bkChan, err := s.rpo.FindBooksForDownload()
 	if err != nil {
@@ -354,6 +418,8 @@ func (s *ServiceImpl) Download(ctx context.Context) error {
 		se.Acquire(ctx, 1)
 		wg.Add(1)
 
+		stats.Total.Add(1)
+
 		go func(bk *model.Book) {
 			defer wg.Done()
 			defer se.Release(1)
@@ -365,7 +431,7 @@ func (s *ServiceImpl) Download(ctx context.Context) error {
 				Str("bk_hash_code", bk.FormatHashCode()).
 				Logger()
 
-			err := s.DownloadBook(logger.WithContext(ctx), bk)
+			err := s.DownloadBook(logger.WithContext(ctx), bk, stats)
 			if err != nil {
 				logger.Error().Err(err).Msg("download book failed")
 			}

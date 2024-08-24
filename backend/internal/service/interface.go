@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"sync/atomic"
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
@@ -12,22 +13,47 @@ type BookOperation func(context.Context, *model.Book) error
 
 type SiteOperation func(context.Context) error
 
+type UpdateStats struct {
+	Total             atomic.Int64
+	Fail              atomic.Int64
+	Unchanged         atomic.Int64
+	NewChapter        atomic.Int64
+	NewEntity         atomic.Int64
+	ErrorUpdated      atomic.Int64
+	InProgressUpdated atomic.Int64
+	EndUpdated        atomic.Int64
+	DownloadedUpdated atomic.Int64
+}
+
+type DownloadStats struct {
+	Total               atomic.Int64
+	Success             atomic.Int64
+	NoChapter           atomic.Int64
+	TooManyFailChapters atomic.Int64
+	RequestFail         atomic.Int64
+}
+
+type PatchStorageStats struct {
+	FileExist   atomic.Int64
+	FileMissing atomic.Int64
+}
+
 //go:generate mockgen -destination=../mock/service/v1/service.go -package=mockservice . Service
 type Service interface {
 	Name() string
 	// Backup() error
-	PatchDownloadStatus(context.Context) error
-	PatchMissingRecords(context.Context) error
+	PatchDownloadStatus(context.Context, *PatchStorageStats) error
+	PatchMissingRecords(context.Context, *UpdateStats) error
 	CheckAvailability(context.Context) error
 
-	UpdateBook(context.Context, *model.Book) error
-	Update(context.Context) error
+	UpdateBook(context.Context, *model.Book, *UpdateStats) error
+	Update(context.Context, *UpdateStats) error
 
-	ExploreBook(context.Context, *model.Book) error
-	Explore(context.Context) error
+	ExploreBook(context.Context, *model.Book, *UpdateStats) error
+	Explore(context.Context, *UpdateStats) error
 
-	DownloadBook(context.Context, *model.Book) error
-	Download(context.Context) error
+	DownloadBook(context.Context, *model.Book, *DownloadStats) error
+	Download(context.Context, *DownloadStats) error
 
 	ValidateBookEnd(context.Context, *model.Book) error
 	ValidateEnd(context.Context) error
