@@ -70,7 +70,12 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *ser
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
 		bk.HashCode = model.GenerateHash()
-		bk.Status = model.StatusInProgress
+		if bkInfo.IsEnd {
+			bk.Status = model.StatusEnd
+		} else {
+			bk.Status = model.StatusInProgress
+		}
+
 		bk.Error = nil
 
 		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
@@ -105,12 +110,12 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *ser
 
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate, bkInfo.UpdateChapter
 
-		bk.Status = model.StatusInProgress
-		bk.Error = nil
-
-		if bk.Status == model.StatusError {
+		if bkInfo.IsEnd {
+			bk.Status = model.StatusEnd
+		} else {
 			bk.Status = model.StatusInProgress
 		}
+		bk.Error = nil
 
 		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
 		saveBkErr := s.rpo.UpdateBook(bk)
