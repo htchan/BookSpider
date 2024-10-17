@@ -118,9 +118,9 @@ from books
   left join errors on books.site=errors.site and books.id=errors.id
 where (books.checksum, books.writer_checksum) = (
   select bks.checksum, bks.writer_checksum from books as bks 
-  where books.site=$1 and books.id=$2 
-  and books.checksum != '' and books.writer_checksum != ''
-  order by books.hash_code desc limit 1
+  where bks.site=$1 and bks.id=$2 
+  and bks.checksum != '' and bks.writer_checksum != ''
+  order by bks.hash_code desc limit 1
 ) or books.site=$1 and books.id=$2;
 
 -- name: GetBookGroupByIDHash :many
@@ -134,7 +134,7 @@ from books
 where (books.checksum, books.writer_checksum) = (
   select bks.checksum, bks.writer_checksum from books as bks 
   where bks.site=$1 and bks.id=$2 and bks.hash_code=$3 
-  and books.checksum != '' and books.writer_checksum != ''
+  and bks.checksum != '' and bks.writer_checksum != ''
   order by bks.hash_code desc limit 1
 ) or books.site=$1 and books.id=$2;
 
@@ -204,9 +204,8 @@ select count(*) as downloaded_count from books where site=$1 and is_downloaded=t
 select status, count(*) from books where site=$1 group by status;
 
 -- name: WritersStat :one
-select count(distinct writers.id) as writer_count 
-from books join writers on books.writer_id=writers.id 
-where site=$1;
+select count(distinct writers_id) as writer_count 
+from books where site=$1;
 
 -- name: FindAllBookIDs :many
 select distinct(id) as book_id from books where site=$1 order by book_id;
