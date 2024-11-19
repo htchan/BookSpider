@@ -25,6 +25,7 @@ func TestParser_ParseBook(t *testing.T) {
 				Type:          "网游竞技小说",
 				UpdateDate:    "0000-01-01",
 				UpdateChapter: "第二十三卷 第6章 放飞希望（完结篇）",
+				IsEnd:         true,
 			},
 			wantError: nil,
 		},

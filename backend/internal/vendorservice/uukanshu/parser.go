@@ -67,6 +67,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 		Type:          bookType,
 		UpdateDate:    date.Format(time.DateOnly),
 		UpdateChapter: chapter,
+		IsEnd:         vendor.CheckChapterEnd(chapter) || time.Since(date) > (365*24*time.Hour),
 	}, parseErr
 }
 

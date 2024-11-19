@@ -63,6 +63,7 @@ func (p *VendorService) ParseBook(body string) (*vendor.BookInfo, error) {
 		Type:          bookType,
 		UpdateDate:    date,
 		UpdateChapter: chapter,
+		IsEnd:         vendor.CheckChapterEnd(chapter) || vendor.CheckDateEnd(date),
 	}, parseErr
 }
 
