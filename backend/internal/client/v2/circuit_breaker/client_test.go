@@ -202,6 +202,7 @@ func TestCircuitBreakerClient_acquire(t *testing.T) {
 					&CircuitBreakerClientConfig{
 						MaxConcurrencyThreads: 10,
 						RecoverThreads:        []int64{1},
+						AcquireTimeout:        25 * time.Millisecond,
 					},
 					nil,
 				)
