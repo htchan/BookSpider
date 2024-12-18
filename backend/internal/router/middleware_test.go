@@ -42,7 +42,7 @@ func Test_GetSiteMiddleware(t *testing.T) {
 			servs:     map[string]service.Service{},
 			siteName:  "unknown",
 			wantServ:  nil,
-			expectRes: `{"error": "site not found"}`,
+			expectRes: `{"error":"site not found"}`,
 		},
 	}
 
@@ -148,7 +148,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 			idHash:          "1",
 			expectBook:      nil,
 			expectBookGroup: nil,
-			wantRes:         `{"error": "book not found"}`,
+			wantRes:         `{"error":"book not found"}`,
 		},
 	}
 
