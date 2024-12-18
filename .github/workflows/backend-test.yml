@@ -17,7 +17,7 @@ on:
 jobs:
   Execute-Backend-Testcase:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
