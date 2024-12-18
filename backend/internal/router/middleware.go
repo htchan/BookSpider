@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -48,7 +47,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 						Str("site", siteName).
 						Strs("available sites", availableSites).
 						Msg("get site middleware failed")
-					fmt.Fprint(res, `{"error": "site not found"}`)
+					writeError(res, http.StatusNotFound, errors.New("site not found"))
 					return
 				}
 				ctx := context.WithValue(req.Context(), SERV_KEY, serv)
@@ -84,7 +83,7 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 					Str("site", serv.Name()).
 					Str("id-hash", idHash).
 					Msg("get book middleware failed")
-				fmt.Fprintf(res, `{"error": "book not found"}`)
+				writeError(res, http.StatusNotFound, errors.New("book not found"))
 				return
 			}
 

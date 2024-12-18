@@ -21,6 +21,12 @@ var customTemplateFunc = template.FuncMap{
 	"arr": func(eles ...any) []any { return eles },
 }
 
+//	@Summary		Home page
+//	@description	home page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Success		200	{string}	string
+//	@Router			/lite/book-spider/ [get]
 func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		logger := zerolog.Ctx(req.Context())
@@ -46,6 +52,13 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	}
 }
 
+//	@Summary		site info page
+//	@description	site info page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Param			siteName	path		string	true	"site name"
+//	@Success		200			{string}	string
+//	@Router			/lite/book-spider/sites/{siteName} [get]
 func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
@@ -75,6 +88,13 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//	@Summary		Search result page
+//	@description	search result page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Param			siteName	path		string	true	"site name"
+//	@Success		200			{string}	string
+//	@Router			/lite/book-spider/sites/{siteName}/search [get]
 func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
@@ -125,6 +145,13 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//	@Summary		Random result page
+//	@description	random result page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Param			siteName	path		string	true	"site name"
+//	@Success		200			{string}	string
+//	@Router			/lite/book-spider/sites/{siteName}/random [get]
 func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
@@ -166,6 +193,14 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//	@Summary		Book info page
+//	@description	book info page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Param			siteName	path		string	true	"site name"
+//	@Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
+//	@Success		200			{string}	string
+//	@Router			/lite/book-spider/sites/{siteName}/books/{idHash} [get]
 func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
@@ -199,6 +234,15 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+//	@Summary		Book download page
+//	@description	book download page
+//	@Tags			book-spider-lite
+//	@Produce		html
+//	@Param			siteName	path		string	true	"site name"
+//	@Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
+//	@Param			format		query		string	true	"txt (default) or epub"
+//	@Success		200			{string}	string
+//	@Router			/lite/book-spider/sites/{siteName}/books/{idHash}/download [get]
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
 	serv := req.Context().Value(SERV_KEY).(service.Service)
