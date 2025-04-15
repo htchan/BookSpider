@@ -58,5 +58,5 @@ func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string
 		router.Get("/db-stats", DBStatsAPIHandler(services))
 	})
 
-	router.Get("docs/swagger", httpSwagger.WrapHandler)
+	router.Get("/docs/swagger/*", httpSwagger.WrapHandler)
 }

@@ -21,7 +21,7 @@ require (
 	github.com/siongui/gojianfan v0.0.0-20210926212422-2f175ac615de
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/http-swagger/v2 v2.0.2
-	github.com/swaggo/swag/v2 v2.0.0-rc4
+	github.com/swaggo/swag v1.16.3
 	go.uber.org/goleak v1.1.12
 	golang.org/x/sync v0.10.0
 	golang.org/x/text v0.21.0
@@ -65,9 +65,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/sv-tools/openapi v0.2.1 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
-	github.com/swaggo/swag v1.16.3 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect

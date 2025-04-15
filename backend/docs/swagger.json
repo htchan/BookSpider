@@ -1,1 +1,573 @@
-{"swagger":"2.0","info":{"description":"This is a service fetching Novel from web","title":"Book Spider Backend","contact":{},"version":"1.0"},"paths":{"/api/book-spider/db-stats":{"get":{"description":"db stats","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"DB stats","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true},{"type":"string","description":"id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional","name":"idHash","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"object","additionalProperties":true}},"400":{"description":"Bad Request","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/api/book-spider/info":{"get":{"description":"get all sites info","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"Get all sites info","responses":{"200":{"description":"OK","schema":{"type":"object","additionalProperties":{"$ref":"#/definitions/repo.Summary"}}}}}},"/api/book-spider/sites/{siteName}":{"get":{"description":"get site info","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"Get site info","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"$ref":"#/definitions/repo.Summary"}},"404":{"description":"Not Found","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/api/book-spider/sites/{siteName}/books/random":{"get":{"description":"list random books","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"List random books","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"$ref":"#/definitions/router.booksResp"}},"400":{"description":"Bad Request","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/api/book-spider/sites/{siteName}/books/search":{"get":{"description":"search books","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"Search books","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"$ref":"#/definitions/router.booksResp"}},"400":{"description":"Bad Request","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/api/book-spider/sites/{siteName}/books/{idHash}":{"get":{"description":"get book info","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"Get book info","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true},{"type":"string","description":"id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional","name":"idHash","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"$ref":"#/definitions/model.Book"}},"400":{"description":"Bad Request","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/api/book-spider/sites/{siteName}/books/{idHash}/download":{"get":{"description":"download book in txt format","consumes":["application/json"],"produces":["application/json"],"tags":["book-spider-api"],"summary":"Download book","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true},{"type":"string","description":"id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional","name":"idHash","in":"path","required":true}],"responses":{"200":{"description":"the book content","schema":{"type":"string"}},"400":{"description":"Bad Request","schema":{"$ref":"#/definitions/router.errResp"}}}}},"/lite/book-spider/":{"get":{"description":"home page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"Home page","responses":{"200":{"description":"OK","schema":{"type":"string"}}}}},"/lite/book-spider/sites/{siteName}":{"get":{"description":"site info page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"site info page","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"string"}}}}},"/lite/book-spider/sites/{siteName}/books/{idHash}":{"get":{"description":"book info page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"Book info page","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true},{"type":"string","description":"id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional","name":"idHash","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"string"}}}}},"/lite/book-spider/sites/{siteName}/books/{idHash}/download":{"get":{"description":"book download page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"Book download page","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true},{"type":"string","description":"id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional","name":"idHash","in":"path","required":true},{"type":"string","description":"txt (default) or epub","name":"format","in":"query","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"string"}}}}},"/lite/book-spider/sites/{siteName}/random":{"get":{"description":"random result page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"Random result page","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"string"}}}}},"/lite/book-spider/sites/{siteName}/search":{"get":{"description":"search result page","produces":["text/html"],"tags":["book-spider-lite"],"summary":"Search result page","parameters":[{"type":"string","description":"site name","name":"siteName","in":"path","required":true}],"responses":{"200":{"description":"OK","schema":{"type":"string"}}}}}},"definitions":{"model.Book":{"type":"object","properties":{"error":{},"hashCode":{"type":"integer"},"id":{"type":"integer"},"isDownloaded":{"type":"boolean"},"site":{"type":"string"},"status":{"type":"integer"},"title":{"type":"string"},"type":{"type":"string"},"updateChapter":{"type":"string"},"updateDate":{"type":"string"},"writer":{"$ref":"#/definitions/model.Writer"}}},"model.Writer":{"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"}}},"repo.Summary":{"type":"object","properties":{"bookCount":{"type":"integer"},"downloadCount":{"type":"integer"},"errorCount":{"type":"integer"},"latestSuccessID":{"type":"integer"},"maxBookID":{"type":"integer"},"statusCount":{"type":"object","additionalProperties":{"type":"integer"}},"uniqueBookCount":{"type":"integer"},"writerCount":{"type":"integer"}}},"router.booksResp":{"type":"object","properties":{"books":{"type":"array","items":{"$ref":"#/definitions/model.Book"}}}},"router.errResp":{"type":"object","properties":{"error":{"type":"string"}}}}}
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a service fetching Novel from web",
+        "title": "Book Spider Backend",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/book-spider/db-stats": {
+            "get": {
+                "description": "db stats",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "DB stats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional",
+                        "name": "idHash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/info": {
+            "get": {
+                "description": "get all sites info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "Get all sites info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/repo.Summary"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/sites/{siteName}": {
+            "get": {
+                "description": "get site info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "Get site info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/repo.Summary"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/sites/{siteName}/books/random": {
+            "get": {
+                "description": "list random books",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "List random books",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/router.booksResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/sites/{siteName}/books/search": {
+            "get": {
+                "description": "search books",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "Search books",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/router.booksResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/sites/{siteName}/books/{idHash}": {
+            "get": {
+                "description": "get book info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "Get book info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional",
+                        "name": "idHash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/book-spider/sites/{siteName}/books/{idHash}/download": {
+            "get": {
+                "description": "download book in txt format",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "book-spider-api"
+                ],
+                "summary": "Download book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional",
+                        "name": "idHash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the book content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/router.errResp"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/": {
+            "get": {
+                "description": "home page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "Home page",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/sites/{siteName}": {
+            "get": {
+                "description": "site info page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "site info page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/sites/{siteName}/books/{idHash}": {
+            "get": {
+                "description": "book info page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "Book info page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional",
+                        "name": "idHash",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/sites/{siteName}/books/{idHash}/download": {
+            "get": {
+                "description": "book download page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "Book download page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "id and hash in format \u003cid\u003e[-\u003chash\u003e]. -\u003chash is optional",
+                        "name": "idHash",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "txt (default) or epub",
+                        "name": "format",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/sites/{siteName}/random": {
+            "get": {
+                "description": "random result page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "Random result page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/lite/book-spider/sites/{siteName}/search": {
+            "get": {
+                "description": "search result page",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "book-spider-lite"
+                ],
+                "summary": "Search result page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "site name",
+                        "name": "siteName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Book": {
+            "type": "object",
+            "properties": {
+                "error": {},
+                "hashCode": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isDownloaded": {
+                    "type": "boolean"
+                },
+                "site": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updateChapter": {
+                    "type": "string"
+                },
+                "updateDate": {
+                    "type": "string"
+                },
+                "writer": {
+                    "$ref": "#/definitions/model.Writer"
+                }
+            }
+        },
+        "model.Writer": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "repo.Summary": {
+            "type": "object",
+            "properties": {
+                "bookCount": {
+                    "type": "integer"
+                },
+                "downloadCount": {
+                    "type": "integer"
+                },
+                "errorCount": {
+                    "type": "integer"
+                },
+                "latestSuccessID": {
+                    "type": "integer"
+                },
+                "maxBookID": {
+                    "type": "integer"
+                },
+                "statusCount": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "uniqueBookCount": {
+                    "type": "integer"
+                },
+                "writerCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "router.booksResp": {
+            "type": "object",
+            "properties": {
+                "books": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Book"
+                    }
+                }
+            }
+        },
+        "router.errResp": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
