@@ -213,17 +213,14 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service.Service)
 	bk := req.Context().Value(BOOK_KEY).(*model.Book)
 	group := req.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
 
 	execErr := t.ExecuteTemplate(res, "book.html", struct {
-		Name      string
 		UriPrefix string
 		Book      *model.Book
 		Group     *model.BookGroup
 	}{
-		Name:      serv.Name(),
 		UriPrefix: uriPrefix,
 		Book:      bk,
 		Group:     group,

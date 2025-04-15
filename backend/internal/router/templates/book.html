@@ -1,29 +1,28 @@
 <html>
 
 <head>
-  <title>Novel - {{ .Name }} - {{ .Book.Title }}</title>
+  <title>Novel - {{ .Book.Site }} - {{ .Book.Title }}</title>
   <style>
   </style>
 </head>
 
 <body>
-  <h1>{{ .Name }}</h1>
+  <h1>{{ .Book.Site }}</h1>
   <div>
       <p>{{ .Book.Title }} - {{ .Book.Writer.Name }}</p>
       <p>{{ .Book.UpdateDate }}</p>
       <p>{{ .Book.UpdateChapter }}</p>
       {{ if .Book.IsDownloaded }}
-      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=txt">Download TXT</a>
-      <a href="{{.UriPrefix}}/sites/{{.Name}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=epub">Download EPUB</a>
+      <a href="{{.UriPrefix}}/sites/{{.Book.Site}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=txt">Download TXT</a>
+      <a href="{{.UriPrefix}}/sites/{{.Book.Site}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=epub">Download EPUB</a>
       {{ else }}
       <p>{{ .Book.Status }}</p>
       {{ end }}
   </div>
   <h2>Book Group</h2>
   {{ $uriPrefix := .UriPrefix }}
-  {{ $siteName := .Name }}
   {{ range $index, $value := .Group }}
-    {{ template "book-card" (arr $uriPrefix $siteName $value) }}
+    {{ template "book-card" (arr $uriPrefix $value) }}
   {{ end}}
 </body>
 

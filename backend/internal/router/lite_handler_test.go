@@ -245,8 +245,6 @@ func TestSearchLiteHandler(t *testing.T) {
 			      
 			  
 			  
-
-
 			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
 			    <p>title - writer</p>
 			    <p>date</p>
@@ -295,20 +293,16 @@ func TestBookLiteHandler(t *testing.T) {
 		expectRes        string
 	}{
 		{
-			name: "happy flow",
+			name: "happy flow without group",
 			services: map[string]service.Service{
 				"test": nil,
 			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
-				serv := servicemock.NewMockService(ctrl)
-				serv.EXPECT().Name().Return("test")
-
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
-				ctx = context.WithValue(ctx, SERV_KEY, serv)
 				ctx = context.WithValue(ctx, BOOK_KEY, &model.Book{
 					Site: "test", ID: 123, HashCode: 100,
 					Title: "title", Writer: model.Writer{Name: "writer"},
@@ -342,7 +336,73 @@ func TestBookLiteHandler(t *testing.T) {
 				<h2>Book Group</h2>
 				
 				
-				
+				</body>
+			
+			</html>
+`,
+		},
+		{
+			name: "happy flow with group",
+			services: map[string]service.Service{
+				"test": nil,
+			},
+			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
+				t.Helper()
+
+				req, err := http.NewRequest(http.MethodGet, "/", nil)
+				assert.NoError(t, err)
+				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
+				ctx = context.WithValue(ctx, BOOK_KEY, &model.Book{
+					Site: "test", ID: 123, HashCode: 100,
+					Title: "title", Writer: model.Writer{Name: "writer"},
+					Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
+					Status: model.StatusEnd, IsDownloaded: true,
+				})
+				ctx = context.WithValue(ctx, BOOK_GROUP_KEY, &model.BookGroup{
+					{
+						Site: "test-2", ID: 123, HashCode: 100,
+						Title: "title", Writer: model.Writer{Name: "writer"},
+						Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
+						Status: model.StatusEnd, IsDownloaded: true,
+					},
+				})
+
+				return req.WithContext(ctx)
+			},
+			expectStatusCode: 200,
+			expectRes: `<html>
+
+			<head>
+				<title>Novel - test - title</title>
+				<style>
+				</style>
+			</head>
+			
+			<body>
+				<h1>test</h1>
+				<div>
+						<p>title - writer</p>
+						<p>date</p>
+						<p>chapter</p>
+						
+						<a href="/lite/novel/sites/test/books/123-100/download?format=txt">Download TXT</a>
+						<a href="/lite/novel/sites/test/books/123-100/download?format=epub">Download EPUB</a>
+						
+				</div>
+				<h2>Book Group</h2>
+
+
+
+
+
+				<div class="book-box" onclick="location.href='/lite/novel/sites/test-2/books/123-100/'">
+				<p>title - writer</p>
+				<p>date</p>
+				<p>chapter</p>
+				<p>Downloaded</p>
+				</div>
+
+
 				</body>
 			
 			</html>
