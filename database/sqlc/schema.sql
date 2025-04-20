@@ -2,12 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.2 (Debian 14.2-1.pgdg110+1)
--- Dumped by pg_dump version 15.4
+-- Dumped from database version 17.4 (Debian 17.4-1.pgdg120+2)
+-- Dumped by pg_dump version 17.4 (Debian 17.4-1.pgdg120+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -21,7 +22,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: books; Type: TABLE; Schema: public; Owner: test
+-- Name: books; Type: TABLE; Schema: public; Owner: book_spider
 --
 
 CREATE TABLE public.books (
@@ -40,10 +41,10 @@ CREATE TABLE public.books (
 );
 
 
-ALTER TABLE public.books OWNER TO test;
+ALTER TABLE public.books OWNER TO book_spider;
 
 --
--- Name: errors; Type: TABLE; Schema: public; Owner: test
+-- Name: errors; Type: TABLE; Schema: public; Owner: book_spider
 --
 
 CREATE TABLE public.errors (
@@ -53,10 +54,10 @@ CREATE TABLE public.errors (
 );
 
 
-ALTER TABLE public.errors OWNER TO test;
+ALTER TABLE public.errors OWNER TO book_spider;
 
 --
--- Name: writers; Type: TABLE; Schema: public; Owner: test
+-- Name: writers; Type: TABLE; Schema: public; Owner: book_spider
 --
 
 CREATE TABLE public.writers (
@@ -66,10 +67,10 @@ CREATE TABLE public.writers (
 );
 
 
-ALTER TABLE public.writers OWNER TO test;
+ALTER TABLE public.writers OWNER TO book_spider;
 
 --
--- Name: writers_id_seq; Type: SEQUENCE; Schema: public; Owner: test
+-- Name: writers_id_seq; Type: SEQUENCE; Schema: public; Owner: book_spider
 --
 
 CREATE SEQUENCE public.writers_id_seq
@@ -81,24 +82,24 @@ CREATE SEQUENCE public.writers_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.writers_id_seq OWNER TO test;
+ALTER SEQUENCE public.writers_id_seq OWNER TO book_spider;
 
 --
--- Name: writers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: test
+-- Name: writers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: book_spider
 --
 
 ALTER SEQUENCE public.writers_id_seq OWNED BY public.writers.id;
 
 
 --
--- Name: writers id; Type: DEFAULT; Schema: public; Owner: test
+-- Name: writers id; Type: DEFAULT; Schema: public; Owner: book_spider
 --
 
 ALTER TABLE ONLY public.writers ALTER COLUMN id SET DEFAULT nextval('public.writers_id_seq'::regclass);
 
 
 --
--- Name: writers writers_pkey; Type: CONSTRAINT; Schema: public; Owner: test
+-- Name: writers writers_pkey; Type: CONSTRAINT; Schema: public; Owner: book_spider
 --
 
 ALTER TABLE ONLY public.writers
@@ -106,98 +107,98 @@ ALTER TABLE ONLY public.writers
 
 
 --
--- Name: books__checksum; Type: INDEX; Schema: public; Owner: test
+-- Name: books__checksum; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books__checksum ON public.books USING btree (checksum, writer_checksum);
 
 
 --
--- Name: books__status; Type: INDEX; Schema: public; Owner: test
+-- Name: books__status; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books__status ON public.books USING btree (status, is_downloaded);
 
 
 --
--- Name: books__vendor_reference; Type: INDEX; Schema: public; Owner: test
+-- Name: books__vendor_reference; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books__vendor_reference ON public.books USING btree (site, id, hash_code DESC);
 
 
 --
--- Name: books_index; Type: INDEX; Schema: public; Owner: test
+-- Name: books_index; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE UNIQUE INDEX books_index ON public.books USING btree (site, id, hash_code);
 
 
 --
--- Name: books_status; Type: INDEX; Schema: public; Owner: test
+-- Name: books_status; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books_status ON public.books USING btree (status);
 
 
 --
--- Name: books_title; Type: INDEX; Schema: public; Owner: test
+-- Name: books_title; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books_title ON public.books USING btree (title);
 
 
 --
--- Name: books_writer; Type: INDEX; Schema: public; Owner: test
+-- Name: books_writer; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books_writer ON public.books USING btree (writer_id);
 
 
 --
--- Name: books_writer_checksum; Type: INDEX; Schema: public; Owner: test
+-- Name: books_writer_checksum; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX books_writer_checksum ON public.books USING btree (writer_checksum);
 
 
 --
--- Name: checksum_index; Type: INDEX; Schema: public; Owner: test
+-- Name: checksum_index; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX checksum_index ON public.books USING btree (checksum);
 
 
 --
--- Name: errors_index; Type: INDEX; Schema: public; Owner: test
+-- Name: errors_index; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE UNIQUE INDEX errors_index ON public.errors USING btree (site, id);
 
 
 --
--- Name: writers__name; Type: INDEX; Schema: public; Owner: test
+-- Name: writers__name; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX writers__name ON public.writers USING btree (name);
 
 
 --
--- Name: writers_checksum_index; Type: INDEX; Schema: public; Owner: test
+-- Name: writers_checksum_index; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE INDEX writers_checksum_index ON public.writers USING btree (checksum);
 
 
 --
--- Name: writers_id; Type: INDEX; Schema: public; Owner: test
+-- Name: writers_id; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE UNIQUE INDEX writers_id ON public.writers USING btree (id);
 
 
 --
--- Name: writers_name; Type: INDEX; Schema: public; Owner: test
+-- Name: writers_name; Type: INDEX; Schema: public; Owner: book_spider
 --
 
 CREATE UNIQUE INDEX writers_name ON public.writers USING btree (name);

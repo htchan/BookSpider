@@ -174,19 +174,19 @@ RETURNING *;
 -- name: DeleteError :one
 delete from errors where site=$1 and id=$2 returning *;
 
--- name: BackupBooks :exec
-copy (select * from books where site=$1) to '$2' 
-csv header quote as '''' force quote *;
+-- -- name: BackupBooks :exec
+-- copy (select * from books where site=$1) to '$2' 
+-- csv header quote as '''' force quote *;
 
--- name: BackupWriters :exec
-copy (
-  select distinct(writers.*) from writers join books on writers.id=books.writer_id 
-  where books.site=$1
-) to '$2' csv header quote as '''' force quote *;
+-- -- name: BackupWriters :exec
+-- copy (
+--   select distinct(writers.*) from writers join books on writers.id=books.writer_id 
+--   where books.site=$1
+-- ) to '$2' csv header quote as '''' force quote *;
 
--- name: BackupError :exec
-copy (select * from errors where site=$1) to '$2' 
-csv header quote as '''' force quote *;
+-- -- name: BackupError :exec
+-- copy (select * from errors where site=$1) to '$2' 
+-- csv header quote as '''' force quote *;
 
 -- name: BooksStat :one
 select count(*) as book_count, count(distinct id) as unique_book_count, max(id) as max_book_id from books where site=$1;
