@@ -91,7 +91,7 @@ func rowsToBook(rows *sql.Rows) (*model.Book, error) {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
 	if errStr != "" {
-		bk.Error = fmt.Errorf(errStr)
+		bk.Error = errors.New(errStr)
 	}
 	bk.Status = model.StatusFromString(statusStr)
 	return bk, nil

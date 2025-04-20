@@ -891,7 +891,7 @@ func TestPsqlRepo_SaveError(t *testing.T) {
 				if !((bk.Error == nil && test.expectErrStr == "") ||
 					(bk.Error != nil && bk.Error.Error() == test.expectErrStr)) {
 					t.Errorf("query got:  %v\nwant: %v", bk.Error, test.expectErrStr)
-					t.Errorf(cmp.Diff(bk.Error.Error(), test.expectErrStr))
+					t.Error(cmp.Diff(bk.Error.Error(), test.expectErrStr))
 				}
 			})
 		})

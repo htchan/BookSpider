@@ -64,7 +64,7 @@ func TestChapter_ContentString(t *testing.T) {
 
 			result := test.chapter.ContentString()
 			if result != test.expect {
-				t.Errorf(cmp.Diff(result, test.expect))
+				t.Error(cmp.Diff(result, test.expect))
 			}
 		})
 	}

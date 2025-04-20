@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -117,7 +118,7 @@ func (r *SqlcRepo) FindBookById(id int) (*model.Book, error) {
 
 	var bkErr error
 	if result.Data != "" {
-		bkErr = fmt.Errorf(result.Data)
+		bkErr = errors.New(result.Data)
 	}
 
 	return &model.Book{
@@ -149,7 +150,7 @@ func (r *SqlcRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 
 	var bkErr error
 	if result.Data != "" {
-		bkErr = fmt.Errorf(result.Data)
+		bkErr = errors.New(result.Data)
 	}
 
 	return &model.Book{
@@ -184,7 +185,7 @@ func (r *SqlcRepo) FindBooksByStatus(Status model.StatusCode) (<-chan model.Book
 		for i := range results {
 			var bkErr error
 			if results[i].Data != "" {
-				bkErr = fmt.Errorf(results[i].Data)
+				bkErr = errors.New(results[i].Data)
 			}
 
 			bkChan <- model.Book{
@@ -221,7 +222,7 @@ func (r *SqlcRepo) FindAllBooks() (<-chan model.Book, error) {
 		for i := range results {
 			var bkErr error
 			if results[i].Data != "" {
-				bkErr = fmt.Errorf(results[i].Data)
+				bkErr = errors.New(results[i].Data)
 			}
 
 			bkChan <- model.Book{
@@ -258,7 +259,7 @@ func (r *SqlcRepo) FindBooksForUpdate() (<-chan model.Book, error) {
 		for i := range results {
 			var bkErr error
 			if results[i].Data != "" {
-				bkErr = fmt.Errorf(results[i].Data)
+				bkErr = errors.New(results[i].Data)
 			}
 
 			bkChan <- model.Book{
@@ -295,7 +296,7 @@ func (r *SqlcRepo) FindBooksForDownload() (<-chan model.Book, error) {
 		for i := range results {
 			var bkErr error
 			if results[i].Data != "" {
-				bkErr = fmt.Errorf(results[i].Data)
+				bkErr = errors.New(results[i].Data)
 			}
 
 			bkChan <- model.Book{
@@ -335,7 +336,7 @@ func (r *SqlcRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 	for i := range results {
 		var bkErr error
 		if results[i].Data != "" {
-			bkErr = fmt.Errorf(results[i].Data)
+			bkErr = errors.New(results[i].Data)
 		}
 
 		bks[i] = model.Book{
@@ -371,7 +372,7 @@ func (r *SqlcRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	for i := range results {
 		var bkErr error
 		if results[i].Data != "" {
-			bkErr = fmt.Errorf(results[i].Data)
+			bkErr = errors.New(results[i].Data)
 		}
 
 		bks[i] = model.Book{
@@ -408,7 +409,7 @@ func (r *SqlcRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
 	for i := range results {
 		var bkErr error
 		if results[i].Data != "" {
-			bkErr = fmt.Errorf(results[i].Data)
+			bkErr = errors.New(results[i].Data)
 		}
 
 		group[i] = model.Book{
@@ -446,7 +447,7 @@ func (r *SqlcRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, err
 	for i := range results {
 		var bkErr error
 		if results[i].Data != "" {
-			bkErr = fmt.Errorf(results[i].Data)
+			bkErr = errors.New(results[i].Data)
 		}
 
 		group[i] = model.Book{
