@@ -17,8 +17,14 @@ target "backend" {
   name = "backend-${service}"
   context = "."
   dockerfile = "./build/Dockerfile"
-  cache-from = [ "type=gha" ]
-  cache-to = [ "type=gha,mode=max" ]
+  cache-from = [
+    "type=gha",
+    "type=local,src=/tmp/.buildx-cache"
+  ]
+  cache-to = [
+    "type=gha,mode=max",
+    "type=local,dest=/tmp/.buildx-cache-new,mode=max"
+  ]
 
   args = {
     SERVICE = "${service}"
@@ -32,8 +38,8 @@ target "backend" {
   ]
 
   tags = [
-    "ghcr.io/htchan/book-spider:${service}-v${DATE}-${substr(HASH,0,7)}",
-    "ghcr.io/htchan/book-spider:${service}-${IMAGE_TAG}"
+    "ghcr.io/htchan/book-spider-${service}:v${DATE}-${substr(HASH,0,7)}",
+    "ghcr.io/htchan/book-spider-${service}:${IMAGE_TAG}"
   ]
   platforms = equal(BAKE_CI, "true") ? ["linux/amd64","linux/arm64"] : []
   output     = [equal(BAKE_CI, "true") ? "type=registry": "type=docker"]

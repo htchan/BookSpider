@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - '**/*.go'
+      - 'go.*'
       - '.github/workflows/backend-test.yml'
   push:
     branches:
@@ -24,7 +25,7 @@ jobs:
       - name: Set up Golang environment
         uses: actions/setup-go@v4
         with: 
-          go-version: 1.21
+          go-version: 1.24.1
           cache: true
           cache-dependency-path: |
             **/go.sum
