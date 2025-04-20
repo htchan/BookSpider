@@ -1,5 +1,5 @@
 name: Push Docker Image
-run-name: ${{github.actor}} trigger docker image build and push for BE
+run-name: ${{github.actor}} trigger docker image build and push
 
 on:
   workflow_dispatch:

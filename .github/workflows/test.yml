@@ -1,17 +1,17 @@
-name: BE Testing
-run-name: ${{github.actor}} trigger tests for BE
+name: Testing
+run-name: ${{github.actor}} trigger tests
 on:
   pull_request:
     branches:
       - master
     paths:
-      - 'backend/**'
+      - '**/*.go'
       - '.github/workflows/backend-test.yml'
   push:
     branches:
       - master
     paths:
-      - 'backend/**'
+      - '**/*.go'
       - '.github/workflows/backend-test.yml'
 
 jobs:
@@ -32,5 +32,4 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Test
-        working-directory: ./backend
         run: make test
