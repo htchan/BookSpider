@@ -1,6 +1,6 @@
 module github.com/htchan/BookSpider
 
-go 1.23.5
+go 1.24.1
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
@@ -12,7 +12,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.3.0
-	github.com/htchan/WebHistory v0.0.0-20241216141051-936d150a6eca
 	github.com/lib/pq v1.10.6
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/rs/zerolog v1.29.1
@@ -35,9 +34,8 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v23.0.1+incompatible // indirect
-	github.com/docker/docker v25.0.6+incompatible // indirect
+	github.com/docker/cli v24.0.7+incompatible // indirect
+	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect

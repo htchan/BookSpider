@@ -31,6 +31,7 @@ target "backend" {
   labels = {
     "org.opencontainers.image.source" = "https://github.com/htchan/BookSpider"
   }
+
   attest = [
     "type=provenance,disabled=true"
   ]
