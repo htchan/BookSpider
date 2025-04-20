@@ -1,0 +1,36 @@
+name: Testing
+run-name: ${{github.actor}} trigger tests
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**/*.go'
+      - 'go.*'
+      - '.github/workflows/backend-test.yml'
+  push:
+    branches:
+      - master
+    paths:
+      - '**/*.go'
+      - '.github/workflows/backend-test.yml'
+
+jobs:
+  Execute-Backend-Testcase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Golang environment
+        uses: actions/setup-go@v4
+        with: 
+          go-version: 1.24.1
+          cache: true
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Test
+        run: make test

@@ -1,0 +1,25 @@
+FROM golang:1.24.1-alpine as builder
+
+WORKDIR /go/src/github.com/htchan/BookSpider
+
+COPY ./go.mod .
+COPY ./go.sum .
+
+RUN apk add gcc musl-dev libc-dev
+RUN go mod download
+
+COPY ./internal ./internal
+COPY ./internal ./internal
+COPY ./cmd/console ./cmd/console
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -v github.com/htchan/BookSpider/cmd/console
+
+
+FROM alpine
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /go/src/github.com/htchan/BookSpider/console .
+
+CMD ['./controller']
