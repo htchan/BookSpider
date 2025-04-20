@@ -1,6 +1,6 @@
 module github.com/htchan/BookSpider
 
-go 1.24.1
+go 1.23.5
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
