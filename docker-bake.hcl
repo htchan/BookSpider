@@ -19,11 +19,9 @@ target "backend" {
   dockerfile = "./build/Dockerfile"
   cache-from = [
     "type=gha",
-    "type=local,src=/tmp/.buildx-cache"
   ]
   cache-to = [
     "type=gha,mode=max",
-    "type=local,dest=/tmp/.buildx-cache-new,mode=max"
   ]
 
   args = {
