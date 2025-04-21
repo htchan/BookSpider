@@ -750,12 +750,29 @@ func (r *SqlcRepo) DBStats(ctx context.Context) sql.DBStats {
 }
 
 func (r *SqlcRepo) Stats(ctx context.Context) repo.Summary {
+	_, bkSpan := repo.GetTracer().Start(ctx, "get books stat")
 	bkStat, _ := r.queries.BooksStat(ctx, r.site)
+	bkSpan.End()
+
+	_, nonErrorBkSpan := repo.GetTracer().Start(ctx, "get non error books stat")
 	nonErrorBkStat, _ := r.queries.NonErrorBooksStat(ctx, r.site)
+	nonErrorBkSpan.End()
+
+	_, errorBkSpan := repo.GetTracer().Start(ctx, "get error books stat")
 	errorBkStat, _ := r.queries.ErrorBooksStat(ctx, r.site)
+	errorBkSpan.End()
+
+	_, downloadedBkSpan := repo.GetTracer().Start(ctx, "get downloaded books stat")
 	downloadedBkStat, _ := r.queries.DownloadedBooksStat(ctx, r.site)
+	downloadedBkSpan.End()
+
+	_, writerStatSpan := repo.GetTracer().Start(ctx, "get writers stat")
 	bkStatusStat, _ := r.queries.BooksStatusStat(ctx, r.site)
+	writerStatSpan.End()
+
+	_, writerStatSpan = repo.GetTracer().Start(ctx, "get writers stat")
 	writerStat, _ := r.queries.WritersStat(ctx, r.site)
+	writerStatSpan.End()
 
 	StatusCount := make(map[model.StatusCode]int)
 	for i := range bkStatusStat {
