@@ -57,7 +57,7 @@ clean:
 	rm ./build/ -r
 
 create_migrate:
-	migrate create -ext sql -dir migrations $(NAME)
+	migrate create -ext sql -dir database/migrations $(NAME)
 
 
 define setup_env
