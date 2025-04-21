@@ -114,6 +114,13 @@ CREATE INDEX books__checksum ON public.books USING btree (checksum, writer_check
 
 
 --
+-- Name: books__is_downloaded; Type: INDEX; Schema: public; Owner: book_spider
+--
+
+CREATE INDEX books__is_downloaded ON public.books USING btree (site, is_downloaded);
+
+
+--
 -- Name: books__status; Type: INDEX; Schema: public; Owner: book_spider
 --
 
