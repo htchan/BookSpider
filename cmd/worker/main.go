@@ -6,10 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/htchan/BookSpider/internal/common"
-	"github.com/htchan/BookSpider/internal/config/v2"
-	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
-	"github.com/htchan/BookSpider/internal/service"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
@@ -19,6 +15,11 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/htchan/BookSpider/internal/common"
+	"github.com/htchan/BookSpider/internal/config/v2"
+	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
+	"github.com/htchan/BookSpider/internal/service"
 )
 
 func otelProvider(conf config.TraceConfig) (*tracesdk.TracerProvider, error) {
