@@ -178,7 +178,7 @@ func TestServiceImpl_Book(t *testing.T) {
 			name: "book found with pure ID",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookById(123).Return(&model.Book{ID: 123, HashCode: 0}, nil)
+				rpo.EXPECT().FindBookById(gomock.Any(), 123).Return(&model.Book{ID: 123, HashCode: 0}, nil)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -191,7 +191,7 @@ func TestServiceImpl_Book(t *testing.T) {
 			name: "book found with ID and Hashcode",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookByIdHash(123, 10).Return(&model.Book{ID: 123, HashCode: 10}, nil)
+				rpo.EXPECT().FindBookByIdHash(gomock.Any(), 123, 10).Return(&model.Book{ID: 123, HashCode: 10}, nil)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -228,7 +228,7 @@ func TestServiceImpl_Book(t *testing.T) {
 			name: "book not found",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookById(123).Return(nil, repo.ErrBookNotExist)
+				rpo.EXPECT().FindBookById(gomock.Any(), 123).Return(nil, repo.ErrBookNotExist)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -270,7 +270,7 @@ func TestServiceImpl_BookGroup(t *testing.T) {
 			name: "book group found with pure ID",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookGroupByID(123).Return(
+				rpo.EXPECT().FindBookGroupByID(gomock.Any(), 123).Return(
 					model.BookGroup{{ID: 123, HashCode: 0}, {ID: 456, HashCode: 0}},
 					nil,
 				)
@@ -287,7 +287,7 @@ func TestServiceImpl_BookGroup(t *testing.T) {
 			name: "book group found with ID and Hashcode",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookGroupByIDHash(123, 10).Return(
+				rpo.EXPECT().FindBookGroupByIDHash(gomock.Any(), 123, 10).Return(
 					model.BookGroup{{ID: 123, HashCode: 10}, {ID: 456, HashCode: 0}},
 					nil,
 				)
@@ -330,7 +330,7 @@ func TestServiceImpl_BookGroup(t *testing.T) {
 			name: "book not found",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBookGroupByID(123).Return(nil, repo.ErrBookNotExist)
+				rpo.EXPECT().FindBookGroupByID(gomock.Any(), 123).Return(nil, repo.ErrBookNotExist)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -375,7 +375,7 @@ func TestServiceImpl_QueryBooks(t *testing.T) {
 			name: "happy flow with books",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBooksByTitleWriter("title", "writer", 10, 0).
+				rpo.EXPECT().FindBooksByTitleWriter(gomock.Any(), "title", "writer", 10, 0).
 					Return([]model.Book{{ID: 123, HashCode: 0}}, nil)
 
 				return &ServiceImpl{rpo: rpo}
@@ -422,7 +422,7 @@ func TestServiceImpl_RandomBooks(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBooksByRandom(10).Return([]model.Book{{ID: 123, HashCode: 0}}, nil)
+				rpo.EXPECT().FindBooksByRandom(gomock.Any(), 10).Return([]model.Book{{ID: 123, HashCode: 0}}, nil)
 
 				return &ServiceImpl{rpo: rpo}
 			},

@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func stubData(r repo.Repository, site string) []model.Book {
+func stubData(ctx context.Context, r repo.Repository, site string) []model.Book {
 	bks := []model.Book{
 		{
 			Site: site, ID: 1, HashCode: 0,
@@ -47,15 +48,15 @@ func stubData(r repo.Repository, site string) []model.Book {
 	}
 
 	for i := range bks {
-		err := r.SaveWriter(&bks[i].Writer)
+		err := r.SaveWriter(ctx, &bks[i].Writer)
 		if err != nil {
 			// panic(err)
 		}
-		err = r.CreateBook(&bks[i])
+		err = r.CreateBook(ctx, &bks[i])
 		if err != nil {
 			// panic(err)
 		}
-		err = r.SaveError(&bks[i], bks[i].Error)
+		err = r.SaveError(ctx, &bks[i], bks[i].Error)
 		if err != nil {
 			// panic(err)
 		}
@@ -139,7 +140,7 @@ func TestPsqlRepo_CreateBook(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := test.r.CreateBook(&test.bk)
+			err := test.r.CreateBook(t.Context(), &test.bk)
 			t.Run("result", func(t *testing.T) {
 				if (err != nil) != test.expectErr {
 					t.Errorf("got error: %v, expect err: %v", err, test.expectErr)
@@ -149,7 +150,7 @@ func TestPsqlRepo_CreateBook(t *testing.T) {
 			})
 
 			t.Run("book in db", func(t *testing.T) {
-				bk, err := test.r.FindBookByIdHash(test.bk.ID, test.bk.HashCode)
+				bk, err := test.r.FindBookByIdHash(t.Context(), test.bk.ID, test.bk.HashCode)
 				if err != nil {
 					t.Fatalf("query got error: %v", err)
 				}
@@ -176,7 +177,7 @@ func TestPsqlRepo_UpdateBook(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name              string
@@ -219,7 +220,7 @@ func TestPsqlRepo_UpdateBook(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := test.r.UpdateBook(test.inputBook)
+			err := test.r.UpdateBook(t.Context(), test.inputBook)
 			t.Run("result", func(t *testing.T) {
 				if (err != nil) != test.expectErr {
 					t.Errorf("got error: %v; want error: %v", err, test.expectErr)
@@ -227,7 +228,7 @@ func TestPsqlRepo_UpdateBook(t *testing.T) {
 			})
 
 			t.Run("book in db", func(t *testing.T) {
-				bk, err := test.r.FindBookByIdHash(test.inputBook.ID, test.inputBook.HashCode)
+				bk, err := test.r.FindBookByIdHash(t.Context(), test.inputBook.ID, test.inputBook.HashCode)
 				if (err != nil) != test.expectQueryErr {
 					t.Errorf("query got error: %v; want error: %v", err, test.expectQueryErr)
 				}
@@ -253,7 +254,7 @@ func TestPsqlRepo_FindBookByID(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -284,7 +285,7 @@ func TestPsqlRepo_FindBookByID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBookById(test.id)
+			result, err := test.r.FindBookById(t.Context(), test.id)
 			t.Run("result", func(t *testing.T) {
 				if (err != nil) != test.expectErr {
 					t.Errorf("got error: %v; want error: %v", err, test.expectErr)
@@ -312,7 +313,7 @@ func TestPsqlRepo_FindBookByIDHash(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -343,7 +344,7 @@ func TestPsqlRepo_FindBookByIDHash(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBookByIdHash(test.id, test.hashcode)
+			result, err := test.r.FindBookByIdHash(t.Context(), test.id, test.hashcode)
 			t.Run("result", func(t *testing.T) {
 				if (err != nil) != test.expectErr {
 					t.Errorf("got error: %v; want error: %v", err, test.expectErr)
@@ -376,7 +377,7 @@ func TestPsqlRepo_FindAllBooks(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -401,7 +402,7 @@ func TestPsqlRepo_FindAllBooks(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindAllBooks()
+			result, err := test.r.FindAllBooks(t.Context())
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
@@ -432,7 +433,7 @@ func TestPsqlRepo_FindBooksForUpdate(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -451,7 +452,7 @@ func TestPsqlRepo_FindBooksForUpdate(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBooksForUpdate()
+			result, err := test.r.FindBooksForUpdate(t.Context())
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
@@ -482,7 +483,7 @@ func TestPsqlRepo_FindBooksForDownload(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -501,7 +502,7 @@ func TestPsqlRepo_FindBooksForDownload(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBooksForDownload()
+			result, err := test.r.FindBooksForDownload(t.Context())
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
@@ -533,7 +534,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -590,7 +591,7 @@ func TestPsqlRepo_FindBooksByTitleWriter(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBooksByTitleWriter(test.title, test.writer, test.limit, test.offset)
+			result, err := test.r.FindBooksByTitleWriter(t.Context(), test.title, test.writer, test.limit, test.offset)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}
@@ -616,8 +617,7 @@ func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 		db.Close()
 	})
 
-	stubData(NewRepo(site, db), site)
-
+	stubData(t.Context(), NewRepo(site, db), site)
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -637,7 +637,7 @@ func TestPsqlRepo_FindBooksByRandom(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result, err := test.r.FindBooksByRandom(test.limit)
+			result, err := test.r.FindBooksByRandom(t.Context(), test.limit)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want err: %v", err, test.expectErr)
 			}
@@ -667,7 +667,7 @@ func TestPsqlRepo_UpdateBooksStatus(t *testing.T) {
 
 	r := NewRepo(site, db)
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name       string
@@ -724,19 +724,19 @@ func TestPsqlRepo_UpdateBooksStatus(t *testing.T) {
 			t.Parallel()
 
 			bksDB[2].Status = model.StatusInProgress
-			r.UpdateBook(&bksDB[2])
+			r.UpdateBook(t.Context(), &bksDB[2])
 			bksDB[3].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
-			r.UpdateBook(&bksDB[3])
+			r.UpdateBook(t.Context(), &bksDB[3])
 			bksDB[0].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
 			bksDB[0].Status = model.StatusInProgress
-			r.UpdateBook(&bksDB[0])
+			r.UpdateBook(t.Context(), &bksDB[0])
 
-			err := test.r.UpdateBooksStatus()
+			err := test.r.UpdateBooksStatus(t.Context())
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v; want error: %v", err, test.expectErr)
 			}
 
-			bk, err := test.r.FindBookByIdHash(test.bkID, test.bkHash)
+			bk, err := test.r.FindBookByIdHash(t.Context(), test.bkID, test.bkHash)
 			if err != nil {
 				t.Errorf("book fail to fetch: id: %v; hash: %v; err: %v", test.bkID, test.bkHash, err)
 				return
@@ -763,10 +763,10 @@ func BenchmarkPsqlRepo_UpdateBooksStatus(b *testing.B) {
 
 	r := NewRepo(site, db)
 
-	stubData(NewRepo(site, db), site)
+	stubData(b.Context(), NewRepo(site, db), site)
 
 	for n := 0; n < b.N; n++ {
-		r.UpdateBooksStatus()
+		r.UpdateBooksStatus(b.Context())
 	}
 }
 
@@ -786,7 +786,7 @@ func TestPsqlRepo_SaveWriter(t *testing.T) {
 		db.Close()
 	})
 
-	bksDB := stubData(NewRepo(site, db), site)
+	bksDB := stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name      string
@@ -810,7 +810,7 @@ func TestPsqlRepo_SaveWriter(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := test.r.SaveWriter(test.writer)
+			err := test.r.SaveWriter(t.Context(), test.writer)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v, expect err: %v", err, test.expectErr)
 			}
@@ -838,7 +838,7 @@ func TestPsqlRepo_SaveError(t *testing.T) {
 		db.Close()
 	})
 
-	stubData(NewRepo(site, db), site)
+	stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name         string
@@ -876,7 +876,7 @@ func TestPsqlRepo_SaveError(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := test.r.SaveError(test.bk, test.e)
+			err := test.r.SaveError(t.Context(), test.bk, test.e)
 			t.Run("result", func(t *testing.T) {
 				if (err != nil) != test.expectErr {
 					t.Errorf("got error: %v, expect err: %v", err, test.expectErr)
@@ -884,7 +884,7 @@ func TestPsqlRepo_SaveError(t *testing.T) {
 			})
 
 			t.Run("error in db", func(t *testing.T) {
-				bk, err := test.r.FindBookByIdHash(test.bk.ID, test.bk.HashCode)
+				bk, err := test.r.FindBookByIdHash(t.Context(), test.bk.ID, test.bk.HashCode)
 				if err != nil {
 					t.Errorf("query got error: %v; want error: %v", err, false)
 				}
@@ -914,7 +914,7 @@ func TestPsqlRepo_Backup(t *testing.T) {
 		db.Close()
 	})
 
-	stubData(NewRepo(site, db), site)
+	stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name      string
@@ -933,7 +933,7 @@ func TestPsqlRepo_Backup(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			err := test.r.Backup(test.path)
+			err := test.r.Backup(t.Context(), test.path)
 			if (err != nil) != test.expectErr {
 				t.Errorf("got err: %v; want err: %v", err, test.expectErr)
 			}
@@ -958,7 +958,7 @@ func TestPsqlRepo_Stats(t *testing.T) {
 		db.Close()
 	})
 
-	stubData(NewRepo(site, db), site)
+	stubData(t.Context(), NewRepo(site, db), site)
 
 	tests := []struct {
 		name   string
@@ -985,7 +985,7 @@ func TestPsqlRepo_Stats(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := test.r.Stats()
+			result := test.r.Stats(t.Context())
 			assert.Equal(t, test.expect, result)
 		})
 	}

@@ -1,44 +1,51 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/htchan/BookSpider/internal/model"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 //go:generate mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
 type Repository interface {
 	// book related
-	CreateBook(*model.Book) error
-	UpdateBook(*model.Book) error
+	CreateBook(context.Context, *model.Book) error
+	UpdateBook(context.Context, *model.Book) error
 	// the system will not delete exiting books
 
-	FindBookById(id int) (*model.Book, error) // return book with the largest hash code
-	FindBookByIdHash(id, hash int) (*model.Book, error)
-	FindBooksByStatus(status model.StatusCode) (<-chan model.Book, error)
-	FindAllBooks() (<-chan model.Book, error)
-	FindBooksForUpdate() (<-chan model.Book, error)
-	FindBooksForDownload() (<-chan model.Book, error)
-	FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error)
-	FindBooksByRandom(limit int) ([]model.Book, error)
-	UpdateBooksStatus() error
+	FindBookById(ctx context.Context, id int) (*model.Book, error) // return book with the largest hash code
+	FindBookByIdHash(ctx context.Context, id, hash int) (*model.Book, error)
+	FindBooksByStatus(ctx context.Context, status model.StatusCode) (<-chan model.Book, error)
+	FindAllBooks(context.Context) (<-chan model.Book, error)
+	FindBooksForUpdate(context.Context) (<-chan model.Book, error)
+	FindBooksForDownload(context.Context) (<-chan model.Book, error)
+	FindBooksByTitleWriter(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error)
+	FindBooksByRandom(ctx context.Context, limit int) ([]model.Book, error)
+	UpdateBooksStatus(context.Context) error
 
-	FindBookGroupByID(id int) (model.BookGroup, error)
-	FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error)
+	FindBookGroupByID(ctx context.Context, id int) (model.BookGroup, error)
+	FindBookGroupByIDHash(ctx context.Context, id, hashCode int) (model.BookGroup, error)
 
-	FindAllBookIDs() ([]int, error)
+	FindAllBookIDs(context.Context) ([]int, error)
 
 	// writer related
-	SaveWriter(*model.Writer) error // create and update id in writer
+	SaveWriter(context.Context, *model.Writer) error // create and update id in writer
 	// the system will not delete / update existing writers
 
 	// error related
-	SaveError(*model.Book, error) error // create / update / delete errors depends on error content
+	SaveError(context.Context, *model.Book, error) error // create / update / delete errors depends on error content
 
 	// database
-	Backup(path string) error
-	DBStats() sql.DBStats // return empty if repo is not based on db
-	Stats() Summary
+	Backup(ctx context.Context, path string) error
+	DBStats(context.Context) sql.DBStats // return empty if repo is not based on db
+	Stats(context.Context) Summary
 
 	Close() error
+}
+
+func GetTracer() trace.Tracer {
+	return otel.Tracer("htchan/BookSpider/repository")
 }

@@ -54,7 +54,7 @@ func Test_GetSiteMiddleware(t *testing.T) {
 			handlerFunc := GetSiteMiddleware(test.servs)
 			handler := handlerFunc(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					serv := r.Context().Value(SERV_KEY).(service.Service)
+					serv := r.Context().Value(ContextKeyServ).(service.Service)
 
 					assert.Equal(t, test.wantServ, serv)
 					// if !cmp.Equal(st, test.wantServ) {
@@ -162,12 +162,12 @@ func Test_GetBookMiddleware(t *testing.T) {
 
 			handler := GetBookMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					bk := r.Context().Value(BOOK_KEY).(*model.Book)
+					bk := r.Context().Value(ContextKeyBook).(*model.Book)
 					if !cmp.Equal(bk, test.expectBook) {
 						t.Errorf("site diff: %v", cmp.Diff(bk, test.expectBook))
 					}
 
-					bkGroup := r.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
+					bkGroup := r.Context().Value(ContextKeyBookGroup).(*model.BookGroup)
 					if !cmp.Equal(bkGroup, test.expectBookGroup) {
 						t.Errorf("site diff: %v", cmp.Diff(bkGroup, test.expectBookGroup))
 					}
@@ -183,7 +183,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 
 			serv := test.setupServ(ctrl)
 
-			ctx := context.WithValue(req.Context(), SERV_KEY, serv)
+			ctx := context.WithValue(req.Context(), ContextKeyServ, serv)
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("idHash", test.idHash)
 			ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
@@ -250,12 +250,12 @@ func Test_GetSearchParamsMiddleware(t *testing.T) {
 			t.Parallel()
 			handler := GetSearchParamsMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					title := r.Context().Value(TITLE_KEY).(string)
+					title := r.Context().Value(ContextKeyTitle).(string)
 					if title != test.wantTitle {
 						t.Errorf("title diff: %v", cmp.Diff(title, test.wantTitle))
 					}
 
-					writer := r.Context().Value(WRITER_KEY).(string)
+					writer := r.Context().Value(ContextKeyWriter).(string)
 					if writer != test.wantWriter {
 						t.Errorf("writer diff: %v", cmp.Diff(writer, test.wantWriter))
 					}
@@ -341,12 +341,12 @@ func Test_GetPageParamsMiddleware(t *testing.T) {
 			t.Parallel()
 			handler := GetPageParamsMiddleware(http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
-					limit := r.Context().Value(LIMIT_KEY).(int)
+					limit := r.Context().Value(ContextKeyLimit).(int)
 					if limit != test.wantLimit {
 						t.Errorf("limit diff: %v", cmp.Diff(limit, test.wantLimit))
 					}
 
-					offset := r.Context().Value(OFFSET_KEY).(int)
+					offset := r.Context().Value(ContextKeyOffset).(int)
 					if offset != test.wantOffset {
 						t.Errorf("offset diff: %v", cmp.Diff(offset, test.wantOffset))
 					}

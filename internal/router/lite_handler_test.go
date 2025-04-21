@@ -34,7 +34,7 @@ func TestGeneralLiteHandler(t *testing.T) {
 				t.Helper()
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
 
 				return req.WithContext(ctx)
 			},
@@ -115,8 +115,8 @@ func TestSiteLiteHandler(t *testing.T) {
 
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
-				ctx = context.WithValue(ctx, SERV_KEY, serv)
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeyServ, serv)
 
 				return req.WithContext(ctx)
 			},
@@ -214,12 +214,12 @@ func TestSearchLiteHandler(t *testing.T) {
 
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
-				ctx = context.WithValue(ctx, SERV_KEY, serv)
-				ctx = context.WithValue(ctx, TITLE_KEY, "title")
-				ctx = context.WithValue(ctx, WRITER_KEY, "writer")
-				ctx = context.WithValue(ctx, LIMIT_KEY, 10)
-				ctx = context.WithValue(ctx, OFFSET_KEY, 0)
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
+				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
+				ctx = context.WithValue(ctx, ContextKeyLimit, 10)
+				ctx = context.WithValue(ctx, ContextKeyOffset, 0)
 
 				return req.WithContext(ctx)
 			},
@@ -302,14 +302,14 @@ func TestBookLiteHandler(t *testing.T) {
 
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
-				ctx = context.WithValue(ctx, BOOK_KEY, &model.Book{
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeyBook, &model.Book{
 					Site: "test", ID: 123, HashCode: 100,
 					Title: "title", Writer: model.Writer{Name: "writer"},
 					Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 					Status: model.StatusEnd, IsDownloaded: true,
 				})
-				ctx = context.WithValue(ctx, BOOK_GROUP_KEY, &model.BookGroup{})
+				ctx = context.WithValue(ctx, ContextKeyBookGroup, &model.BookGroup{})
 
 				return req.WithContext(ctx)
 			},
@@ -351,14 +351,14 @@ func TestBookLiteHandler(t *testing.T) {
 
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, "/lite/novel")
-				ctx = context.WithValue(ctx, BOOK_KEY, &model.Book{
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeyBook, &model.Book{
 					Site: "test", ID: 123, HashCode: 100,
 					Title: "title", Writer: model.Writer{Name: "writer"},
 					Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 					Status: model.StatusEnd, IsDownloaded: true,
 				})
-				ctx = context.WithValue(ctx, BOOK_GROUP_KEY, &model.BookGroup{
+				ctx = context.WithValue(ctx, ContextKeyBookGroup, &model.BookGroup{
 					{
 						Site: "test-2", ID: 123, HashCode: 100,
 						Title: "title", Writer: model.Writer{Name: "writer"},

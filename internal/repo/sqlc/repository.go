@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -13,12 +14,13 @@ import (
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/sqlc"
 	_ "github.com/lib/pq"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type SqlcRepo struct {
 	site    string
 	db      *sql.DB
-	ctx     context.Context
 	queries *sqlc.Queries
 }
 
@@ -40,13 +42,18 @@ func NewRepo(site string, db *sql.DB) *SqlcRepo {
 	return &SqlcRepo{
 		site:    site,
 		db:      db,
-		ctx:     context.Background(),
 		queries: sqlc.New(db),
 	}
 }
 
-func (r *SqlcRepo) CreateBook(bk *model.Book) error {
-	result, err := r.queries.CreateBookWithZeroHash(r.ctx, sqlc.CreateBookWithZeroHashParams{
+func (r *SqlcRepo) CreateBook(ctx context.Context, bk *model.Book) error {
+	createBookCtx, createBookSpan := repo.GetTracer().Start(ctx, "create book")
+	defer createBookSpan.End()
+
+	_, createBookWithZeroHashSpan := repo.GetTracer().Start(createBookCtx, "create book with zero hash")
+	defer createBookWithZeroHashSpan.End()
+
+	zeroHashParams := sqlc.CreateBookWithZeroHashParams{
 		Site:           bk.Site,
 		ID:             int32(bk.ID),
 		Title:          toSqlString(bk.Title),
@@ -58,13 +65,21 @@ func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 		Status:         bk.Status.String(),
 		IsDownloaded:   bk.IsDownloaded,
 		Checksum:       toSqlString(bk.Checksum()),
-	})
+	}
+	zeroHashJsonByte, zeroHashJsonErr := json.Marshal(zeroHashParams)
+	if zeroHashJsonErr == nil {
+		createBookWithZeroHashSpan.SetAttributes(attribute.String("params", string(zeroHashJsonByte)))
+	}
+	result, err := r.queries.CreateBookWithZeroHash(ctx, zeroHashParams)
 	if err == nil {
 		bk.HashCode = int(result.HashCode)
 		return nil
 	}
 
-	_, err = r.queries.CreateBookWithHash(r.ctx, sqlc.CreateBookWithHashParams{
+	_, createBookWithHashSpan := repo.GetTracer().Start(createBookCtx, "create book with hash")
+	defer createBookWithHashSpan.End()
+
+	withHashParams := sqlc.CreateBookWithHashParams{
 		Site:           bk.Site,
 		ID:             int32(bk.ID),
 		HashCode:       int32(bk.HashCode),
@@ -77,7 +92,13 @@ func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 		Status:         bk.Status.String(),
 		IsDownloaded:   bk.IsDownloaded,
 		Checksum:       toSqlString(bk.Checksum()),
-	})
+	}
+	withHashJsonByte, withHashJsonErr := json.Marshal(withHashParams)
+	if withHashJsonErr == nil {
+		createBookWithHashSpan.SetAttributes(attribute.String("params", string(withHashJsonByte)))
+	}
+
+	_, err = r.queries.CreateBookWithHash(ctx, withHashParams)
 	if err != nil {
 		return fmt.Errorf("fail to insert book: %v", err)
 	}
@@ -85,8 +106,11 @@ func (r *SqlcRepo) CreateBook(bk *model.Book) error {
 	return nil
 }
 
-func (r *SqlcRepo) UpdateBook(bk *model.Book) error {
-	_, err := r.queries.UpdateBook(r.ctx, sqlc.UpdateBookParams{
+func (r *SqlcRepo) UpdateBook(ctx context.Context, bk *model.Book) error {
+	_, span := repo.GetTracer().Start(ctx, "update book")
+	defer span.End()
+
+	params := sqlc.UpdateBookParams{
 		Site:           bk.Site,
 		ID:             int32(bk.ID),
 		HashCode:       int32(bk.HashCode),
@@ -99,7 +123,13 @@ func (r *SqlcRepo) UpdateBook(bk *model.Book) error {
 		Status:         bk.Status.String(),
 		IsDownloaded:   bk.IsDownloaded,
 		Checksum:       toSqlString(bk.Checksum()),
-	})
+	}
+	jsonByte, jsonErr := json.Marshal(params)
+	if jsonErr == nil {
+		span.SetAttributes(attribute.String("params", string(jsonByte)))
+	}
+
+	_, err := r.queries.UpdateBook(ctx, params)
 	if err != nil {
 		return fmt.Errorf("fail to update book: %w", err)
 	}
@@ -107,8 +137,13 @@ func (r *SqlcRepo) UpdateBook(bk *model.Book) error {
 	return nil
 }
 
-func (r *SqlcRepo) FindBookById(id int) (*model.Book, error) {
-	result, err := r.queries.GetBookByID(r.ctx, sqlc.GetBookByIDParams{
+func (r *SqlcRepo) FindBookById(ctx context.Context, id int) (*model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find book by id")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site), attribute.Int("id", id))
+
+	result, err := r.queries.GetBookByID(ctx, sqlc.GetBookByIDParams{
 		Site: r.site,
 		ID:   int32(id),
 	})
@@ -138,8 +173,17 @@ func (r *SqlcRepo) FindBookById(id int) (*model.Book, error) {
 		Error:         bkErr,
 	}, nil
 }
-func (r *SqlcRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
-	result, err := r.queries.GetBookByIDHash(r.ctx, sqlc.GetBookByIDHashParams{
+func (r *SqlcRepo) FindBookByIdHash(ctx context.Context, id, hash int) (*model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find book by id hash")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("site", r.site),
+		attribute.Int("id", id),
+		attribute.Int("hash", hash),
+	)
+
+	result, err := r.queries.GetBookByIDHash(ctx, sqlc.GetBookByIDHashParams{
 		Site:     r.site,
 		ID:       int32(id),
 		HashCode: int32(hash),
@@ -170,10 +214,15 @@ func (r *SqlcRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 		Error:         bkErr,
 	}, nil
 }
-func (r *SqlcRepo) FindBooksByStatus(Status model.StatusCode) (<-chan model.Book, error) {
-	results, err := r.queries.ListBooksByStatus(r.ctx, sqlc.ListBooksByStatusParams{
+func (r *SqlcRepo) FindBooksByStatus(ctx context.Context, status model.StatusCode) (<-chan model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find books by status")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site), attribute.String("status", status.String()))
+
+	results, err := r.queries.ListBooksByStatus(ctx, sqlc.ListBooksByStatusParams{
 		Site:   r.site,
-		Status: Status.String(),
+		Status: status.String(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
@@ -210,8 +259,13 @@ func (r *SqlcRepo) FindBooksByStatus(Status model.StatusCode) (<-chan model.Book
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindAllBooks() (<-chan model.Book, error) {
-	results, err := r.queries.ListBooks(r.ctx, r.site)
+func (r *SqlcRepo) FindAllBooks(ctx context.Context) (<-chan model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find all books")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site))
+
+	results, err := r.queries.ListBooks(ctx, r.site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -247,8 +301,13 @@ func (r *SqlcRepo) FindAllBooks() (<-chan model.Book, error) {
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindBooksForUpdate() (<-chan model.Book, error) {
-	results, err := r.queries.ListBooksForUpdate(r.ctx, r.site)
+func (r *SqlcRepo) FindBooksForUpdate(ctx context.Context) (<-chan model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find books for update")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site))
+
+	results, err := r.queries.ListBooksForUpdate(ctx, r.site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -284,8 +343,13 @@ func (r *SqlcRepo) FindBooksForUpdate() (<-chan model.Book, error) {
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindBooksForDownload() (<-chan model.Book, error) {
-	results, err := r.queries.ListBooksForDownload(r.ctx, r.site)
+func (r *SqlcRepo) FindBooksForDownload(ctx context.Context) (<-chan model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find books for download")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site))
+
+	results, err := r.queries.ListBooksForDownload(ctx, r.site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -321,8 +385,19 @@ func (r *SqlcRepo) FindBooksForDownload() (<-chan model.Book, error) {
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error) {
-	results, err := r.queries.ListBooksByTitleWriter(r.ctx, sqlc.ListBooksByTitleWriterParams{
+func (r *SqlcRepo) FindBooksByTitleWriter(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find books by title and writer")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("site", r.site),
+		attribute.String("title", title),
+		attribute.String("writer", writer),
+		attribute.Int("limit", limit),
+		attribute.Int("offset", offset),
+	)
+
+	results, err := r.queries.ListBooksByTitleWriter(ctx, sqlc.ListBooksByTitleWriterParams{
 		Site:    r.site,
 		Column2: toSqlString(fmt.Sprintf("%%%s%%", title)),
 		Column3: toSqlString(fmt.Sprintf("%%%s%%", writer)),
@@ -359,8 +434,16 @@ func (r *SqlcRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 
 	return bks, nil
 }
-func (r *SqlcRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
-	results, err := r.queries.ListRandomBooks(r.ctx, sqlc.ListRandomBooksParams{
+func (r *SqlcRepo) FindBooksByRandom(ctx context.Context, limit int) ([]model.Book, error) {
+	_, span := repo.GetTracer().Start(ctx, "find books by random")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("site", r.site),
+		attribute.Int("limit", limit),
+	)
+
+	results, err := r.queries.ListRandomBooks(ctx, sqlc.ListRandomBooksParams{
 		Site:    r.site,
 		Column2: limit,
 	})
@@ -396,8 +479,13 @@ func (r *SqlcRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	return bks, nil
 }
 
-func (r *SqlcRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
-	results, err := r.queries.GetBookGroupByID(r.ctx, sqlc.GetBookGroupByIDParams{
+func (r *SqlcRepo) FindBookGroupByID(ctx context.Context, id int) (model.BookGroup, error) {
+	_, span := repo.GetTracer().Start(ctx, "find book group by id")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site), attribute.Int("id", id))
+
+	results, err := r.queries.GetBookGroupByID(ctx, sqlc.GetBookGroupByIDParams{
 		Site: r.site,
 		ID:   int32(id),
 	})
@@ -433,8 +521,17 @@ func (r *SqlcRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
 	return group, nil
 }
 
-func (r *SqlcRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
-	results, err := r.queries.GetBookGroupByIDHash(r.ctx, sqlc.GetBookGroupByIDHashParams{
+func (r *SqlcRepo) FindBookGroupByIDHash(ctx context.Context, id, hashCode int) (model.BookGroup, error) {
+	_, span := repo.GetTracer().Start(ctx, "find book group by id hash")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("site", r.site),
+		attribute.Int("id", id),
+		attribute.Int("hash", hashCode),
+	)
+
+	results, err := r.queries.GetBookGroupByIDHash(ctx, sqlc.GetBookGroupByIDHashParams{
 		Site:     r.site,
 		ID:       int32(id),
 		HashCode: int32(hashCode),
@@ -471,15 +568,25 @@ func (r *SqlcRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, err
 	return group, nil
 }
 
-func (r *SqlcRepo) UpdateBooksStatus() error {
-	return r.queries.UpdateBooksStatus(r.ctx, sqlc.UpdateBooksStatusParams{
+func (r *SqlcRepo) UpdateBooksStatus(ctx context.Context) error {
+	_, span := repo.GetTracer().Start(ctx, "update books status")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site))
+
+	return r.queries.UpdateBooksStatus(ctx, sqlc.UpdateBooksStatusParams{
 		Site:       r.site,
 		UpdateDate: toSqlString(strconv.Itoa(time.Now().Year() - 1)),
 	})
 }
 
-func (r *SqlcRepo) FindAllBookIDs() ([]int, error) {
-	result, err := r.queries.FindAllBookIDs(r.ctx, r.site)
+func (r *SqlcRepo) FindAllBookIDs(ctx context.Context) ([]int, error) {
+	_, span := repo.GetTracer().Start(ctx, "find all book ids")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("site", r.site))
+
+	result, err := r.queries.FindAllBookIDs(ctx, r.site)
 	if err != nil {
 		return nil, fmt.Errorf("sql failed: %w", err)
 	}
@@ -493,8 +600,16 @@ func (r *SqlcRepo) FindAllBookIDs() ([]int, error) {
 }
 
 // writer related
-func (r *SqlcRepo) SaveWriter(writer *model.Writer) error {
-	result, err := r.queries.CreateWriter(r.ctx, sqlc.CreateWriterParams{
+func (r *SqlcRepo) SaveWriter(ctx context.Context, writer *model.Writer) error {
+	_, span := repo.GetTracer().Start(ctx, "save writer")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("params.writer_name", writer.Name),
+		attribute.String("params.writer_checksum", writer.Checksum()),
+	)
+
+	result, err := r.queries.CreateWriter(ctx, sqlc.CreateWriterParams{
 		Name:     toSqlString(writer.Name),
 		Checksum: toSqlString(writer.Checksum()),
 	})
@@ -508,21 +623,33 @@ func (r *SqlcRepo) SaveWriter(writer *model.Writer) error {
 }
 
 // error related
-func (r *SqlcRepo) SaveError(bk *model.Book, e error) error {
+func (r *SqlcRepo) SaveError(ctx context.Context, bk *model.Book, e error) error {
+	_, span := repo.GetTracer().Start(ctx, "save error")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("params.site", r.site),
+		attribute.Int("params.id", bk.ID),
+		attribute.String("params.error", e.Error()),
+	)
+
 	var err error
 	if e == nil {
-		_, err = r.queries.DeleteError(r.ctx, sqlc.DeleteErrorParams{
+		_, err = r.queries.DeleteError(ctx, sqlc.DeleteErrorParams{
 			Site: toSqlString(bk.Site),
 			ID:   toSqlInt(bk.ID),
 		})
 	} else {
-		_, err = r.queries.CreateError(r.ctx, sqlc.CreateErrorParams{
+		_, err = r.queries.CreateError(ctx, sqlc.CreateErrorParams{
 			Site: toSqlString(bk.Site),
 			ID:   toSqlInt(bk.ID),
 			Data: toSqlString(e.Error()),
 		})
 	}
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+
 		return fmt.Errorf("fail to save error: %w", err)
 	}
 
@@ -531,7 +658,12 @@ func (r *SqlcRepo) SaveError(bk *model.Book, e error) error {
 	return nil
 }
 
-func (r *SqlcRepo) backupBooks(path string) error {
+func (r *SqlcRepo) backupBooks(ctx context.Context, path string) error {
+	_, span := repo.GetTracer().Start(ctx, "backup books")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("path", path))
+
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (select * from books where site='%s') to '%s/%s/books_%s.csv' 
@@ -541,12 +673,18 @@ func (r *SqlcRepo) backupBooks(path string) error {
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+
 		return fmt.Errorf("backup books: %w", err)
 	}
 	return nil
 }
 
-func (r *SqlcRepo) backupWriters(path string) error {
+func (r *SqlcRepo) backupWriters(ctx context.Context, path string) error {
+	_, span := repo.GetTracer().Start(ctx, "backup writers")
+	defer span.End()
+	span.SetAttributes(attribute.String("path", path))
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (
@@ -558,12 +696,19 @@ func (r *SqlcRepo) backupWriters(path string) error {
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+
 		return fmt.Errorf("backup writers: %w", err)
 	}
 	return nil
 }
 
-func (r *SqlcRepo) backupErrors(path string) error {
+func (r *SqlcRepo) backupErrors(ctx context.Context, path string) error {
+	_, span := repo.GetTracer().Start(ctx, "backup errors")
+	defer span.End()
+	span.SetAttributes(attribute.String("path", path))
+
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (select * from errors where site='%s') to '%s/%s/errors_%s.csv' 
@@ -573,15 +718,26 @@ func (r *SqlcRepo) backupErrors(path string) error {
 	)
 
 	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		span.RecordError(err)
+
 		return fmt.Errorf("backup errors: %w", err)
 	}
 	return nil
 }
 
-func (r *SqlcRepo) Backup(path string) error {
-	for _, f := range []func(string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
-		err := f(path)
+func (r *SqlcRepo) Backup(ctx context.Context, path string) error {
+	_, span := repo.GetTracer().Start(ctx, "backup")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("path", path))
+
+	for _, f := range []func(context.Context, string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
+		err := f(ctx, path)
 		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
+
 			return err
 		}
 	}
@@ -589,17 +745,17 @@ func (r *SqlcRepo) Backup(path string) error {
 }
 
 // database
-func (r *SqlcRepo) DBStats() sql.DBStats {
+func (r *SqlcRepo) DBStats(ctx context.Context) sql.DBStats {
 	return r.db.Stats()
 }
 
-func (r *SqlcRepo) Stats() repo.Summary {
-	bkStat, _ := r.queries.BooksStat(r.ctx, r.site)
-	nonErrorBkStat, _ := r.queries.NonErrorBooksStat(r.ctx, r.site)
-	errorBkStat, _ := r.queries.ErrorBooksStat(r.ctx, r.site)
-	downloadedBkStat, _ := r.queries.DownloadedBooksStat(r.ctx, r.site)
-	bkStatusStat, _ := r.queries.BooksStatusStat(r.ctx, r.site)
-	writerStat, _ := r.queries.WritersStat(r.ctx, r.site)
+func (r *SqlcRepo) Stats(ctx context.Context) repo.Summary {
+	bkStat, _ := r.queries.BooksStat(ctx, r.site)
+	nonErrorBkStat, _ := r.queries.NonErrorBooksStat(ctx, r.site)
+	errorBkStat, _ := r.queries.ErrorBooksStat(ctx, r.site)
+	downloadedBkStat, _ := r.queries.DownloadedBooksStat(ctx, r.site)
+	bkStatusStat, _ := r.queries.BooksStatusStat(ctx, r.site)
+	writerStat, _ := r.queries.WritersStat(ctx, r.site)
 
 	StatusCount := make(map[model.StatusCode]int)
 	for i := range bkStatusStat {

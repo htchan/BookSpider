@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"strconv"
 	"testing"
 	"time"
@@ -64,7 +63,7 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			name: "book is end, but its status is not",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year() - 3),
 					Status:     model.StatusEnd,
 				}).Return(nil)
@@ -97,7 +96,7 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			name: "book is not end, but its status is end",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year()),
 					Status:     model.StatusInProgress,
 				}).Return(nil)
@@ -112,7 +111,7 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			name: "update book return error",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					UpdateDate: strconv.Itoa(time.Now().Year()),
 					Status:     model.StatusInProgress,
 				}).Return(serv.ErrUnavailable)
@@ -133,7 +132,7 @@ func TestServiceImpl_ValidateBookEnd(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).ValidateBookEnd(context.Background(), test.bk)
+			err := test.getServ(ctrl).ValidateBookEnd(t.Context(), test.bk)
 			assert.Equal(t, test.wantBk, test.bk)
 			assert.ErrorIs(t, err, test.wantError)
 		})
@@ -152,7 +151,7 @@ func TestServiceImpl_ValidateEnd(t *testing.T) {
 			name: "call rpo function",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().UpdateBooksStatus().Return(serv.ErrUnavailable)
+				rpo.EXPECT().UpdateBooksStatus(gomock.Any()).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -168,7 +167,7 @@ func TestServiceImpl_ValidateEnd(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).ValidateEnd(context.Background())
+			err := test.getServ(ctrl).ValidateEnd(t.Context())
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

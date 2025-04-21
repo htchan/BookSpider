@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"flag"
 	"os"
 	"testing"
@@ -244,8 +243,8 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 					close(bkCh)
 				}()
 
-				rpo.EXPECT().FindAllBooks().Return(bkCh, nil)
-				rpo.EXPECT().UpdateBook(&model.Book{ID: 456, HashCode: 0, IsDownloaded: false}).Return(nil)
+				rpo.EXPECT().FindAllBooks(gomock.Any()).Return(bkCh, nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{ID: 456, HashCode: 0, IsDownloaded: false}).Return(nil)
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./patch-download-status"},
@@ -260,7 +259,7 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
 
-				rpo.EXPECT().FindAllBooks().Return(nil, service.ErrUnavailable)
+				rpo.EXPECT().FindAllBooks(gomock.Any()).Return(nil, service.ErrUnavailable)
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./patch-download-status"},
@@ -280,7 +279,7 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getService(ctrl).PatchDownloadStatus(context.Background(), nil)
+			err := test.getService(ctrl).PatchDownloadStatus(t.Context(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}
@@ -304,21 +303,21 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 
 				hashcode := model.GenerateHash()
 
-				rpo.EXPECT().FindAllBookIDs().Return([]int{1, 2, 4}, nil)
+				rpo.EXPECT().FindAllBookIDs(gomock.Any()).Return([]int{1, 2, 4}, nil)
 				vendorService.EXPECT().FindMissingIds([]int{1, 2, 4}).Return([]int{3})
-				rpo.EXPECT().CreateBook(&model.Book{Site: "serv", ID: 3, HashCode: hashcode}).Return(nil)
+				rpo.EXPECT().CreateBook(gomock.Any(), &model.Book{Site: "serv", ID: 3, HashCode: hashcode}).Return(nil)
 				vendorService.EXPECT().BookURL("3").Return("http://testing.com/1234")
 				cli.EXPECT().Get(gomock.Any(), "http://testing.com/1234").Return("result", nil)
 				vendorService.EXPECT().ParseBook("result").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 				}, nil)
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					Site: "serv", ID: 3, HashCode: hashcode,
 					Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}).Return(nil)
-				rpo.EXPECT().SaveError(&model.Book{
+				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{
 					Site: "serv", ID: 3, HashCode: hashcode,
 					Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
@@ -345,7 +344,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
 
-				rpo.EXPECT().FindAllBookIDs().Return(nil, service.ErrUnavailable)
+				rpo.EXPECT().FindAllBookIDs(gomock.Any()).Return(nil, service.ErrUnavailable)
 
 				return &ServiceImpl{
 					rpo:  rpo,
@@ -368,7 +367,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 			defer ctrl.Finish()
 
 			stats := new(serv.UpdateStats)
-			err := test.getService(ctrl).PatchMissingRecords(context.Background(), stats)
+			err := test.getService(ctrl).PatchMissingRecords(t.Context(), stats)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}
@@ -431,7 +430,7 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 			defer ctrl.Finish()
 
 			serv := test.getService(ctrl)
-			err := serv.CheckAvailability(context.Background())
+			err := serv.CheckAvailability(t.Context())
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

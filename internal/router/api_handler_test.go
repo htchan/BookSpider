@@ -105,7 +105,7 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
+			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
@@ -172,11 +172,11 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
-			ctx = context.WithValue(ctx, TITLE_KEY, test.title)
-			ctx = context.WithValue(ctx, WRITER_KEY, test.writer)
-			ctx = context.WithValue(ctx, LIMIT_KEY, test.limit)
-			ctx = context.WithValue(ctx, OFFSET_KEY, test.offset)
+			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, ContextKeyTitle, test.title)
+			ctx = context.WithValue(ctx, ContextKeyWriter, test.writer)
+			ctx = context.WithValue(ctx, ContextKeyLimit, test.limit)
+			ctx = context.WithValue(ctx, ContextKeyOffset, test.offset)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
@@ -238,9 +238,9 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
-			ctx = context.WithValue(ctx, LIMIT_KEY, test.limit)
-			ctx = context.WithValue(ctx, OFFSET_KEY, test.offset)
+			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, ContextKeyLimit, test.limit)
+			ctx = context.WithValue(ctx, ContextKeyOffset, test.offset)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
@@ -283,7 +283,7 @@ func Test_BookInfoAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), BOOK_KEY, test.bk)
+			ctx := context.WithValue(req.Context(), ContextKeyBook, test.bk)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
@@ -354,8 +354,8 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), SERV_KEY, test.setupServ(ctrl))
-			ctx = context.WithValue(ctx, BOOK_KEY, test.bk)
+			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, ContextKeyBook, test.bk)
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()

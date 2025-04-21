@@ -8,9 +8,9 @@ import (
 )
 
 func (s *ServiceImpl) Stats(ctx context.Context) repo.Summary {
-	return s.rpo.Stats()
+	return s.rpo.Stats(ctx)
 }
 
 func (s *ServiceImpl) DBStats(ctx context.Context) sql.DBStats {
-	return s.rpo.DBStats()
+	return s.rpo.DBStats(ctx)
 }

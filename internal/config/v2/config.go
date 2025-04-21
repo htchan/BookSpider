@@ -17,6 +17,7 @@ import (
 type APIConfig struct {
 	APIRoutePrefix     string                `env:"NOVEL_SPIDER_API_ROUTE_PREFIX,required" validate:"startswith=/,endsnotwith=/"`
 	LiteRoutePrefix    string                `env:"NOVEL_SPIDER_LITE_ROUTE_PREFIX,required" validate:"startswith=/,endsnotwith=/"`
+	TraceConfig        TraceConfig           `validate:"dive"`
 	AvailableSiteNames []string              `env:"API_AVAILABLE_SITES,required" validate:"min=1,dive,min=1"`
 	SiteConfigs        map[string]SiteConfig `yaml:"sites" validate:"dive"`
 	DatabaseConfig     DatabaseConfig        `yaml:"database"`
@@ -26,10 +27,15 @@ type APIConfig struct {
 type WorkerConfig struct {
 	MaxWorkingThreads  int                   `env:"MAX_WORKING_THREADS" validate:"min=1"`
 	AvailableSiteNames []string              `env:"BATCH_AVAILABLE_SITES,required" validate:"min=1,dive,min=1"`
+	TraceConfig        TraceConfig           `validate:"dive"`
 	SiteConfigs        map[string]SiteConfig `yaml:"sites" validate:"dive"`
 	DatabaseConfig     DatabaseConfig        `yaml:"database"`
 	ScheduleConfig     ScheduleConfig        `yaml:"schedule"`
 	ConfigDirectory    string                `env:"CONFIG_DIRECTORY,required" validate:"dir"`
+}
+type TraceConfig struct {
+	OtelURL         string `env:"OTEL_URL,required" validate:"url"`
+	OtelServiceName string `env:"OTEL_SERVICE_NAME,required" validate:"min=1"`
 }
 
 type DatabaseConfig struct {
@@ -49,6 +55,7 @@ func LoadAPIConfig() (*APIConfig, error) {
 	loadConfigFuncs := []func() error{
 		func() error { return env.Parse(&conf) },
 		func() error { return env.Parse(&conf.DatabaseConfig) },
+		func() error { return env.Parse(&conf.TraceConfig) },
 		func() error {
 			var referenceData []byte
 
@@ -101,6 +108,7 @@ func LoadWorkerConfig() (*WorkerConfig, error) {
 	loadConfigFuncs := []func() error{
 		func() error { return env.Parse(&conf) },
 		func() error { return env.Parse(&conf.DatabaseConfig) },
+		func() error { return env.Parse(&conf.TraceConfig) },
 		func() error { return env.Parse(&conf.ScheduleConfig) },
 		func() error {
 			var referenceData []byte

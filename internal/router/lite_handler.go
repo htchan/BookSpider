@@ -21,16 +21,16 @@ var customTemplateFunc = template.FuncMap{
 	"arr": func(eles ...any) []any { return eles },
 }
 
-//	@Summary		Home page
-//	@description	home page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Success		200	{string}	string
-//	@Router			/lite/book-spider/ [get]
+// @Summary		Home page
+// @description	home page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Success		200	{string}	string
+// @Router			/lite/book-spider/ [get]
 func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		logger := zerolog.Ctx(req.Context())
-		uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
+		uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 		t, err :=
 			new(template.Template).
 				Funcs(customTemplateFunc).
@@ -52,16 +52,16 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 	}
 }
 
-//	@Summary		site info page
-//	@description	site info page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Param			siteName	path		string	true	"site name"
-//	@Success		200			{string}	string
-//	@Router			/lite/book-spider/sites/{siteName} [get]
+// @Summary		site info page
+// @description	site info page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Param			siteName	path		string	true	"site name"
+// @Success		200			{string}	string
+// @Router			/lite/book-spider/sites/{siteName} [get]
 func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
+	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/site.html")
@@ -72,7 +72,7 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service.Service)
+	serv := req.Context().Value(ContextKeyServ).(service.Service)
 	execErr := t.ExecuteTemplate(res, "site.html", struct {
 		Name      string
 		UriPrefix string
@@ -88,16 +88,16 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//	@Summary		Search result page
-//	@description	search result page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Param			siteName	path		string	true	"site name"
-//	@Success		200			{string}	string
-//	@Router			/lite/book-spider/sites/{siteName}/search [get]
+// @Summary		Search result page
+// @description	search result page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Param			siteName	path		string	true	"site name"
+// @Success		200			{string}	string
+// @Router			/lite/book-spider/sites/{siteName}/search [get]
 func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
+	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
@@ -107,11 +107,11 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service.Service)
-	title := req.Context().Value(TITLE_KEY).(string)
-	writer := req.Context().Value(WRITER_KEY).(string)
-	limit := req.Context().Value(LIMIT_KEY).(int)
-	offset := req.Context().Value(OFFSET_KEY).(int)
+	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	title := req.Context().Value(ContextKeyTitle).(string)
+	writer := req.Context().Value(ContextKeyWriter).(string)
+	limit := req.Context().Value(ContextKeyLimit).(int)
+	offset := req.Context().Value(ContextKeyOffset).(int)
 	if limit == 0 {
 		limit = 10
 	}
@@ -145,16 +145,16 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//	@Summary		Random result page
-//	@description	random result page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Param			siteName	path		string	true	"site name"
-//	@Success		200			{string}	string
-//	@Router			/lite/book-spider/sites/{siteName}/random [get]
+// @Summary		Random result page
+// @description	random result page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Param			siteName	path		string	true	"site name"
+// @Success		200			{string}	string
+// @Router			/lite/book-spider/sites/{siteName}/random [get]
 func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
+	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
@@ -164,8 +164,8 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(SERV_KEY).(service.Service)
-	limit := req.Context().Value(LIMIT_KEY).(int)
+	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	limit := req.Context().Value(ContextKeyLimit).(int)
 	if limit == 0 {
 		limit = 10
 	}
@@ -193,17 +193,17 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//	@Summary		Book info page
-//	@description	book info page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Param			siteName	path		string	true	"site name"
-//	@Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
-//	@Success		200			{string}	string
-//	@Router			/lite/book-spider/sites/{siteName}/books/{idHash} [get]
+// @Summary		Book info page
+// @description	book info page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Param			siteName	path		string	true	"site name"
+// @Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
+// @Success		200			{string}	string
+// @Router			/lite/book-spider/sites/{siteName}/books/{idHash} [get]
 func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	uriPrefix := req.Context().Value(URI_PREFIX_KEY).(string)
+	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
 		ParseFS(files, "templates/book.html", "templates/components/book-card.html")
@@ -213,8 +213,8 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	bk := req.Context().Value(BOOK_KEY).(*model.Book)
-	group := req.Context().Value(BOOK_GROUP_KEY).(*model.BookGroup)
+	bk := req.Context().Value(ContextKeyBook).(*model.Book)
+	group := req.Context().Value(ContextKeyBookGroup).(*model.BookGroup)
 
 	execErr := t.ExecuteTemplate(res, "book.html", struct {
 		UriPrefix string
@@ -231,20 +231,20 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//	@Summary		Book download page
-//	@description	book download page
-//	@Tags			book-spider-lite
-//	@Produce		html
-//	@Param			siteName	path		string	true	"site name"
-//	@Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
-//	@Param			format		query		string	true	"txt (default) or epub"
-//	@Success		200			{string}	string
-//	@Router			/lite/book-spider/sites/{siteName}/books/{idHash}/download [get]
+// @Summary		Book download page
+// @description	book download page
+// @Tags			book-spider-lite
+// @Produce		html
+// @Param			siteName	path		string	true	"site name"
+// @Param			idHash		path		string	true	"id and hash in format <id>[-<hash>]. -<hash is optional"
+// @Param			format		query		string	true	"txt (default) or epub"
+// @Success		200			{string}	string
+// @Router			/lite/book-spider/sites/{siteName}/books/{idHash}/download [get]
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	serv := req.Context().Value(SERV_KEY).(service.Service)
-	bk := req.Context().Value(BOOK_KEY).(*model.Book)
-	formatStr := req.Context().Value(FORMAT_KEY).(string)
+	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	bk := req.Context().Value(ContextKeyBook).(*model.Book)
+	formatStr := req.Context().Value(ContextKeyFormat).(string)
 
 	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {

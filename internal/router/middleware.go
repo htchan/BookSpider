@@ -3,9 +3,11 @@ package router
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -13,21 +15,42 @@ import (
 	"github.com/htchan/BookSpider/internal/service"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ContextKey string
 
 const (
-	SERV_KEY       ContextKey = "serv"
-	BOOK_KEY       ContextKey = "book"
-	BOOK_GROUP_KEY ContextKey = "book_group"
-	TITLE_KEY      ContextKey = "title"
-	WRITER_KEY     ContextKey = "writer"
-	LIMIT_KEY      ContextKey = "limit"
-	OFFSET_KEY     ContextKey = "offset"
-	URI_PREFIX_KEY ContextKey = "uri_prefix"
-	FORMAT_KEY     ContextKey = "format"
+	ContextKeyReqID     ContextKey = "req_id"
+	ContextKeyServ      ContextKey = "serv"
+	ContextKeyBook      ContextKey = "book"
+	ContextKeyBookGroup ContextKey = "book_group"
+	ContextKeyTitle     ContextKey = "title"
+	ContextKeyWriter    ContextKey = "writer"
+	ContextKeyLimit     ContextKey = "limit"
+	ContextKeyOffset    ContextKey = "offset"
+	ContextKeyUriPrefix ContextKey = "uri_prefix"
+	ContextKeyFormat    ContextKey = "format"
 )
+
+func getTracer() trace.Tracer {
+	tracer := otel.Tracer("htchan/WebHistory/api")
+	return tracer
+}
+
+func TraceMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			ctx, span := getTracer().Start(req.Context(), fmt.Sprintf("%s %s", req.Method, req.RequestURI))
+			defer span.End()
+
+			next.ServeHTTP(res, req.WithContext(ctx))
+		},
+	)
+}
 
 func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -39,8 +62,19 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 				for key := range services {
 					availableSites = append(availableSites, key)
 				}
+
+				_, span := getTracer().Start(req.Context(), "get site middleware")
+				defer span.End()
+				span.SetAttributes(
+					attribute.String("site", siteName),
+					attribute.StringSlice("available_sites", availableSites),
+				)
+
 				serv, ok := services[siteName]
 				if !ok {
+					span.SetStatus(codes.Error, "site not found")
+					span.RecordError(errors.New("site not found"))
+
 					logger.
 						Error().
 						Err(errors.New("site not found")).
@@ -50,7 +84,10 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 					writeError(res, http.StatusNotFound, errors.New("site not found"))
 					return
 				}
-				ctx := context.WithValue(req.Context(), SERV_KEY, serv)
+
+				span.End()
+
+				ctx := context.WithValue(req.Context(), ContextKeyServ, serv)
 				next.ServeHTTP(res, req.WithContext(ctx))
 			},
 		)
@@ -61,11 +98,18 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 		func(res http.ResponseWriter, req *http.Request) {
 			logger := zerolog.Ctx(req.Context())
 			idHash := chi.URLParam(req, "idHash")
-			serv := req.Context().Value(SERV_KEY).(service.Service)
+			serv := req.Context().Value(ContextKeyServ).(service.Service)
 			var (
 				bk    *model.Book
 				group *model.BookGroup
 				err   error
+			)
+
+			_, span := getTracer().Start(req.Context(), "get book middleware")
+			defer span.End()
+
+			span.SetAttributes(
+				attribute.String("id_hash", idHash),
 			)
 
 			idHashArray := strings.Split(idHash, "-")
@@ -77,6 +121,9 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 				bk, group, err = serv.BookGroup(req.Context(), id, hash)
 			}
 			if err != nil {
+				span.SetStatus(codes.Error, "get book failed")
+				span.RecordError(err)
+
 				logger.
 					Error().
 					Err(err).
@@ -87,8 +134,10 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(req.Context(), BOOK_KEY, bk)
-			ctx = context.WithValue(ctx, BOOK_GROUP_KEY, group)
+			span.End()
+
+			ctx := context.WithValue(req.Context(), ContextKeyBook, bk)
+			ctx = context.WithValue(ctx, ContextKeyBookGroup, group)
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},
 	)
@@ -97,10 +146,10 @@ func GetSearchParamsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {
 			title := req.URL.Query().Get("title")
-			ctx := context.WithValue(req.Context(), TITLE_KEY, title)
+			ctx := context.WithValue(req.Context(), ContextKeyTitle, title)
 
 			writer := req.URL.Query().Get("writer")
-			ctx = context.WithValue(ctx, WRITER_KEY, writer)
+			ctx = context.WithValue(ctx, ContextKeyWriter, writer)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},
@@ -113,8 +162,8 @@ func GetPageParamsMiddleware(next http.Handler) http.Handler {
 			perPage, _ := strconv.Atoi(req.URL.Query().Get("per_page"))
 			offset := page * perPage
 
-			ctx := context.WithValue(req.Context(), LIMIT_KEY, perPage)
-			ctx = context.WithValue(ctx, OFFSET_KEY, offset)
+			ctx := context.WithValue(req.Context(), ContextKeyLimit, perPage)
+			ctx = context.WithValue(ctx, ContextKeyOffset, offset)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},
@@ -127,33 +176,40 @@ func GetDownloadParamsMiddleware(next http.Handler) http.Handler {
 			if format == "" {
 				format = "txt"
 			}
-			ctx := context.WithValue(req.Context(), FORMAT_KEY, format)
+			ctx := context.WithValue(req.Context(), ContextKeyFormat, format)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},
 	)
 }
+func logRequest() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(res http.ResponseWriter, req *http.Request) {
+				requestID := uuid.New()
 
-func ZerologMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(res http.ResponseWriter, req *http.Request) {
-			requestUUID := uuid.New()
-			logger := log.With().
-				Str("request_uuid", requestUUID.String()).
-				Str("method", req.Method).
-				Str("endpoint", req.RequestURI).Logger()
-			logger.Info().Msg("API called")
+				ctx := context.WithValue(req.Context(), ContextKeyReqID, requestID)
+				logger := log.With().
+					Str("request_id", requestID.String()).
+					Logger()
 
-			next.ServeHTTP(res, req.WithContext(logger.WithContext(req.Context())))
-		},
-	)
+				start := time.Now().UTC().Truncate(5 * time.Second)
+				next.ServeHTTP(res, req.WithContext(logger.WithContext(ctx)))
+
+				logger.Info().
+					Str("path", req.URL.String()).
+					Str("duration", time.Since(start).String()).
+					Msg("request handled")
+			},
+		)
+	}
 }
 
 func SetUriPrefixMiddleware(uriPrefix string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
 			func(res http.ResponseWriter, req *http.Request) {
-				ctx := context.WithValue(req.Context(), URI_PREFIX_KEY, uriPrefix)
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, uriPrefix)
 				next.ServeHTTP(res, req.WithContext(ctx))
 			},
 		)
