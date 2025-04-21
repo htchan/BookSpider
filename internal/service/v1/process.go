@@ -24,7 +24,7 @@ func (s *ServiceImpl) ProcessBook(ctx context.Context, bk *model.Book) error {
 
 	bookStorageUpdated := s.checkBookStorage(bk, nil)
 	if bookStorageUpdated {
-		s.rpo.UpdateBook(bk)
+		s.rpo.UpdateBook(ctx, bk)
 	}
 
 	downloadErr := s.DownloadBook(ctx, bk, nil)
@@ -34,7 +34,7 @@ func (s *ServiceImpl) ProcessBook(ctx context.Context, bk *model.Book) error {
 
 	bookStorageUpdated = s.checkBookStorage(bk, nil)
 	if bookStorageUpdated {
-		s.rpo.UpdateBook(bk)
+		s.rpo.UpdateBook(ctx, bk)
 	}
 
 	return nil

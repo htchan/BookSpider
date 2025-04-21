@@ -73,9 +73,9 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *ser
 		bk.Status = model.StatusInProgress
 		bk.Error = nil
 
-		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
-		saveBkErr := s.rpo.CreateBook(bk)
-		saveErrErr := s.rpo.SaveError(bk, bk.Error)
+		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
+		saveBkErr := s.rpo.CreateBook(ctx, bk)
+		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr)
 		}
@@ -112,9 +112,9 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *ser
 			bk.Status = model.StatusInProgress
 		}
 
-		saveWriterErr := s.rpo.SaveWriter(&bk.Writer)
-		saveBkErr := s.rpo.UpdateBook(bk)
-		saveErrErr := s.rpo.SaveError(bk, bk.Error)
+		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
+		saveBkErr := s.rpo.UpdateBook(ctx, bk)
+		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr)
 		}
@@ -132,7 +132,7 @@ func (s *ServiceImpl) Update(ctx context.Context, stats *serv.UpdateStats) error
 		stats = new(serv.UpdateStats)
 	}
 
-	bkChan, err := s.rpo.FindBooksForUpdate()
+	bkChan, err := s.rpo.FindBooksForUpdate(ctx)
 	if err != nil {
 		return fmt.Errorf("fail to load books from DB: %w", err)
 	}
@@ -176,13 +176,13 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book, stats *se
 	//TODO: find a new method to check if we should create the book
 	isNew := bk.Error == nil
 	if isNew {
-		s.rpo.CreateBook(bk)
+		s.rpo.CreateBook(ctx, bk)
 	}
 
 	err := s.UpdateBook(ctx, bk, stats)
 	if err != nil {
 		bk.Error = err
-		saveErr := s.rpo.SaveError(bk, bk.Error)
+		saveErr := s.rpo.SaveError(ctx, bk, bk.Error)
 		if saveErr != nil {
 			return fmt.Errorf("explore book fail: %w; save error fail: %w", err, saveErr)
 		}
@@ -194,7 +194,7 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book, stats *se
 }
 
 func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) error {
-	summary := s.rpo.Stats()
+	summary := s.rpo.Stats(ctx)
 	var errorCount atomic.Int64
 
 	if stats == nil {
@@ -213,7 +213,7 @@ func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) erro
 			defer wg.Done()
 			defer s.sema.Release(1)
 
-			bk, err := s.rpo.FindBookById(id)
+			bk, err := s.rpo.FindBookById(ctx, id)
 			if err != nil {
 				errorCount.Add(1)
 				return
@@ -389,7 +389,7 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book, stats *s
 
 	logger.Info().Msg("update book is_downloaded")
 	bk.IsDownloaded = true
-	err = s.rpo.UpdateBook(bk)
+	err = s.rpo.UpdateBook(ctx, bk)
 	if err != nil {
 		return fmt.Errorf("update book is_downloaded fail: %w", err)
 	}
@@ -407,7 +407,7 @@ func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) e
 		stats = new(serv.DownloadStats)
 	}
 
-	bkChan, err := s.rpo.FindBooksForDownload()
+	bkChan, err := s.rpo.FindBooksForDownload(ctx)
 	if err != nil {
 		return fmt.Errorf("fail to fetch books: %w", err)
 	}
@@ -476,7 +476,7 @@ func (s *ServiceImpl) ValidateBookEnd(ctx context.Context, bk *model.Book) error
 	}
 
 	if isUpdated {
-		err := s.rpo.UpdateBook(bk)
+		err := s.rpo.UpdateBook(ctx, bk)
 		if err != nil {
 			return fmt.Errorf("update book in DB fail: %w", err)
 		}
@@ -486,5 +486,5 @@ func (s *ServiceImpl) ValidateBookEnd(ctx context.Context, bk *model.Book) error
 }
 
 func (s *ServiceImpl) ValidateEnd(ctx context.Context) error {
-	return s.rpo.UpdateBooksStatus()
+	return s.rpo.UpdateBooksStatus(ctx)
 }

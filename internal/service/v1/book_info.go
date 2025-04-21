@@ -63,7 +63,7 @@ func (s *ServiceImpl) Book(ctx context.Context, id, hash string) (*model.Book, e
 	}
 
 	if hash == "" {
-		return s.rpo.FindBookById(int(bkID))
+		return s.rpo.FindBookById(ctx, int(bkID))
 	}
 
 	hashcode, err := strconv.ParseInt(hash, 36, 64)
@@ -71,7 +71,7 @@ func (s *ServiceImpl) Book(ctx context.Context, id, hash string) (*model.Book, e
 		return nil, serv.ErrInvalidHashCode
 	}
 
-	return s.rpo.FindBookByIdHash(int(bkID), int(hashcode))
+	return s.rpo.FindBookByIdHash(ctx, int(bkID), int(hashcode))
 }
 
 func (s *ServiceImpl) BookGroup(
@@ -90,7 +90,7 @@ func (s *ServiceImpl) BookGroup(
 	}
 
 	if hash == "" {
-		group, err = s.rpo.FindBookGroupByID(int(bkID))
+		group, err = s.rpo.FindBookGroupByID(ctx, int(bkID))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -100,7 +100,7 @@ func (s *ServiceImpl) BookGroup(
 			return nil, nil, serv.ErrInvalidHashCode
 		}
 
-		group, err = s.rpo.FindBookGroupByIDHash(int(bkID), int(hashcode))
+		group, err = s.rpo.FindBookGroupByIDHash(ctx, int(bkID), int(hashcode))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -142,9 +142,9 @@ func (s *ServiceImpl) BookGroup(
 func (s *ServiceImpl) QueryBooks(
 	ctx context.Context, title, writer string, limit, offset int,
 ) ([]model.Book, error) {
-	return s.rpo.FindBooksByTitleWriter(title, writer, limit, offset)
+	return s.rpo.FindBooksByTitleWriter(ctx, title, writer, limit, offset)
 }
 
 func (s *ServiceImpl) RandomBooks(ctx context.Context, limit int) ([]model.Book, error) {
-	return s.rpo.FindBooksByRandom(limit)
+	return s.rpo.FindBooksByRandom(ctx, limit)
 }

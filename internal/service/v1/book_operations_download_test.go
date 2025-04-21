@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -95,7 +94,7 @@ func TestServiceImpl_downloadChapter(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getService(ctrl).downloadChapter(context.Background(), test.chapter)
+			err := test.getService(ctrl).downloadChapter(t.Context(), test.chapter)
 			assert.ErrorIs(t, err, test.wantError)
 			assert.Equal(t, test.wantChapter, test.chapter)
 		})
@@ -140,7 +139,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
 					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(nil)
@@ -324,7 +323,7 @@ content 2 content 2 content 2
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"},
 					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(serv.ErrUnavailable)
@@ -358,7 +357,7 @@ content 2 content 2 content 2
 			defer ctrl.Finish()
 
 			downloadStats := new(serv.DownloadStats)
-			err := test.getService(ctrl).DownloadBook(context.Background(), test.book, downloadStats)
+			err := test.getService(ctrl).DownloadBook(t.Context(), test.book, downloadStats)
 			assert.ErrorIs(t, err, test.wantError)
 			assert.Equal(t, test.wantBook, test.book)
 			assert.Equal(t, downloadStats, test.wantDownloadStats())
@@ -398,7 +397,7 @@ func TestServiceImpl_Download(t *testing.T) {
 					close(ch)
 				}()
 
-				rpo.EXPECT().FindBooksForDownload().Return(ch, nil)
+				rpo.EXPECT().FindBooksForDownload(gomock.Any()).Return(ch, nil)
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list-1")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-1").Return("", serv.ErrUnavailable)
 				vendorService.EXPECT().ChapterListURL("2").Return("https://test.com/chapter-list-2")
@@ -415,7 +414,7 @@ func TestServiceImpl_Download(t *testing.T) {
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
-				rpo.EXPECT().UpdateBook(&model.Book{
+				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
 					ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"},
 					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(serv.ErrUnavailable)
@@ -432,7 +431,7 @@ func TestServiceImpl_Download(t *testing.T) {
 			name: "fail to find books for download",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBooksForDownload().Return(nil, serv.ErrUnavailable)
+				rpo.EXPECT().FindBooksForDownload(gomock.Any()).Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -448,7 +447,7 @@ func TestServiceImpl_Download(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getService(ctrl).Download(context.Background(), nil)
+			err := test.getService(ctrl).Download(t.Context(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

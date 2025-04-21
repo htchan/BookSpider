@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -187,9 +186,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().UpdateBook(bk).Return(nil)
-				rpo.EXPECT().SaveError(bk, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(nil)
+				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -220,9 +219,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date 2", UpdateChapter: "chapter 2", Status: model.StatusInProgress,
 				}
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().UpdateBook(bk).Return(nil)
-				rpo.EXPECT().SaveError(bk, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(nil)
+				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -255,9 +254,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 					ID: 1, HashCode: model.GenerateHash(), Title: "title 2", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().CreateBook(bk).Return(nil)
-				rpo.EXPECT().SaveError(bk, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().CreateBook(gomock.Any(), bk).Return(nil)
+				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -331,9 +330,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().UpdateBook(bk).Return(serv.ErrUnavailable)
-				rpo.EXPECT().SaveError(bk, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(serv.ErrUnavailable)
+				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -364,9 +363,9 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 					ID: 1, HashCode: model.GenerateHash(), Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().CreateBook(bk).Return(serv.ErrUnavailable)
-				rpo.EXPECT().SaveError(bk, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().CreateBook(gomock.Any(), bk).Return(serv.ErrUnavailable)
+				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
 				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -394,7 +393,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 			defer ctrl.Finish()
 
 			updateStats := new(serv.UpdateStats)
-			err := test.getServ(ctrl).UpdateBook(context.Background(), test.bk, updateStats)
+			err := test.getServ(ctrl).UpdateBook(t.Context(), test.bk, updateStats)
 			assert.Equal(t, test.wantBk, test.bk)
 			assert.ErrorIs(t, err, test.wantError)
 			assert.Equal(t, updateStats, test.wantUpdateStats())
@@ -427,7 +426,7 @@ func TestServiceImpl_Update(t *testing.T) {
 					close(ch)
 				}()
 
-				rpo.EXPECT().FindBooksForUpdate().Return(ch, nil)
+				rpo.EXPECT().FindBooksForUpdate(gomock.Any()).Return(ch, nil)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
@@ -437,9 +436,9 @@ func TestServiceImpl_Update(t *testing.T) {
 				bkUpdated := bk
 				bkUpdated.UpdateDate, bkUpdated.UpdateChapter = "date 2", "chapter 2"
 
-				rpo.EXPECT().SaveWriter(&model.Writer{Name: "writer"}).Return(nil)
-				rpo.EXPECT().UpdateBook(&bkUpdated).Return(nil)
-				rpo.EXPECT().SaveError(&bkUpdated, nil).Return(nil)
+				rpo.EXPECT().SaveWriter(gomock.Any(), &model.Writer{Name: "writer"}).Return(nil)
+				rpo.EXPECT().UpdateBook(gomock.Any(), &bkUpdated).Return(nil)
+				rpo.EXPECT().SaveError(gomock.Any(), &bkUpdated, nil).Return(nil)
 
 				return &ServiceImpl{sema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
 			},
@@ -450,7 +449,7 @@ func TestServiceImpl_Update(t *testing.T) {
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
 
-				rpo.EXPECT().FindBooksForUpdate().Return(nil, serv.ErrUnavailable)
+				rpo.EXPECT().FindBooksForUpdate(gomock.Any()).Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -466,7 +465,7 @@ func TestServiceImpl_Update(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			err := test.getServ(ctrl).Update(context.Background(), nil)
+			err := test.getServ(ctrl).Update(t.Context(), nil)
 			assert.ErrorIs(t, err, test.wantError)
 		})
 	}

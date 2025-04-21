@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"database/sql"
 	"testing"
 
@@ -23,7 +22,7 @@ func TestServiceImpl_Stats(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().Stats().Return(repo.Summary{})
+				rpo.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -41,7 +40,7 @@ func TestServiceImpl_Stats(t *testing.T) {
 
 			svc := test.getService(ctrl)
 
-			got := svc.Stats(context.Background())
+			got := svc.Stats(t.Context())
 			assert.Equal(t, test.want, got)
 		})
 	}
@@ -59,7 +58,7 @@ func TestServiceImpl_DBStats(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().DBStats().Return(sql.DBStats{})
+				rpo.EXPECT().DBStats(gomock.Any()).Return(sql.DBStats{})
 
 				return &ServiceImpl{rpo: rpo}
 			},
@@ -77,7 +76,7 @@ func TestServiceImpl_DBStats(t *testing.T) {
 
 			svc := test.getService(ctrl)
 
-			got := svc.DBStats(context.Background())
+			got := svc.DBStats(t.Context())
 			assert.Equal(t, test.want, got)
 		})
 	}
