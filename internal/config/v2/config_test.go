@@ -41,6 +41,10 @@ func Test_validate_APIConfig(t *testing.T) {
 				LiteRoutePrefix:    "/data",
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -59,6 +63,10 @@ func Test_validate_APIConfig(t *testing.T) {
 				LiteRoutePrefix:    "/data",
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -77,6 +85,10 @@ func Test_validate_APIConfig(t *testing.T) {
 				LiteRoutePrefix:    "/data",
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{"data": {}},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -95,6 +107,10 @@ func Test_validate_APIConfig(t *testing.T) {
 				LiteRoutePrefix:    "/data",
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "",
 					Port:     "port",
@@ -113,6 +129,10 @@ func Test_validate_APIConfig(t *testing.T) {
 				LiteRoutePrefix:    "/data",
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -121,6 +141,25 @@ func Test_validate_APIConfig(t *testing.T) {
 					Name:     "name",
 				},
 				ConfigDirectory: "./not-exist/",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid TraceConfig",
+			conf: APIConfig{
+				APIRoutePrefix:     "/data",
+				LiteRoutePrefix:    "/data",
+				AvailableSiteNames: []string{"data"},
+				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig:        TraceConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ConfigDirectory: ".",
 			},
 			valid: false,
 		},
@@ -153,6 +192,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -178,6 +221,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  0,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -199,6 +246,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{"data": {}},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -220,6 +271,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "",
 					Port:     "port",
@@ -241,6 +296,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -262,6 +321,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -287,6 +350,10 @@ func Test_validate_BatchConfig(t *testing.T) {
 				MaxWorkingThreads:  10,
 				AvailableSiteNames: []string{"data"},
 				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "port",
@@ -296,6 +363,32 @@ func Test_validate_BatchConfig(t *testing.T) {
 				},
 				ScheduleConfig: ScheduleConfig{
 					InitDate: 1,
+				},
+				ConfigDirectory: ".",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid TraceConfig",
+			conf: WorkerConfig{
+				MaxWorkingThreads:  10,
+				AvailableSiteNames: []string{"data"},
+				SiteConfigs:        map[string]SiteConfig{},
+				TraceConfig:        TraceConfig{},
+				DatabaseConfig: DatabaseConfig{
+					Host:     "host",
+					Port:     "port",
+					User:     "user",
+					Password: "pwd",
+					Name:     "name",
+				},
+				ScheduleConfig: ScheduleConfig{
+					InitDate:      1,
+					InitHour:      0,
+					InitMinute:    0,
+					MatchWeekday:  0,
+					IntervalDay:   0,
+					IntervalMonth: 1,
 				},
 				ConfigDirectory: ".",
 			},
@@ -396,6 +489,61 @@ func Test_validate_DatabaseConfig(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
+
+			err := validator.New().Struct(test.conf)
+			if !assert.Equal(t, test.valid, err == nil) {
+				t.Errorf("getting error: %v", err)
+			}
+		})
+	}
+}
+
+func Test_validate_TraceConfig(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		conf  TraceConfig
+		valid bool
+	}{
+		{
+			name: "valid conf",
+			conf: TraceConfig{
+				OtelURL:         "http://localhost:4317",
+				OtelServiceName: "test-service",
+			},
+			valid: true,
+		},
+		{
+			name: "invalid OtelURL - empty",
+			conf: TraceConfig{
+				OtelURL:         "",
+				OtelServiceName: "test-service",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid OtelURL - non url",
+			conf: TraceConfig{
+				OtelURL:         "htllo",
+				OtelServiceName: "test-service",
+			},
+			valid: false,
+		},
+		{
+			name: "invalid OtelServiceName - empty",
+			conf: TraceConfig{
+				OtelURL:         "http://localhost:4317",
+				OtelServiceName: "",
+			},
+			valid: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			// t.Parallel()
 
 			err := validator.New().Struct(test.conf)
 			if !assert.Equal(t, test.valid, err == nil) {
@@ -555,6 +703,8 @@ xbiquge_client: &xbiquge_client
 				"PSQL_USER":                      "user",
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
+				"OTEL_URL":                       "http://localhost:4317",
+				"OTEL_SERVICE_NAME":              "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.Mkdir("./selectors", os.ModePerm)
@@ -617,6 +767,10 @@ xbiquge_client: &xbiquge_client
 				APIRoutePrefix:     "/api-novel",
 				LiteRoutePrefix:    "/lite-novel",
 				AvailableSiteNames: []string{"xbiquge", "xqishu"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
@@ -899,6 +1053,8 @@ xbiquge_client: &xbiquge_client
 				"PSQL_USER":                      "user",
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
+				"OTEL_URL":                       "http://localhost:4317",
+				"OTEL_SERVICE_NAME":              "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.WriteFile("./main.yaml", []byte(""), 0644)
@@ -910,6 +1066,10 @@ xbiquge_client: &xbiquge_client
 				APIRoutePrefix:     "/api-novel",
 				LiteRoutePrefix:    "/lite-novel",
 				AvailableSiteNames: []string{"xbiquge"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "12345",
@@ -932,6 +1092,8 @@ xbiquge_client: &xbiquge_client
 				"PSQL_USER":           "user",
 				"PSQL_PASSWORD":       "password",
 				"PSQL_NAME":           "name",
+				"OTEL_URL":            "http://localhost:4317",
+				"OTEL_SERVICE_NAME":   "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.WriteFile("./main.yaml", []byte(""), 0644)
@@ -1134,6 +1296,8 @@ xbiquge_client: &xbiquge_client
 				"SCHEDULE_INIT_HOUR":     "20",
 				"SCHEDULE_INIT_MINUTE":   "1",
 				"SCHEDULE_MATCH_WEEKDAY": "5",
+				"OTEL_URL":               "http://localhost:4317",
+				"OTEL_SERVICE_NAME":      "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.Mkdir("./selectors", os.ModePerm)
@@ -1195,6 +1359,10 @@ xbiquge_client: &xbiquge_client
 			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge", "xqishu"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
@@ -1498,6 +1666,8 @@ xbiquge_client: &xbiquge_client
 				"SCHEDULE_INIT_HOUR":     "20",
 				"SCHEDULE_INIT_MINUTE":   "1",
 				"SCHEDULE_MATCH_WEEKDAY": "5",
+				"OTEL_URL":               "http://localhost:4317",
+				"OTEL_SERVICE_NAME":      "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.WriteFile("./main.yaml", []byte(""), 0644)
@@ -1508,6 +1678,10 @@ xbiquge_client: &xbiquge_client
 			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				DatabaseConfig: DatabaseConfig{
 					Host:     "host",
 					Port:     "12345",
@@ -1541,6 +1715,8 @@ xbiquge_client: &xbiquge_client
 				"SCHEDULE_INIT_HOUR":     "20",
 				"SCHEDULE_INIT_MINUTE":   "1",
 				"SCHEDULE_MATCH_WEEKDAY": "5",
+				"OTEL_URL":               "http://localhost:4317",
+				"OTEL_SERVICE_NAME":      "test-service",
 			},
 			stubConfFileFunc: func() {
 				os.WriteFile("./main.yaml", []byte(""), 0644)
