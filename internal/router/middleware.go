@@ -37,7 +37,7 @@ const (
 )
 
 func getTracer() trace.Tracer {
-	tracer := otel.Tracer("htchan/WebHistory/api")
+	tracer := otel.Tracer("htchan/BookSpider/api")
 	return tracer
 }
 

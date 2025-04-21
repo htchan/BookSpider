@@ -4,10 +4,11 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	shutdown "github.com/htchan/goshutdown"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
@@ -110,15 +111,13 @@ func main() {
 	// }
 	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, 1)
 
+	shutdown.LogEnabled = true
+	shutdownHandler := shutdown.New(syscall.SIGINT, syscall.SIGTERM)
+
 	// load routes
 	r := chi.NewRouter()
-	// if conf.APIConfig.ContainsRoute(config.RouteAPIKey) {
 	router.AddAPIRoutes(r, conf, services)
-	// }
-
-	// if backendConfig.ContainsRoute(config.RouteLiteKey) {
 	router.AddLiteRoutes(r, conf, services)
-	// }
 
 	server := http.Server{
 		Addr:         ":9427",
@@ -136,14 +135,15 @@ func main() {
 		}
 	}()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-	<-sigChan
-	log.Debug().Msg("received interrupt signal")
+	shutdownHandler.Register("api server", func() error {
+		server.Shutdown(context.Background())
 
-	// Setup graceful shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	server.Shutdown(ctx)
-	tp.Shutdown(ctx)
+		return nil
+	})
+	shutdownHandler.Register("database", db.Close)
+	shutdownHandler.Register("tracer", func() error {
+		return tp.Shutdown(context.Background())
+	})
+
+	shutdownHandler.Listen(60 * time.Second)
 }
