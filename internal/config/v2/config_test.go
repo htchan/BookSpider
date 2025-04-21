@@ -802,6 +802,8 @@ xbiquge_client: &xbiquge_client
 				"PSQL_USER":                      "user",
 				"PSQL_PASSWORD":                  "password",
 				"PSQL_NAME":                      "name",
+				"OTEL_URL":                       "http://localhost:4317",
+				"OTEL_SERVICE_NAME":              "test-service",
 			},
 			stubConfFileFunc: func() {
 				confData := `sites:
@@ -841,6 +843,10 @@ xbiquge_client: &xbiquge_client
 				APIRoutePrefix:     "/api-novel",
 				LiteRoutePrefix:    "/lite-novel",
 				AvailableSiteNames: []string{"xbiquge"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
@@ -1385,6 +1391,8 @@ xbiquge_client: &xbiquge_client
 				"SCHEDULE_MATCH_WEEKDAY":  "5",
 				"SCHEDULE_INTERVAL_DAY":   "1",
 				"SCHEDULE_INTERVAL_MONTH": "1",
+				"OTEL_URL":                "http://localhost:4317",
+				"OTEL_SERVICE_NAME":       "test-service",
 			},
 			stubConfFileFunc: func() {
 				confData := `sites:
@@ -1423,6 +1431,10 @@ xbiquge_client: &xbiquge_client
 			expectedConf: &WorkerConfig{
 				MaxWorkingThreads:  1000,
 				AvailableSiteNames: []string{"xbiquge"},
+				TraceConfig: TraceConfig{
+					OtelURL:         "http://localhost:4317",
+					OtelServiceName: "test-service",
+				},
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
