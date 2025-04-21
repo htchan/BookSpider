@@ -8,7 +8,8 @@ import (
 
 func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service) {
 	router.Route(conf.LiteRoutePrefix, func(router chi.Router) {
-		router.Use(ZerologMiddleware)
+		router.Use(logRequest())
+		router.Use(TraceMiddleware)
 		router.Use(SetUriPrefixMiddleware(conf.LiteRoutePrefix))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
