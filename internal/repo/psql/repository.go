@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -25,11 +26,11 @@ func NewRepo(site string, db *sql.DB) *PsqlRepo {
 	return &PsqlRepo{site: site, db: db}
 }
 
-func (r *PsqlRepo) FindAllBookIDs() ([]int, error) {
+func (r *PsqlRepo) FindAllBookIDs(_ context.Context) ([]int, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (r *PsqlRepo) CreateBook(bk *model.Book) error {
+func (r *PsqlRepo) CreateBook(_ context.Context, bk *model.Book) error {
 	_, err := r.db.Exec(
 		`insert into books 
 		(site, id, hash_code, title, writer_id, type, update_date, update_chapter, status, is_downloaded) 
@@ -56,7 +57,7 @@ func (r *PsqlRepo) CreateBook(bk *model.Book) error {
 
 	return nil
 }
-func (r *PsqlRepo) UpdateBook(bk *model.Book) error {
+func (r *PsqlRepo) UpdateBook(_ context.Context, bk *model.Book) error {
 	_, err := r.db.Exec(
 		"update books set title=$4, writer_id=$5, type=$6, update_date=$7, update_chapter=$8, status=$9, is_downloaded=$10 where site=$1 and id=$2 and hash_code=$3",
 		bk.Site, bk.ID, bk.HashCode, bk.Title, bk.Writer.ID, bk.Type,
@@ -110,7 +111,7 @@ func rowsToBookChan(rows *sql.Rows) <-chan model.Book {
 	return c
 }
 
-func (r *PsqlRepo) FindBookById(id int) (*model.Book, error) {
+func (r *PsqlRepo) FindBookById(_ context.Context, id int) (*model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s where books.site=$1 and books.id=$2 order by hash_code desc`,
@@ -127,7 +128,7 @@ func (r *PsqlRepo) FindBookById(id int) (*model.Book, error) {
 	}
 	return nil, fmt.Errorf("fail to query book by site id: %w", repo.ErrBookNotExist)
 }
-func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
+func (r *PsqlRepo) FindBookByIdHash(_ context.Context, id, hash int) (*model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s 
@@ -145,7 +146,7 @@ func (r *PsqlRepo) FindBookByIdHash(id, hash int) (*model.Book, error) {
 	}
 	return nil, fmt.Errorf("fail to query book by site id hash: %w", repo.ErrBookNotExist)
 }
-func (r *PsqlRepo) FindBooksByStatus(status model.StatusCode) (<-chan model.Book, error) {
+func (r *PsqlRepo) FindBooksByStatus(_ context.Context, status model.StatusCode) (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s 
@@ -161,7 +162,7 @@ func (r *PsqlRepo) FindBooksByStatus(status model.StatusCode) (<-chan model.Book
 
 	return rowsToBookChan(rows), nil
 }
-func (r *PsqlRepo) FindAllBooks() (<-chan model.Book, error) {
+func (r *PsqlRepo) FindAllBooks(_ context.Context) (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s where books.site=$1 order by books.site, books.id, books.hash_code`,
@@ -174,7 +175,7 @@ func (r *PsqlRepo) FindAllBooks() (<-chan model.Book, error) {
 
 	return rowsToBookChan(rows), nil
 }
-func (r *PsqlRepo) FindBooksForUpdate() (<-chan model.Book, error) {
+func (r *PsqlRepo) FindBooksForUpdate(_ context.Context) (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select distinct on (books.site, books.id) %s from %s 
@@ -189,7 +190,7 @@ func (r *PsqlRepo) FindBooksForUpdate() (<-chan model.Book, error) {
 
 	return rowsToBookChan(rows), nil
 }
-func (r *PsqlRepo) FindBooksForDownload() (<-chan model.Book, error) {
+func (r *PsqlRepo) FindBooksForDownload(_ context.Context) (<-chan model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s
@@ -208,7 +209,7 @@ func (r *PsqlRepo) FindBooksForDownload() (<-chan model.Book, error) {
 
 	return rowsToBookChan(rows), nil
 }
-func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset int) ([]model.Book, error) {
+func (r *PsqlRepo) FindBooksByTitleWriter(_ context.Context, title, writer string, limit, offset int) ([]model.Book, error) {
 	if title != "" {
 		title = fmt.Sprintf("%%%v%%", title)
 	}
@@ -238,7 +239,7 @@ func (r *PsqlRepo) FindBooksByTitleWriter(title, writer string, limit, offset in
 
 	return bks, nil
 }
-func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
+func (r *PsqlRepo) FindBooksByRandom(_ context.Context, limit int) ([]model.Book, error) {
 	rows, err := r.db.Query(
 		fmt.Sprintf(
 			`select %s from %s
@@ -262,11 +263,11 @@ func (r *PsqlRepo) FindBooksByRandom(limit int) ([]model.Book, error) {
 	return bks, nil
 }
 
-func (r *PsqlRepo) FindBookGroupByID(id int) (model.BookGroup, error) {
+func (r *PsqlRepo) FindBookGroupByID(_ context.Context, id int) (model.BookGroup, error) {
 	return nil, errors.New("Not implemented error")
 }
 
-func (r *PsqlRepo) FindBookGroupByIDHash(id, hashCode int) (model.BookGroup, error) {
+func (r *PsqlRepo) FindBookGroupByIDHash(_ context.Context, id, hashCode int) (model.BookGroup, error) {
 	return nil, errors.New("Not implemented error")
 }
 
@@ -285,7 +286,7 @@ func generateUpdateStatusCondition(length int) string {
 	return sqlStmt
 }
 
-func (r *PsqlRepo) UpdateBooksStatus() error {
+func (r *PsqlRepo) UpdateBooksStatus(_ context.Context) error {
 	matchingKeywords := make([]interface{}, 0, len(model.ChapterEndKeywords))
 	for _, keyword := range model.ChapterEndKeywords {
 		matchingKeywords = append(matchingKeywords, fmt.Sprintf("%%%v%%", keyword))
@@ -309,7 +310,7 @@ func (r *PsqlRepo) UpdateBooksStatus() error {
 }
 
 // writer related
-func (r *PsqlRepo) SaveWriter(writer *model.Writer) error {
+func (r *PsqlRepo) SaveWriter(_ context.Context, writer *model.Writer) error {
 	rows, err := r.db.Query(
 		`insert into writers (name) values ($1) 
 		on conflict (name) do update set name=$1 
@@ -330,7 +331,7 @@ func (r *PsqlRepo) SaveWriter(writer *model.Writer) error {
 }
 
 // error related
-func (r *PsqlRepo) SaveError(bk *model.Book, e error) error {
+func (r *PsqlRepo) SaveError(_ context.Context, bk *model.Book, e error) error {
 	var err error
 	if e == nil {
 		_, err = r.db.Exec(
@@ -351,7 +352,7 @@ func (r *PsqlRepo) SaveError(bk *model.Book, e error) error {
 	return nil
 }
 
-func (r *PsqlRepo) backupBooks(path string) error {
+func (r *PsqlRepo) backupBooks(_ context.Context, path string) error {
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (select * from books where site='%s') to '%s/%s/books_%s.csv' 
@@ -366,7 +367,7 @@ func (r *PsqlRepo) backupBooks(path string) error {
 	return nil
 }
 
-func (r *PsqlRepo) backupWriters(path string) error {
+func (r *PsqlRepo) backupWriters(_ context.Context, path string) error {
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (
@@ -383,7 +384,7 @@ func (r *PsqlRepo) backupWriters(path string) error {
 	return nil
 }
 
-func (r *PsqlRepo) backupErrors(path string) error {
+func (r *PsqlRepo) backupErrors(_ context.Context, path string) error {
 	_, err := r.db.Exec(
 		fmt.Sprintf(
 			`copy (select * from errors where site='%s') to '%s/%s/errors_%s.csv' 
@@ -398,9 +399,9 @@ func (r *PsqlRepo) backupErrors(path string) error {
 	return nil
 }
 
-func (r *PsqlRepo) Backup(path string) error {
-	for _, f := range []func(string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
-		err := f(path)
+func (r *PsqlRepo) Backup(ctx context.Context, path string) error {
+	for _, f := range []func(context.Context, string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
+		err := f(ctx, path)
 		if err != nil {
 			return err
 		}
@@ -409,11 +410,11 @@ func (r *PsqlRepo) Backup(path string) error {
 }
 
 // database
-func (r *PsqlRepo) DBStats() sql.DBStats {
+func (r *PsqlRepo) DBStats(_ context.Context) sql.DBStats {
 	return r.db.Stats()
 }
 
-func (r *PsqlRepo) Stats() repo.Summary {
+func (r *PsqlRepo) Stats(_ context.Context) repo.Summary {
 	var summary repo.Summary
 
 	rowsBk, err := r.db.Query("select count(*), count(distinct id), max(id) from books where site=$1", r.site)

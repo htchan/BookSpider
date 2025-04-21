@@ -5,6 +5,7 @@
 package mockrepo
 
 import (
+	context "context"
 	sql "database/sql"
 	reflect "reflect"
 
@@ -37,17 +38,17 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // Backup mocks base method.
-func (m *MockRepository) Backup(arg0 string) error {
+func (m *MockRepository) Backup(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Backup", arg0)
+	ret := m.ctrl.Call(m, "Backup", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Backup indicates an expected call of Backup.
-func (mr *MockRepositoryMockRecorder) Backup(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Backup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Backup", reflect.TypeOf((*MockRepository)(nil).Backup), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Backup", reflect.TypeOf((*MockRepository)(nil).Backup), arg0, arg1)
 }
 
 // Close mocks base method.
@@ -65,264 +66,264 @@ func (mr *MockRepositoryMockRecorder) Close() *gomock.Call {
 }
 
 // CreateBook mocks base method.
-func (m *MockRepository) CreateBook(arg0 *model.Book) error {
+func (m *MockRepository) CreateBook(arg0 context.Context, arg1 *model.Book) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateBook", arg0)
+	ret := m.ctrl.Call(m, "CreateBook", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateBook indicates an expected call of CreateBook.
-func (mr *MockRepositoryMockRecorder) CreateBook(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) CreateBook(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBook", reflect.TypeOf((*MockRepository)(nil).CreateBook), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBook", reflect.TypeOf((*MockRepository)(nil).CreateBook), arg0, arg1)
 }
 
 // DBStats mocks base method.
-func (m *MockRepository) DBStats() sql.DBStats {
+func (m *MockRepository) DBStats(arg0 context.Context) sql.DBStats {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DBStats")
+	ret := m.ctrl.Call(m, "DBStats", arg0)
 	ret0, _ := ret[0].(sql.DBStats)
 	return ret0
 }
 
 // DBStats indicates an expected call of DBStats.
-func (mr *MockRepositoryMockRecorder) DBStats() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) DBStats(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBStats", reflect.TypeOf((*MockRepository)(nil).DBStats))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBStats", reflect.TypeOf((*MockRepository)(nil).DBStats), arg0)
 }
 
 // FindAllBookIDs mocks base method.
-func (m *MockRepository) FindAllBookIDs() ([]int, error) {
+func (m *MockRepository) FindAllBookIDs(arg0 context.Context) ([]int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllBookIDs")
+	ret := m.ctrl.Call(m, "FindAllBookIDs", arg0)
 	ret0, _ := ret[0].([]int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllBookIDs indicates an expected call of FindAllBookIDs.
-func (mr *MockRepositoryMockRecorder) FindAllBookIDs() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindAllBookIDs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBookIDs", reflect.TypeOf((*MockRepository)(nil).FindAllBookIDs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBookIDs", reflect.TypeOf((*MockRepository)(nil).FindAllBookIDs), arg0)
 }
 
 // FindAllBooks mocks base method.
-func (m *MockRepository) FindAllBooks() (<-chan model.Book, error) {
+func (m *MockRepository) FindAllBooks(arg0 context.Context) (<-chan model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllBooks")
+	ret := m.ctrl.Call(m, "FindAllBooks", arg0)
 	ret0, _ := ret[0].(<-chan model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllBooks indicates an expected call of FindAllBooks.
-func (mr *MockRepositoryMockRecorder) FindAllBooks() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindAllBooks(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBooks", reflect.TypeOf((*MockRepository)(nil).FindAllBooks))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllBooks", reflect.TypeOf((*MockRepository)(nil).FindAllBooks), arg0)
 }
 
 // FindBookById mocks base method.
-func (m *MockRepository) FindBookById(arg0 int) (*model.Book, error) {
+func (m *MockRepository) FindBookById(arg0 context.Context, arg1 int) (*model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBookById", arg0)
+	ret := m.ctrl.Call(m, "FindBookById", arg0, arg1)
 	ret0, _ := ret[0].(*model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBookById indicates an expected call of FindBookById.
-func (mr *MockRepositoryMockRecorder) FindBookById(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBookById(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookById", reflect.TypeOf((*MockRepository)(nil).FindBookById), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookById", reflect.TypeOf((*MockRepository)(nil).FindBookById), arg0, arg1)
 }
 
 // FindBookByIdHash mocks base method.
-func (m *MockRepository) FindBookByIdHash(arg0, arg1 int) (*model.Book, error) {
+func (m *MockRepository) FindBookByIdHash(arg0 context.Context, arg1, arg2 int) (*model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBookByIdHash", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindBookByIdHash", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBookByIdHash indicates an expected call of FindBookByIdHash.
-func (mr *MockRepositoryMockRecorder) FindBookByIdHash(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBookByIdHash(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookByIdHash", reflect.TypeOf((*MockRepository)(nil).FindBookByIdHash), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookByIdHash", reflect.TypeOf((*MockRepository)(nil).FindBookByIdHash), arg0, arg1, arg2)
 }
 
 // FindBookGroupByID mocks base method.
-func (m *MockRepository) FindBookGroupByID(arg0 int) (model.BookGroup, error) {
+func (m *MockRepository) FindBookGroupByID(arg0 context.Context, arg1 int) (model.BookGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBookGroupByID", arg0)
+	ret := m.ctrl.Call(m, "FindBookGroupByID", arg0, arg1)
 	ret0, _ := ret[0].(model.BookGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBookGroupByID indicates an expected call of FindBookGroupByID.
-func (mr *MockRepositoryMockRecorder) FindBookGroupByID(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBookGroupByID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByID", reflect.TypeOf((*MockRepository)(nil).FindBookGroupByID), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByID", reflect.TypeOf((*MockRepository)(nil).FindBookGroupByID), arg0, arg1)
 }
 
 // FindBookGroupByIDHash mocks base method.
-func (m *MockRepository) FindBookGroupByIDHash(arg0, arg1 int) (model.BookGroup, error) {
+func (m *MockRepository) FindBookGroupByIDHash(arg0 context.Context, arg1, arg2 int) (model.BookGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBookGroupByIDHash", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindBookGroupByIDHash", arg0, arg1, arg2)
 	ret0, _ := ret[0].(model.BookGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBookGroupByIDHash indicates an expected call of FindBookGroupByIDHash.
-func (mr *MockRepositoryMockRecorder) FindBookGroupByIDHash(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBookGroupByIDHash(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByIDHash", reflect.TypeOf((*MockRepository)(nil).FindBookGroupByIDHash), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBookGroupByIDHash", reflect.TypeOf((*MockRepository)(nil).FindBookGroupByIDHash), arg0, arg1, arg2)
 }
 
 // FindBooksByRandom mocks base method.
-func (m *MockRepository) FindBooksByRandom(arg0 int) ([]model.Book, error) {
+func (m *MockRepository) FindBooksByRandom(arg0 context.Context, arg1 int) ([]model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBooksByRandom", arg0)
+	ret := m.ctrl.Call(m, "FindBooksByRandom", arg0, arg1)
 	ret0, _ := ret[0].([]model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBooksByRandom indicates an expected call of FindBooksByRandom.
-func (mr *MockRepositoryMockRecorder) FindBooksByRandom(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBooksByRandom(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByRandom", reflect.TypeOf((*MockRepository)(nil).FindBooksByRandom), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByRandom", reflect.TypeOf((*MockRepository)(nil).FindBooksByRandom), arg0, arg1)
 }
 
 // FindBooksByStatus mocks base method.
-func (m *MockRepository) FindBooksByStatus(arg0 model.StatusCode) (<-chan model.Book, error) {
+func (m *MockRepository) FindBooksByStatus(arg0 context.Context, arg1 model.StatusCode) (<-chan model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBooksByStatus", arg0)
+	ret := m.ctrl.Call(m, "FindBooksByStatus", arg0, arg1)
 	ret0, _ := ret[0].(<-chan model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBooksByStatus indicates an expected call of FindBooksByStatus.
-func (mr *MockRepositoryMockRecorder) FindBooksByStatus(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBooksByStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByStatus", reflect.TypeOf((*MockRepository)(nil).FindBooksByStatus), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByStatus", reflect.TypeOf((*MockRepository)(nil).FindBooksByStatus), arg0, arg1)
 }
 
 // FindBooksByTitleWriter mocks base method.
-func (m *MockRepository) FindBooksByTitleWriter(arg0, arg1 string, arg2, arg3 int) ([]model.Book, error) {
+func (m *MockRepository) FindBooksByTitleWriter(arg0 context.Context, arg1, arg2 string, arg3, arg4 int) ([]model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBooksByTitleWriter", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "FindBooksByTitleWriter", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBooksByTitleWriter indicates an expected call of FindBooksByTitleWriter.
-func (mr *MockRepositoryMockRecorder) FindBooksByTitleWriter(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBooksByTitleWriter(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByTitleWriter", reflect.TypeOf((*MockRepository)(nil).FindBooksByTitleWriter), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksByTitleWriter", reflect.TypeOf((*MockRepository)(nil).FindBooksByTitleWriter), arg0, arg1, arg2, arg3, arg4)
 }
 
 // FindBooksForDownload mocks base method.
-func (m *MockRepository) FindBooksForDownload() (<-chan model.Book, error) {
+func (m *MockRepository) FindBooksForDownload(arg0 context.Context) (<-chan model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBooksForDownload")
+	ret := m.ctrl.Call(m, "FindBooksForDownload", arg0)
 	ret0, _ := ret[0].(<-chan model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBooksForDownload indicates an expected call of FindBooksForDownload.
-func (mr *MockRepositoryMockRecorder) FindBooksForDownload() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBooksForDownload(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksForDownload", reflect.TypeOf((*MockRepository)(nil).FindBooksForDownload))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksForDownload", reflect.TypeOf((*MockRepository)(nil).FindBooksForDownload), arg0)
 }
 
 // FindBooksForUpdate mocks base method.
-func (m *MockRepository) FindBooksForUpdate() (<-chan model.Book, error) {
+func (m *MockRepository) FindBooksForUpdate(arg0 context.Context) (<-chan model.Book, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindBooksForUpdate")
+	ret := m.ctrl.Call(m, "FindBooksForUpdate", arg0)
 	ret0, _ := ret[0].(<-chan model.Book)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindBooksForUpdate indicates an expected call of FindBooksForUpdate.
-func (mr *MockRepositoryMockRecorder) FindBooksForUpdate() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindBooksForUpdate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksForUpdate", reflect.TypeOf((*MockRepository)(nil).FindBooksForUpdate))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBooksForUpdate", reflect.TypeOf((*MockRepository)(nil).FindBooksForUpdate), arg0)
 }
 
 // SaveError mocks base method.
-func (m *MockRepository) SaveError(arg0 *model.Book, arg1 error) error {
+func (m *MockRepository) SaveError(arg0 context.Context, arg1 *model.Book, arg2 error) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveError", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveError", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveError indicates an expected call of SaveError.
-func (mr *MockRepositoryMockRecorder) SaveError(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveError(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveError", reflect.TypeOf((*MockRepository)(nil).SaveError), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveError", reflect.TypeOf((*MockRepository)(nil).SaveError), arg0, arg1, arg2)
 }
 
 // SaveWriter mocks base method.
-func (m *MockRepository) SaveWriter(arg0 *model.Writer) error {
+func (m *MockRepository) SaveWriter(arg0 context.Context, arg1 *model.Writer) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveWriter", arg0)
+	ret := m.ctrl.Call(m, "SaveWriter", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveWriter indicates an expected call of SaveWriter.
-func (mr *MockRepositoryMockRecorder) SaveWriter(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) SaveWriter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWriter", reflect.TypeOf((*MockRepository)(nil).SaveWriter), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWriter", reflect.TypeOf((*MockRepository)(nil).SaveWriter), arg0, arg1)
 }
 
 // Stats mocks base method.
-func (m *MockRepository) Stats() repo.Summary {
+func (m *MockRepository) Stats(arg0 context.Context) repo.Summary {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stats")
+	ret := m.ctrl.Call(m, "Stats", arg0)
 	ret0, _ := ret[0].(repo.Summary)
 	return ret0
 }
 
 // Stats indicates an expected call of Stats.
-func (mr *MockRepositoryMockRecorder) Stats() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Stats(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stats", reflect.TypeOf((*MockRepository)(nil).Stats))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stats", reflect.TypeOf((*MockRepository)(nil).Stats), arg0)
 }
 
 // UpdateBook mocks base method.
-func (m *MockRepository) UpdateBook(arg0 *model.Book) error {
+func (m *MockRepository) UpdateBook(arg0 context.Context, arg1 *model.Book) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBook", arg0)
+	ret := m.ctrl.Call(m, "UpdateBook", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBook indicates an expected call of UpdateBook.
-func (mr *MockRepositoryMockRecorder) UpdateBook(arg0 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpdateBook(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBook", reflect.TypeOf((*MockRepository)(nil).UpdateBook), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBook", reflect.TypeOf((*MockRepository)(nil).UpdateBook), arg0, arg1)
 }
 
 // UpdateBooksStatus mocks base method.
-func (m *MockRepository) UpdateBooksStatus() error {
+func (m *MockRepository) UpdateBooksStatus(arg0 context.Context) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateBooksStatus")
+	ret := m.ctrl.Call(m, "UpdateBooksStatus", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateBooksStatus indicates an expected call of UpdateBooksStatus.
-func (mr *MockRepositoryMockRecorder) UpdateBooksStatus() *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpdateBooksStatus(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBooksStatus", reflect.TypeOf((*MockRepository)(nil).UpdateBooksStatus))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBooksStatus", reflect.TypeOf((*MockRepository)(nil).UpdateBooksStatus), arg0)
 }
