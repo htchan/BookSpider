@@ -8,6 +8,7 @@ variable "BAKE_CI" { default = "false" }
 
 variable "BRANCH" { default = "" }
 variable "IMAGE_TAG" { default = "${equal(BRANCH,"master") ? "latest" : "beta"}" }
+variable "GO_VERSION" { default = "1.24.2" }
 
 group "default" {
   targets = ["backend-api","backend-worker"]
@@ -26,6 +27,7 @@ target "backend" {
 
   args = {
     SERVICE = "${service}"
+    GO_VERSION = "${GO_VERSION}"
   }
 
   labels = {
