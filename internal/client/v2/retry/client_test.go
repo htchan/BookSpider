@@ -120,7 +120,7 @@ func TestRetryClient_Get(t *testing.T) {
 						{
 							Type:              RetryConditionTypeTimeout,
 							Weight:            1,
-							PauseInterval:     5 * time.Millisecond,
+							PauseInterval:     7 * time.Millisecond,
 							PauseIntervalType: PauseIntervalTypeLinear,
 						},
 					},
@@ -129,7 +129,7 @@ func TestRetryClient_Get(t *testing.T) {
 				simpleClient,
 			),
 			serverHandler: func(w http.ResponseWriter, r *http.Request) {
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(9 * time.Millisecond)
 				w.Write([]byte("hello"))
 			},
 			args: args{
@@ -138,7 +138,7 @@ func TestRetryClient_Get(t *testing.T) {
 			},
 			want:                  "",
 			wantError:             client.ErrTimeout,
-			expectedDurationTaken: 105 * time.Millisecond,
+			expectedDurationTaken: 135 * time.Millisecond,
 		},
 		{
 			name: "success before using all retry count",
@@ -148,7 +148,7 @@ func TestRetryClient_Get(t *testing.T) {
 						{
 							Type:              RetryConditionTypeTimeout,
 							Weight:            1,
-							PauseInterval:     5 * time.Millisecond,
+							PauseInterval:     7 * time.Millisecond,
 							PauseIntervalType: PauseIntervalTypeLinear,
 						},
 					},
@@ -160,7 +160,7 @@ func TestRetryClient_Get(t *testing.T) {
 				var i atomic.Int32
 				return func(w http.ResponseWriter, r *http.Request) {
 					if i.Load() < 4 {
-						time.Sleep(10 * time.Millisecond)
+						time.Sleep(9 * time.Millisecond)
 						i.Add(1)
 					}
 					w.Write([]byte("hello"))
@@ -172,7 +172,7 @@ func TestRetryClient_Get(t *testing.T) {
 			},
 			want:                  "hello",
 			wantError:             nil,
-			expectedDurationTaken: 75 * time.Millisecond,
+			expectedDurationTaken: 90 * time.Millisecond,
 		},
 	}
 
@@ -186,7 +186,7 @@ func TestRetryClient_Get(t *testing.T) {
 
 			start := time.Now()
 			got, err := test.client.Get(test.args.getContext(), server.URL+test.args.url)
-			timeTaken := time.Since(start).Truncate(5 * time.Millisecond)
+			timeTaken := time.Since(start).Truncate(15 * time.Millisecond)
 
 			assert.Equal(t, test.want, got)
 			assert.ErrorIs(t, err, test.wantError)

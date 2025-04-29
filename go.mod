@@ -1,6 +1,6 @@
 module github.com/htchan/BookSpider
 
-go 1.24.1
+go 1.24.2
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
@@ -41,7 +41,7 @@ require (
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/cli v24.0.7+incompatible // indirect
-	github.com/docker/docker v24.0.7+incompatible // indirect
+	github.com/docker/docker v23.0.15+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
