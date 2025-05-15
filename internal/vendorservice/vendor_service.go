@@ -28,7 +28,7 @@ type ChapterInfo struct {
 	Body  string
 }
 
-//go:generate mockgen -destination=../mock/vendorservice/vendor_service.go -package=mockvendorservice . VendorService
+//go:generate go tool mockgen -destination=../mock/vendorservice/vendor_service.go -package=mockvendorservice . VendorService
 type VendorService interface {
 	// url builder
 	BookURL(bookID string) string

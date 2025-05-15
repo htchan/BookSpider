@@ -10,12 +10,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	mockservice "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_GeneralInfoAPIHandler(t *testing.T) {

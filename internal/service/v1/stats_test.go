@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func TestServiceImpl_Stats(t *testing.T) {

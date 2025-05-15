@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
 	"github.com/htchan/BookSpider/internal/client/v2/retry"
 	"github.com/htchan/BookSpider/internal/client/v2/simple"
@@ -20,6 +19,7 @@ import (
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/sync/semaphore"
 )
 

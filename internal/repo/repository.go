@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-//go:generate mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
+//go:generate go tool mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
 type Repository interface {
 	// book related
 	CreateBook(context.Context, *model.Book) error

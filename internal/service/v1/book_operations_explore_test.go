@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/htchan/BookSpider/internal/config/v2"
 	clientmock "github.com/htchan/BookSpider/internal/mock/client/v2"
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
@@ -13,6 +12,7 @@ import (
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/sync/semaphore"
 )
 

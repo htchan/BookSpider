@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
 	"github.com/htchan/BookSpider/internal/model"
 	serv "github.com/htchan/BookSpider/internal/service"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func Test_isEnd(t *testing.T) {

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	servicemock "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/htchan/BookSpider/internal/service"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGeneralLiteHandler(t *testing.T) {

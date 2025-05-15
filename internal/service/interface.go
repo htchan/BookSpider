@@ -38,7 +38,7 @@ type PatchStorageStats struct {
 	FileMissing atomic.Int64
 }
 
-//go:generate mockgen -destination=../mock/service/v1/service.go -package=mockservice . Service
+//go:generate go tool mockgen -destination=../mock/service/v1/service.go -package=mockservice . Service
 type Service interface {
 	Name() string
 	// Backup() error
