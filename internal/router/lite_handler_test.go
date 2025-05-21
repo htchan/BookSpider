@@ -259,12 +259,10 @@ func TestSearchLiteHandler(t *testing.T) {
 			  
 			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
 				<p class="inline">title - writer</p>
-				<div class="tag">
-				test
-				</div>
+				<div class="tag">test</div>
+				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
 			    <p>date</p>
 			    <p>chapter</p>
-			    <p>Downloaded</p>
 			  </div>
 			
 			    
@@ -446,12 +444,10 @@ func TestBookLiteHandler(t *testing.T) {
 
 				<div class="book-box" onclick="location.href='/lite/novel/sites/test-2/books/123-100/'">
 				<p class="inline">title - writer</p>
-				<div class="tag">
-				test-2
-				</div>
+				<div class="tag">test-2</div>
+				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
 				<p>date</p>
 				<p>chapter</p>
-				<p>Downloaded</p>
 				</div>
 
 
