@@ -9,7 +9,7 @@ on:
       - 'database/**'
       - 'build/**'
       - 'go.*'
-      - '.github/workflows/backend-test.yml'
+      - '.github/workflows/test.yml'
   push:
     branches:
       - master
@@ -18,7 +18,7 @@ on:
       - 'database/**'
       - 'build/**'
       - 'go.*'
-      - '.github/workflows/backend-test.yml'
+      - '.github/workflows/test.yml'
 
 env:
   GO_VERSION: 1.24.2
