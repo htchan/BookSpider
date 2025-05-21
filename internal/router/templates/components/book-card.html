@@ -2,7 +2,10 @@
   {{ $uriPrefix := index . 0 }}
   {{ $book := index . 1}}
   <div class="book-box" onclick="location.href='{{$uriPrefix}}/sites/{{$book.Site}}/books/{{$book.ID}}-{{$book.HashCode}}/'">
-    <p>{{ $book.Title }} - {{ $book.Writer.Name }}</p>
+    <p class="inline">{{ $book.Title }} - {{ $book.Writer.Name }}</p>
+    <div class="tag">
+      {{ $book.Site }}
+    </div>
     <p>{{ $book.UpdateDate }}</p>
     <p>{{ $book.UpdateChapter }}</p>
     <p>{{ if $book.IsDownloaded }}Downloaded{{ else }}{{ $book.Status }}{{ end }}</p>

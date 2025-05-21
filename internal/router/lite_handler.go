@@ -34,7 +34,12 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 		t, err :=
 			new(template.Template).
 				Funcs(customTemplateFunc).
-				ParseFS(files, "templates/sites.html", "templates/components/site-card.html")
+				ParseFS(
+					files,
+					"templates/sites.html",
+					"templates/components/site-card.html",
+					"templates/styles/site-button.html",
+				)
 		if err != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 			logger.Error().Err(err).Msg("general lite handler parse fs fail")
@@ -100,7 +105,12 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
-		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
+		ParseFS(
+			files,
+			"templates/result.html",
+			"templates/components/book-card.html",
+			"templates/styles/book-box.html",
+		)
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		logger.Error().Err(err).Msg("search lite handler parse fs fail")
@@ -157,7 +167,12 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
-		ParseFS(files, "templates/result.html", "templates/components/book-card.html")
+		ParseFS(
+			files,
+			"templates/result.html",
+			"templates/components/book-card.html",
+			"templates/styles/book-box.html",
+		)
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		logger.Error().Err(err).Msg("random lite handler parse fs fail")
@@ -206,7 +221,12 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 	uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
 	t, err := new(template.Template).
 		Funcs(customTemplateFunc).
-		ParseFS(files, "templates/book.html", "templates/components/book-card.html")
+		ParseFS(
+			files,
+			"templates/book.html",
+			"templates/components/book-card.html",
+			"templates/styles/book-box.html",
+		)
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
 		logger.Error().Err(err).Msg("book lite handler parse fs fail")

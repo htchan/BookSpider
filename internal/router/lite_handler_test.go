@@ -233,7 +233,19 @@ func TestSearchLiteHandler(t *testing.T) {
 			      border-style: solid;
 			      padding-left: 1em;
 			      padding-right: 1em;
-			    }
+			      margin: 1em;
+				}
+				.inline {
+				  display: inline-block;
+				}
+				.tag {
+				  display: inline-block;
+				  background-color: #f0f0f0;
+				  border-radius: 0.5em;
+				  padding: 0.2em 0.5em;
+				  margin: 0.5em;
+				  border: 0.2em solid #000;
+				}
 			  </style>
 			</head>
 			
@@ -246,7 +258,10 @@ func TestSearchLiteHandler(t *testing.T) {
 			  
 			  
 			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
-			    <p>title - writer</p>
+				<p class="inline">title - writer</p>
+				<div class="tag">
+				test
+				</div>
 			    <p>date</p>
 			    <p>chapter</p>
 			    <p>Downloaded</p>
@@ -319,6 +334,23 @@ func TestBookLiteHandler(t *testing.T) {
 			<head>
 				<title>Novel - test - title</title>
 				<style>
+			      .book-box {
+			        border-style: solid;
+			        padding-left: 1em;
+			        padding-right: 1em;
+			        margin: 1em;
+				  }
+				  .inline {
+				    display: inline-block;
+				  }
+				  .tag {
+				    display: inline-block;
+				    background-color: #f0f0f0;
+				    border-radius: 0.5em;
+				    padding: 0.2em 0.5em;
+				    margin: 0.5em;
+				    border: 0.2em solid #000;
+				  }
 				</style>
 			</head>
 			
@@ -375,6 +407,23 @@ func TestBookLiteHandler(t *testing.T) {
 			<head>
 				<title>Novel - test - title</title>
 				<style>
+			      .book-box {
+			        border-style: solid;
+			        padding-left: 1em;
+			        padding-right: 1em;
+			        margin: 1em;
+				  }
+				  .inline {
+				    display: inline-block;
+				  }
+				  .tag {
+				    display: inline-block;
+				    background-color: #f0f0f0;
+				    border-radius: 0.5em;
+				    padding: 0.2em 0.5em;
+				    margin: 0.5em;
+				    border: 0.2em solid #000;
+				  }
 				</style>
 			</head>
 			
@@ -396,7 +445,10 @@ func TestBookLiteHandler(t *testing.T) {
 
 
 				<div class="book-box" onclick="location.href='/lite/novel/sites/test-2/books/123-100/'">
-				<p>title - writer</p>
+				<p class="inline">title - writer</p>
+				<div class="tag">
+				test-2
+				</div>
 				<p>date</p>
 				<p>chapter</p>
 				<p>Downloaded</p>

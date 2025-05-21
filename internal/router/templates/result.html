@@ -2,13 +2,7 @@
 
 <head>
   <title>Novel - {{ .Name }}</title>
-  <style>
-    .book-box {
-      border-style: solid;
-      padding-left: 1em;
-      padding-right: 1em;
-    }
-  </style>
+  {{ template "book-box-style" }}
 </head>
 
 <body>
