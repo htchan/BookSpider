@@ -9,7 +9,7 @@
   <h1>{{ .Book.Site }}</h1>
   <div>
       <p class="inline">{{ .Book.Title }} - {{ .Book.Writer.Name }}</p>
-      {{ if .Book.IsDownloaded }}<div class="tag" style="background-color: #00ff00;">Downloaded</div>{{ else }}<p>{{ .Book.Status }}</p>{{ end }}
+      {{ if .Book.IsDownloaded }}<div class="tag" style="background-color: #00ff00;">Downloaded</div>{{ else }}<dig class="tag">{{ .Book.Status }}</div>{{ end }}
       <p>{{ .Book.UpdateDate }}</p>
       <p>{{ .Book.UpdateChapter }}</p>
       {{ if .Book.IsDownloaded }}
