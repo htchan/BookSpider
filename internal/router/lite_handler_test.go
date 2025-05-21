@@ -355,7 +355,8 @@ func TestBookLiteHandler(t *testing.T) {
 			<body>
 				<h1>test</h1>
 				<div>
-						<p>title - writer</p>
+						<p class="inline">title - writer</p>
+						<div class="tag" style="background-color: #00ff00;">Downloaded</div>
 						<p>date</p>
 						<p>chapter</p>
 						
@@ -428,7 +429,8 @@ func TestBookLiteHandler(t *testing.T) {
 			<body>
 				<h1>test</h1>
 				<div>
-						<p>title - writer</p>
+						<p class="inline">title - writer</p>
+						<div class="tag" style="background-color: #00ff00;">Downloaded</div>
 						<p>date</p>
 						<p>chapter</p>
 						

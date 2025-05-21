@@ -8,14 +8,13 @@
 <body>
   <h1>{{ .Book.Site }}</h1>
   <div>
-      <p>{{ .Book.Title }} - {{ .Book.Writer.Name }}</p>
+      <p class="inline">{{ .Book.Title }} - {{ .Book.Writer.Name }}</p>
+      {{ if .Book.IsDownloaded }}<div class="tag" style="background-color: #00ff00;">Downloaded</div>{{ else }}<p>{{ .Book.Status }}</p>{{ end }}
       <p>{{ .Book.UpdateDate }}</p>
       <p>{{ .Book.UpdateChapter }}</p>
       {{ if .Book.IsDownloaded }}
       <a href="{{.UriPrefix}}/sites/{{.Book.Site}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=txt">Download TXT</a>
       <a href="{{.UriPrefix}}/sites/{{.Book.Site}}/books/{{.Book.ID}}-{{.Book.HashCode}}/download?format=epub">Download EPUB</a>
-      {{ else }}
-      <p>{{ .Book.Status }}</p>
       {{ end }}
   </div>
   <h2>Book Group</h2>
