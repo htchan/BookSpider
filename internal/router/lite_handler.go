@@ -109,17 +109,21 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 			files,
 			"templates/result.html",
 			"templates/components/book-card.html",
+			"templates/components/pagination.html",
 			"templates/styles/book-box.html",
+			"templates/styles/pagination.html",
 		)
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
-		logger.Error().Err(err).Msg("search lite handler parse fs fail")
 		return
 	}
 
+	siteName := req.Context().Value(ContextKeySiteName).(string)
 	serv := req.Context().Value(ContextKeyServ).(service.Service)
 	title := req.Context().Value(ContextKeyTitle).(string)
 	writer := req.Context().Value(ContextKeyWriter).(string)
+	page := req.Context().Value(ContextKeyPage).(int)
+	perPage := req.Context().Value(ContextKeyPerPage).(int)
 	limit := req.Context().Value(ContextKeyLimit).(int)
 	offset := req.Context().Value(ContextKeyOffset).(int)
 	if limit == 0 {
@@ -133,20 +137,29 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprint(res, "books not found")
 		return
 	}
-	pageNo := (offset / limit)
 
 	execErr := t.ExecuteTemplate(res, "result.html", struct {
-		Name       string
-		UriPrefix  string
-		Books      []model.Book
-		lastPageNo int
-		nextPageNo int
+		Name           string
+		UriPrefix      string
+		SiteName       string
+		Books          []model.Book
+		Title          string
+		Writer         string
+		PreviousPage   int
+		NextPage       int
+		PerPage        int
+		ShowPagination bool
 	}{
-		Name:       serv.Name(),
-		UriPrefix:  uriPrefix,
-		Books:      bks,
-		lastPageNo: pageNo - 1,
-		nextPageNo: pageNo + 1,
+		Name:           serv.Name(),
+		UriPrefix:      uriPrefix,
+		SiteName:       siteName,
+		Books:          bks,
+		Title:          title,
+		Writer:         writer,
+		PreviousPage:   page - 1,
+		NextPage:       page + 1,
+		PerPage:        perPage,
+		ShowPagination: true,
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -171,7 +184,9 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 			files,
 			"templates/result.html",
 			"templates/components/book-card.html",
+			"templates/components/pagination.html",
 			"templates/styles/book-box.html",
+			"templates/styles/pagination.html",
 		)
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
@@ -194,13 +209,15 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	execErr := t.ExecuteTemplate(res, "result.html", struct {
-		Name      string
-		UriPrefix string
-		Books     []model.Book
+		Name           string
+		UriPrefix      string
+		Books          []model.Book
+		ShowPagination bool
 	}{
-		Name:      serv.Name(),
-		UriPrefix: uriPrefix,
-		Books:     bks,
+		Name:           serv.Name(),
+		UriPrefix:      uriPrefix,
+		Books:          bks,
+		ShowPagination: false,
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)

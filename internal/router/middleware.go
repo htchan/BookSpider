@@ -25,11 +25,14 @@ type ContextKey string
 
 const (
 	ContextKeyReqID     ContextKey = "req_id"
+	ContextKeySiteName  ContextKey = "site_name"
 	ContextKeyServ      ContextKey = "serv"
 	ContextKeyBook      ContextKey = "book"
 	ContextKeyBookGroup ContextKey = "book_group"
 	ContextKeyTitle     ContextKey = "title"
 	ContextKeyWriter    ContextKey = "writer"
+	ContextKeyPage      ContextKey = "page"
+	ContextKeyPerPage   ContextKey = "per_page"
 	ContextKeyLimit     ContextKey = "limit"
 	ContextKeyOffset    ContextKey = "offset"
 	ContextKeyUriPrefix ContextKey = "uri_prefix"
@@ -88,6 +91,7 @@ func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) h
 				span.End()
 
 				ctx := context.WithValue(req.Context(), ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeySiteName, siteName)
 				next.ServeHTTP(res, req.WithContext(ctx))
 			},
 		)
@@ -164,6 +168,8 @@ func GetPageParamsMiddleware(next http.Handler) http.Handler {
 
 			ctx := context.WithValue(req.Context(), ContextKeyLimit, perPage)
 			ctx = context.WithValue(ctx, ContextKeyOffset, offset)
+			ctx = context.WithValue(ctx, ContextKeyPage, page)
+			ctx = context.WithValue(ctx, ContextKeyPerPage, perPage)
 
 			next.ServeHTTP(res, req.WithContext(ctx))
 		},

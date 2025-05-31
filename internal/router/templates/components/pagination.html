@@ -1,0 +1,11 @@
+{{ define "pagination" }}
+  {{ $uriPrefix := index . 0 }}
+  {{ $siteName := index . 1 }}
+  {{ $title := index . 2 }}{{ $writer := index . 3 }}
+  {{ $perPage := index . 4 }}
+  {{ $previousPage := index . 5 }}{{ $nextPage := index . 6 }}
+  {{ $booksLength := index . 7 }}
+<div class="pagination">
+  {{ if ge $previousPage 0 }}<a href="{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$previousPage}}&per_page={{$perPage}}">Previous</a>{{ end }}
+  {{ if ge $booksLength $perPage }}<a href="{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$nextPage}}&per_page={{$perPage}}">Next</a>{{ end }}
+</div>{{ end }}

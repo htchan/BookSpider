@@ -192,7 +192,7 @@ func TestSearchLiteHandler(t *testing.T) {
 		expectRes        string
 	}{
 		{
-			name: "happy flow",
+			name: "happy flow without pagination",
 			services: map[string]service.Service{
 				"test": nil,
 			},
@@ -215,9 +215,12 @@ func TestSearchLiteHandler(t *testing.T) {
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 				ctx = context.WithValue(ctx, ContextKeyServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
 				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
+				ctx = context.WithValue(ctx, ContextKeyPage, 0)
+				ctx = context.WithValue(ctx, ContextKeyPerPage, 10)
 				ctx = context.WithValue(ctx, ContextKeyLimit, 10)
 				ctx = context.WithValue(ctx, ContextKeyOffset, 0)
 
@@ -247,6 +250,17 @@ func TestSearchLiteHandler(t *testing.T) {
 				  border: 0.2em solid #000;
 				}
 			  </style>
+			  <style>
+				.pageButton {
+				  display: inline-block;
+				  border-style: solid;
+				  margin: 0em 2%;
+				  width: 45%;
+				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+			  </style>
 			</head>
 			
 			<body>
@@ -267,7 +281,127 @@ func TestSearchLiteHandler(t *testing.T) {
 			
 			    
 			  </div>
-			  <!-- TODO: add next page and last page control -->
+
+
+
+
+
+
+
+
+			  <div class="pagination">
+
+
+			  </div>
+
+			</body>
+			
+			</html>
+`,
+		},
+		{
+			name: "happy flow with pagination",
+			services: map[string]service.Service{
+				"test": nil,
+			},
+			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
+				t.Helper()
+
+				serv := servicemock.NewMockService(ctrl)
+				serv.EXPECT().Name().Return("test")
+				serv.EXPECT().QueryBooks(gomock.Any(), "title", "writer", 1, 5).Return(
+					[]model.Book{
+						{
+							Site: "test", ID: 123, HashCode: 100,
+							Title: "title", Writer: model.Writer{Name: "writer"},
+							Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
+							Status: model.StatusEnd, IsDownloaded: true,
+						},
+					}, nil,
+				)
+
+				req, err := http.NewRequest(http.MethodGet, "/", nil)
+				assert.NoError(t, err)
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
+				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
+				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
+				ctx = context.WithValue(ctx, ContextKeyPage, 5)
+				ctx = context.WithValue(ctx, ContextKeyPerPage, 1)
+				ctx = context.WithValue(ctx, ContextKeyLimit, 1)
+				ctx = context.WithValue(ctx, ContextKeyOffset, 5)
+
+				return req.WithContext(ctx)
+			},
+			expectStatusCode: 200,
+			expectRes: `<html>
+
+			<head>
+			  <title>Novel - test</title>
+			  <style>
+			    .book-box {
+			      border-style: solid;
+			      padding-left: 1em;
+			      padding-right: 1em;
+			      margin: 1em;
+				}
+				.inline {
+				  display: inline-block;
+				}
+				.tag {
+				  display: inline-block;
+				  background-color: #f0f0f0;
+				  border-radius: 0.5em;
+				  padding: 0.2em 0.5em;
+				  margin: 0.5em;
+				  border: 0.2em solid #000;
+				}
+			  </style>
+			  <style>
+				.pageButton {
+				  display: inline-block;
+				  border-style: solid;
+				  margin: 0em 2%;
+				  width: 45%;
+				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+			  </style>
+			</head>
+			
+			<body>
+			  <h1>test</h1>
+			  <div>
+			    
+			    
+			      
+			  
+			  
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
+				<p class="inline">title - writer</p>
+				<div class="tag">test</div>
+				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
+			    <p>date</p>
+			    <p>chapter</p>
+			  </div>
+			
+			    
+			  </div>
+
+
+
+
+
+
+
+
+			  <div class="pagination">
+				<a href="/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1">Previous</a>
+				<a href="/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1">Next</a>
+			  </div>
+
 			</body>
 			
 			</html>
@@ -286,6 +420,130 @@ func TestSearchLiteHandler(t *testing.T) {
 			res := httptest.NewRecorder()
 
 			SearchLiteHandler(res, req)
+			assert.Equal(t, test.expectStatusCode, res.Result().StatusCode)
+			assert.Equal(t,
+				strings.ReplaceAll(strings.ReplaceAll(test.expectRes, "\t", ""), "  ", ""),
+				strings.ReplaceAll(strings.ReplaceAll(res.Body.String(), "\t", ""), "  ", ""),
+			)
+		})
+	}
+}
+
+func TestRandomLiteHandler(t *testing.T) {
+
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		services         map[string]service.Service
+		prepareRequest   func(*testing.T, *gomock.Controller) *http.Request
+		expectStatusCode int
+		expectRes        string
+	}{
+		{
+			name: "happy flow",
+			services: map[string]service.Service{
+				"test": nil,
+			},
+			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
+				t.Helper()
+
+				serv := servicemock.NewMockService(ctrl)
+				serv.EXPECT().Name().Return("test")
+				serv.EXPECT().RandomBooks(gomock.Any(), 10).Return(
+					[]model.Book{
+						{
+							Site: "test", ID: 123, HashCode: 100,
+							Title: "title", Writer: model.Writer{Name: "writer"},
+							Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
+							Status: model.StatusEnd, IsDownloaded: true,
+						},
+					}, nil,
+				)
+
+				req, err := http.NewRequest(http.MethodGet, "/", nil)
+				assert.NoError(t, err)
+				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
+				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeyLimit, 10)
+				ctx = context.WithValue(ctx, ContextKeyOffset, 0)
+
+				return req.WithContext(ctx)
+			},
+			expectStatusCode: 200,
+			expectRes: `<html>
+
+			<head>
+			  <title>Novel - test</title>
+			  <style>
+			    .book-box {
+			      border-style: solid;
+			      padding-left: 1em;
+			      padding-right: 1em;
+			      margin: 1em;
+				}
+				.inline {
+				  display: inline-block;
+				}
+				.tag {
+				  display: inline-block;
+				  background-color: #f0f0f0;
+				  border-radius: 0.5em;
+				  padding: 0.2em 0.5em;
+				  margin: 0.5em;
+				  border: 0.2em solid #000;
+				}
+			  </style>
+			  <style>
+				.pageButton {
+				  display: inline-block;
+				  border-style: solid;
+				  margin: 0em 2%;
+				  width: 45%;
+				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+			  </style>
+			</head>
+			
+			<body>
+			  <h1>test</h1>
+			  <div>
+			    
+			    
+			      
+			  
+			  
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
+				<p class="inline">title - writer</p>
+				<div class="tag">test</div>
+				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
+			    <p>date</p>
+			    <p>chapter</p>
+			  </div>
+			
+			    
+			  </div>
+
+			</body>
+			
+			</html>
+`,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+
+			req := test.prepareRequest(t, ctrl)
+			res := httptest.NewRecorder()
+
+			RandomLiteHandler(res, req)
 			assert.Equal(t, test.expectStatusCode, res.Result().StatusCode)
 			assert.Equal(t,
 				strings.ReplaceAll(strings.ReplaceAll(test.expectRes, "\t", ""), "  ", ""),

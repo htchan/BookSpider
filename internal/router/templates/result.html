@@ -3,6 +3,7 @@
 <head>
   <title>Novel - {{ .Name }}</title>
   {{ template "book-box-style" }}
+  {{ template "pagination-style" }}
 </head>
 
 <body>
@@ -15,7 +16,9 @@
     <p>No Books Found</p>
     {{ end }}
   </div>
-  <!-- TODO: add next page and last page control -->
+  {{ if .ShowPagination}}
+    {{ template "pagination" (arr $uriPrefix .SiteName .Title .Writer .PerPage .PreviousPage .NextPage (len .Books)) }}
+  {{ end }}
 </body>
 
 </html>
