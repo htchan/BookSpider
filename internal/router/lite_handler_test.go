@@ -253,13 +253,6 @@ func TestSearchLiteHandler(t *testing.T) {
 			  <style>
 				.page-button {
 				  display: inline-block;
-				  border-style: solid;
-				  margin: 0em 2%;
-				  width: 45%;
-				  padding: 1% 0em;
-				  text-align: center;
-				}
-				.blank-page-button {
 				  margin: 0em 2%;
 				  width: 45%;
 				  padding: 1% 0em;
@@ -295,8 +288,8 @@ func TestSearchLiteHandler(t *testing.T) {
 
 
 			  <div class="pagination">
-			  	<div class="blank-page-button"></div>
-				<div class="blank-page-button"></div>
+			  	<div class="page-button"></div>
+				<div class="page-button"></div>
 			  </div>
 
 			</body>
@@ -366,13 +359,6 @@ func TestSearchLiteHandler(t *testing.T) {
 			  <style>
 				.page-button {
 				  display: inline-block;
-				  border-style: solid;
-				  margin: 0em 2%;
-				  width: 45%;
-				  padding: 1% 0em;
-				  text-align: center;
-				}
-				.blank-page-button {
 				  margin: 0em 2%;
 				  width: 45%;
 				  padding: 1% 0em;
@@ -408,8 +394,8 @@ func TestSearchLiteHandler(t *testing.T) {
 
 
 			  <div class="pagination">
-				<div class="page-button" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1'">Previous</div>
-				<div class="page-button" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1'">Next</div>
+				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1'">Previous</div>
+				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1'">Next</div>
 			  </div>
 
 			</body>
@@ -507,13 +493,6 @@ func TestRandomLiteHandler(t *testing.T) {
 			  <style>
 				.page-button {
 				  display: inline-block;
-				  border-style: solid;
-				  margin: 0em 2%;
-				  width: 45%;
-				  padding: 1% 0em;
-				  text-align: center;
-				}
-				.blank-page-button {
 				  margin: 0em 2%;
 				  width: 45%;
 				  padding: 1% 0em;

@@ -6,6 +6,6 @@
   {{ $previousPage := index . 5 }}{{ $nextPage := index . 6 }}
   {{ $booksLength := index . 7 }}
 <div class="pagination">
-  {{ if ge $previousPage 0 }}<div class="page-button" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$previousPage}}&per_page={{$perPage}}'">Previous</div>{{else}}<div class="blank-page-button"></div>{{ end }}
-  {{ if ge $booksLength $perPage }}<div class="page-button" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$nextPage}}&per_page={{$perPage}}'">Next</div>{{else}}<div class="blank-page-button"></div>{{ end }}
+  {{ if ge $previousPage 0 }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$previousPage}}&per_page={{$perPage}}'">Previous</div>{{else}}<div class="page-button"></div>{{ end }}
+  {{ if ge $booksLength $perPage }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$nextPage}}&per_page={{$perPage}}'">Next</div>{{else}}<div class="page-button"></div>{{ end }}
 </div>{{ end }}
