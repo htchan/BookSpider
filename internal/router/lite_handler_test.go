@@ -256,7 +256,12 @@ func TestSearchLiteHandler(t *testing.T) {
 				  border-style: solid;
 				  margin: 0em 2%;
 				  width: 45%;
-				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+				.blank-page-button {
+				  margin: 0em 2%;
+				  width: 45%;
 				  padding: 1% 0em;
 				  text-align: center;
 				}
@@ -290,8 +295,8 @@ func TestSearchLiteHandler(t *testing.T) {
 
 
 			  <div class="pagination">
-
-
+			  	<div class="blank-page-button"></div>
+				<div class="blank-page-button"></div>
 			  </div>
 
 			</body>
@@ -364,7 +369,12 @@ func TestSearchLiteHandler(t *testing.T) {
 				  border-style: solid;
 				  margin: 0em 2%;
 				  width: 45%;
-				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+				.blank-page-button {
+				  margin: 0em 2%;
+				  width: 45%;
 				  padding: 1% 0em;
 				  text-align: center;
 				}
@@ -500,7 +510,12 @@ func TestRandomLiteHandler(t *testing.T) {
 				  border-style: solid;
 				  margin: 0em 2%;
 				  width: 45%;
-				  height: 5%;
+				  padding: 1% 0em;
+				  text-align: center;
+				}
+				.blank-page-button {
+				  margin: 0em 2%;
+				  width: 45%;
 				  padding: 1% 0em;
 				  text-align: center;
 				}
