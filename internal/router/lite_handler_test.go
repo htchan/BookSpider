@@ -251,7 +251,7 @@ func TestSearchLiteHandler(t *testing.T) {
 				}
 			  </style>
 			  <style>
-				.pageButton {
+				.page-button {
 				  display: inline-block;
 				  border-style: solid;
 				  margin: 0em 2%;
@@ -359,7 +359,7 @@ func TestSearchLiteHandler(t *testing.T) {
 				}
 			  </style>
 			  <style>
-				.pageButton {
+				.page-button {
 				  display: inline-block;
 				  border-style: solid;
 				  margin: 0em 2%;
@@ -398,8 +398,8 @@ func TestSearchLiteHandler(t *testing.T) {
 
 
 			  <div class="pagination">
-				<a href="/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1">Previous</a>
-				<a href="/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1">Next</a>
+				<div class="page-button" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1'">Previous</div>
+				<div class="page-button" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1'">Next</div>
 			  </div>
 
 			</body>
@@ -495,7 +495,7 @@ func TestRandomLiteHandler(t *testing.T) {
 				}
 			  </style>
 			  <style>
-				.pageButton {
+				.page-button {
 				  display: inline-block;
 				  border-style: solid;
 				  margin: 0em 2%;
