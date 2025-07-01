@@ -11,10 +11,10 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 		router.Use(logRequest())
 		router.Use(TraceMiddleware)
 		router.Use(SetUriPrefixMiddleware(conf.LiteRoutePrefix))
+		router.Use(GetReadDataServiceMiddleware(readDataServices))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
 			router.Use(GetSiteMiddleware(services))
-			router.Use(GetReadDataServiceMiddleware(readDataServices))
 			router.Get("/", SiteLiteHandlerfunc)
 
 			router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", SearchLiteHandler)
@@ -31,5 +31,8 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 		})
 
 		router.Get("/", GeneralLiteHandler(services))
+		router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", SearchLiteHandler)
+		router.With(GetPageParamsMiddleware).Get("/random", RandomLiteHandler)
+
 	})
 }
