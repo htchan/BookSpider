@@ -62,15 +62,6 @@ type Service interface {
 	Process(context.Context) error
 
 	BookInfo(context.Context, *model.Book) string
-	BookContent(context.Context, *model.Book) (string, error)
-	BookChapters(context.Context, *model.Book) (model.Chapters, error)
-	Book(ctx context.Context, id, hash string) (*model.Book, error)
-	BookGroup(ctx context.Context, id, hash string) (*model.Book, *model.BookGroup, error)
-	QueryBooks(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error)
-	RandomBooks(ctx context.Context, limit int) ([]model.Book, error)
-
-	Stats(context.Context) repo.Summary
-	DBStats(context.Context) sql.DBStats
 }
 
 //go:generate go tool mockgen -destination=../mock/service/v1/read_data_service.go -package=mockservice . ReadDataService

@@ -392,12 +392,12 @@ func TestServiceImpl_Download(t *testing.T) {
 
 				ch := make(chan model.Book)
 				go func() {
-					ch <- model.Book{ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"}, Status: model.StatusEnd}
-					ch <- model.Book{ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"}, Status: model.StatusEnd}
+					ch <- model.Book{Site: "test", ID: 1, Title: "title 1", Writer: model.Writer{Name: "writer 1"}, Status: model.StatusEnd}
+					ch <- model.Book{Site: "test", ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"}, Status: model.StatusEnd}
 					close(ch)
 				}()
 
-				rpo.EXPECT().FindBooksForDownload(gomock.Any()).Return(ch, nil)
+				rpo.EXPECT().FindBooksForDownload(gomock.Any(), "test").Return(ch, nil)
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list-1")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-1").Return("", serv.ErrUnavailable)
 				vendorService.EXPECT().ChapterListURL("2").Return("https://test.com/chapter-list-2")
@@ -415,12 +415,12 @@ func TestServiceImpl_Download(t *testing.T) {
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
 				rpo.EXPECT().UpdateBook(gomock.Any(), &model.Book{
-					ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"},
+					Site: "test", ID: 2, Title: "title 2", Writer: model.Writer{Name: "writer 2"},
 					Status: model.StatusEnd, IsDownloaded: true,
 				}).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					conf: config.SiteConfig{Storage: "./download-book", MaxDownloadConcurrency: 1},
+					name: "test", conf: config.SiteConfig{Storage: "./download-book", MaxDownloadConcurrency: 1},
 					sema: semaphore.NewWeighted(2),
 					rpo:  rpo, cli: cli, vendorService: vendorService,
 				}
@@ -431,9 +431,9 @@ func TestServiceImpl_Download(t *testing.T) {
 			name: "fail to find books for download",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				rpo.EXPECT().FindBooksForDownload(gomock.Any()).Return(nil, serv.ErrUnavailable)
+				rpo.EXPECT().FindBooksForDownload(gomock.Any(), "test").Return(nil, serv.ErrUnavailable)
 
-				return &ServiceImpl{rpo: rpo}
+				return &ServiceImpl{name: "test", rpo: rpo}
 			},
 			wantError: serv.ErrUnavailable,
 		},

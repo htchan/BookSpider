@@ -20,7 +20,7 @@ func TestNewReadDataService(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		rpo   repo.RepositoryV2
+		rpo   repo.Repository
 		confs map[string]config.SiteConfig
 		want  *ReadDataServiceImpl
 	}{
@@ -91,7 +91,7 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 		{
 			name: "book found with pure ID",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(gomock.Any(), "test", 123).Return(&model.Book{ID: 123, HashCode: 0}, nil)
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -105,7 +105,7 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 		{
 			name: "book found with ID and Hashcode",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookByIdHash(gomock.Any(), "test", 123, 10).Return(&model.Book{ID: 123, HashCode: 10}, nil)
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -119,7 +119,7 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 		{
 			name: "invalid id",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				return &ReadDataServiceImpl{rpo: rpo}
 			},
@@ -132,7 +132,7 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 		{
 			name: "invalid hashcode",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				return &ReadDataServiceImpl{rpo: rpo}
 			},
@@ -145,7 +145,7 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 		{
 			name: "book not found",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookById(gomock.Any(), "test", 123).Return(nil, repo.ErrBookNotExist)
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -315,7 +315,7 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 		{
 			name: "book group found with pure ID",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookGroupByID(gomock.Any(), "test", 123).Return(
 					model.BookGroup{{Site: "test", ID: 123, HashCode: 0}, {Site: "test", ID: 456, HashCode: 0}},
 					nil,
@@ -333,7 +333,7 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 		{
 			name: "book group found with ID and Hashcode",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookGroupByIDHash(gomock.Any(), "test", 123, 10).Return(
 					model.BookGroup{{Site: "test", ID: 123, HashCode: 10}, {Site: "test", ID: 456, HashCode: 0}},
 					nil,
@@ -351,7 +351,7 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 		{
 			name: "invalid id",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				return &ReadDataServiceImpl{rpo: rpo}
 			},
@@ -365,7 +365,7 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 		{
 			name: "invalid hashcode",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 
 				return &ReadDataServiceImpl{rpo: rpo}
 			},
@@ -379,7 +379,7 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 		{
 			name: "book not found",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBookGroupByID(gomock.Any(), "test", 123).Return(nil, repo.ErrBookNotExist)
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -426,7 +426,7 @@ func TestReadDataReadDataServiceImpl_SearchBook(t *testing.T) {
 		{
 			name: "happy flow with books",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByTitleWriter(gomock.Any(), "title", "writer", 10, 0).
 					Return([]model.Book{{ID: 123, HashCode: 0}}, nil)
 
@@ -473,7 +473,7 @@ func TestReadDataReadDataServiceImpl_RandomBook(t *testing.T) {
 		{
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().FindBooksByRandom(gomock.Any(), 10).Return([]model.Book{{ID: 123, HashCode: 0}}, nil)
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -512,7 +512,7 @@ func TestReadDataReadDataServiceImpl_Stats(t *testing.T) {
 		{
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{})
 
 				return &ReadDataServiceImpl{rpo: rpo}
@@ -550,7 +550,7 @@ func TestReadDataReadDataServiceImpl_DBStats(t *testing.T) {
 		{
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ReadDataServiceImpl {
-				rpo := mockrepo.NewMockRepositoryV2(ctrl)
+				rpo := mockrepo.NewMockRepository(ctrl)
 				rpo.EXPECT().DBStats(gomock.Any()).Return(sql.DBStats{})
 
 				return &ReadDataServiceImpl{rpo: rpo}

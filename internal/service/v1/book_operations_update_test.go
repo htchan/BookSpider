@@ -415,7 +415,7 @@ func TestServiceImpl_Update(t *testing.T) {
 				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				bk := model.Book{
-					ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
+					Site: "test", ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 					UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
 				}
 				ch := make(chan model.Book)
@@ -426,7 +426,7 @@ func TestServiceImpl_Update(t *testing.T) {
 					close(ch)
 				}()
 
-				rpo.EXPECT().FindBooksForUpdate(gomock.Any()).Return(ch, nil)
+				rpo.EXPECT().FindBooksForUpdate(gomock.Any(), "test").Return(ch, nil)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
@@ -440,7 +440,7 @@ func TestServiceImpl_Update(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), &bkUpdated).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), &bkUpdated, nil).Return(nil)
 
-				return &ServiceImpl{sema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{name: "test", sema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
 			},
 			wantError: nil,
 		},
@@ -449,9 +449,9 @@ func TestServiceImpl_Update(t *testing.T) {
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
 
-				rpo.EXPECT().FindBooksForUpdate(gomock.Any()).Return(nil, serv.ErrUnavailable)
+				rpo.EXPECT().FindBooksForUpdate(gomock.Any(), "test").Return(nil, serv.ErrUnavailable)
 
-				return &ServiceImpl{rpo: rpo}
+				return &ServiceImpl{name: "test", rpo: rpo}
 			},
 			wantError: serv.ErrUnavailable,
 		},

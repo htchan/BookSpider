@@ -132,7 +132,7 @@ func (s *ServiceImpl) Update(ctx context.Context, stats *serv.UpdateStats) error
 		stats = new(serv.UpdateStats)
 	}
 
-	bkChan, err := s.rpo.FindBooksForUpdate(ctx)
+	bkChan, err := s.rpo.FindBooksForUpdate(ctx, s.name)
 	if err != nil {
 		return fmt.Errorf("fail to load books from DB: %w", err)
 	}
@@ -194,7 +194,7 @@ func (s *ServiceImpl) ExploreBook(ctx context.Context, bk *model.Book, stats *se
 }
 
 func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) error {
-	summary := s.rpo.Stats(ctx)
+	summary := s.rpo.Stats(ctx, s.name)
 	var errorCount atomic.Int64
 
 	if stats == nil {
@@ -213,7 +213,7 @@ func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) erro
 			defer wg.Done()
 			defer s.sema.Release(1)
 
-			bk, err := s.rpo.FindBookById(ctx, id)
+			bk, err := s.rpo.FindBookById(ctx, s.name, id)
 			if err != nil {
 				errorCount.Add(1)
 				return
@@ -407,7 +407,7 @@ func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) e
 		stats = new(serv.DownloadStats)
 	}
 
-	bkChan, err := s.rpo.FindBooksForDownload(ctx)
+	bkChan, err := s.rpo.FindBooksForDownload(ctx, s.name)
 	if err != nil {
 		return fmt.Errorf("fail to fetch books: %w", err)
 	}

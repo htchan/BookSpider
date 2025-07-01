@@ -104,15 +104,15 @@ func TestServiceImpl_Explore(t *testing.T) {
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				cli := clientmock.NewMockBookClient(ctrl)
 
-				rpo.EXPECT().Stats(gomock.Any()).Return(repo.Summary{LatestSuccessID: 0, MaxBookID: 5})
-				rpo.EXPECT().FindBookById(gomock.Any(), 1).Return(&model.Book{ID: 1, Status: model.StatusError, Error: serv.ErrUnavailable}, nil)
+				rpo.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{LatestSuccessID: 0, MaxBookID: 5})
+				rpo.EXPECT().FindBookById(gomock.Any(), "test", 1).Return(&model.Book{ID: 1, Status: model.StatusError, Error: serv.ErrUnavailable}, nil)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
 				expectErr := fmt.Errorf("get book page failed: %w", serv.ErrUnavailable)
 				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{ID: 1, Status: model.StatusError, Error: expectErr}, expectErr).Return(nil)
 
 				return &ServiceImpl{
-					rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
+					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
 					conf: config.SiteConfig{MaxExploreError: 1},
 				}
 			},
@@ -125,17 +125,17 @@ func TestServiceImpl_Explore(t *testing.T) {
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				cli := clientmock.NewMockBookClient(ctrl)
 
-				rpo.EXPECT().Stats(gomock.Any()).Return(repo.Summary{LatestSuccessID: 5, MaxBookID: 5})
+				rpo.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{LatestSuccessID: 5, MaxBookID: 5})
 
-				rpo.EXPECT().CreateBook(gomock.Any(), &model.Book{Site: "testing", ID: 6, HashCode: model.GenerateHash(), Status: model.StatusError}).Return(nil)
+				rpo.EXPECT().CreateBook(gomock.Any(), &model.Book{Site: "test", ID: 6, HashCode: model.GenerateHash(), Status: model.StatusError}).Return(nil)
 				vendorService.EXPECT().BookURL("6").Return("https://test.com")
 				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
 				expectErr := fmt.Errorf("get book page failed: %w", serv.ErrUnavailable)
-				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{Site: "testing", ID: 6, HashCode: model.GenerateHash(), Status: model.StatusError, Error: expectErr}, expectErr).Return(nil)
+				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{Site: "test", ID: 6, HashCode: model.GenerateHash(), Status: model.StatusError, Error: expectErr}, expectErr).Return(nil)
 
 				return &ServiceImpl{
-					rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
-					name: "testing", conf: config.SiteConfig{MaxExploreError: 1},
+					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
+					conf: config.SiteConfig{MaxExploreError: 1},
 				}
 			},
 			wantError: nil,
