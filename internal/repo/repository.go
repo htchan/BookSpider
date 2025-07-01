@@ -9,49 +9,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-//go:generate go tool mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
-type Repository interface {
-	// book related
-	CreateBook(context.Context, *model.Book) error
-	UpdateBook(context.Context, *model.Book) error
-	// the system will not delete exiting books
-
-	FindBookById(ctx context.Context, id int) (*model.Book, error) // return book with the largest hash code
-	FindBookByIdHash(ctx context.Context, id, hash int) (*model.Book, error)
-	FindBooksByStatus(ctx context.Context, status model.StatusCode) (<-chan model.Book, error)
-	FindAllBooks(context.Context) (<-chan model.Book, error)
-	FindBooksForUpdate(context.Context) (<-chan model.Book, error)
-	FindBooksForDownload(context.Context) (<-chan model.Book, error)
-	FindBooksByTitleWriter(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error)
-	FindBooksByRandom(ctx context.Context, limit int) ([]model.Book, error)
-	UpdateBooksStatus(context.Context) error
-
-	FindBookGroupByID(ctx context.Context, id int) (model.BookGroup, error)
-	FindBookGroupByIDHash(ctx context.Context, id, hashCode int) (model.BookGroup, error)
-
-	FindAllBookIDs(context.Context) ([]int, error)
-
-	// writer related
-	SaveWriter(context.Context, *model.Writer) error // create and update id in writer
-	// the system will not delete / update existing writers
-
-	// error related
-	SaveError(context.Context, *model.Book, error) error // create / update / delete errors depends on error content
-
-	// database
-	Backup(ctx context.Context, path string) error
-	DBStats(context.Context) sql.DBStats // return empty if repo is not based on db
-	Stats(context.Context) Summary
-
-	Close() error
-}
-
 func GetTracer() trace.Tracer {
 	return otel.Tracer("htchan/BookSpider/repository")
 }
 
-//go:generate go tool mockgen -destination=../mock/repo/repository_v2.go -package=mockrepo . RepositoryV2
-type RepositoryV2 interface {
+//go:generate go tool mockgen -destination=../mock/repo/repository.go -package=mockrepo . Repository
+type Repository interface {
 	// book related
 	CreateBook(context.Context, *model.Book) error
 	UpdateBook(context.Context, *model.Book) error

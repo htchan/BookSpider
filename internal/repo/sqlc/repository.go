@@ -19,7 +19,6 @@ import (
 )
 
 type SqlcRepo struct {
-	site    string
 	db      *sql.DB
 	queries *sqlc.Queries
 }
@@ -38,9 +37,8 @@ func toSqlBool(b bool) sql.NullBool {
 	return sql.NullBool{Bool: b, Valid: true}
 }
 
-func NewRepo(site string, db *sql.DB) *SqlcRepo {
+func NewRepo(db *sql.DB) *SqlcRepo {
 	return &SqlcRepo{
-		site:    site,
 		db:      db,
 		queries: sqlc.New(db),
 	}
@@ -137,14 +135,14 @@ func (r *SqlcRepo) UpdateBook(ctx context.Context, bk *model.Book) error {
 	return nil
 }
 
-func (r *SqlcRepo) FindBookById(ctx context.Context, id int) (*model.Book, error) {
+func (r *SqlcRepo) FindBookById(ctx context.Context, site string, id int) (*model.Book, error) {
 	_, span := repo.GetTracer().Start(ctx, "find book by id")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site), attribute.Int("id", id))
+	span.SetAttributes(attribute.String("site", site), attribute.Int("id", id))
 
 	result, err := r.queries.GetBookByID(ctx, sqlc.GetBookByIDParams{
-		Site: r.site,
+		Site: site,
 		ID:   int32(id),
 	})
 	if err != nil {
@@ -173,18 +171,18 @@ func (r *SqlcRepo) FindBookById(ctx context.Context, id int) (*model.Book, error
 		Error:         bkErr,
 	}, nil
 }
-func (r *SqlcRepo) FindBookByIdHash(ctx context.Context, id, hash int) (*model.Book, error) {
+func (r *SqlcRepo) FindBookByIdHash(ctx context.Context, site string, id, hash int) (*model.Book, error) {
 	_, span := repo.GetTracer().Start(ctx, "find book by id hash")
 	defer span.End()
 
 	span.SetAttributes(
-		attribute.String("site", r.site),
+		attribute.String("site", site),
 		attribute.Int("id", id),
 		attribute.Int("hash", hash),
 	)
 
 	result, err := r.queries.GetBookByIDHash(ctx, sqlc.GetBookByIDHashParams{
-		Site:     r.site,
+		Site:     site,
 		ID:       int32(id),
 		HashCode: int32(hash),
 	})
@@ -218,12 +216,9 @@ func (r *SqlcRepo) FindBooksByStatus(ctx context.Context, status model.StatusCod
 	_, span := repo.GetTracer().Start(ctx, "find books by status")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site), attribute.String("status", status.String()))
+	span.SetAttributes(attribute.String("status", status.String()))
 
-	results, err := r.queries.ListBooksByStatus(ctx, sqlc.ListBooksByStatusParams{
-		Site:   r.site,
-		Status: status.String(),
-	})
+	results, err := r.queries.ListBooksByStatus(ctx, status.String())
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -259,13 +254,13 @@ func (r *SqlcRepo) FindBooksByStatus(ctx context.Context, status model.StatusCod
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindAllBooks(ctx context.Context) (<-chan model.Book, error) {
+func (r *SqlcRepo) FindAllBooks(ctx context.Context, site string) (<-chan model.Book, error) {
 	_, span := repo.GetTracer().Start(ctx, "find all books")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site))
+	span.SetAttributes(attribute.String("site", site))
 
-	results, err := r.queries.ListBooks(ctx, r.site)
+	results, err := r.queries.ListBooks(ctx, site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -301,13 +296,13 @@ func (r *SqlcRepo) FindAllBooks(ctx context.Context) (<-chan model.Book, error) 
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindBooksForUpdate(ctx context.Context) (<-chan model.Book, error) {
+func (r *SqlcRepo) FindBooksForUpdate(ctx context.Context, site string) (<-chan model.Book, error) {
 	_, span := repo.GetTracer().Start(ctx, "find books for update")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site))
+	span.SetAttributes(attribute.String("site", site))
 
-	results, err := r.queries.ListBooksForUpdate(ctx, r.site)
+	results, err := r.queries.ListBooksForUpdate(ctx, site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -343,13 +338,13 @@ func (r *SqlcRepo) FindBooksForUpdate(ctx context.Context) (<-chan model.Book, e
 
 	return bkChan, nil
 }
-func (r *SqlcRepo) FindBooksForDownload(ctx context.Context) (<-chan model.Book, error) {
+func (r *SqlcRepo) FindBooksForDownload(ctx context.Context, site string) (<-chan model.Book, error) {
 	_, span := repo.GetTracer().Start(ctx, "find books for download")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site))
+	span.SetAttributes(attribute.String("site", site))
 
-	results, err := r.queries.ListBooksForDownload(ctx, r.site)
+	results, err := r.queries.ListBooksForDownload(ctx, site)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -390,7 +385,6 @@ func (r *SqlcRepo) FindBooksByTitleWriter(ctx context.Context, title, writer str
 	defer span.End()
 
 	span.SetAttributes(
-		attribute.String("site", r.site),
 		attribute.String("title", title),
 		attribute.String("writer", writer),
 		attribute.Int("limit", limit),
@@ -398,10 +392,10 @@ func (r *SqlcRepo) FindBooksByTitleWriter(ctx context.Context, title, writer str
 	)
 
 	results, err := r.queries.ListBooksByTitleWriter(ctx, sqlc.ListBooksByTitleWriterParams{
-		Site:    r.site,
-		Column2: toSqlString(fmt.Sprintf("%%%s%%", title)),
-		Column3: toSqlString(fmt.Sprintf("%%%s%%", writer)),
-		Limit:   int32(limit), Offset: int32(offset),
+		Column1: toSqlString(fmt.Sprintf("%%%s%%", title)),
+		Column2: toSqlString(fmt.Sprintf("%%%s%%", writer)),
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
@@ -439,14 +433,10 @@ func (r *SqlcRepo) FindBooksByRandom(ctx context.Context, limit int) ([]model.Bo
 	defer span.End()
 
 	span.SetAttributes(
-		attribute.String("site", r.site),
 		attribute.Int("limit", limit),
 	)
 
-	results, err := r.queries.ListRandomBooks(ctx, sqlc.ListRandomBooksParams{
-		Site:    r.site,
-		Column2: limit,
-	})
+	results, err := r.queries.ListRandomBooks(ctx, limit)
 	if err != nil {
 		return nil, fmt.Errorf("fail to query book by site id: %w", err)
 	}
@@ -479,14 +469,14 @@ func (r *SqlcRepo) FindBooksByRandom(ctx context.Context, limit int) ([]model.Bo
 	return bks, nil
 }
 
-func (r *SqlcRepo) FindBookGroupByID(ctx context.Context, id int) (model.BookGroup, error) {
+func (r *SqlcRepo) FindBookGroupByID(ctx context.Context, site string, id int) (model.BookGroup, error) {
 	_, span := repo.GetTracer().Start(ctx, "find book group by id")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site), attribute.Int("id", id))
+	span.SetAttributes(attribute.String("site", site), attribute.Int("id", id))
 
 	results, err := r.queries.GetBookGroupByID(ctx, sqlc.GetBookGroupByIDParams{
-		Site: r.site,
+		Site: site,
 		ID:   int32(id),
 	})
 	if err != nil {
@@ -521,18 +511,17 @@ func (r *SqlcRepo) FindBookGroupByID(ctx context.Context, id int) (model.BookGro
 	return group, nil
 }
 
-func (r *SqlcRepo) FindBookGroupByIDHash(ctx context.Context, id, hashCode int) (model.BookGroup, error) {
+func (r *SqlcRepo) FindBookGroupByIDHash(ctx context.Context, site string, id, hashCode int) (model.BookGroup, error) {
 	_, span := repo.GetTracer().Start(ctx, "find book group by id hash")
 	defer span.End()
 
 	span.SetAttributes(
-		attribute.String("site", r.site),
 		attribute.Int("id", id),
 		attribute.Int("hash", hashCode),
 	)
 
 	results, err := r.queries.GetBookGroupByIDHash(ctx, sqlc.GetBookGroupByIDHashParams{
-		Site:     r.site,
+		Site:     site,
 		ID:       int32(id),
 		HashCode: int32(hashCode),
 	})
@@ -572,21 +561,16 @@ func (r *SqlcRepo) UpdateBooksStatus(ctx context.Context) error {
 	_, span := repo.GetTracer().Start(ctx, "update books status")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site))
-
-	return r.queries.UpdateBooksStatus(ctx, sqlc.UpdateBooksStatusParams{
-		Site:       r.site,
-		UpdateDate: toSqlString(strconv.Itoa(time.Now().Year() - 1)),
-	})
+	return r.queries.UpdateBooksStatus(ctx, toSqlString(strconv.Itoa(time.Now().Year()-1)))
 }
 
-func (r *SqlcRepo) FindAllBookIDs(ctx context.Context) ([]int, error) {
+func (r *SqlcRepo) FindAllBookIDs(ctx context.Context, site string) ([]int, error) {
 	_, span := repo.GetTracer().Start(ctx, "find all book ids")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("site", r.site))
+	span.SetAttributes(attribute.String("site", site))
 
-	result, err := r.queries.FindAllBookIDs(ctx, r.site)
+	result, err := r.queries.FindAllBookIDs(ctx, site)
 	if err != nil {
 		return nil, fmt.Errorf("sql failed: %w", err)
 	}
@@ -628,7 +612,7 @@ func (r *SqlcRepo) SaveError(ctx context.Context, bk *model.Book, e error) error
 	defer span.End()
 
 	span.SetAttributes(
-		attribute.String("params.site", r.site),
+		attribute.String("params.site", bk.Site),
 		attribute.Int("params.id", bk.ID),
 	)
 
@@ -659,7 +643,7 @@ func (r *SqlcRepo) SaveError(ctx context.Context, bk *model.Book, e error) error
 	return nil
 }
 
-func (r *SqlcRepo) backupBooks(ctx context.Context, path string) error {
+func (r *SqlcRepo) backupBooks(ctx context.Context, site, path string) error {
 	_, span := repo.GetTracer().Start(ctx, "backup books")
 	defer span.End()
 
@@ -669,7 +653,7 @@ func (r *SqlcRepo) backupBooks(ctx context.Context, path string) error {
 		fmt.Sprintf(
 			`copy (select * from books where site='%s') to '%s/%s/books_%s.csv' 
 			csv header quote as '''' force quote *`,
-			r.site, path, r.site, time.Now().Format("2006-01-02"),
+			site, path, site, time.Now().Format("2006-01-02"),
 		),
 	)
 
@@ -682,7 +666,7 @@ func (r *SqlcRepo) backupBooks(ctx context.Context, path string) error {
 	return nil
 }
 
-func (r *SqlcRepo) backupWriters(ctx context.Context, path string) error {
+func (r *SqlcRepo) backupWriters(ctx context.Context, site, path string) error {
 	_, span := repo.GetTracer().Start(ctx, "backup writers")
 	defer span.End()
 	span.SetAttributes(attribute.String("path", path))
@@ -692,7 +676,7 @@ func (r *SqlcRepo) backupWriters(ctx context.Context, path string) error {
 				select distinct(writers.*) from writers join books on writers.id=books.writer_id 
 				where books.site='%s'
 			) to '%s/%s/writers_%s.csv' csv header quote as '''' force quote *`,
-			r.site, path, r.site, time.Now().Format("2006-01-02"),
+			site, path, site, time.Now().Format("2006-01-02"),
 		),
 	)
 
@@ -705,7 +689,7 @@ func (r *SqlcRepo) backupWriters(ctx context.Context, path string) error {
 	return nil
 }
 
-func (r *SqlcRepo) backupErrors(ctx context.Context, path string) error {
+func (r *SqlcRepo) backupErrors(ctx context.Context, site, path string) error {
 	_, span := repo.GetTracer().Start(ctx, "backup errors")
 	defer span.End()
 	span.SetAttributes(attribute.String("path", path))
@@ -714,7 +698,7 @@ func (r *SqlcRepo) backupErrors(ctx context.Context, path string) error {
 		fmt.Sprintf(
 			`copy (select * from errors where site='%s') to '%s/%s/errors_%s.csv' 
 			csv header quote as '''' force quote *`,
-			r.site, path, r.site, time.Now().Format("2006-01-02"),
+			site, path, site, time.Now().Format("2006-01-02"),
 		),
 	)
 
@@ -727,14 +711,17 @@ func (r *SqlcRepo) backupErrors(ctx context.Context, path string) error {
 	return nil
 }
 
-func (r *SqlcRepo) Backup(ctx context.Context, path string) error {
+func (r *SqlcRepo) Backup(ctx context.Context, site, path string) error {
 	_, span := repo.GetTracer().Start(ctx, "backup")
 	defer span.End()
 
-	span.SetAttributes(attribute.String("path", path))
+	span.SetAttributes(
+		attribute.String("path", path),
+		attribute.String("site", site),
+	)
 
-	for _, f := range []func(context.Context, string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
-		err := f(ctx, path)
+	for _, f := range []func(context.Context, string, string) error{r.backupBooks, r.backupWriters, r.backupErrors} {
+		err := f(ctx, site, path)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
@@ -750,29 +737,29 @@ func (r *SqlcRepo) DBStats(ctx context.Context) sql.DBStats {
 	return r.db.Stats()
 }
 
-func (r *SqlcRepo) Stats(ctx context.Context) repo.Summary {
+func (r *SqlcRepo) Stats(ctx context.Context, site string) repo.Summary {
 	_, bkSpan := repo.GetTracer().Start(ctx, "get books stat")
-	bkStat, _ := r.queries.BooksStat(ctx, r.site)
+	bkStat, _ := r.queries.BooksStat(ctx, site)
 	bkSpan.End()
 
 	_, nonErrorBkSpan := repo.GetTracer().Start(ctx, "get non error books stat")
-	nonErrorBkStat, _ := r.queries.NonErrorBooksStat(ctx, r.site)
+	nonErrorBkStat, _ := r.queries.NonErrorBooksStat(ctx, site)
 	nonErrorBkSpan.End()
 
 	_, errorBkSpan := repo.GetTracer().Start(ctx, "get error books stat")
-	errorBkStat, _ := r.queries.ErrorBooksStat(ctx, r.site)
+	errorBkStat, _ := r.queries.ErrorBooksStat(ctx, site)
 	errorBkSpan.End()
 
 	_, downloadedBkSpan := repo.GetTracer().Start(ctx, "get downloaded books stat")
-	downloadedBkStat, _ := r.queries.DownloadedBooksStat(ctx, r.site)
+	downloadedBkStat, _ := r.queries.DownloadedBooksStat(ctx, site)
 	downloadedBkSpan.End()
 
 	_, writerStatSpan := repo.GetTracer().Start(ctx, "get writers stat")
-	bkStatusStat, _ := r.queries.BooksStatusStat(ctx, r.site)
+	bkStatusStat, _ := r.queries.BooksStatusStat(ctx, site)
 	writerStatSpan.End()
 
 	_, writerStatSpan = repo.GetTracer().Start(ctx, "get writers stat")
-	writerStat, _ := r.queries.WritersStat(ctx, r.site)
+	writerStat, _ := r.queries.WritersStat(ctx, site)
 	writerStatSpan.End()
 
 	StatusCount := make(map[model.StatusCode]int)
