@@ -50,6 +50,7 @@ func GetTracer() trace.Tracer {
 	return otel.Tracer("htchan/BookSpider/repository")
 }
 
+//go:generate go tool mockgen -destination=../mock/repo/repository_v2.go -package=mockrepo . RepositoryV2
 type RepositoryV2 interface {
 	// book related
 	CreateBook(context.Context, *model.Book) error
