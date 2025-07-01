@@ -14,6 +14,7 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 		router.Use(GetReadDataServiceMiddleware(readDataServices))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
+			router.Use(GetSiteMiddleware)
 			router.Get("/", SiteLiteHandlerfunc)
 
 			router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", SearchLiteHandler)

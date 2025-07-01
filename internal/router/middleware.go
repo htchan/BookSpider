@@ -78,6 +78,16 @@ func GetReadDataServiceMiddleware(readDataServ service.ReadDataService) func(htt
 		)
 	}
 }
+func GetSiteMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(res http.ResponseWriter, req *http.Request) {
+			siteName := chi.URLParam(req, "siteName")
+
+			ctx := context.WithValue(req.Context(), ContextKeySiteName, siteName)
+			next.ServeHTTP(res, req.WithContext(ctx))
+		},
+	)
+}
 func GetBookMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(res http.ResponseWriter, req *http.Request) {

@@ -18,6 +18,59 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func Test_GetSiteMiddleware(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name      string
+		siteName  string
+		wantSite  string
+		expectRes string
+	}{
+		{
+			name:      "set request context site if site found",
+			siteName:  "test",
+			wantSite:  "test",
+			expectRes: "site found",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := GetSiteMiddleware(http.HandlerFunc(
+				func(w http.ResponseWriter, r *http.Request) {
+					site := r.Context().Value(ContextKeySiteName).(string)
+
+					assert.Equal(t, test.wantSite, site)
+					fmt.Fprintln(w, test.expectRes)
+				},
+			))
+
+			req, err := http.NewRequest("GET", "", nil)
+			if err != nil {
+				t.Errorf("cannot init request: %v", err)
+				return
+			}
+
+			ctx := req.Context()
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("siteName", test.siteName)
+			ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
+			req = req.WithContext(ctx)
+			res := httptest.NewRecorder()
+			handler.ServeHTTP(res, req)
+
+			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
+				t.Error("got different response as expect")
+				t.Error(res.Body.String())
+				t.Error(test.expectRes)
+			}
+		})
+	}
+}
+
 func Test_GetBookMiddleware(t *testing.T) {
 	t.Parallel()
 
