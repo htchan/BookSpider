@@ -92,7 +92,7 @@ func Test_GetBookMiddleware(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		setupServ       func(ctrl *gomock.Controller) service.Service
+		setupServ       func(ctrl *gomock.Controller) service.ReadDataService
 		idHash          string
 		expectBook      *model.Book
 		expectBookGroup *model.BookGroup
@@ -100,9 +100,9 @@ func Test_GetBookMiddleware(t *testing.T) {
 	}{
 		{
 			name: "set request context book for existing id",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().BookGroup(gomock.Any(), "test", "1", "").Return(
 					&model.Book{ID: 1},
 					&model.BookGroup{{ID: 1}, {ID: 2}},
 					nil,
@@ -117,9 +117,9 @@ func Test_GetBookMiddleware(t *testing.T) {
 		},
 		{
 			name: "set request context book for existing id-hash",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), "1", "2s").Return(
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().BookGroup(gomock.Any(), "test", "1", "2s").Return(
 					&model.Book{ID: 1, HashCode: 100},
 					&model.BookGroup{{ID: 1, HashCode: 100}, {ID: 2}},
 					nil,
@@ -134,14 +134,13 @@ func Test_GetBookMiddleware(t *testing.T) {
 		},
 		{
 			name: "return error for not exist id",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().BookGroup(gomock.Any(), "1", "").Return(
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().BookGroup(gomock.Any(), "test", "1", "").Return(
 					nil,
 					nil,
 					errors.New("some error"),
 				)
-				serv.EXPECT().Name().Return("")
 
 				return serv
 			},
@@ -183,10 +182,11 @@ func Test_GetBookMiddleware(t *testing.T) {
 
 			serv := test.setupServ(ctrl)
 
-			ctx := context.WithValue(req.Context(), ContextKeyServ, serv)
+			ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, serv)
 			rctx := chi.NewRouteContext()
 			rctx.URLParams.Add("idHash", test.idHash)
 			ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
+			ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 			req = req.WithContext(ctx)
 			res := httptest.NewRecorder()
 			handler.ServeHTTP(res, req)

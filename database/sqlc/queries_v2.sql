@@ -47,7 +47,7 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.status=$2 order by hash_code desc;
+where books.status=$1 order by hash_code desc;
 
 -- name: ListBooks :many
 select books.site, books.id, books.hash_code, books.title,
@@ -88,10 +88,10 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.status != 'ERROR' and 
-  (($2 != '%%' and books.title like $2) or
-  ($3 != '%%' and writers.name like $3))
-order by books.update_date desc, books.id desc limit $4 offset $5;
+where books.status != 'ERROR' and 
+  (($1 != '%%' and books.title like $1) or
+  ($2 != '%%' and writers.name like $2))
+order by books.update_date desc, books.id desc, books.site desc limit $3 offset $4;
 
 -- name: ListRandomBooks :many
 select books.site, books.id, books.hash_code, books.title,
@@ -100,12 +100,12 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.is_downloaded=true
+where books.is_downloaded=true
 order by books.site, books.id desc, books.hash_code desc 
-limit $2 offset RANDOM() * 
-(
-  select greatest(count(*) - $2, 0)
-  from books as bks where site=$1 and bks.is_downloaded=true
+limit $1 offset RANDOM() * 
+greatest(
+  (select count(*) - $1
+  from books as bks where bks.is_downloaded=true), 0
 );
 
 -- name: GetBookGroupByID :many
@@ -158,7 +158,7 @@ where (update_date < $1 or
     update_chapter like '%全文结%' or update_chapter like '%剧终%' or 
     update_chapter like '%（完）%' or update_chapter like '%终章%' or 
     update_chapter like '%外传%' or update_chapter like '%结尾%') and 
-  status='INPROGRESS' and site=$2;
+  status='INPROGRESS';
 
 -- name: CreateWriter :one
 insert into writers (name, checksum) values ($1, $2) 

@@ -24,19 +24,20 @@ import (
 type ContextKey string
 
 const (
-	ContextKeyReqID     ContextKey = "req_id"
-	ContextKeySiteName  ContextKey = "site_name"
-	ContextKeyServ      ContextKey = "serv"
-	ContextKeyBook      ContextKey = "book"
-	ContextKeyBookGroup ContextKey = "book_group"
-	ContextKeyTitle     ContextKey = "title"
-	ContextKeyWriter    ContextKey = "writer"
-	ContextKeyPage      ContextKey = "page"
-	ContextKeyPerPage   ContextKey = "per_page"
-	ContextKeyLimit     ContextKey = "limit"
-	ContextKeyOffset    ContextKey = "offset"
-	ContextKeyUriPrefix ContextKey = "uri_prefix"
-	ContextKeyFormat    ContextKey = "format"
+	ContextKeyReqID        ContextKey = "req_id"
+	ContextKeySiteName     ContextKey = "site_name"
+	ContextKeyServ         ContextKey = "serv"
+	ContextKeyReadDataServ ContextKey = "read_data_serv"
+	ContextKeyBook         ContextKey = "book"
+	ContextKeyBookGroup    ContextKey = "book_group"
+	ContextKeyTitle        ContextKey = "title"
+	ContextKeyWriter       ContextKey = "writer"
+	ContextKeyPage         ContextKey = "page"
+	ContextKeyPerPage      ContextKey = "per_page"
+	ContextKeyLimit        ContextKey = "limit"
+	ContextKeyOffset       ContextKey = "offset"
+	ContextKeyUriPrefix    ContextKey = "uri_prefix"
+	ContextKeyFormat       ContextKey = "format"
 )
 
 func getTracer() trace.Tracer {
@@ -55,6 +56,29 @@ func TraceMiddleware(next http.Handler) http.Handler {
 	)
 }
 
+func GetReadDataServiceMiddleware(readDataServ service.ReadDataService) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(
+			func(res http.ResponseWriter, req *http.Request) {
+				logger := zerolog.Ctx(req.Context())
+				_, span := getTracer().Start(req.Context(), "get read data service middleware")
+				defer span.End()
+
+				if readDataServ == nil {
+					span.SetStatus(codes.Error, "read data service not initialized")
+					span.RecordError(errors.New("read data service not initialized"))
+
+					logger.Error().Msg("read data service not initialized")
+					writeError(res, http.StatusInternalServerError, errors.New("read data service not initialized"))
+					return
+				}
+
+				ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, readDataServ)
+				next.ServeHTTP(res, req.WithContext(ctx))
+			},
+		)
+	}
+}
 func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(
@@ -102,7 +126,8 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 		func(res http.ResponseWriter, req *http.Request) {
 			logger := zerolog.Ctx(req.Context())
 			idHash := chi.URLParam(req, "idHash")
-			serv := req.Context().Value(ContextKeyServ).(service.Service)
+			site := req.Context().Value(ContextKeySiteName).(string)
+			serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 			var (
 				bk    *model.Book
 				group *model.BookGroup
@@ -119,10 +144,10 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 			idHashArray := strings.Split(idHash, "-")
 			if len(idHashArray) == 1 {
 				id := idHashArray[0]
-				bk, group, err = serv.BookGroup(req.Context(), id, "")
+				bk, group, err = serv.BookGroup(req.Context(), site, id, "")
 			} else if len(idHashArray) == 2 {
 				id, hash := idHashArray[0], idHashArray[1]
-				bk, group, err = serv.BookGroup(req.Context(), id, hash)
+				bk, group, err = serv.BookGroup(req.Context(), site, id, hash)
 			}
 			if err != nil {
 				span.SetStatus(codes.Error, "get book failed")
@@ -131,7 +156,7 @@ func GetBookMiddleware(next http.Handler) http.Handler {
 				logger.
 					Error().
 					Err(err).
-					Str("site", serv.Name()).
+					Str("site", site).
 					Str("id-hash", idHash).
 					Msg("get book middleware failed")
 				writeError(res, http.StatusNotFound, errors.New("book not found"))

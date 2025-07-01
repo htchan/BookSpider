@@ -9,5 +9,19 @@
     {{ range $key, $value := .Services }}
       {{ template "site-card" (arr $uriPrefix $key)}}
     {{ end }}
+    <hr/>
+    <h2>Search</h2>
+    <div class="search_panel">
+      <form action="{{.UriPrefix}}/search">
+        <label for="fname">Title:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="lname">Writer:</label><br>
+        <input type="text" id="writer" name="writer"><br>
+        <input type="hidden" id="page" name="page" value="0"><br>
+        <input type="hidden" id="per_page" name="per_page" value="10"><br>
+        <input type="submit" value="Submit">
+      </form>
+      <button onclick="location.href='{{.UriPrefix}}/random?per_page=10'">Random</button>
+    </div>
   </body>
 </html>

@@ -77,15 +77,16 @@ func SiteLiteHandlerfunc(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	siteName := req.Context().Value(ContextKeySiteName).(string)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	execErr := t.ExecuteTemplate(res, "site.html", struct {
 		Name      string
 		UriPrefix string
 		Summary   repo.Summary
 	}{
-		Name:      serv.Name(),
+		Name:      siteName,
 		UriPrefix: uriPrefix,
-		Summary:   serv.Stats(req.Context()),
+		Summary:   serv.Stats(req.Context(), siteName),
 	})
 	if execErr != nil {
 		res.WriteHeader(http.StatusInternalServerError)
@@ -119,7 +120,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	siteName := req.Context().Value(ContextKeySiteName).(string)
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	title := req.Context().Value(ContextKeyTitle).(string)
 	writer := req.Context().Value(ContextKeyWriter).(string)
 	page := req.Context().Value(ContextKeyPage).(int)
@@ -130,7 +131,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		limit = 10
 	}
 
-	bks, err := serv.QueryBooks(req.Context(), title, writer, limit, offset)
+	bks, err := serv.SearchBooks(req.Context(), title, writer, limit, offset)
 
 	if err != nil {
 		res.WriteHeader(404)
@@ -150,7 +151,7 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		PerPage        int
 		ShowPagination bool
 	}{
-		Name:           serv.Name(),
+		Name:           siteName,
 		UriPrefix:      uriPrefix,
 		SiteName:       siteName,
 		Books:          bks,
@@ -194,7 +195,8 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	siteName := req.Context().Value(ContextKeySiteName).(string)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	limit := req.Context().Value(ContextKeyLimit).(int)
 	if limit == 0 {
 		limit = 10
@@ -214,7 +216,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		Books          []model.Book
 		ShowPagination bool
 	}{
-		Name:           serv.Name(),
+		Name:           siteName,
 		UriPrefix:      uriPrefix,
 		Books:          bks,
 		ShowPagination: false,
@@ -279,7 +281,7 @@ func BookLiteHandler(res http.ResponseWriter, req *http.Request) {
 // @Router			/lite/book-spider/sites/{siteName}/books/{idHash}/download [get]
 func DownloadLiteHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	bk := req.Context().Value(ContextKeyBook).(*model.Book)
 	formatStr := req.Context().Value(ContextKeyFormat).(string)
 

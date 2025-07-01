@@ -6,7 +6,9 @@ import (
 
 	"github.com/htchan/BookSpider/internal/config/v2"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
+	repo_v2 "github.com/htchan/BookSpider/internal/repo/sqlc_v2"
 	"github.com/htchan/BookSpider/internal/service"
+	service_v1 "github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/htchan/BookSpider/internal/vendorservice/baling"
 	"github.com/htchan/BookSpider/internal/vendorservice/bestory"
 	"github.com/htchan/BookSpider/internal/vendorservice/ck101"
@@ -65,4 +67,10 @@ func LoadServices(vendors []string, db *sql.DB, siteConf map[string]config.SiteC
 	}
 
 	return result
+}
+
+func LoadReadDataService(db *sql.DB, siteConf map[string]config.SiteConfig) service.ReadDataService {
+	rpo := repo_v2.NewRepo(db)
+
+	return service_v1.NewReadDataService(rpo, siteConf)
 }

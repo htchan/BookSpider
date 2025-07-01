@@ -14,7 +14,7 @@ import (
 var (
 	conf = config.DatabaseConfig{
 		Host:     "localhost",
-		Port:     "35432",
+		Port:     "35433",
 		Name:     "sqlc",
 		User:     "postgres",
 		Password: "postgres",
@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	defer func() { os.Exit(code) }()
 
 	close, err := repo.CreatePsqlContainer(
-		"test-sqlc-repo", conf,
+		"test-sqlc_v2-repo", conf,
 		func() error {
 			db, err := OpenDatabaseByConfig(conf)
 			defer db.Close()
