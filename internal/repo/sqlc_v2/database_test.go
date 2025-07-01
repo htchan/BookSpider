@@ -7,8 +7,8 @@ import (
 )
 
 func Test_OpenDatabase(t *testing.T) {
-	t.Parallel()
 	StubPsqlConn()
+	t.Parallel()
 
 	result, err := OpenDatabase("test")
 

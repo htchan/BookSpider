@@ -51,7 +51,7 @@ func stubData(t testing.TB, r repo.Repository, site string) []model.Book {
 
 	for i := range bks {
 		var err error
-		for _ = range 5 {
+		for range 5 {
 			err = r.SaveWriter(t.Context(), &bks[i].Writer)
 			if err == nil {
 				break
@@ -104,17 +104,20 @@ func Test_NewRepo(t *testing.T) {
 }
 
 func TestSqlcRepo_CreateBook(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 
 	site := "bk/create"
 	db.Exec("ALTER SEQUENCE writers_id_seq RESTART WITH 1;")
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
+		db.Close()
 	})
 
+	t.Parallel()
 	tests := []struct {
 		name       string
 		r          *SqlcRepo
@@ -172,9 +175,10 @@ func TestSqlcRepo_CreateBook(t *testing.T) {
 }
 
 func TestSqlcRepo_UpdateBook(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "bk/update"
 
 	t.Cleanup(func() {
@@ -182,10 +186,12 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name              string
 		r                 repo.Repository
@@ -246,9 +252,10 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBookByID(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "bk_id/find"
 
 	t.Cleanup(func() {
@@ -256,10 +263,12 @@ func TestSqlcRepo_FindBookByID(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -302,9 +311,10 @@ func TestSqlcRepo_FindBookByID(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBookByIDHash(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "bk_id_hash/find"
 
 	t.Cleanup(func() {
@@ -312,10 +322,12 @@ func TestSqlcRepo_FindBookByIDHash(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -363,9 +375,10 @@ func TestSqlcRepo_FindBookByStatus(t *testing.T) {
 }
 
 func TestSqlcRepo_FindAllBooks(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "all_bk/find"
 
 	t.Cleanup(func() {
@@ -373,10 +386,12 @@ func TestSqlcRepo_FindAllBooks(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -416,9 +431,10 @@ func TestSqlcRepo_FindAllBooks(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "update_bk/find"
 
 	t.Cleanup(func() {
@@ -426,10 +442,12 @@ func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -463,9 +481,10 @@ func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "down_bk/find"
 
 	t.Cleanup(func() {
@@ -473,10 +492,12 @@ func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -510,10 +531,10 @@ func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
-	t.Parallel()
-	//TODO: fill in testcase
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "bk_tit_wrt/find"
 
 	t.Cleanup(func() {
@@ -521,10 +542,12 @@ func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -590,10 +613,10 @@ func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
 }
 
 func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
-	t.Parallel()
-
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "random_bk/find"
 
 	t.Cleanup(func() {
@@ -601,10 +624,12 @@ func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -636,10 +661,10 @@ func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
 }
 
 func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
-	t.Parallel()
-
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "stat_bk/update"
 
 	t.Cleanup(func() {
@@ -647,12 +672,14 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	r := NewRepo(site, db)
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name       string
 		r          repo.Repository
@@ -705,8 +732,6 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
 			bksDB[2].Status = model.StatusInProgress
 			r.UpdateBook(context.Background(), &bksDB[2])
 			bksDB[3].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
@@ -714,6 +739,8 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 			bksDB[0].UpdateChapter = fmt.Sprintf("end %v end", model.ChapterEndKeywords[0])
 			bksDB[0].Status = model.StatusInProgress
 			r.UpdateBook(context.Background(), &bksDB[0])
+
+			t.Parallel()
 
 			err := test.r.UpdateBooksStatus(context.Background())
 			if (err != nil) != test.expectErr {
@@ -731,8 +758,10 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 }
 
 func BenchmarkSqlcRepo_UpdateBooksStatus(b *testing.B) {
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(b, err, "Failed to open database") {
+		b.FailNow()
+	}
 	site := "bm/bk_st/update"
 
 	b.Cleanup(func() {
@@ -740,6 +769,7 @@ func BenchmarkSqlcRepo_UpdateBooksStatus(b *testing.B) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	r := NewRepo(site, db)
@@ -752,21 +782,23 @@ func BenchmarkSqlcRepo_UpdateBooksStatus(b *testing.B) {
 }
 
 func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
-	t.Parallel()
-
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "bk/find_all_ids"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 
+		db.Close()
 	})
 
 	r := NewRepo(site, db)
 
 	stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name      string
 		r         repo.Repository
@@ -794,9 +826,10 @@ func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
 }
 
 func TestSqlcRepo_SaveWriter(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "writer/save"
 
 	t.Cleanup(func() {
@@ -804,10 +837,12 @@ func TestSqlcRepo_SaveWriter(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	bksDB := stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name      string
 		r         repo.Repository
@@ -843,9 +878,10 @@ func TestSqlcRepo_SaveWriter(t *testing.T) {
 }
 
 func TestSqlcRepo_SaveError(t *testing.T) {
-	t.Parallel()
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "error/save"
 
 	t.Cleanup(func() {
@@ -853,10 +889,12 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
 
+		db.Close()
 	})
 
 	stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name         string
 		r            repo.Repository
@@ -916,8 +954,10 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 }
 
 // func TestSqlcRepo_Backup(t *testing.T) {
-// 	t.Parallel()
-// 	StubPsqlConn()
+// db, err := OpenDatabaseByConfig(conf)
+// if !assert.NoError(t, err, "Failed to open database") {
+// 	t.FailNow()
+// }
 // 	db := testDB
 // 	site := "backup"
 
@@ -926,6 +966,7 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 // 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 // 		db.Exec("delete from errors where site=$1", site)
 
+// db.Close()
 // 	})
 
 // 	stubData(t, NewRepo(site, db), site)
@@ -956,18 +997,23 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 // }
 
 func TestSqlcRepo_Stats(t *testing.T) {
-	StubPsqlConn()
-	db := testDB
+	db, err := OpenDatabaseByConfig(conf)
+	if !assert.NoError(t, err, "Failed to open database") {
+		t.FailNow()
+	}
 	site := "stats"
 
 	t.Cleanup(func() {
 		db.Exec("delete from books where site=$1", site)
 		db.Exec("delete from writers where id>0 and name like $1", site+"%")
 		db.Exec("delete from errors where site=$1", site)
+
+		db.Close()
 	})
 
 	stubData(t, NewRepo(site, db), site)
 
+	t.Parallel()
 	tests := []struct {
 		name   string
 		r      repo.Repository

@@ -66,11 +66,13 @@ func OpenDatabaseByConfig(conf config.DatabaseConfig) (*sql.DB, error) {
 
 func Migrate(conf config.DatabaseConfig, migratePath string) error {
 	db, dbErr := OpenDatabaseByConfig(conf)
+	defer db.Close()
 	if dbErr != nil {
 		return fmt.Errorf("load db for migration failed: %v", dbErr)
 	}
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	defer driver.Close()
 	if err != nil {
 		return fmt.Errorf("migrate fail: %w", err)
 	}
@@ -80,11 +82,10 @@ func Migrate(conf config.DatabaseConfig, migratePath string) error {
 		"postgres",
 		driver,
 	)
+	defer m.Close()
 	if err != nil {
 		return fmt.Errorf("migrate fail: %w", err)
 	}
-
-	defer m.Close()
 
 	upErr := m.Up()
 	if upErr != nil {

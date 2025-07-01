@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"database/sql"
 	"flag"
 	"log"
 	"os"
@@ -12,23 +11,40 @@ import (
 	"go.uber.org/goleak"
 )
 
-var testDB *sql.DB
-
-func TestMain(m *testing.M) {
-	var code int
-	defer func() { os.Exit(code) }()
-
-	conf := config.DatabaseConfig{
+var (
+	conf = config.DatabaseConfig{
 		Host:     "localhost",
 		Port:     "35432",
 		Name:     "sqlc",
 		User:     "postgres",
 		Password: "postgres",
 	}
+)
+
+func TestMain(m *testing.M) {
+	var code int
+	defer func() { os.Exit(code) }()
 
 	close, err := repo.CreatePsqlContainer(
 		"test-sqlc-repo", conf,
 		func() error {
+			db, err := OpenDatabaseByConfig(conf)
+			defer db.Close()
+			if err != nil {
+				log.Printf("Could not open database: %s", err)
+				code = 1
+
+				return err
+			}
+
+			err = db.Ping()
+			if err != nil {
+				log.Printf("Could not ping database: %s", err)
+				code = 1
+
+				return err
+			}
+
 			migrateErr := Migrate(conf, "../../../database/migrations")
 			if migrateErr != nil {
 				log.Printf("Could not migrate database: %s", migrateErr)
@@ -37,16 +53,7 @@ func TestMain(m *testing.M) {
 				return migrateErr
 			}
 
-			var err error
-			testDB, err = OpenDatabaseByConfig(conf)
-			if err != nil {
-				log.Printf("Could not open database: %s", err)
-				code = 1
-
-				return err
-			}
-
-			return testDB.Ping()
+			return nil
 		},
 	)
 	if err != nil {
@@ -56,13 +63,19 @@ func TestMain(m *testing.M) {
 		return
 	}
 	defer close()
-	defer testDB.Close()
 
 	leak := flag.Bool("leak", false, "check for memory leaks")
 	flag.Parse()
 
+	code = 0
+
 	if *leak {
-		goleak.VerifyTestMain(m)
+		goleak.VerifyTestMain(
+			m,
+			goleak.Cleanup(func(exitCode int) {
+				close()
+			}),
+		)
 	} else {
 		code = m.Run()
 	}
