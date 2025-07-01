@@ -206,7 +206,6 @@ func TestSearchLiteHandler(t *testing.T) {
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
-				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
 				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
@@ -221,7 +220,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			expectRes: `<html>
 
 			<head>
-			  <title>Novel - test</title>
+			  <title>Novel - Search Result</title>
 			  <style>
 			    .book-box {
 			      border-style: solid;
@@ -253,7 +252,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			</head>
 			
 			<body>
-			  <h1>test</h1>
+			  <h1>Search Result</h1>
 			  <div>
 			    
 			    
@@ -270,7 +269,6 @@ func TestSearchLiteHandler(t *testing.T) {
 			
 			    
 			  </div>
-
 
 
 
@@ -308,7 +306,6 @@ func TestSearchLiteHandler(t *testing.T) {
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
-				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
 				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
@@ -323,7 +320,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			expectRes: `<html>
 
 			<head>
-			  <title>Novel - test</title>
+			  <title>Novel - Search Result</title>
 			  <style>
 			    .book-box {
 			      border-style: solid;
@@ -355,7 +352,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			</head>
 			
 			<body>
-			  <h1>test</h1>
+			  <h1>Search Result</h1>
 			  <div>
 			    
 			    
@@ -379,10 +376,9 @@ func TestSearchLiteHandler(t *testing.T) {
 
 
 
-
 			  <div class="pagination">
-				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=4&per_page=1'">Previous</div>
-				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/sites/test/search?title=title&writer=writer&page=6&per_page=1'">Next</div>
+				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/search?title=title&writer=writer&page=4&per_page=1'">Previous</div>
+				<div class="page-button" style="border-style: solid;" onclick="location.href='/lite/novel/search?title=title&writer=writer&page=6&per_page=1'">Next</div>
 			  </div>
 
 			</body>
@@ -442,7 +438,6 @@ func TestRandomLiteHandler(t *testing.T) {
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
-				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyLimit, 10)
 				ctx = context.WithValue(ctx, ContextKeyOffset, 0)
@@ -453,7 +448,7 @@ func TestRandomLiteHandler(t *testing.T) {
 			expectRes: `<html>
 
 			<head>
-			  <title>Novel - test</title>
+			  <title>Novel - Random</title>
 			  <style>
 			    .book-box {
 			      border-style: solid;
@@ -485,7 +480,7 @@ func TestRandomLiteHandler(t *testing.T) {
 			</head>
 			
 			<body>
-			  <h1>test</h1>
+			  <h1>Random</h1>
 			  <div>
 			    
 			    

@@ -1,11 +1,10 @@
 {{ define "pagination" }}
   {{ $uriPrefix := index . 0 }}
-  {{ $siteName := index . 1 }}
-  {{ $title := index . 2 }}{{ $writer := index . 3 }}
-  {{ $perPage := index . 4 }}
-  {{ $previousPage := index . 5 }}{{ $nextPage := index . 6 }}
-  {{ $booksLength := index . 7 }}
+  {{ $title := index . 1 }}{{ $writer := index . 2 }}
+  {{ $perPage := index . 3 }}
+  {{ $previousPage := index . 4 }}{{ $nextPage := index . 5 }}
+  {{ $booksLength := index . 6 }}
 <div class="pagination">
-  {{ if ge $previousPage 0 }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$previousPage}}&per_page={{$perPage}}'">Previous</div>{{else}}<div class="page-button"></div>{{ end }}
-  {{ if ge $booksLength $perPage }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/sites/{{$siteName}}/search?title={{$title}}&writer={{$writer}}&page={{$nextPage}}&per_page={{$perPage}}'">Next</div>{{else}}<div class="page-button"></div>{{ end }}
+  {{ if ge $previousPage 0 }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/search?title={{$title}}&writer={{$writer}}&page={{$previousPage}}&per_page={{$perPage}}'">Previous</div>{{else}}<div class="page-button"></div>{{ end }}
+  {{ if ge $booksLength $perPage }}<div class="page-button" style="border-style: solid;" onclick="location.href='{{$uriPrefix}}/search?title={{$title}}&writer={{$writer}}&page={{$nextPage}}&per_page={{$perPage}}'">Next</div>{{else}}<div class="page-button"></div>{{ end }}
 </div>{{ end }}

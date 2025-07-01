@@ -17,7 +17,7 @@
     {{ end }}
   </div>
   {{ if .ShowPagination}}
-    {{ template "pagination" (arr $uriPrefix .SiteName .Title .Writer .PerPage .PreviousPage .NextPage (len .Books)) }}
+    {{ template "pagination" (arr $uriPrefix .Title .Writer .PerPage .PreviousPage .NextPage (len .Books)) }}
   {{ end }}
 </body>
 

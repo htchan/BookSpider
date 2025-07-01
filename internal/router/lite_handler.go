@@ -119,7 +119,6 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	siteName := req.Context().Value(ContextKeySiteName).(string)
 	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	title := req.Context().Value(ContextKeyTitle).(string)
 	writer := req.Context().Value(ContextKeyWriter).(string)
@@ -142,7 +141,6 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 	execErr := t.ExecuteTemplate(res, "result.html", struct {
 		Name           string
 		UriPrefix      string
-		SiteName       string
 		Books          []model.Book
 		Title          string
 		Writer         string
@@ -151,9 +149,8 @@ func SearchLiteHandler(res http.ResponseWriter, req *http.Request) {
 		PerPage        int
 		ShowPagination bool
 	}{
-		Name:           siteName,
+		Name:           "Search Result",
 		UriPrefix:      uriPrefix,
-		SiteName:       siteName,
 		Books:          bks,
 		Title:          title,
 		Writer:         writer,
@@ -195,7 +192,6 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	siteName := req.Context().Value(ContextKeySiteName).(string)
 	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	limit := req.Context().Value(ContextKeyLimit).(int)
 	if limit == 0 {
@@ -216,7 +212,7 @@ func RandomLiteHandler(res http.ResponseWriter, req *http.Request) {
 		Books          []model.Book
 		ShowPagination bool
 	}{
-		Name:           siteName,
+		Name:           "Random",
 		UriPrefix:      uriPrefix,
 		Books:          bks,
 		ShowPagination: false,
