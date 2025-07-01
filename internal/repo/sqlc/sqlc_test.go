@@ -14,7 +14,7 @@ import (
 var (
 	conf = config.DatabaseConfig{
 		Host:     "localhost",
-		Port:     "35432",
+		Port:     "35433",
 		Name:     "sqlc",
 		User:     "postgres",
 		Password: "postgres",

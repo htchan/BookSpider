@@ -22,9 +22,9 @@ func TestServiceImpl_Stats(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
-				rpo.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
+				rpo.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{})
 
-				return &ServiceImpl{rpo: rpo}
+				return &ServiceImpl{name: "test", rpo: rpo}
 			},
 			want: repo.Summary{},
 		},

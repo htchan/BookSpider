@@ -98,7 +98,7 @@ func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context, stats *serv.Patch
 		stats = new(serv.PatchStorageStats)
 	}
 
-	bks, err := s.rpo.FindAllBooks(ctx)
+	bks, err := s.rpo.FindAllBooks(ctx, s.name)
 	if err != nil {
 		return fmt.Errorf("patch download status fail: %w", err)
 	}
@@ -142,7 +142,7 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context, stats *serv.Updat
 	}
 
 	var wg sync.WaitGroup
-	allBkIDs, err := s.rpo.FindAllBookIDs(ctx)
+	allBkIDs, err := s.rpo.FindAllBookIDs(ctx, s.name)
 	if err != nil {
 		return fmt.Errorf("find all book ids fail: %w", err)
 	}

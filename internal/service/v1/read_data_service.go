@@ -17,13 +17,13 @@ import (
 )
 
 type ReadDataServiceImpl struct {
-	rpo   repo.RepositoryV2
+	rpo   repo.Repository
 	confs map[string]config.SiteConfig
 }
 
 var _ serv.ReadDataService = (*ReadDataServiceImpl)(nil)
 
-func NewReadDataService(rpo repo.RepositoryV2, confs map[string]config.SiteConfig) *ReadDataServiceImpl {
+func NewReadDataService(rpo repo.Repository, confs map[string]config.SiteConfig) *ReadDataServiceImpl {
 	return &ReadDataServiceImpl{
 		rpo:   rpo,
 		confs: confs,

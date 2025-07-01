@@ -26,7 +26,6 @@ type ContextKey string
 const (
 	ContextKeyReqID        ContextKey = "req_id"
 	ContextKeySiteName     ContextKey = "site_name"
-	ContextKeyServ         ContextKey = "serv"
 	ContextKeyReadDataServ ContextKey = "read_data_serv"
 	ContextKeyBook         ContextKey = "book"
 	ContextKeyBookGroup    ContextKey = "book_group"
@@ -74,48 +73,6 @@ func GetReadDataServiceMiddleware(readDataServ service.ReadDataService) func(htt
 				}
 
 				ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, readDataServ)
-				next.ServeHTTP(res, req.WithContext(ctx))
-			},
-		)
-	}
-}
-func GetSiteMiddleware(services map[string]service.Service) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(
-			func(res http.ResponseWriter, req *http.Request) {
-				logger := zerolog.Ctx(req.Context())
-				siteName := chi.URLParam(req, "siteName")
-				availableSites := make([]string, 0, len(services))
-				for key := range services {
-					availableSites = append(availableSites, key)
-				}
-
-				_, span := getTracer().Start(req.Context(), "get site middleware")
-				defer span.End()
-				span.SetAttributes(
-					attribute.String("site", siteName),
-					attribute.StringSlice("available_sites", availableSites),
-				)
-
-				serv, ok := services[siteName]
-				if !ok {
-					span.SetStatus(codes.Error, "site not found")
-					span.RecordError(errors.New("site not found"))
-
-					logger.
-						Error().
-						Err(errors.New("site not found")).
-						Str("site", siteName).
-						Strs("available sites", availableSites).
-						Msg("get site middleware failed")
-					writeError(res, http.StatusNotFound, errors.New("site not found"))
-					return
-				}
-
-				span.End()
-
-				ctx := context.WithValue(req.Context(), ContextKeyServ, serv)
-				ctx = context.WithValue(ctx, ContextKeySiteName, siteName)
 				next.ServeHTTP(res, req.WithContext(ctx))
 			},
 		)

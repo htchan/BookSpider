@@ -606,13 +606,8 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.status=$2 order by hash_code desc
+where books.status=$1 order by hash_code desc
 `
-
-type ListBooksByStatusParams struct {
-	Site   string
-	Status string
-}
 
 type ListBooksByStatusRow struct {
 	Site          string
@@ -629,8 +624,8 @@ type ListBooksByStatusRow struct {
 	Data          string
 }
 
-func (q *Queries) ListBooksByStatus(ctx context.Context, arg ListBooksByStatusParams) ([]ListBooksByStatusRow, error) {
-	rows, err := q.db.QueryContext(ctx, listBooksByStatus, arg.Site, arg.Status)
+func (q *Queries) ListBooksByStatus(ctx context.Context, status string) ([]ListBooksByStatusRow, error) {
+	rows, err := q.db.QueryContext(ctx, listBooksByStatus, status)
 	if err != nil {
 		return nil, err
 	}
@@ -672,16 +667,15 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.status != 'ERROR' and 
-  (($2 != '%%' and books.title like $2) or
-  ($3 != '%%' and writers.name like $3))
-order by books.update_date desc, books.id desc limit $4 offset $5
+where books.status != 'ERROR' and 
+  (($1 != '%%' and books.title like $1) or
+  ($2 != '%%' and writers.name like $2))
+order by books.update_date desc, books.id desc, books.site desc limit $3 offset $4
 `
 
 type ListBooksByTitleWriterParams struct {
-	Site    string
+	Column1 interface{}
 	Column2 interface{}
-	Column3 interface{}
 	Limit   int32
 	Offset  int32
 }
@@ -703,9 +697,8 @@ type ListBooksByTitleWriterRow struct {
 
 func (q *Queries) ListBooksByTitleWriter(ctx context.Context, arg ListBooksByTitleWriterParams) ([]ListBooksByTitleWriterRow, error) {
 	rows, err := q.db.QueryContext(ctx, listBooksByTitleWriter,
-		arg.Site,
+		arg.Column1,
 		arg.Column2,
-		arg.Column3,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -876,19 +869,14 @@ select books.site, books.id, books.hash_code, books.title,
   books.status, books.is_downloaded, coalesce(errors.data, '')
 from books left join writers on books.writer_id=writers.id 
   left join errors on books.site=errors.site and books.id=errors.id
-where books.site=$1 and books.is_downloaded=true
+where books.is_downloaded=true
 order by books.site, books.id desc, books.hash_code desc 
-limit $2 offset RANDOM() * 
-(
-  select greatest(count(*) - $2, 0)
-  from books as bks where site=$1 and bks.is_downloaded=true
+limit $1 offset RANDOM() * 
+greatest(
+  (select count(*) - $1
+  from books as bks where bks.is_downloaded=true), 0
 )
 `
-
-type ListRandomBooksParams struct {
-	Site    string
-	Column2 interface{}
-}
 
 type ListRandomBooksRow struct {
 	Site          string
@@ -905,8 +893,8 @@ type ListRandomBooksRow struct {
 	Data          string
 }
 
-func (q *Queries) ListRandomBooks(ctx context.Context, arg ListRandomBooksParams) ([]ListRandomBooksRow, error) {
-	rows, err := q.db.QueryContext(ctx, listRandomBooks, arg.Site, arg.Column2)
+func (q *Queries) ListRandomBooks(ctx context.Context, dollar_1 interface{}) ([]ListRandomBooksRow, error) {
+	rows, err := q.db.QueryContext(ctx, listRandomBooks, dollar_1)
 	if err != nil {
 		return nil, err
 	}
@@ -1028,16 +1016,11 @@ where (update_date < $1 or
     update_chapter like '%全文结%' or update_chapter like '%剧终%' or 
     update_chapter like '%（完）%' or update_chapter like '%终章%' or 
     update_chapter like '%外传%' or update_chapter like '%结尾%') and 
-  status='INPROGRESS' and site=$2
+  status='INPROGRESS'
 `
 
-type UpdateBooksStatusParams struct {
-	UpdateDate sql.NullString
-	Site       string
-}
-
-func (q *Queries) UpdateBooksStatus(ctx context.Context, arg UpdateBooksStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateBooksStatus, arg.UpdateDate, arg.Site)
+func (q *Queries) UpdateBooksStatus(ctx context.Context, updateDate sql.NullString) error {
+	_, err := q.db.ExecContext(ctx, updateBooksStatus, updateDate)
 	return err
 }
 
