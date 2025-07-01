@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	}
 
 	close, err := repo.CreatePsqlContainer(
-		"test-sqlc-repo", conf,
+		"test-sqlc_v2-repo", conf,
 		func() error {
 			migrateErr := Migrate(conf, "../../../database/migrations")
 			if migrateErr != nil {
