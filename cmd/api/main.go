@@ -110,14 +110,15 @@ func main() {
 	// 	services[siteName] = serv
 	// }
 	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, 1)
+	readDataService := common.LoadReadDataService(db, conf.SiteConfigs)
 
 	shutdown.LogEnabled = true
 	shutdownHandler := shutdown.New(syscall.SIGINT, syscall.SIGTERM)
 
 	// load routes
 	r := chi.NewRouter()
-	router.AddAPIRoutes(r, conf, services)
-	router.AddLiteRoutes(r, conf, services)
+	router.AddAPIRoutes(r, conf, services, readDataService)
+	router.AddLiteRoutes(r, conf, services, readDataService)
 
 	server := http.Server{
 		Addr:         ":9427",
