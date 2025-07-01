@@ -22,21 +22,27 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		setupServs func(ctrl *gomock.Controller) map[string]service.Service
-		url        string
-		expectRes  string
+		name              string
+		setupReadDataServ func(ctrl *gomock.Controller) service.ReadDataService
+		setupServs        func(ctrl *gomock.Controller) map[string]service.Service
+		url               string
+		expectRes         string
 	}{
 		{
 			name: "works",
+			setupReadDataServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().Stats(gomock.Any(), "test1").Return(repo.Summary{})
+				serv.EXPECT().Stats(gomock.Any(), "test2").Return(repo.Summary{})
+
+				return serv
+			},
 			setupServs: func(ctrl *gomock.Controller) map[string]service.Service {
 				serv1 := mockservice.NewMockService(ctrl)
-				serv1.EXPECT().Name().Return("test1")
-				serv1.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
+				serv1.EXPECT().Name().Return("test1").Times(2)
 
 				serv2 := mockservice.NewMockService(ctrl)
-				serv2.EXPECT().Name().Return("test2")
-				serv2.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
+				serv2.EXPECT().Name().Return("test2").Times(2)
 
 				return map[string]service.Service{
 					"test1": serv1,
@@ -63,7 +69,7 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 			}
 
 			res := httptest.NewRecorder()
-			GeneralInfoAPIHandler(test.setupServs(ctrl)).ServeHTTP(res, req)
+			GeneralInfoAPIHandler(test.setupServs(ctrl), test.setupReadDataServ(ctrl)).ServeHTTP(res, req)
 
 			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})

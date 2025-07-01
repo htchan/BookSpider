@@ -19,11 +19,11 @@ import (
 // @Produce		json
 // @Success		200	{object}	map[string]repo.Summary
 // @Router			/api/book-spider/info [get]
-func GeneralInfoAPIHandler(services map[string]service.Service) http.HandlerFunc {
+func GeneralInfoAPIHandler(services map[string]service.Service, readDataService service.ReadDataService) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		servInfo := make(map[string]repo.Summary)
 		for _, serv := range services {
-			servInfo[serv.Name()] = serv.Stats(req.Context())
+			servInfo[serv.Name()] = readDataService.Stats(req.Context(), serv.Name())
 		}
 		json.NewEncoder(res).Encode(servInfo)
 	}

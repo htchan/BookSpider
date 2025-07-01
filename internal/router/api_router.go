@@ -37,10 +37,9 @@ func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string
 			),
 		)
 
-		router.Get("/info", GeneralInfoAPIHandler(services))
+		router.Get("/info", GeneralInfoAPIHandler(services, readDataServices))
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
-			router.Use(GetSiteMiddleware(services))
 			router.Use(GetReadDataServiceMiddleware(readDataServices))
 			router.Get("/", SiteInfoAPIHandler)
 

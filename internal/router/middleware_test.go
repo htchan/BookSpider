@@ -14,78 +14,9 @@ import (
 	mockservice "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/service"
-	servicev1 "github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
-
-func Test_GetSiteMiddleware(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name      string
-		servs     map[string]service.Service
-		siteName  string
-		wantServ  service.Service
-		expectRes string
-	}{
-		{
-			name: "set request context site if site found",
-			servs: map[string]service.Service{
-				"test": &servicev1.ServiceImpl{},
-			},
-			siteName:  "test",
-			wantServ:  &servicev1.ServiceImpl{},
-			expectRes: "site found",
-		},
-		{
-			name:      "return error if site not found",
-			servs:     map[string]service.Service{},
-			siteName:  "unknown",
-			wantServ:  nil,
-			expectRes: `{"error":"site not found"}`,
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			handlerFunc := GetSiteMiddleware(test.servs)
-			handler := handlerFunc(http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					serv := r.Context().Value(ContextKeyServ).(service.Service)
-
-					assert.Equal(t, test.wantServ, serv)
-					// if !cmp.Equal(st, test.wantServ) {
-					// 	t.Errorf("site diff: %v", cmp.Diff(st, test.wantServ))
-					// }
-					fmt.Fprintln(w, test.expectRes)
-				},
-			))
-
-			req, err := http.NewRequest("GET", "", nil)
-			if err != nil {
-				t.Errorf("cannot init request: %v", err)
-				return
-			}
-
-			ctx := req.Context()
-			rctx := chi.NewRouteContext()
-			rctx.URLParams.Add("siteName", test.siteName)
-			ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
-			req = req.WithContext(ctx)
-			res := httptest.NewRecorder()
-			handler.ServeHTTP(res, req)
-
-			if strings.Trim(res.Body.String(), "\n") != test.expectRes {
-				t.Error("got different response as expect")
-				t.Error(res.Body.String())
-				t.Error(test.expectRes)
-			}
-		})
-	}
-}
 
 func Test_GetBookMiddleware(t *testing.T) {
 	t.Parallel()
