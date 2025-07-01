@@ -6,7 +6,7 @@ import (
 	"github.com/htchan/BookSpider/internal/service"
 )
 
-func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service) {
+func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service, readDataServices service.ReadDataService) {
 	router.Route(conf.LiteRoutePrefix, func(router chi.Router) {
 		router.Use(logRequest())
 		router.Use(TraceMiddleware)
@@ -14,6 +14,7 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
 			router.Use(GetSiteMiddleware(services))
+			router.Use(GetReadDataServiceMiddleware(readDataServices))
 			router.Get("/", SiteLiteHandlerfunc)
 
 			router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", SearchLiteHandler)

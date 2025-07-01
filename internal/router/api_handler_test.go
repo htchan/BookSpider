@@ -75,15 +75,15 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		setupServ func(ctrl *gomock.Controller) service.Service
+		setupServ func(ctrl *gomock.Controller) service.ReadDataService
 		url       string
 		expectRes string
 	}{
 		{
 			name: "works",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{})
 
 				return serv
 			},
@@ -105,7 +105,8 @@ func Test_SiteInfoAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, test.setupServ(ctrl))
+			ctx = context.WithValue(ctx, ContextKeySiteName, "test")
 			req = req.WithContext(ctx)
 
 			res := httptest.NewRecorder()
@@ -121,7 +122,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setupServ     func(ctrl *gomock.Controller) service.Service
+		setupServ     func(ctrl *gomock.Controller) service.ReadDataService
 		url           string
 		title, writer string
 		limit, offset int
@@ -129,9 +130,9 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 	}{
 		{
 			name: "works",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().QueryBooks(gomock.Any(), "title 1", "writer 1", 10, 0).Return([]model.Book{}, nil)
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().SearchBooks(gomock.Any(), "title 1", "writer 1", 10, 0).Return([]model.Book{}, nil)
 
 				return serv
 			},
@@ -144,9 +145,9 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 		},
 		{
 			name: "error",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
-				serv.EXPECT().QueryBooks(gomock.Any(), "title 1", "writer 1", 10, 0).Return(nil, errors.New("some error"))
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().SearchBooks(gomock.Any(), "title 1", "writer 1", 10, 0).Return(nil, errors.New("some error"))
 
 				return serv
 			},
@@ -172,7 +173,7 @@ func Test_BookSearchAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, test.setupServ(ctrl))
 			ctx = context.WithValue(ctx, ContextKeyTitle, test.title)
 			ctx = context.WithValue(ctx, ContextKeyWriter, test.writer)
 			ctx = context.WithValue(ctx, ContextKeyLimit, test.limit)
@@ -192,15 +193,15 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setupServ     func(ctrl *gomock.Controller) service.Service
+		setupServ     func(ctrl *gomock.Controller) service.ReadDataService
 		url           string
 		limit, offset int
 		expectRes     string
 	}{
 		{
 			name: "works",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
 				serv.EXPECT().RandomBooks(gomock.Any(), 10).Return([]model.Book{}, nil)
 
 				return serv
@@ -212,8 +213,8 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 		},
 		{
 			name: "error",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
 				serv.EXPECT().RandomBooks(gomock.Any(), 10).Return(nil, errors.New("some error"))
 
 				return serv
@@ -238,7 +239,7 @@ func Test_BookRandomAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, test.setupServ(ctrl))
 			ctx = context.WithValue(ctx, ContextKeyLimit, test.limit)
 			ctx = context.WithValue(ctx, ContextKeyOffset, test.offset)
 			req = req.WithContext(ctx)
@@ -307,15 +308,15 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 	tests := []struct {
 		name      string
 		url       string
-		setupServ func(ctrl *gomock.Controller) service.Service
+		setupServ func(ctrl *gomock.Controller) service.ReadDataService
 		bk        *model.Book
 		expectRes string
 	}{
 		{
 			name: "works",
 			url:  "https://localhost/data",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
 				serv.EXPECT().
 					BookContent(gomock.Any(), &model.Book{Site: "test", ID: 1, HashCode: 0, Status: model.StatusEnd, IsDownloaded: true}).
 					Return("data", nil)
@@ -328,8 +329,8 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 		{
 			name: "bk is not download",
 			url:  "https://localhost/data",
-			setupServ: func(ctrl *gomock.Controller) service.Service {
-				serv := mockservice.NewMockService(ctrl)
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
 				serv.EXPECT().
 					BookContent(gomock.Any(), &model.Book{Site: "test", ID: 1, HashCode: 0}).
 					Return("", errors.New("some error"))
@@ -354,7 +355,7 @@ func Test_BookDownloadAPIHandler(t *testing.T) {
 				t.Errorf("cannot init request: %v", err)
 				return
 			}
-			ctx := context.WithValue(req.Context(), ContextKeyServ, test.setupServ(ctrl))
+			ctx := context.WithValue(req.Context(), ContextKeyReadDataServ, test.setupServ(ctrl))
 			ctx = context.WithValue(ctx, ContextKeyBook, test.bk)
 			req = req.WithContext(ctx)
 
@@ -370,27 +371,21 @@ func Test_DBStatAPIHandler(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name       string
-		url        string
-		setupServs func(ctrl *gomock.Controller) map[string]service.Service
-		expectRes  string
+		name      string
+		url       string
+		setupServ func(ctrl *gomock.Controller) service.ReadDataService
+		expectRes string
 	}{
 		{
 			name: "works",
 			url:  "https://localhost/data",
-			setupServs: func(ctrl *gomock.Controller) map[string]service.Service {
-				serv1 := mockservice.NewMockService(ctrl)
-				serv1.EXPECT().DBStats(gomock.Any()).Return(sql.DBStats{})
+			setupServ: func(ctrl *gomock.Controller) service.ReadDataService {
+				serv := mockservice.NewMockReadDataService(ctrl)
+				serv.EXPECT().DBStats(gomock.Any()).Return(sql.DBStats{})
 
-				serv2 := mockservice.NewMockService(ctrl)
-				serv2.EXPECT().DBStats(gomock.Any()).Return(sql.DBStats{})
-
-				return map[string]service.Service{
-					"test1": serv1,
-					"test2": serv2,
-				}
+				return serv
 			},
-			expectRes: `{"stats":[{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0},{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0}]}`,
+			expectRes: `{"stats":[{"MaxOpenConnections":0,"OpenConnections":0,"InUse":0,"Idle":0,"WaitCount":0,"WaitDuration":0,"MaxIdleClosed":0,"MaxIdleTimeClosed":0,"MaxLifetimeClosed":0}]}`,
 		},
 	}
 
@@ -409,7 +404,7 @@ func Test_DBStatAPIHandler(t *testing.T) {
 			}
 
 			res := httptest.NewRecorder()
-			DBStatsAPIHandler(test.setupServs(ctrl)).ServeHTTP(res, req)
+			DBStatsAPIHandler(test.setupServ(ctrl)).ServeHTTP(res, req)
 
 			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})

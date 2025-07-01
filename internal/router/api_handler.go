@@ -39,8 +39,9 @@ func GeneralInfoAPIHandler(services map[string]service.Service) http.HandlerFunc
 // @Failure		404			{object}	errResp
 // @Router			/api/book-spider/sites/{siteName} [get]
 func SiteInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
-	json.NewEncoder(res).Encode(serv.Stats(req.Context()))
+	site := req.Context().Value(ContextKeySiteName).(string)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
+	json.NewEncoder(res).Encode(serv.Stats(req.Context(), site))
 }
 
 // @Summary		Search books
@@ -54,13 +55,13 @@ func SiteInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 // @Router			/api/book-spider/sites/{siteName}/books/search [get]
 func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	title := req.Context().Value(ContextKeyTitle).(string)
 	writer := req.Context().Value(ContextKeyWriter).(string)
 	limit := req.Context().Value(ContextKeyLimit).(int)
 	offset := req.Context().Value(ContextKeyOffset).(int)
 
-	bks, err := serv.QueryBooks(req.Context(), title, writer, limit, offset)
+	bks, err := serv.SearchBooks(req.Context(), title, writer, limit, offset)
 	if err != nil {
 		logger.Error().Err(err).Msg("query books failed")
 		writeError(res, 400, err)
@@ -80,7 +81,7 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 // @Router			/api/book-spider/sites/{siteName}/books/random [get]
 func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	limit := req.Context().Value(ContextKeyLimit).(int)
 
 	bks, err := serv.RandomBooks(req.Context(), limit)
@@ -119,7 +120,7 @@ func BookInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 // @Router			/api/book-spider/sites/{siteName}/books/{idHash}/download [get]
 func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
 	logger := zerolog.Ctx(req.Context())
-	serv := req.Context().Value(ContextKeyServ).(service.Service)
+	serv := req.Context().Value(ContextKeyReadDataServ).(service.ReadDataService)
 	bk := req.Context().Value(ContextKeyBook).(*model.Book)
 	content, err := serv.BookContent(req.Context(), bk)
 	if err != nil {
@@ -143,12 +144,8 @@ func BookDownloadAPIHandler(res http.ResponseWriter, req *http.Request) {
 // @Success		200			{object}	map[string]interface{}
 // @Failure		400			{object}	errResp
 // @Router			/api/book-spider/db-stats [get]
-func DBStatsAPIHandler(services map[string]service.Service) http.HandlerFunc {
+func DBStatsAPIHandler(service service.ReadDataService) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		stats := make([]sql.DBStats, 0, len(services))
-		for _, serv := range services {
-			stats = append(stats, serv.DBStats(req.Context()))
-		}
-		json.NewEncoder(res).Encode(dbStatsResp{stats})
+		json.NewEncoder(res).Encode(dbStatsResp{[]sql.DBStats{service.DBStats(req.Context())}})
 	}
 }

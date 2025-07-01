@@ -22,7 +22,7 @@ func writeError(res http.ResponseWriter, statusCode int, err error) {
 	json.NewEncoder(res).Encode(errResp{err.Error()})
 }
 
-func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service) {
+func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service, readDataServices service.ReadDataService) {
 	router.Route(conf.APIRoutePrefix, func(router chi.Router) {
 		router.Use(logRequest())
 		router.Use(TraceMiddleware)
@@ -41,6 +41,7 @@ func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string
 
 		router.Route("/sites/{siteName}", func(router chi.Router) {
 			router.Use(GetSiteMiddleware(services))
+			router.Use(GetReadDataServiceMiddleware(readDataServices))
 			router.Get("/", SiteInfoAPIHandler)
 
 			router.Route("/books", func(router chi.Router) {
@@ -56,7 +57,7 @@ func AddAPIRoutes(router chi.Router, conf *config.APIConfig, services map[string
 			})
 		})
 
-		router.Get("/db-stats", DBStatsAPIHandler(services))
+		router.Get("/db-stats", DBStatsAPIHandler(readDataServices))
 	})
 
 	router.Get("/docs/swagger/*", httpSwagger.WrapHandler)

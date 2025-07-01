@@ -96,27 +96,23 @@ func TestSiteLiteHandler(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		services         map[string]service.Service
 		prepareRequest   func(*testing.T, *gomock.Controller) *http.Request
 		expectStatusCode int
 		expectRes        string
 	}{
 		{
 			name: "happy flow",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
-				serv := servicemock.NewMockService(ctrl)
-				serv.EXPECT().Name().Return("test")
-				serv.EXPECT().Stats(gomock.Any()).Return(repo.Summary{})
+				serv := servicemock.NewMockReadDataService(ctrl)
+				serv.EXPECT().Stats(gomock.Any(), "test").Return(repo.Summary{})
 
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
-				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
+				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 
 				return req.WithContext(ctx)
 			},
@@ -186,22 +182,17 @@ func TestSearchLiteHandler(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		services         map[string]service.Service
 		prepareRequest   func(*testing.T, *gomock.Controller) *http.Request
 		expectStatusCode int
 		expectRes        string
 	}{
 		{
 			name: "happy flow without pagination",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
-				serv := servicemock.NewMockService(ctrl)
-				serv.EXPECT().Name().Return("test")
-				serv.EXPECT().QueryBooks(gomock.Any(), "title", "writer", 10, 0).Return(
+				serv := servicemock.NewMockReadDataService(ctrl)
+				serv.EXPECT().SearchBooks(gomock.Any(), "title", "writer", 10, 0).Return(
 					[]model.Book{
 						{
 							Site: "test", ID: 123, HashCode: 100,
@@ -216,7 +207,7 @@ func TestSearchLiteHandler(t *testing.T) {
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
 				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
-				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
 				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
 				ctx = context.WithValue(ctx, ContextKeyPage, 0)
@@ -299,15 +290,11 @@ func TestSearchLiteHandler(t *testing.T) {
 		},
 		{
 			name: "happy flow with pagination",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
-				serv := servicemock.NewMockService(ctrl)
-				serv.EXPECT().Name().Return("test")
-				serv.EXPECT().QueryBooks(gomock.Any(), "title", "writer", 1, 5).Return(
+				serv := servicemock.NewMockReadDataService(ctrl)
+				serv.EXPECT().SearchBooks(gomock.Any(), "title", "writer", 1, 5).Return(
 					[]model.Book{
 						{
 							Site: "test", ID: 123, HashCode: 100,
@@ -322,7 +309,7 @@ func TestSearchLiteHandler(t *testing.T) {
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
 				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
-				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyTitle, "title")
 				ctx = context.WithValue(ctx, ContextKeyWriter, "writer")
 				ctx = context.WithValue(ctx, ContextKeyPage, 5)
@@ -431,21 +418,16 @@ func TestRandomLiteHandler(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		services         map[string]service.Service
 		prepareRequest   func(*testing.T, *gomock.Controller) *http.Request
 		expectStatusCode int
 		expectRes        string
 	}{
 		{
 			name: "happy flow",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
-				serv := servicemock.NewMockService(ctrl)
-				serv.EXPECT().Name().Return("test")
+				serv := servicemock.NewMockReadDataService(ctrl)
 				serv.EXPECT().RandomBooks(gomock.Any(), 10).Return(
 					[]model.Book{
 						{
@@ -460,7 +442,8 @@ func TestRandomLiteHandler(t *testing.T) {
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
 				assert.NoError(t, err)
 				ctx := context.WithValue(req.Context(), ContextKeyUriPrefix, "/lite/novel")
-				ctx = context.WithValue(ctx, ContextKeyServ, serv)
+				ctx = context.WithValue(ctx, ContextKeySiteName, "test")
+				ctx = context.WithValue(ctx, ContextKeyReadDataServ, serv)
 				ctx = context.WithValue(ctx, ContextKeyLimit, 10)
 				ctx = context.WithValue(ctx, ContextKeyOffset, 0)
 
@@ -552,16 +535,12 @@ func TestBookLiteHandler(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		services         map[string]service.Service
 		prepareRequest   func(*testing.T, *gomock.Controller) *http.Request
 		expectStatusCode int
 		expectRes        string
 	}{
 		{
 			name: "happy flow without group",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
@@ -626,9 +605,6 @@ func TestBookLiteHandler(t *testing.T) {
 		},
 		{
 			name: "happy flow with group",
-			services: map[string]service.Service{
-				"test": nil,
-			},
 			prepareRequest: func(t *testing.T, ctrl *gomock.Controller) *http.Request {
 				t.Helper()
 
