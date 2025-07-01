@@ -11,11 +11,9 @@ package mockservice
 
 import (
 	context "context"
-	sql "database/sql"
 	reflect "reflect"
 
 	model "github.com/htchan/BookSpider/internal/model"
-	repo "github.com/htchan/BookSpider/internal/repo"
 	service "github.com/htchan/BookSpider/internal/service"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -44,67 +42,6 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// Book mocks base method.
-func (m *MockService) Book(ctx context.Context, id, hash string) (*model.Book, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Book", ctx, id, hash)
-	ret0, _ := ret[0].(*model.Book)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Book indicates an expected call of Book.
-func (mr *MockServiceMockRecorder) Book(ctx, id, hash any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Book", reflect.TypeOf((*MockService)(nil).Book), ctx, id, hash)
-}
-
-// BookChapters mocks base method.
-func (m *MockService) BookChapters(arg0 context.Context, arg1 *model.Book) (model.Chapters, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BookChapters", arg0, arg1)
-	ret0, _ := ret[0].(model.Chapters)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BookChapters indicates an expected call of BookChapters.
-func (mr *MockServiceMockRecorder) BookChapters(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookChapters", reflect.TypeOf((*MockService)(nil).BookChapters), arg0, arg1)
-}
-
-// BookContent mocks base method.
-func (m *MockService) BookContent(arg0 context.Context, arg1 *model.Book) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BookContent", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// BookContent indicates an expected call of BookContent.
-func (mr *MockServiceMockRecorder) BookContent(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookContent", reflect.TypeOf((*MockService)(nil).BookContent), arg0, arg1)
-}
-
-// BookGroup mocks base method.
-func (m *MockService) BookGroup(ctx context.Context, id, hash string) (*model.Book, *model.BookGroup, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "BookGroup", ctx, id, hash)
-	ret0, _ := ret[0].(*model.Book)
-	ret1, _ := ret[1].(*model.BookGroup)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// BookGroup indicates an expected call of BookGroup.
-func (mr *MockServiceMockRecorder) BookGroup(ctx, id, hash any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookGroup", reflect.TypeOf((*MockService)(nil).BookGroup), ctx, id, hash)
-}
-
 // BookInfo mocks base method.
 func (m *MockService) BookInfo(arg0 context.Context, arg1 *model.Book) string {
 	m.ctrl.T.Helper()
@@ -131,20 +68,6 @@ func (m *MockService) CheckAvailability(arg0 context.Context) error {
 func (mr *MockServiceMockRecorder) CheckAvailability(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAvailability", reflect.TypeOf((*MockService)(nil).CheckAvailability), arg0)
-}
-
-// DBStats mocks base method.
-func (m *MockService) DBStats(arg0 context.Context) sql.DBStats {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DBStats", arg0)
-	ret0, _ := ret[0].(sql.DBStats)
-	return ret0
-}
-
-// DBStats indicates an expected call of DBStats.
-func (mr *MockServiceMockRecorder) DBStats(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBStats", reflect.TypeOf((*MockService)(nil).DBStats), arg0)
 }
 
 // Download mocks base method.
@@ -271,50 +194,6 @@ func (m *MockService) ProcessBook(arg0 context.Context, arg1 *model.Book) error 
 func (mr *MockServiceMockRecorder) ProcessBook(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessBook", reflect.TypeOf((*MockService)(nil).ProcessBook), arg0, arg1)
-}
-
-// QueryBooks mocks base method.
-func (m *MockService) QueryBooks(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "QueryBooks", ctx, title, writer, limit, offset)
-	ret0, _ := ret[0].([]model.Book)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QueryBooks indicates an expected call of QueryBooks.
-func (mr *MockServiceMockRecorder) QueryBooks(ctx, title, writer, limit, offset any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBooks", reflect.TypeOf((*MockService)(nil).QueryBooks), ctx, title, writer, limit, offset)
-}
-
-// RandomBooks mocks base method.
-func (m *MockService) RandomBooks(ctx context.Context, limit int) ([]model.Book, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RandomBooks", ctx, limit)
-	ret0, _ := ret[0].([]model.Book)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RandomBooks indicates an expected call of RandomBooks.
-func (mr *MockServiceMockRecorder) RandomBooks(ctx, limit any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RandomBooks", reflect.TypeOf((*MockService)(nil).RandomBooks), ctx, limit)
-}
-
-// Stats mocks base method.
-func (m *MockService) Stats(arg0 context.Context) repo.Summary {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stats", arg0)
-	ret0, _ := ret[0].(repo.Summary)
-	return ret0
-}
-
-// Stats indicates an expected call of Stats.
-func (mr *MockServiceMockRecorder) Stats(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stats", reflect.TypeOf((*MockService)(nil).Stats), arg0)
 }
 
 // Update mocks base method.
