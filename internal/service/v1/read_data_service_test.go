@@ -262,7 +262,7 @@ func TestReadDataReadDataServiceImpl_BookChapters(t *testing.T) {
 	}{
 		{
 			name: "successfully read and parse content to chapters",
-			serv: &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters"}}},
+			serv: &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters-read"}}},
 			bk:   &model.Book{Site: "test", ID: 123, IsDownloaded: true},
 			want: model.Chapters{
 				{Index: 0, Title: "title 1", Content: "content 1"},
@@ -272,14 +272,14 @@ func TestReadDataReadDataServiceImpl_BookChapters(t *testing.T) {
 		},
 		{
 			name:      "fail to parse content to chapters",
-			serv:      &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters"}}},
+			serv:      &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters-read"}}},
 			bk:        &model.Book{Site: "test", ID: 123, HashCode: 10, IsDownloaded: true},
 			want:      nil,
 			wantError: model.ErrCannotParseContent,
 		},
 		{
 			name:      "fail to read content ",
-			serv:      &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters"}}},
+			serv:      &ReadDataServiceImpl{confs: map[string]config.SiteConfig{"test": {Storage: "./book-chapters-read"}}},
 			bk:        &model.Book{Site: "test", ID: 456, HashCode: 0, IsDownloaded: true},
 			want:      nil,
 			wantError: serv.ErrBookFileNotFound,
