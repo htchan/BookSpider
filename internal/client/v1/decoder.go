@@ -1,34 +1,33 @@
 package client
 
 import (
-	"github.com/htchan/BookSpider/internal/config/v1"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"
 )
 
+type DecodeMethod string
+
+const (
+	DecodeMethodGBK  DecodeMethod = "gbk"
+	DecodeMethodBig5 DecodeMethod = "big5"
+	DecodeMethodUTF8 DecodeMethod = "utf8"
+)
+
 type Decoder struct {
 	decoder *encoding.Decoder
 }
 
-func NewDecoder(conf config.DecoderConfig) Decoder {
+func NewDecoder(decodeMethod DecodeMethod) Decoder {
 	var decoder *encoding.Decoder
-	if conf.Method == "big5" {
-		decoder = traditionalchinese.Big5.NewDecoder()
-	} else if conf.Method == "gbk" {
+	switch decodeMethod {
+	case DecodeMethodGBK:
 		decoder = simplifiedchinese.GBK.NewDecoder()
-	}
-
-	return Decoder{decoder: decoder}
-}
-
-func NewDecoderV2(decodeMethod string) Decoder {
-	var decoder *encoding.Decoder
-	if decodeMethod == "big5" {
+	case DecodeMethodBig5:
 		decoder = traditionalchinese.Big5.NewDecoder()
-	} else if decodeMethod == "gbk" {
-		decoder = simplifiedchinese.GBK.NewDecoder()
+	default:
+		decoder = nil
 	}
 
 	return Decoder{decoder: decoder}
