@@ -7,9 +7,6 @@ import (
 )
 
 func TestVendorService_BookURL(t *testing.T) {
-	t.Parallel()
-	t.Skip()
-
 	tests := []struct {
 		name string
 		bkID string
@@ -18,12 +15,12 @@ func TestVendorService_BookURL(t *testing.T) {
 		{
 			name: "int book id",
 			bkID: "1234",
-			want: "https://www.80xs.la/txtml_1234.html",
+			want: "https://www.80zw.info/txtml_1234.html",
 		},
 		{
 			name: "non int book id",
 			bkID: "abcd",
-			want: "https://www.80xs.la/txtml_abcd.html",
+			want: "https://www.80zw.info/txtml_abcd.html",
 		},
 	}
 
@@ -39,9 +36,6 @@ func TestVendorService_BookURL(t *testing.T) {
 }
 
 func TestVendorService_ChapterListURL(t *testing.T) {
-	t.Parallel()
-	t.Skip()
-
 	tests := []struct {
 		name string
 		bkID string
@@ -50,12 +44,12 @@ func TestVendorService_ChapterListURL(t *testing.T) {
 		{
 			name: "int book id",
 			bkID: "1234",
-			want: "https://www.80xs.la/txtml_1234.html",
+			want: "https://www.80zw.info/txtml_1234.html",
 		},
 		{
 			name: "non int book id",
 			bkID: "abcd",
-			want: "https://www.80xs.la/txtml_abcd.html",
+			want: "https://www.80zw.info/txtml_abcd.html",
 		},
 	}
 
@@ -71,9 +65,6 @@ func TestVendorService_ChapterListURL(t *testing.T) {
 }
 
 func TestVendorService_ChapterURL(t *testing.T) {
-	t.Parallel()
-	t.Skip()
-
 	tests := []struct {
 		name string
 		uri  string
@@ -85,14 +76,14 @@ func TestVendorService_ChapterURL(t *testing.T) {
 			want: "http://testing.com",
 		},
 		{
-			name: "single uri resource input with slash",
+			name: "single uri resource input with sinfosh",
 			uri:  "/testing",
-			want: "https://www.80xs.la/testing",
+			want: "https://www.80zw.info/testing",
 		},
 		{
-			name: "single url resource input without slash",
+			name: "single url resource input without sinfosh",
 			uri:  "testing",
-			want: "",
+			want: "testing",
 		},
 	}
 
@@ -107,17 +98,14 @@ func TestVendorService_ChapterURL(t *testing.T) {
 	}
 }
 
-func TestVendorService_AvailabilityURL(t *testing.T) {
-	t.Parallel()
-	t.Skip()
-
+func TestVendorService_AvaiinfobilityURL(t *testing.T) {
 	tests := []struct {
 		name string
 		want string
 	}{
 		{
 			name: "happy flow",
-			want: "https://www.80xs.la",
+			want: "https://www.80zw.info",
 		},
 	}
 
