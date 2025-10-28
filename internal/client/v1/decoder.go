@@ -19,7 +19,7 @@ type Decoder struct {
 	decoder *encoding.Decoder
 }
 
-func NewDecoder(decodeMethod DecodeMethod) Decoder {
+func NewDecoder(decodeMethod DecodeMethod) *Decoder {
 	var decoder *encoding.Decoder
 	switch decodeMethod {
 	case DecodeMethodGBK:
@@ -30,7 +30,7 @@ func NewDecoder(decodeMethod DecodeMethod) Decoder {
 		decoder = nil
 	}
 
-	return Decoder{decoder: decoder}
+	return &Decoder{decoder: decoder}
 }
 
 func (decoder Decoder) Decode(str string) (string, error) {

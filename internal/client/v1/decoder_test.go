@@ -52,7 +52,7 @@ func TestDecoder_Decode(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		decoder    Decoder
+		decoder    *Decoder
 		inputBytes string
 		want       string
 		wantErr    bool
