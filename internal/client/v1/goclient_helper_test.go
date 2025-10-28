@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/htchan/BookSpider/internal/config/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +33,7 @@ func TestNewClientPool(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got := NewClientPool()
+			got := NewClientPool(config.ClientPoolConfig{})
 			assert.Equal(t, tt.want.clients, got.clients)
 			assert.Equal(t, tt.want.failureMap, got.failureMap)
 			assert.Equal(t, tt.want.clientInPool, got.clientInPool)
@@ -52,7 +53,7 @@ func TestClientPool_GetClient(t *testing.T) {
 		{
 			name: "happy flow",
 			getClientPool: func() *ClientPool {
-				pool := NewClientPool()
+				pool := NewClientPool(config.ClientPoolConfig{})
 				pool.AddClients(&http.Client{})
 
 				return pool
@@ -69,7 +70,7 @@ func TestClientPool_GetClient(t *testing.T) {
 		{
 			name: "empty pool - add client later",
 			getClientPool: func() *ClientPool {
-				pool := NewClientPool()
+				pool := NewClientPool(config.ClientPoolConfig{})
 				go func() {
 					time.Sleep(10 * time.Millisecond)
 					pool.AddClients(&http.Client{})
@@ -124,7 +125,7 @@ func TestClientPool_AddClients(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			pool := NewClientPool()
+			pool := NewClientPool(config.ClientPoolConfig{})
 			pool.AddClients(tt.clientsToAdd...)
 			assert.Equal(t, tt.wantClients, pool.clients)
 			assert.Equal(t, tt.wantClientInPool, pool.clientInPool)
@@ -165,7 +166,7 @@ func TestClientPool_addAvailableProxyClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			pool := NewClientPool()
+			pool := NewClientPool(config.ClientPoolConfig{})
 			pool.addAvailableProxyClient(tt.proxyAddr, tt.clientAvailable)
 			assert.Equal(t, tt.wantClientLength, len(pool.clients))
 			assert.Equal(t, tt.wantClientInPool, pool.clientInPool)
@@ -211,7 +212,7 @@ func TestClientPool_socks5ProxyList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			pool := NewClientPool()
+			pool := NewClientPool(config.ClientPoolConfig{})
 			got := pool.proxyList(tt.protocol, tt.sourceURL)
 			assert.Equal(t, tt.want, got)
 		})
@@ -250,7 +251,7 @@ func TestClientPool_RequestRecorder(t *testing.T) {
 		{
 			name: "happy flow - successful request",
 			getPool: func() *ClientPool {
-				pool := NewClientPool()
+				pool := NewClientPool(config.ClientPoolConfig{})
 				pool.AddClients(&http.Client{})
 
 				return pool
@@ -271,8 +272,7 @@ func TestClientPool_RequestRecorder(t *testing.T) {
 		{
 			name: "happy flow - failure request",
 			getPool: func() *ClientPool {
-				pool := NewClientPool()
-				pool.conf.DropClientFailureThreshold = 2
+				pool := NewClientPool(config.ClientPoolConfig{DropClientFailureThreshold: 2})
 				pool.AddClients(&http.Client{})
 
 				return pool
@@ -293,8 +293,7 @@ func TestClientPool_RequestRecorder(t *testing.T) {
 		{
 			name: "happy flow - failure request reaching threshold",
 			getPool: func() *ClientPool {
-				pool := NewClientPool()
-				pool.conf.DropClientFailureThreshold = 1
+				pool := NewClientPool(config.ClientPoolConfig{DropClientFailureThreshold: 1})
 				pool.failureMap[""] = 1
 				pool.AddClients(&http.Client{})
 
@@ -316,8 +315,7 @@ func TestClientPool_RequestRecorder(t *testing.T) {
 		{
 			name: "happy flow - got timeout",
 			getPool: func() *ClientPool {
-				pool := NewClientPool()
-				pool.conf.DropClientFailureThreshold = 1
+				pool := NewClientPool(config.ClientPoolConfig{DropClientFailureThreshold: 1})
 				pool.failureMap[""] = 1
 				pool.AddClients(&http.Client{Timeout: time.Millisecond})
 

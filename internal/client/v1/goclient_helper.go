@@ -29,13 +29,14 @@ type ClientPool struct {
 	conf         config.ClientPoolConfig
 }
 
-func NewClientPool() *ClientPool {
+func NewClientPool(conf config.ClientPoolConfig) *ClientPool {
 	mutex := new(sync.Mutex)
 	return &ClientPool{
 		lock:       mutex,
 		cond:       sync.NewCond(mutex),
 		clients:    []*http.Client{},
 		failureMap: make(map[string]int),
+		conf:       conf,
 	}
 }
 
