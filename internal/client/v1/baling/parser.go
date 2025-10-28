@@ -38,13 +38,14 @@ func parseBook(body string) (*client.BookInfo, error) {
 
 	// parse dateStr
 	date := time.Now()
+	var parseDateErr error
 	dateStr := client.GetGoqueryContentWithoutChildren(doc.Find(bookDateGoquerySelector))
 	dateStr = strings.ReplaceAll(dateStr, "更新时间：", "")
 	if dateStr == "" {
 		parseErr = errors.Join(parseErr, client.ErrBookDateNotFound)
 	} else {
-		date, parseErr = time.Parse("2006-01-02", dateStr)
-		if parseErr != nil {
+		date, parseDateErr = time.Parse("2006-01-02", dateStr)
+		if parseDateErr != nil {
 			parseErr = errors.Join(parseErr, client.ErrBookDateParseFail)
 		}
 	}
@@ -63,7 +64,7 @@ func parseBook(body string) (*client.BookInfo, error) {
 		Title:         title,
 		Author:        writer,
 		Type:          bookType,
-		UpdateDate:    date,
+		UpdateDate:    date.UTC().Truncate(time.Second),
 		UpdateChapter: chapter,
 	}, parseErr
 }

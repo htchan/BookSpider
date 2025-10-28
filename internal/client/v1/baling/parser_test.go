@@ -2,20 +2,20 @@ package baling
 
 import (
 	"testing"
+	"time"
 
-	vendor "github.com/htchan/BookSpider/internal/vendorservice"
+	"github.com/htchan/BookSpider/internal/client/v1"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParser_ParseBook(t *testing.T) {
 	t.Parallel()
-	t.Skip()
 
 	tests := []struct {
-		name      string
-		body      string
-		want      *vendor.BookInfo
-		wantError error
+		name    string
+		body    string
+		want    *client.BookInfo
+		wantErr string
 	}{
 		{
 			name: "happy flow",
@@ -24,15 +24,15 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:author" content="author" />
 				<meta property="og:novel:category" content="type" />
 				<div><div class="txt_info"></div><div class="txt_info"></div>
-				<div class="txt_info"></div><div class="txt_info">更新时间：date</div></div>
+				<div class="txt_info"></div><div class="txt_info">2000-01-01</div></div>
 				<div class="yulan"><a>chapter name</a></div>
 				</div>
 			</data>`,
-			want: &vendor.BookInfo{
-				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter name",
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
 			},
-			wantError: nil,
+			wantErr: "",
 		},
 		{
 			name: "title not found",
@@ -40,14 +40,14 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:author" content="author" />
 				<meta property="og:novel:category" content="type" />
 				<div><div class="txt_info"></div><div class="txt_info"></div>
-				<div class="txt_info"></div><div class="txt_info">更新时间：date</div></div>
+				<div class="txt_info"></div><div class="txt_info">更新时间：2000-01-01</div></div>
 				<div class="yulan"><a>chapter name</a></div>
 			</data>`,
-			want: &vendor.BookInfo{
-				Writer: "author", Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter name",
+			want: &client.BookInfo{
+				Author: "author", Type: "type",
+				UpdateDate: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
 			},
-			wantError: vendor.ErrBookTitleNotFound,
+			wantErr: client.ErrBookTitleNotFound.Error(),
 		},
 		{
 			name: "writer not found",
@@ -55,14 +55,14 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:book_name" content="book name" />
 				<meta property="og:novel:category" content="type" />
 				<div><div class="txt_info"></div><div class="txt_info"></div>
-				<div class="txt_info"></div><div class="txt_info">更新时间：date</div></div>
+				<div class="txt_info"></div><div class="txt_info">更新时间：2000-01-01</div></div>
 				<div class="yulan"><a>chapter name</a></div>
 			</data>`,
-			want: &vendor.BookInfo{
+			want: &client.BookInfo{
 				Title: "book name", Type: "type",
-				UpdateDate: "date", UpdateChapter: "chapter name",
+				UpdateDate: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
 			},
-			wantError: vendor.ErrBookWriterNotFound,
+			wantErr: client.ErrBookWriterNotFound.Error(),
 		},
 		{
 			name: "type not found",
@@ -70,14 +70,14 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:book_name" content="book name" />
 				<meta property="og:novel:author" content="author" />
 				<div><div class="txt_info"></div><div class="txt_info"></div>
-				<div class="txt_info"></div><div class="txt_info">更新时间：date</div></div>
+				<div class="txt_info"></div><div class="txt_info">更新时间：2000-01-01</div></div>
 				<div class="yulan"><a>chapter name</a></div>
 			</data>`,
-			want: &vendor.BookInfo{
-				Title: "book name", Writer: "author",
-				UpdateDate: "date", UpdateChapter: "chapter name",
+			want: &client.BookInfo{
+				Title: "book name", Author: "author",
+				UpdateDate: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
 			},
-			wantError: vendor.ErrBookTypeNotFound,
+			wantErr: client.ErrBookTypeNotFound.Error(),
 		},
 		{
 			name: "date not found",
@@ -87,11 +87,11 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:category" content="type" />
 				<div class="yulan"><a>chapter name</a></div>
 			</data>`,
-			want: &vendor.BookInfo{
-				Title: "book name", Writer: "author", Type: "type",
-				UpdateChapter: "chapter name",
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Now().UTC().Truncate(time.Second), UpdateChapter: "chapter name",
 			},
-			wantError: vendor.ErrBookDateNotFound,
+			wantErr: client.ErrBookDateNotFound.Error(),
 		},
 		{
 			name: "chapter not found",
@@ -100,43 +100,47 @@ func TestParser_ParseBook(t *testing.T) {
 				<meta property="og:novel:author" content="author" />
 				<meta property="og:novel:category" content="type" />
 				<div><div class="txt_info"></div><div class="txt_info"></div>
-				<div class="txt_info"></div><div class="txt_info">更新时间：date</div></div>
+				<div class="txt_info"></div><div class="txt_info">更新时间：2000-01-01</div></div>
 			</data>`,
-			want: &vendor.BookInfo{
-				Title: "book name", Writer: "author", Type: "type",
-				UpdateDate: "date",
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
 			},
-			wantError: vendor.ErrBookChapterNotFound,
+			wantErr: client.ErrBookChapterNotFound.Error(),
 		},
 		{
-			name:      "all fields not found",
-			body:      "<data></data>",
-			want:      &vendor.BookInfo{},
-			wantError: vendor.ErrFieldsNotFound,
+			name: "all fields not found",
+			body: "<data></data>",
+			want: &client.BookInfo{
+				UpdateDate: time.Now().UTC().Truncate(time.Second),
+			},
+			wantErr: client.ErrFieldsNotFound.Error(),
 		},
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
 			got, err := parseBook(test.body)
 			assert.Equal(t, test.want, got)
-			assert.ErrorIs(t, err, test.wantError)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
 
 func TestParser_ParseChapterList(t *testing.T) {
 	t.Parallel()
-	t.Skip()
 
 	tests := []struct {
-		name      string
-		body      string
-		want      vendor.ChapterList
-		wantError error
+		name    string
+		body    string
+		want    client.ChapterEntryList
+		wantErr string
 	}{
 		{
 			name: "happy flow",
@@ -148,13 +152,13 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<li><a href="chapter url 4">chapter name 4</a></li>
 				</div>
 			</data>`,
-			want: vendor.ChapterList{
+			want: client.ChapterEntryList{
 				{URL: "chapter url 1", Title: "chapter name 1"},
 				{URL: "chapter url 2", Title: "chapter name 2"},
 				{URL: "chapter url 3", Title: "chapter name 3"},
 				{URL: "chapter url 4", Title: "chapter name 4"},
 			},
-			wantError: nil,
+			wantErr: "",
 		},
 		{
 			name: "2nd chapter missing href",
@@ -166,13 +170,13 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<li><a href="chapter url 4">chapter name 4</a></li>
 				</div>
 			</data>`,
-			want: vendor.ChapterList{
+			want: client.ChapterEntryList{
 				{URL: "chapter url 1", Title: "chapter name 1"},
 				{URL: "", Title: "chapter name 2"},
 				{URL: "chapter url 3", Title: "chapter name 3"},
 				{URL: "chapter url 4", Title: "chapter name 4"},
 			},
-			wantError: vendor.ErrChapterListUrlNotFound,
+			wantErr: client.ErrChapterListUrlNotFound.Error(),
 		},
 		{
 			name: "3nd chapter missing title",
@@ -184,19 +188,19 @@ func TestParser_ParseChapterList(t *testing.T) {
 					<li><a href="chapter url 4">chapter name 4</a></li>
 				</div>
 			</data>`,
-			want: vendor.ChapterList{
+			want: client.ChapterEntryList{
 				{URL: "chapter url 1", Title: "chapter name 1"},
 				{URL: "chapter url 2", Title: "chapter name 2"},
 				{URL: "chapter url 3", Title: ""},
 				{URL: "chapter url 4", Title: "chapter name 4"},
 			},
-			wantError: vendor.ErrChapterListTitleNotFound,
+			wantErr: client.ErrChapterListTitleNotFound.Error(),
 		},
 		{
-			name:      "no chapters found",
-			body:      `<data></data>`,
-			want:      nil,
-			wantError: vendor.ErrChapterListEmpty,
+			name:    "no chapters found",
+			body:    `<data></data>`,
+			want:    nil,
+			wantErr: client.ErrChapterListEmpty.Error(),
 		},
 	}
 
@@ -207,20 +211,23 @@ func TestParser_ParseChapterList(t *testing.T) {
 
 			got, err := parseChapterList(test.body)
 			assert.Equal(t, test.want, got)
-			assert.ErrorIs(t, err, test.wantError)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
 
 func TestParser_ParseChapter(t *testing.T) {
 	t.Parallel()
-	t.Skip()
 
 	tests := []struct {
-		name      string
-		body      string
-		want      *vendor.ChapterInfo
-		wantError error
+		name    string
+		body    string
+		want    *client.ChapterContent
+		wantErr string
 	}{
 		{
 			name: "happy flow",
@@ -228,10 +235,10 @@ func TestParser_ParseChapter(t *testing.T) {
 				<div class="date"><h1>chapter name</h1></div>
 				<div class="book_content">chapter content</div>
 			</data>`,
-			want: &vendor.ChapterInfo{
+			want: &client.ChapterContent{
 				Title: "chapter name", Body: "chapter content",
 			},
-			wantError: nil,
+			wantErr: "",
 		},
 		{
 			name: "title empty",
@@ -239,10 +246,10 @@ func TestParser_ParseChapter(t *testing.T) {
 			<div class="date"><h1></h1></div>
 			<div class="book_content">chapter content</div>
 			</data>`,
-			want: &vendor.ChapterInfo{
+			want: &client.ChapterContent{
 				Title: "", Body: "chapter content",
 			},
-			wantError: vendor.ErrChapterTitleNotFound,
+			wantErr: client.ErrChapterTitleNotFound.Error(),
 		},
 		{
 			name: "body empty",
@@ -250,16 +257,16 @@ func TestParser_ParseChapter(t *testing.T) {
 			<div class="date"><h1>chapter name</h1></div>
 			<div class="book_content"></div>
 			</data>`,
-			want: &vendor.ChapterInfo{
+			want: &client.ChapterContent{
 				Title: "chapter name", Body: "",
 			},
-			wantError: vendor.ErrChapterContentNotFound,
+			wantErr: client.ErrChapterContentNotFound.Error(),
 		},
 		{
-			name:      "all fields not found",
-			body:      "<data></data>",
-			want:      &vendor.ChapterInfo{},
-			wantError: vendor.ErrFieldsNotFound,
+			name:    "all fields not found",
+			body:    "<data></data>",
+			want:    &client.ChapterContent{},
+			wantErr: client.ErrFieldsNotFound.Error(),
 		},
 	}
 
@@ -270,14 +277,17 @@ func TestParser_ParseChapter(t *testing.T) {
 
 			got, err := parseChapter(test.body)
 			assert.Equal(t, test.want, got)
-			assert.ErrorIs(t, err, test.wantError)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }
 
 func TestParser_IsAvailable(t *testing.T) {
 	t.Parallel()
-	t.Skip()
 
 	tests := []struct {
 		name string
@@ -286,7 +296,7 @@ func TestParser_IsAvailable(t *testing.T) {
 	}{
 		{
 			name: "return true",
-			body: "黃金屋",
+			body: "80txt",
 			want: true,
 		},
 		{
