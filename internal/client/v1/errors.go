@@ -1,6 +1,9 @@
 package client
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrFieldsNotFound = errors.New("book fields not found")
@@ -19,3 +22,11 @@ var (
 	ErrChapterTitleNotFound   = errors.New("chapter title not found")
 	ErrChapterContentNotFound = errors.New("chapter content not found")
 )
+
+type ErrStatusCode struct {
+	StatusCode int
+}
+
+func (e ErrStatusCode) Error() string {
+	return fmt.Sprintf("invalid status code: %d", e.StatusCode)
+}
