@@ -44,6 +44,8 @@ func TestMain(m *testing.M) {
 					<div class="date"><h1>chapter name</h1></div>
 					<div class="book_content">chapter content</div>
 				</data>`))
+			} else if strings.Contains(r.URL.Path, "available") {
+				w.Write([]byte(`80txt`))
 			}
 		} else if strings.Contains(r.URL.Path, "not_found") {
 			w.WriteHeader(http.StatusNotFound)
