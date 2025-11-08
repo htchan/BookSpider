@@ -1,0 +1,328 @@
+package uukanshu
+
+import (
+	"testing"
+	"time"
+
+	"github.com/htchan/BookSpider/internal/client/v1"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestParser_ParseBook(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		body    string
+		want    *client.BookInfo
+		wantErr string
+	}{
+		{
+			name: "happy flow",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h1><a title="book name最新章节"></a></h1>
+					<h2><a>author</a></h2>
+					<div class="shijian">5月</div>
+				</dd></dl></div>
+				<div class="weizhi"><div class="path"><a></a><a>type</a></div></div>
+				<div class="zhangjie"><ul id="chapterList"><li><a>chapter name</a></li></ul></div>
+			</data>`,
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Date(time.Now().Year(), 5, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
+			},
+			wantErr: "",
+		},
+		{
+			name: "title not found",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h2><a>author</a></h2>
+					<div class="shijian">5月</div>
+				</dd></dl></div>
+				<div class="weizhi"><div class="path"><a></a><a>type</a></div></div>
+				<div class="zhangjie"><ul id="chapterList"><li><a>chapter name</a></li></ul></div>
+			</data>`,
+			want: &client.BookInfo{
+				Author: "author", Type: "type",
+				UpdateDate: time.Date(time.Now().Year(), 5, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
+			},
+			wantErr: client.ErrBookTitleNotFound.Error(),
+		},
+		{
+			name: "writer not found",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h1><a title="book name最新章节"></a></h1>
+					<div class="shijian">5月</div>
+				</dd></dl></div>
+				<div class="weizhi"><div class="path"><a></a><a>type</a></div></div>
+				<div class="zhangjie"><ul id="chapterList"><li><a>chapter name</a></li></ul></div>
+			</data>`,
+			want: &client.BookInfo{
+				Title: "book name", Type: "type",
+				UpdateDate: time.Date(time.Now().Year(), 5, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
+			},
+			wantErr: client.ErrBookWriterNotFound.Error(),
+		},
+		{
+			name: "type not found",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h1><a title="book name最新章节"></a></h1>
+					<h2><a>author</a></h2>
+					<div class="shijian">5月</div>
+				</dd></dl></div>
+				<div class="zhangjie"><ul id="chapterList"><li><a>chapter name</a></li></ul></div>
+			</data>`,
+			want: &client.BookInfo{
+				Title: "book name", Author: "author",
+				UpdateDate: time.Date(time.Now().Year(), 5, 1, 0, 0, 0, 0, time.UTC), UpdateChapter: "chapter name",
+			},
+			wantErr: client.ErrBookTypeNotFound.Error(),
+		},
+		{
+			name: "date not found",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h1><a title="book name最新章节"></a></h1>
+					<h2><a>author</a></h2>
+				</dd></dl></div>
+				<div class="weizhi"><div class="path"><a></a><a>type</a></div></div>
+				<div class="zhangjie"><ul id="chapterList"><li><a>chapter name</a></li></ul></div>
+			</data>`,
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Now().UTC().Truncate(time.Second), UpdateChapter: "chapter name",
+			},
+			wantErr: client.ErrBookDateNotFound.Error(),
+		},
+		{
+			name: "chapter not found",
+			body: `<data>
+				<div class="xiaoshuo_content"><dl class="jieshao"><dd class="jieshao_content">
+					<h1><a title="book name最新章节"></a></h1>
+					<h2><a>author</a></h2>
+					<div class="shijian">5月</div>
+				</dd></dl></div>
+				<div class="weizhi"><div class="path"><a></a><a>type</a></div></div>
+			</data>`,
+			want: &client.BookInfo{
+				Title: "book name", Author: "author", Type: "type",
+				UpdateDate: time.Date(time.Now().Year(), 5, 1, 0, 0, 0, 0, time.UTC),
+			},
+			wantErr: client.ErrBookChapterNotFound.Error(),
+		},
+		{
+			name: "all fields not found",
+			body: "<data></data>",
+			want: &client.BookInfo{
+				UpdateDate: time.Now().UTC().Truncate(time.Second),
+			},
+			wantErr: client.ErrFieldsNotFound.Error(),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := parseBook(test.body)
+			assert.Equal(t, test.want, got)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParser_ParseChapterList(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		body    string
+		want    client.ChapterEntryList
+		wantErr string
+	}{
+		{
+			name: "happy flow",
+			body: `<data>
+				<div class="zhangjie"><ul id="chapterList">
+					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="chapter url 3">chapter name 3</a></li>
+					<li><a href="chapter url 2">chapter name 2</a></li>
+					<li><a href="chapter url 1">chapter name 1</a></li>
+				</ul></div>
+			</data>`,
+			want: client.ChapterEntryList{
+				{URL: "chapter url 1", Title: "chapter name 1"},
+				{URL: "chapter url 2", Title: "chapter name 2"},
+				{URL: "chapter url 3", Title: "chapter name 3"},
+				{URL: "chapter url 4", Title: "chapter name 4"},
+			},
+			wantErr: "",
+		},
+		{
+			name: "2nd chapter missing href",
+			body: `<data>
+				<div class="zhangjie"><ul id="chapterList">
+					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="chapter url 3">chapter name 3</a></li>
+					<li><a href="">chapter name 2</a></li>
+					<li><a href="chapter url 1">chapter name 1</a></li>
+				</ul></div>
+			</data>`,
+			want: client.ChapterEntryList{
+				{URL: "chapter url 1", Title: "chapter name 1"},
+				{URL: "", Title: "chapter name 2"},
+				{URL: "chapter url 3", Title: "chapter name 3"},
+				{URL: "chapter url 4", Title: "chapter name 4"},
+			},
+			wantErr: client.ErrChapterListUrlNotFound.Error(),
+		},
+		{
+			name: "3nd chapter missing title",
+			body: `<data>
+				<div class="zhangjie"><ul id="chapterList">
+					<li><a href="chapter url 4">chapter name 4</a></li>
+					<li><a href="chapter url 3"></a></li>
+					<li><a href="chapter url 2">chapter name 2</a></li>
+					<li><a href="chapter url 1">chapter name 1</a></li>
+				</ul></div>
+			</data>`,
+			want: client.ChapterEntryList{
+				{URL: "chapter url 1", Title: "chapter name 1"},
+				{URL: "chapter url 2", Title: "chapter name 2"},
+				{URL: "chapter url 3", Title: ""},
+				{URL: "chapter url 4", Title: "chapter name 4"},
+			},
+			wantErr: client.ErrChapterListTitleNotFound.Error(),
+		},
+		{
+			name:    "no chapters found",
+			body:    `<data></data>`,
+			want:    nil,
+			wantErr: client.ErrChapterListEmpty.Error(),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := parseChapterList(test.body)
+			assert.Equal(t, test.want, got)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParser_ParseChapter(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		body    string
+		want    *client.ChapterContent
+		wantErr string
+	}{
+		{
+			name: "happy flow",
+			body: `<data>
+				<div class="zhengwen_box"><div class="box_left"><div class="w_main">
+					<div class="h1title"><h1 id="timu">chapter name</h1></div>
+					<div class="contentbox"><div id="contentbox">chapter content</div></div>
+				</div></div></div>
+			</data>`,
+			want: &client.ChapterContent{
+				Title: "chapter name", Body: "chapter content",
+			},
+			wantErr: "",
+		},
+		{
+			name: "title empty",
+			body: `<data>
+				<div class="zhengwen_box"><div class="box_left"><div class="w_main">
+					<div class="contentbox"><div id="contentbox">chapter content</div></div>
+				</div></div></div>
+			</data>`,
+			want: &client.ChapterContent{
+				Title: "", Body: "chapter content",
+			},
+			wantErr: client.ErrChapterTitleNotFound.Error(),
+		},
+		{
+			name: "body empty",
+			body: `<data>
+				<div class="zhengwen_box"><div class="box_left"><div class="w_main">
+					<div class="h1title"><h1 id="timu">chapter name</h1></div>
+				</div></div></div>
+			</data>`,
+			want: &client.ChapterContent{
+				Title: "chapter name", Body: "",
+			},
+			wantErr: client.ErrChapterContentNotFound.Error(),
+		},
+		{
+			name:    "all fields not found",
+			body:    "<data></data>",
+			want:    &client.ChapterContent{},
+			wantErr: client.ErrFieldsNotFound.Error(),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := parseChapter(test.body)
+			assert.Equal(t, test.want, got)
+			if test.wantErr != "" {
+				assert.ErrorContains(t, err, test.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParser_IsAvailable(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		body string
+		want bool
+	}{
+		{
+			name: "return true",
+			body: "UU看书",
+			want: true,
+		},
+		{
+			name: "return false",
+			body: "",
+			want: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := isAvailable(test.body)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
