@@ -37,7 +37,7 @@ func parseBook(body string) (*client.BookInfo, error) {
 	}
 
 	// parse dateStr
-	date := time.Now()
+	date := time.Now().UTC().Truncate(time.Minute)
 	var parseDateErr error
 	dateStr := doc.Find(bookDateGoquerySelector).AttrOr("content", "")
 	if dateStr == "" {

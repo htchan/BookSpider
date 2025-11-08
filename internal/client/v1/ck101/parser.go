@@ -37,7 +37,7 @@ func parseBook(body string) (*client.BookInfo, error) {
 	}
 
 	// parse dateStr
-	date := time.Now()
+	date := time.Now().UTC().Truncate(time.Minute)
 	var parseDateErr error
 	dateStr := client.GetGoqueryContentWithoutChildren(doc.Find(bookDateGoquerySelector))
 	dateStr = strings.ReplaceAll(dateStr, "更新时间：", "")

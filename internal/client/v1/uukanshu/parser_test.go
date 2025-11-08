@@ -94,7 +94,7 @@ func TestParser_ParseBook(t *testing.T) {
 			</data>`,
 			want: &client.BookInfo{
 				Title: "book name", Author: "author", Type: "type",
-				UpdateDate: time.Now().UTC().Truncate(time.Second), UpdateChapter: "chapter name",
+				UpdateDate: time.Now().UTC().Truncate(time.Minute), UpdateChapter: "chapter name",
 			},
 			wantErr: client.ErrBookDateNotFound.Error(),
 		},
@@ -118,7 +118,7 @@ func TestParser_ParseBook(t *testing.T) {
 			name: "all fields not found",
 			body: "<data></data>",
 			want: &client.BookInfo{
-				UpdateDate: time.Now().UTC().Truncate(time.Second),
+				UpdateDate: time.Now().UTC().Truncate(time.Minute),
 			},
 			wantErr: client.ErrFieldsNotFound.Error(),
 		},

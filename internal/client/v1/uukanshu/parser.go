@@ -40,20 +40,18 @@ func parseBook(body string) (*client.BookInfo, error) {
 	}
 
 	// parse dateStr
-	date := time.Now()
-	var parseDateErr error
+	date := time.Now().UTC().Truncate(time.Minute)
 	dateStr := client.GetGoqueryContentWithoutChildren(doc.Find(bookDateGoquerySelector))
 	dateStr = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(dateStr, "更新时间：", ""), " ", ""), "\t", ""), "\n", "")
 	if dateStr == "" {
 		parseErr = errors.Join(parseErr, client.ErrBookDateNotFound)
 	} else {
 		if regexp.MustCompile("\\d+月").MatchString(dateStr) {
-			date, parseDateErr = time.Parse("1月", dateStr)
+			parsedDate, parseDateErr := time.Parse("1月", dateStr)
 			if parseDateErr != nil {
 				parseErr = errors.Join(parseErr, client.ErrBookDateParseFail)
 			} else {
-				now := time.Now()
-				date = time.Date(now.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
+				date = time.Date(date.Year(), parsedDate.Month(), 1, 0, 0, 0, 0, time.UTC)
 			}
 		}
 	}
