@@ -8,7 +8,7 @@ import (
 
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -19,11 +19,11 @@ import (
 // @Produce		json
 // @Success		200	{object}	map[string]repo.Summary
 // @Router			/api/book-spider/info [get]
-func GeneralInfoAPIHandler(services map[string]service.Service, readDataService service.ReadDataService) http.HandlerFunc {
+func GeneralInfoAPIHandler(availableSites []string, readDataService service.ReadDataService) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		servInfo := make(map[string]repo.Summary)
-		for _, serv := range services {
-			servInfo[serv.Name()] = readDataService.Stats(req.Context(), serv.Name())
+		for _, name := range availableSites {
+			servInfo[name] = readDataService.Stats(req.Context(), name)
 		}
 		json.NewEncoder(res).Encode(servInfo)
 	}

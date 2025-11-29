@@ -13,7 +13,7 @@ import (
 	mockservice "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -24,7 +24,7 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 	tests := []struct {
 		name              string
 		setupReadDataServ func(ctrl *gomock.Controller) service.ReadDataService
-		setupServs        func(ctrl *gomock.Controller) map[string]service.Service
+		availableSites    []string
 		url               string
 		expectRes         string
 	}{
@@ -37,20 +37,9 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 
 				return serv
 			},
-			setupServs: func(ctrl *gomock.Controller) map[string]service.Service {
-				serv1 := mockservice.NewMockService(ctrl)
-				serv1.EXPECT().Name().Return("test1").Times(2)
-
-				serv2 := mockservice.NewMockService(ctrl)
-				serv2.EXPECT().Name().Return("test2").Times(2)
-
-				return map[string]service.Service{
-					"test1": serv1,
-					"test2": serv2,
-				}
-			},
-			url:       "https://localhost/data",
-			expectRes: `{"test1":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null},"test2":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}}`,
+			availableSites: []string{"test1", "test2"},
+			url:            "https://localhost/data",
+			expectRes:      `{"test1":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null},"test2":{"BookCount":0,"WriterCount":0,"ErrorCount":0,"UniqueBookCount":0,"MaxBookID":0,"LatestSuccessID":0,"DownloadCount":0,"StatusCount":null}}`,
 		},
 	}
 
@@ -69,7 +58,7 @@ func Test_GeneralInfoAPIHandler(t *testing.T) {
 			}
 
 			res := httptest.NewRecorder()
-			GeneralInfoAPIHandler(test.setupServs(ctrl), test.setupReadDataServ(ctrl)).ServeHTTP(res, req)
+			GeneralInfoAPIHandler(test.availableSites, test.setupReadDataServ(ctrl)).ServeHTTP(res, req)
 
 			assert.Equal(t, test.expectRes, strings.Trim(res.Body.String(), "\n"))
 		})

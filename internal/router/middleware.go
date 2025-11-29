@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
