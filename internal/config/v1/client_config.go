@@ -19,4 +19,7 @@ type ClientPoolConfig struct {
 	FailureCooldownInterval    time.Duration `yaml:"failure_cooldown_interval" json:"failure_cooldown_interval"`
 	SuccessCooldownInterval    time.Duration `yaml:"success_cooldown_interval" json:"success_cooldown_interval"`
 	ClientTimeout              time.Duration `yaml:"client_timeout" json:"client_timeout"`
+	Socks5ProxySourceURL       string        `yaml:"socks5_proxy_source_url" json:"socks5_proxy_source_url"`
+	Socks4ProxySourceURL       string        `yaml:"socks4_proxy_source_url" json:"socks4_proxy_source_url"`
+	HTTPProxySourceURL         string        `yaml:"http_proxy_source_url" json:"http_proxy_source_url"`
 }

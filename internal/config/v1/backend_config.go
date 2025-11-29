@@ -7,5 +7,6 @@ type BackendConfig struct {
 	Database DatabaseConfig `yaml:"database" json:"database"`
 	Trace    TraceConfig    `yaml:"trace" json:"trace"`
 
-	StoragePath string `yaml:"storage_path" json:"storage_path"`
+	StoragePath    string   `yaml:"storage_path" json:"storage_path"`
+	AvailableSites []string `yaml:"available_sites" json:"available_sites"`
 }
