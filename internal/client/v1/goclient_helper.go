@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/htchan/BookSpider/internal/config/v3"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	"github.com/htchan/goclient"
 	pool "github.com/htchan/goclient/requester/client_pool"
 )

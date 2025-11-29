@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/htchan/BookSpider/internal/client/v1"
-	"github.com/htchan/BookSpider/internal/config/v3"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	"github.com/htchan/goclient"
 	"github.com/htchan/goclient/middlewares/retry"
 	pool "github.com/htchan/goclient/requester/client_pool"

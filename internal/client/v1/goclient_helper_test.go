@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/htchan/BookSpider/internal/config/v3"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	"github.com/stretchr/testify/assert"
 )
 

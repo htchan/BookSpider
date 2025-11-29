@@ -25,6 +25,7 @@ type ChapterContent struct {
 	Body  string
 }
 
+//go:generate go tool mockgen -destination=../../mock/client/v1/client.go -package=mockclient . Client
 type Client interface {
 	GetBookInfo(ctx context.Context, bookID string) (*BookInfo, error)
 	GetBookChapterList(ctx context.Context, bookID string) (ChapterEntryList, error)
