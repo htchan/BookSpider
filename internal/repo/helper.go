@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/htchan/BookSpider/internal/config/v2"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 )
