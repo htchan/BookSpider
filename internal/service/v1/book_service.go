@@ -7,14 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 
 	"github.com/google/uuid"
 	"github.com/htchan/BookSpider/internal/client/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	"github.com/rs/zerolog"
-	"golang.org/x/sync/semaphore"
 )
 
 type bookServiceImpl struct {
@@ -56,16 +54,27 @@ func isBookUpdated(bk *model.Book, bkInfo *client.BookInfo) bool {
 func (s *bookServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 	bkInfo, err := s.bookClient(bk).GetBookInfo(ctx, strconv.Itoa(bk.ID))
 	if err != nil {
-		bk.Error = err
-		return s.rpo.UpdateBook(ctx, bk)
+		if bk.Status == model.StatusError && bk.Error == nil {
+			bk.HashCode = model.GenerateHash()
+			bk.Error = err
+
+			saveBkErr := s.rpo.CreateBook(ctx, bk)
+			saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
+			return errors.Join(err, saveBkErr, saveErrErr)
+		} else {
+			return err
+		}
 	}
 
 	if isNewBook(bk, bkInfo) {
 		bk.Title, bk.Writer.Name, bk.Type = bkInfo.Title, bkInfo.Author, bkInfo.Type
-		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate.String(), bkInfo.UpdateChapter
+		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate.UTC().String(), bkInfo.UpdateChapter
 
 		bk.HashCode = model.GenerateHash()
 		bk.Status = model.StatusInProgress
+		if bk.IsEnd() {
+			bk.Status = model.StatusEnd
+		}
 		bk.Error = nil
 
 		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
@@ -82,11 +91,10 @@ func (s *bookServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error 
 		bk.UpdateDate, bk.UpdateChapter = bkInfo.UpdateDate.String(), bkInfo.UpdateChapter
 
 		bk.Status = model.StatusInProgress
-		bk.Error = nil
-
-		if bk.Status == model.StatusError {
-			bk.Status = model.StatusInProgress
+		if bk.IsEnd() {
+			bk.Status = model.StatusEnd
 		}
+		bk.Error = nil
 
 		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
 		saveBkErr := s.rpo.UpdateBook(ctx, bk)
@@ -131,20 +139,12 @@ func (s *bookServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) erro
 
 	logger.Info().Msg("download chapters")
 	chapters := make(model.Chapters, len(chapterList))
-	var wg sync.WaitGroup
 	failedChapterCount := 0
-	sema := semaphore.NewWeighted(10)
 
 	for i := range chapters {
-		i := i
 		chapters[i] = model.NewChapter(i, (chapterList)[i].URL, (chapterList)[i].Title)
-		wg.Add(1)
-		sema.Acquire(ctx, 1)
 
-		go func(ch *model.Chapter) {
-			defer wg.Done()
-			defer sema.Release(1)
-
+		func(ch *model.Chapter) {
 			chapterLogger := logger.With().
 				Str("chapter_worker_id", uuid.New().String()).
 				Str("chapter_url", ch.URL).
@@ -158,8 +158,6 @@ func (s *bookServiceImpl) DownloadBook(ctx context.Context, bk *model.Book) erro
 			}
 		}(&chapters[i])
 	}
-
-	wg.Wait()
 
 	if failedChapterCount > 50 || failedChapterCount*10 > len(chapters) {
 
