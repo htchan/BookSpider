@@ -108,3 +108,21 @@ func (bk Book) Checksum() string {
 func (bk *Book) FormatHashCode() string {
 	return strconv.FormatInt(int64(bk.HashCode), 36)
 }
+
+func (bk *Book) IsEnd() bool {
+	//TODO: fetch all chapter
+	//hint: use book.generateEmptyChapters
+	//TODO: check last n chapter to see if they contains any end keywords
+	//hint: use len(chapters) and the n should come from book config
+	if bk.UpdateDate < strconv.Itoa(time.Now().Year()-1) {
+		return true
+	}
+
+	chapter := strings.ReplaceAll(bk.UpdateChapter, " ", "")
+	for _, keyword := range ChapterEndKeywords {
+		if strings.Contains(chapter, keyword) {
+			return true
+		}
+	}
+	return false
+}

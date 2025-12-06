@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
@@ -137,6 +138,50 @@ func TestBook_String(t *testing.T) {
 			t.Parallel()
 
 			result := test.bk.String()
+
+			assert.Equal(t, test.expect, result)
+		})
+	}
+}
+
+func TestBook_IsEnd(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		bk     *Book
+		expect bool
+	}{
+		{
+			name: "not end",
+			bk: &Book{
+				UpdateDate: strconv.Itoa(time.Now().Year()),
+			},
+			expect: false,
+		},
+		{
+			name: "end/too long not updated",
+			bk: &Book{
+				UpdateDate: strconv.Itoa(time.Now().Year() - 2),
+			},
+			expect: true,
+		},
+		{
+			name: "end/chapter contains end keywords",
+			bk: &Book{
+				UpdateDate:    strconv.Itoa(time.Now().Year()),
+				UpdateChapter: "結 局",
+			},
+			expect: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := test.bk.IsEnd()
 
 			assert.Equal(t, test.expect, result)
 		})
