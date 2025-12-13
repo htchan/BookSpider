@@ -9,8 +9,8 @@ type ClientConfig struct {
 }
 
 type RetryConfig struct {
-	MaxRetryCount int           `yaml:"max_retry_count" json:"max_retry_count"`
-	RetryInterval time.Duration `yaml:"retry_interval" json:"retry_interval"`
+	MaxRetryCount       int           `yaml:"max_retry_count" json:"max_retry_count"`
+	LinearRetryInterval time.Duration `yaml:"linear_retry_interval" json:"linear_retry_interval"`
 }
 
 type ClientPoolConfig struct {

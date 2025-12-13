@@ -1,0 +1,19 @@
+worker_count: 10
+available_sites:
+  - site1
+  - site2
+clients:
+  test:
+    decode_method: big5
+    retry:
+      max_retry_count: 20
+      linear_retry_interval: 3s
+    pool:
+      refresh_interval: 168h
+      drop_client_failure_threshold: 20
+      failure_cooldown_interval: 60s
+      success_cooldown_interval: 10s
+      client_timeout: 60s
+      socks5_proxy_source_url: https://test.com/socks5
+      socks4_proxy_source_url: https://test.com/socks4
+      http_proxy_source_url: https://test.com/http

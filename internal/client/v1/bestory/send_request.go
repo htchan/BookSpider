@@ -33,7 +33,7 @@ func newClient(ctx context.Context, conf config.ClientConfig) *goclient.Client {
 			retry.NewRetryMiddleware(
 				conf.Retry.MaxRetryCount,
 				retry.RetryForError,
-				retry.LinearRetryInterval(conf.Retry.RetryInterval),
+				retry.LinearRetryInterval(conf.Retry.LinearRetryInterval),
 			),
 			client.RaiseErrorForNon2xxMiddleware,
 		),
