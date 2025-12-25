@@ -18,6 +18,7 @@ type PatchStorageResult struct {
 //go:generate go tool mockgen -destination=../../mock/service/v1/book_service.go -package=mockservice . BookService
 type BookService interface {
 	// CreateBook(context.Context, *model.Book) error
+	SupportBook(*model.Book) bool
 	UpdateBook(context.Context, *model.Book) error
 	DownloadBook(context.Context, *model.Book) error
 	ProcessBook(context.Context, *model.Book) error // do all create / update + download (optional)

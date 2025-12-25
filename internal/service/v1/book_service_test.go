@@ -49,6 +49,46 @@ func TestNewBookService(t *testing.T) {
 	}
 }
 
+func TestBookServiceImpl_SupportBook(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name string
+		clis map[string]client.Client
+		bk   *model.Book
+		want bool
+	}{
+		{
+			name: "happy flow/support book",
+			clis: map[string]client.Client{
+				"test": nil,
+			},
+			bk: &model.Book{
+				Site: "test",
+			},
+			want: true,
+		},
+		{
+			name: "happy flow/not support book",
+			clis: map[string]client.Client{
+				"test": nil,
+			},
+			bk: &model.Book{
+				Site: "unknown",
+			},
+			want: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			serv := &bookServiceImpl{clis: test.clis}
+			got := serv.SupportBook(test.bk)
+			assert.Equal(t, test.want, got)
+		})
+	}
+}
+
 func Test_bookServiceImpl_bookFileLocation(t *testing.T) {
 	t.Parallel()
 

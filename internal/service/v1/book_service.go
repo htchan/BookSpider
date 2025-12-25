@@ -29,6 +29,11 @@ func NewBookService(clis map[string]client.Client, rpo repo.Repository, storageP
 	}
 }
 
+func (s *bookServiceImpl) SupportBook(bk *model.Book) bool {
+	_, ok := s.clis[bk.Site]
+	return ok
+}
+
 func (s *bookServiceImpl) bookFileLocation(bk *model.Book) string {
 	filename := fmt.Sprintf("%d.txt", bk.ID)
 	if bk.HashCode > 0 {
