@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/siongui/gojianfan"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Error struct {
@@ -120,4 +121,16 @@ func (bk *Book) IsEnd() bool {
 		}
 	}
 	return false
+}
+
+func (bk *Book) OtelAttributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("book_site", bk.Site),
+		attribute.String("book_id", bk.String()),
+		attribute.String("book_hash_code", bk.FormatHashCode()),
+		attribute.String("book_title", bk.Title),
+		attribute.String("book_writer", bk.Writer.Name),
+		attribute.String("book_status", bk.Status.String()),
+		attribute.Bool("book_is_downloaded", bk.IsDownloaded),
+	}
 }
