@@ -66,7 +66,7 @@ func BookSearchAPIHandler(res http.ResponseWriter, req *http.Request) {
 		logger.Error().Err(err).Msg("query books failed")
 		writeError(res, 400, err)
 	} else {
-		json.NewEncoder(res).Encode(booksResp{bks})
+		json.NewEncoder(res).Encode(toBooksResp(bks))
 	}
 }
 
@@ -89,7 +89,7 @@ func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
 		logger.Error().Err(err).Msg("random books railed")
 		writeError(res, 400, err)
 	} else {
-		json.NewEncoder(res).Encode(booksResp{bks})
+		json.NewEncoder(res).Encode(toBooksResp(bks))
 	}
 }
 
