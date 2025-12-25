@@ -170,7 +170,7 @@ func Test_isNewBook(t *testing.T) {
 			name: "book with error status and nil error is new",
 			bk: &model.Book{
 				Status: model.StatusError,
-				Error:  nil,
+				Error:  model.Error{Err: nil},
 			},
 			bkInfo: nil,
 			want:   true,
@@ -179,7 +179,7 @@ func Test_isNewBook(t *testing.T) {
 			name: "book with error status and non-nil error is not new",
 			bk: &model.Book{
 				Status: model.StatusError,
-				Error:  assert.AnError,
+				Error:  model.Error{Err: assert.AnError},
 			},
 			bkInfo: nil,
 			want:   false,
@@ -486,12 +486,12 @@ func Test_bookServiceImpl_UpdateBook(t *testing.T) {
 				repo := mockrepo.NewMockRepository(ctrl)
 				repo.EXPECT().
 					CreateBook(gomock.Any(), &model.Book{
-						ID: 1, Site: "test", HashCode: int(time.Now().Unix()), Status: model.StatusError, Error: assert.AnError,
+						ID: 1, Site: "test", HashCode: int(time.Now().Unix()), Status: model.StatusError, Error: model.Error{Err: assert.AnError},
 					}).
 					DoAndReturn(removeBookHaah)
 				repo.EXPECT().
 					SaveError(gomock.Any(), &model.Book{
-						ID: 1, Site: "test", Status: model.StatusError, Error: assert.AnError,
+						ID: 1, Site: "test", Status: model.StatusError, Error: model.Error{Err: assert.AnError},
 					}, assert.AnError).
 					Return(nil)
 
@@ -505,7 +505,7 @@ func Test_bookServiceImpl_UpdateBook(t *testing.T) {
 			wantBk: &model.Book{
 				ID:    1,
 				Site:  "test",
-				Error: assert.AnError,
+				Error: model.Error{Err: assert.AnError},
 			},
 			wantErr: assert.AnError,
 		},
@@ -557,7 +557,7 @@ func Test_bookServiceImpl_UpdateBook(t *testing.T) {
 			bk: &model.Book{
 				Site: "test", ID: 1,
 				Status: model.StatusError,
-				Error:  assert.AnError,
+				Error:  model.Error{Err: assert.AnError},
 			},
 			serv: func(ctrl *gomock.Controller) BookService {
 				cli := mockclient.NewMockClient(ctrl)
@@ -640,7 +640,7 @@ func Test_bookServiceImpl_UpdateBook(t *testing.T) {
 			bk: &model.Book{
 				Site: "test", ID: 1,
 				Status: model.StatusError,
-				Error:  assert.AnError,
+				Error:  model.Error{Err: assert.AnError},
 			},
 			serv: func(ctrl *gomock.Controller) BookService {
 				cli := mockclient.NewMockClient(ctrl)
@@ -1324,7 +1324,7 @@ func Test_bookServiceImpl_ProcessBook(t *testing.T) {
 				repo := mockrepo.NewMockRepository(ctrl)
 				repo.EXPECT().
 					CreateBook(gomock.Any(), &model.Book{
-						ID: 3, Site: "test", HashCode: int(time.Now().Unix()), Status: model.StatusError, Error: assert.AnError,
+						ID: 3, Site: "test", HashCode: int(time.Now().Unix()), Status: model.StatusError, Error: model.Error{Err: assert.AnError},
 					}).
 					DoAndReturn(func(_ context.Context, bk *model.Book) error {
 						bk.HashCode = 0
@@ -1332,7 +1332,7 @@ func Test_bookServiceImpl_ProcessBook(t *testing.T) {
 					})
 				repo.EXPECT().
 					SaveError(gomock.Any(), &model.Book{
-						ID: 3, Site: "test", Status: model.StatusError, Error: assert.AnError,
+						ID: 3, Site: "test", Status: model.StatusError, Error: model.Error{Err: assert.AnError},
 					}, assert.AnError).
 					Return(nil)
 

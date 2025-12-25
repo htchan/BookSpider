@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -13,19 +12,41 @@ import (
 	"github.com/siongui/gojianfan"
 )
 
-type Book struct {
-	Site          string
-	ID            int
-	HashCode      int
-	Title         string
-	Type          string
-	UpdateDate    string
-	UpdateChapter string
-	Status        StatusCode
-	IsDownloaded  bool
+type Error struct {
+	Err error
+}
 
-	Writer Writer
-	Error  error
+func (e Error) MarshalJSON() ([]byte, error) {
+	if e.Err != nil {
+		return []byte(`"` + e.Err.Error() + `"`), nil
+	}
+
+	return []byte(`""`), nil
+}
+
+func (e *Error) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), `"`)
+	if str == "" {
+		e.Err = nil
+	} else {
+		e.Err = errors.New(str)
+	}
+	return nil
+}
+
+type Book struct {
+	Site          string     `json:"site"`
+	ID            int        `json:"id"`
+	HashCode      int        `json:"hash_code"`
+	Title         string     `json:"title"`
+	Type          string     `json:"type"`
+	UpdateDate    string     `json:"update_date"`
+	UpdateChapter string     `json:"update_chapter"`
+	Status        StatusCode `json:"status"`
+	IsDownloaded  bool       `json:"is_downloaded"`
+
+	Writer Writer `json:"writer"`
+	Error  Error  `json:"error"`
 }
 
 type BookGroup []Book
@@ -44,32 +65,6 @@ func GenerateHash() int {
 
 func (bk *Book) HeaderInfo() string {
 	return bk.Title + "\n" + bk.Writer.Name + "\n" + CONTENT_SEP + "\n\n"
-}
-
-func (bk Book) MarshalJSON() ([]byte, error) {
-	errString := ""
-	if bk.Error != nil {
-		errString = bk.Error.Error()
-	}
-	return json.Marshal(&struct {
-		Site          string `json:"site"`
-		ID            int    `json:"id"`
-		HashCode      string `json:"hash_code"`
-		Title         string `json:"title"`
-		Writer        string `json:"writer"`
-		Type          string `json:"type"`
-		UpdateDate    string `json:"update_date"`
-		UpdateChapter string `json:"update_chapter"`
-		Status        string `json:"status"`
-		IsDownloaded  bool   `json:"is_downloaded"`
-		Error         string `json:"error"`
-	}{
-		Site: bk.Site, ID: bk.ID, HashCode: bk.FormatHashCode(),
-		Title: bk.Title, Writer: bk.Writer.Name, Type: bk.Type,
-		UpdateDate: bk.UpdateDate, UpdateChapter: bk.UpdateChapter,
-		Status: bk.Status.String(), IsDownloaded: bk.IsDownloaded,
-		Error: errString,
-	})
 }
 
 func (bk Book) String() string {

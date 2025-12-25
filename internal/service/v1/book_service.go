@@ -43,7 +43,7 @@ func (s *bookServiceImpl) bookClient(bk *model.Book) client.Client {
 }
 
 func isNewBook(bk *model.Book, bkInfo *client.BookInfo) bool {
-	return (bk.Status == model.StatusError && bk.Error == nil) ||
+	return (bk.Status == model.StatusError && bk.Error.Err == nil) ||
 		(bk.Status != model.StatusError && (bk.Title != bkInfo.Title || bk.Writer.Name != bkInfo.Author || bk.Type != bkInfo.Type))
 }
 
@@ -54,12 +54,12 @@ func isBookUpdated(bk *model.Book, bkInfo *client.BookInfo) bool {
 func (s *bookServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error {
 	bkInfo, err := s.bookClient(bk).GetBookInfo(ctx, strconv.Itoa(bk.ID))
 	if err != nil {
-		if bk.Status == model.StatusError && bk.Error == nil {
+		if bk.Status == model.StatusError && bk.Error.Err == nil {
 			bk.HashCode = model.GenerateHash()
-			bk.Error = err
+			bk.Error.Err = err
 
 			saveBkErr := s.rpo.CreateBook(ctx, bk)
-			saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
+			saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error.Err)
 			return errors.Join(err, saveBkErr, saveErrErr)
 		} else {
 			return err
@@ -75,11 +75,11 @@ func (s *bookServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error 
 		if bk.IsEnd() {
 			bk.Status = model.StatusEnd
 		}
-		bk.Error = nil
+		bk.Error.Err = nil
 
 		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
 		saveBkErr := s.rpo.CreateBook(ctx, bk)
-		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
+		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error.Err)
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr, saveErrErr)
 		}
@@ -94,11 +94,11 @@ func (s *bookServiceImpl) UpdateBook(ctx context.Context, bk *model.Book) error 
 		if bk.IsEnd() {
 			bk.Status = model.StatusEnd
 		}
-		bk.Error = nil
+		bk.Error.Err = nil
 
 		saveWriterErr := s.rpo.SaveWriter(ctx, &bk.Writer)
 		saveBkErr := s.rpo.UpdateBook(ctx, bk)
-		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error)
+		saveErrErr := s.rpo.SaveError(ctx, bk, bk.Error.Err)
 		if saveWriterErr != nil || saveBkErr != nil || saveErrErr != nil {
 			return errors.Join(saveWriterErr, saveBkErr, saveErrErr)
 		}

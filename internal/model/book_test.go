@@ -82,9 +82,9 @@ func TestBook_MarshalJSON(t *testing.T) {
 				Title: "title", Writer: Writer{ID: 1, Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter",
 				Status: StatusInProgress, IsDownloaded: true,
-				Error: errors.New("error"),
+				Error: Error{errors.New("error")},
 			},
-			expect:    `{"site":"test","id":1,"hash_code":"0","title":"title","writer":"writer","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"error":"error"}`,
+			expect:    `{"site":"test","id":1,"hash_code":0,"title":"title","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"writer":{"id":1,"name":"writer"},"error":"error"}`,
 			expectErr: false,
 		},
 	}
@@ -98,9 +98,7 @@ func TestBook_MarshalJSON(t *testing.T) {
 			if (err != nil) != test.expectErr {
 				t.Errorf("got error: %v, expect error: %v", err, test.expectErr)
 			}
-			if string(result) != test.expect {
-				t.Errorf("got:  %v\nwant: %v", string(result), test.expect)
-			}
+			assert.Equal(t, test.expect, string(result))
 		})
 	}
 }

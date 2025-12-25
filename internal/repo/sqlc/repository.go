@@ -168,7 +168,7 @@ func (r *SqlcRepo) FindBookById(ctx context.Context, site string, id int) (*mode
 		UpdateChapter: result.UpdateChapter.String,
 		Status:        model.StatusFromString(result.Status),
 		IsDownloaded:  result.IsDownloaded,
-		Error:         bkErr,
+		Error:         model.Error{Err: bkErr},
 	}, nil
 }
 func (r *SqlcRepo) FindBookByIdHash(ctx context.Context, site string, id, hash int) (*model.Book, error) {
@@ -209,7 +209,7 @@ func (r *SqlcRepo) FindBookByIdHash(ctx context.Context, site string, id, hash i
 		UpdateChapter: result.UpdateChapter.String,
 		Status:        model.StatusFromString(result.Status),
 		IsDownloaded:  result.IsDownloaded,
-		Error:         bkErr,
+		Error:         model.Error{Err: bkErr},
 	}, nil
 }
 func (r *SqlcRepo) FindBooksByStatus(ctx context.Context, status model.StatusCode) (<-chan model.Book, error) {
@@ -246,7 +246,7 @@ func (r *SqlcRepo) FindBooksByStatus(ctx context.Context, status model.StatusCod
 				UpdateChapter: results[i].UpdateChapter.String,
 				Status:        model.StatusFromString(results[i].Status),
 				IsDownloaded:  results[i].IsDownloaded,
-				Error:         bkErr,
+				Error:         model.Error{Err: bkErr},
 			}
 		}
 		close(bkChan)
@@ -288,7 +288,7 @@ func (r *SqlcRepo) FindAllBooks(ctx context.Context, site string) (<-chan model.
 				UpdateChapter: results[i].UpdateChapter.String,
 				Status:        model.StatusFromString(results[i].Status),
 				IsDownloaded:  results[i].IsDownloaded,
-				Error:         bkErr,
+				Error:         model.Error{Err: bkErr},
 			}
 		}
 		close(bkChan)
@@ -330,7 +330,7 @@ func (r *SqlcRepo) FindBooksForUpdate(ctx context.Context, site string) (<-chan 
 				UpdateChapter: results[i].UpdateChapter.String,
 				Status:        model.StatusFromString(results[i].Status),
 				IsDownloaded:  results[i].IsDownloaded,
-				Error:         bkErr,
+				Error:         model.Error{Err: bkErr},
 			}
 		}
 		close(bkChan)
@@ -372,7 +372,7 @@ func (r *SqlcRepo) FindBooksForDownload(ctx context.Context, site string) (<-cha
 				UpdateChapter: results[i].UpdateChapter.String,
 				Status:        model.StatusFromString(results[i].Status),
 				IsDownloaded:  results[i].IsDownloaded,
-				Error:         bkErr,
+				Error:         model.Error{Err: bkErr},
 			}
 		}
 		close(bkChan)
@@ -422,7 +422,7 @@ func (r *SqlcRepo) FindBooksByTitleWriter(ctx context.Context, title, writer str
 			UpdateChapter: results[i].UpdateChapter.String,
 			Status:        model.StatusFromString(results[i].Status),
 			IsDownloaded:  results[i].IsDownloaded,
-			Error:         bkErr,
+			Error:         model.Error{Err: bkErr},
 		}
 	}
 
@@ -462,7 +462,7 @@ func (r *SqlcRepo) FindBooksByRandom(ctx context.Context, limit int) ([]model.Bo
 			UpdateChapter: results[i].UpdateChapter.String,
 			Status:        model.StatusFromString(results[i].Status),
 			IsDownloaded:  results[i].IsDownloaded,
-			Error:         bkErr,
+			Error:         model.Error{Err: bkErr},
 		}
 	}
 
@@ -504,7 +504,7 @@ func (r *SqlcRepo) FindBookGroupByID(ctx context.Context, site string, id int) (
 			UpdateChapter: results[i].UpdateChapter.String,
 			Status:        model.StatusFromString(results[i].Status),
 			IsDownloaded:  results[i].IsDownloaded,
-			Error:         bkErr,
+			Error:         model.Error{Err: bkErr},
 		}
 	}
 
@@ -550,7 +550,7 @@ func (r *SqlcRepo) FindBookGroupByIDHash(ctx context.Context, site string, id, h
 			UpdateChapter: results[i].UpdateChapter.String,
 			Status:        model.StatusFromString(results[i].Status),
 			IsDownloaded:  results[i].IsDownloaded,
-			Error:         bkErr,
+			Error:         model.Error{Err: bkErr},
 		}
 	}
 
@@ -638,7 +638,7 @@ func (r *SqlcRepo) SaveError(ctx context.Context, bk *model.Book, e error) error
 		return fmt.Errorf("fail to save error: %w", err)
 	}
 
-	bk.Error = e
+	bk.Error = model.Error{Err: e}
 
 	return nil
 }

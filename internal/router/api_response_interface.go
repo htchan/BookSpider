@@ -30,8 +30,8 @@ type bookResp struct {
 
 func toBookResp(bk *model.Book) bookResp {
 	errString := ""
-	if bk.Error != nil {
-		errString = bk.Error.Error()
+	if bk.Error.Err != nil {
+		errString = bk.Error.Err.Error()
 	}
 
 	return bookResp{

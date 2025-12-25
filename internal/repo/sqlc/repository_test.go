@@ -21,31 +21,31 @@ func stubData(t testing.TB, r repo.Repository, site string) []model.Book {
 			Site: site, ID: 1, HashCode: 0,
 			Title: "title 1", Writer: model.Writer{Name: site + " writer 1"}, Type: "type 1",
 			UpdateDate: "date 1", UpdateChapter: "chapter 1",
-			Status: model.StatusEnd, IsDownloaded: true, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: true, Error: model.Error{Err: nil},
 		},
 		{
 			Site: site, ID: 2, HashCode: 0,
 			Title: "title 2", Writer: model.Writer{Name: site + " writer 2"}, Type: "type 2",
 			UpdateDate: "date 2", UpdateChapter: "chapter 2",
-			Status: model.StatusEnd, IsDownloaded: true, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: true, Error: model.Error{Err: nil},
 		},
 		{
 			Site: site, ID: 2, HashCode: 100,
 			Title: "title 2 new", Writer: model.Writer{Name: site + " writer 2 new"}, Type: "type 2 new",
 			UpdateDate: "date 2.1", UpdateChapter: "chapter 2 new",
-			Status: model.StatusEnd, IsDownloaded: false, Error: nil,
+			Status: model.StatusEnd, IsDownloaded: false, Error: model.Error{Err: nil},
 		},
 		{
 			Site: site, ID: 3, HashCode: 0,
 			Title: "title 3", Writer: model.Writer{Name: site + " writer 3"}, Type: "type 3",
 			UpdateDate: "date 3", UpdateChapter: "chapter 3",
-			Status: model.StatusInProgress, IsDownloaded: false, Error: nil,
+			Status: model.StatusInProgress, IsDownloaded: false, Error: model.Error{Err: nil},
 		},
 		{
 			Site: site, ID: 4, HashCode: 0,
 			Title: "", Writer: model.Writer{Name: ""}, Type: "",
 			UpdateDate: "", UpdateChapter: "",
-			Status: model.StatusError, IsDownloaded: false, Error: errors.New("error"),
+			Status: model.StatusError, IsDownloaded: false, Error: model.Error{Err: errors.New("error")},
 		},
 	}
 
@@ -66,7 +66,7 @@ func stubData(t testing.TB, r repo.Repository, site string) []model.Book {
 			t.FailNow()
 		}
 
-		err = r.SaveError(t.Context(), &bks[i], bks[i].Error)
+		err = r.SaveError(t.Context(), &bks[i], bks[i].Error.Err)
 		if !assert.NoError(t, err, "Failed to save error for book %d: %v", i, bks[i]) {
 			t.FailNow()
 		}
@@ -218,14 +218,14 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 				Site: bksDB[4].Site, ID: bksDB[4].ID, HashCode: bksDB[4].HashCode,
 				Title: "t", Writer: model.Writer{Name: bksDB[0].Writer.Name}, Type: "t",
 				UpdateDate: "d", UpdateChapter: "c",
-				Status: model.StatusInProgress, IsDownloaded: false, Error: nil,
+				Status: model.StatusInProgress, IsDownloaded: false, Error: model.Error{Err: nil},
 			},
 			expectErr: false,
 			expectQueryResult: &model.Book{
 				Site: bksDB[4].Site, ID: bksDB[4].ID, HashCode: bksDB[4].HashCode,
 				Title: "t", Writer: model.Writer{ID: 0, Name: ""}, Type: "t",
 				UpdateDate: "d", UpdateChapter: "c",
-				Status: model.StatusInProgress, IsDownloaded: false, Error: errors.New("error"),
+				Status: model.StatusInProgress, IsDownloaded: false, Error: model.Error{Err: errors.New("error")},
 			},
 			expectQueryErr: false,
 		},
@@ -970,10 +970,10 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 				if err != nil {
 					t.Errorf("query got error: %v; want error: %v", err, false)
 				}
-				if !((bk.Error == nil && test.expectErrStr == "") ||
-					(bk.Error != nil && bk.Error.Error() == test.expectErrStr)) {
+				if !((bk.Error.Err == nil && test.expectErrStr == "") ||
+					(bk.Error.Err != nil && bk.Error.Err.Error() == test.expectErrStr)) {
 					t.Errorf("query got:  %v\nwant: %v", bk.Error, test.expectErrStr)
-					t.Error(cmp.Diff(bk.Error.Error(), test.expectErrStr))
+					t.Error(cmp.Diff(bk.Error.Err.Error(), test.expectErrStr))
 				}
 			})
 		})

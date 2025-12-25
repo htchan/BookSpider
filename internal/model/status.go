@@ -38,3 +38,13 @@ func (status StatusCode) String() string {
 	}
 	return StatusErrorKey
 }
+
+func (status StatusCode) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + status.String() + `"`), nil
+}
+
+func (status *StatusCode) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), `"`)
+	*status = StatusFromString(str)
+	return nil
+}

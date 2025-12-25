@@ -263,7 +263,7 @@ func Test_BookInfoAPIHandler(t *testing.T) {
 				Site: "test", ID: 1, HashCode: 100,
 				Title: "title 1", Writer: model.Writer{ID: 2, Name: "writer 1"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
-				IsDownloaded: true, Error: errors.New("error"),
+				IsDownloaded: true, Error: model.Error{Err: errors.New("error")},
 			},
 			expectRes: `{"site":"test","id":1,"hash_code":"2s","title":"title 1","writer":"writer 1","type":"type","update_date":"date","update_chapter":"chapter","status":"INPROGRESS","is_downloaded":true,"error":"error"}`,
 		},
