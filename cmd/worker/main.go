@@ -88,7 +88,11 @@ func main() {
 	}
 
 	rpo := repo.NewRepo(db)
-	clients, err := common.LoadClients(conf.Clients)
+	clients, err := common.LoadClients(context.Background(), conf.Clients)
+	if err != nil {
+		log.Error().Err(err).Msg("load clients fail")
+	}
+
 	bookService := service.NewBookService(clients, rpo, conf.Common.StoragePath)
 
 	shutdown.LogEnabled = true
