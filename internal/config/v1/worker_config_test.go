@@ -24,6 +24,8 @@ func TestLoadWorkerConfig(t *testing.T) {
 		"OTEL_URL":          "http://otel.host",
 		"OTEL_SERVICE_NAME": "otel test name",
 
+		"NATS_URL": "nats://localhost:4222",
+
 		"STORAGE_PATH":    ".",
 		"CONFIG_LOCATION": "../../../config/v1/worker.yml",
 	}
@@ -76,6 +78,9 @@ func TestLoadWorkerConfig(t *testing.T) {
 				Trace: TraceConfig{
 					OtelURL:         "http://otel.host",
 					OtelServiceName: "otel test name",
+				},
+				Nats: NatsConfig{
+					URL: "nats://localhost:4222",
 				},
 				Common: CommonConfig{
 					StoragePath:    ".",
@@ -137,6 +142,21 @@ func TestLoadWorkerConfig(t *testing.T) {
 			assertError: func(t *testing.T, err error) {
 				assert.ErrorIs(t, err, env.EnvVarIsNotSetError{Key: "OTEL_URL"})
 				assert.ErrorIs(t, err, env.EnvVarIsNotSetError{Key: "OTEL_SERVICE_NAME"})
+			},
+		},
+		{
+			name: "error fllow/nats config not exist",
+			setupEnv: func(t *testing.T) {
+				for key, val := range envMap {
+					if strings.HasPrefix(key, "NATS") {
+						continue
+					}
+
+					t.Setenv(key, val)
+				}
+			},
+			assertError: func(t *testing.T, err error) {
+				assert.ErrorIs(t, err, env.EnvVarIsNotSetError{Key: "NATS_URL"})
 			},
 		},
 		{

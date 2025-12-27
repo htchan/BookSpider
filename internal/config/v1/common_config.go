@@ -18,8 +18,9 @@ type TraceConfig struct {
 	OtelServiceName string `env:"OTEL_SERVICE_NAME,required" validate:"min=1"`
 }
 
-// TODO: we will use NATS to receive the task request
-type NatsConfig struct{}
+type NatsConfig struct {
+	URL string `env:"NATS_URL,required"`
+}
 
 type CommonConfig struct {
 	StoragePath    string `env:"STORAGE_PATH,required" validate:"dir"`

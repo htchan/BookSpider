@@ -21,13 +21,15 @@ type BackendConfig struct {
 
 func LoadBackendConfig() (*BackendConfig, error) {
 	conf := &BackendConfig{}
-	commonConfigErr := env.Parse(&conf.Common)
-	dbConfigErr := env.Parse(&conf.Database)
-	traceConfigErr := env.Parse(&conf.Trace)
+	loadConfigErr := errors.Join(
+		env.Parse(&conf.Common),
+		env.Parse(&conf.Database),
+		env.Parse(&conf.Trace),
+	)
 
 	validataConfigErr := validator.New().Struct(conf)
-	if commonConfigErr != nil || dbConfigErr != nil || traceConfigErr != nil || validataConfigErr != nil {
-		return nil, errors.Join(commonConfigErr, dbConfigErr, traceConfigErr, validataConfigErr)
+	if loadConfigErr != nil || validataConfigErr != nil {
+		return nil, errors.Join(loadConfigErr, validataConfigErr)
 	}
 
 	data, readFileErr := os.ReadFile(conf.Common.ConfigLocation)
