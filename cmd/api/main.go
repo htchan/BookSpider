@@ -87,8 +87,6 @@ func main() {
 		return
 	}
 
-	defer db.Close()
-
 	rpo := repo.NewRepo(db)
 	readDataService := service.NewReadDataService(rpo, conf.Common.StoragePath)
 
