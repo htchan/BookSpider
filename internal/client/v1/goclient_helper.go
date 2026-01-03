@@ -115,34 +115,53 @@ func (cp *ClientPool) proxyList(protocol string, sourceURL string) []string {
 	return proxyAddrs
 }
 
+func (cp *ClientPool) refreshClients(ctx context.Context, clientAvailable func(*http.Client) bool) {
+	proxyAddrs := make([]string, 0)
+	if cp.conf.Socks5ProxySourceURL != "" {
+		proxyAddrs = append(proxyAddrs, cp.proxyList("socks5", cp.conf.Socks5ProxySourceURL)...)
+	}
+	if cp.conf.Socks4ProxySourceURL != "" {
+		proxyAddrs = append(proxyAddrs, cp.proxyList("socks4", cp.conf.Socks4ProxySourceURL)...)
+	}
+	if cp.conf.HTTPProxySourceURL != "" {
+		proxyAddrs = append(proxyAddrs, cp.proxyList("http", cp.conf.HTTPProxySourceURL)...)
+	}
+
+	wg := new(sync.WaitGroup)
+	for _, addr := range proxyAddrs {
+		wg.Go(func() {
+			cp.addAvailableProxyClient(addr, clientAvailable)
+		})
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	waitCh := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(waitCh)
+	}()
+
+	// early return if ctx.Done was called
+	select {
+	case <-ctx.Done():
+		return
+	case <-waitCh:
+	}
+}
+
 func (cp *ClientPool) BackgroundRefreshClients(ctx context.Context, clientAvailable func(*http.Client) bool) {
+	// refresh client at the beginning
+	cp.refreshClients(ctx, clientAvailable)
+
 	clock := time.NewTicker(cp.conf.RefreshInterval)
+	defer clock.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-clock.C:
-			proxyAddrs := make([]string, 0)
-			if cp.conf.Socks5ProxySourceURL != "" {
-				proxyAddrs = append(proxyAddrs, cp.proxyList("socks5", cp.conf.Socks5ProxySourceURL)...)
-			}
-			if cp.conf.Socks4ProxySourceURL != "" {
-				proxyAddrs = append(proxyAddrs, cp.proxyList("socks4", cp.conf.Socks4ProxySourceURL)...)
-			}
-			if cp.conf.HTTPProxySourceURL != "" {
-				proxyAddrs = append(proxyAddrs, cp.proxyList("http", cp.conf.HTTPProxySourceURL)...)
-			}
-
-			wg := new(sync.WaitGroup)
-			for _, addr := range proxyAddrs {
-				wg.Go(func() {
-					cp.addAvailableProxyClient(addr, clientAvailable)
-				})
-				time.Sleep(100 * time.Millisecond)
-			}
-
-			wg.Wait()
+			cp.refreshClients(ctx, clientAvailable)
 		}
 	}
 }
