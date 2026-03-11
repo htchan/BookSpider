@@ -61,8 +61,10 @@ func TestMain(m *testing.M) {
 	}))
 
 	if *leak {
-		goleak.VerifyTestMain(m)
-		serv.Close()
+		goleak.VerifyTestMain(
+			m,
+			goleak.Cleanup(func(exitCode int) { serv.Close() }),
+		)
 	} else {
 		code := m.Run()
 		serv.Close()

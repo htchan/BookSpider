@@ -105,7 +105,7 @@ func BookRandomAPIHandler(res http.ResponseWriter, req *http.Request) {
 // @Router			/api/book-spider/sites/{siteName}/books/{idHash} [get]
 func BookInfoAPIHandler(res http.ResponseWriter, req *http.Request) {
 	bk := req.Context().Value(ContextKeyBook).(*model.Book)
-	json.NewEncoder(res).Encode(bk)
+	json.NewEncoder(res).Encode(toBookResp(bk))
 }
 
 // @Summary		Download book

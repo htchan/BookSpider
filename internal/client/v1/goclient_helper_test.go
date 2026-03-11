@@ -95,9 +95,11 @@ func TestClientPool_GetClient(t *testing.T) {
 			cp := tt.getClientPool()
 			got := cp.GetClient(nil)
 			assert.Equal(t, tt.want, got)
+			cp.lock.Lock()
 			assert.Equal(t, tt.wantClientPool.clients, cp.clients)
 			assert.Equal(t, tt.wantClientPool.failureMap, cp.failureMap)
 			assert.Equal(t, tt.wantClientPool.clientInPool, cp.clientInPool)
+			cp.lock.Unlock()
 		})
 	}
 }
@@ -343,9 +345,11 @@ func TestClientPool_RequestRecorder(t *testing.T) {
 			cli, req, resp, err := tt.sendReq(t, pool)
 			pool.RequestRecorder(pool, cli, req, resp, err)
 			time.Sleep(time.Millisecond)
+			pool.lock.Lock()
 			assert.Equal(t, tt.wantClientsLength, len(pool.clients))
 			assert.Equal(t, tt.wantClientInPool, pool.clientInPool)
 			assert.Equal(t, tt.wantFailureMap, pool.failureMap)
+			pool.lock.Unlock()
 		})
 	}
 }
