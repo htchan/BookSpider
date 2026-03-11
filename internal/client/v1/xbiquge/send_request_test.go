@@ -1,11 +1,15 @@
 package xbiquge
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/htchan/BookSpider/internal/client/v1"
+	"github.com/htchan/BookSpider/internal/config/v1"
+	"github.com/htchan/goclient"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,9 +58,97 @@ func Test_clientAvailable(t *testing.T) {
 }
 
 func Test_newClient(t *testing.T) {
-	t.Skipf("not implemented")
+	tests := []struct {
+		name string
+		conf config.ClientConfig
+	}{
+		{
+			name: "happy flow",
+			conf: config.ClientConfig{
+				Pool: config.ClientPoolConfig{
+					RefreshInterval: time.Minute,
+				},
+				Retry: config.RetryConfig{
+					MaxRetryCount:       3,
+					LinearRetryInterval: time.Second,
+				},
+				DecodeMethod: "utf8",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			cli := newClient(ctx, tt.conf)
+			assert.NotNil(t, cli)
+		})
+	}
 }
 
 func TestClient_get(t *testing.T) {
-	t.Skipf("not implemented")
+	vendorProtocol = "http"
+	vendorHost = strings.TrimLeft(serv.URL, "http://")
+	t.Cleanup(func() {
+		vendorProtocol = "https"
+		vendorHost = "www.xbiquge.bz"
+	})
+
+	tests := []struct {
+		name    string
+		cli     xbiqugeClient
+		url     string
+		want    string
+		wantErr string
+	}{
+		{
+			name: "happy flow",
+			cli: xbiqugeClient{
+				cli:     goclient.NewClient(goclient.WithMiddlewares(client.RaiseErrorForNon2xxMiddleware)),
+				decoder: client.NewDecoder(client.DecodeMethodUTF8),
+			},
+			url:     serv.URL + "/available/success",
+			want:    "笔趣阁",
+			wantErr: "",
+		},
+		{
+			name: "unhappy flow - not found",
+			cli: xbiqugeClient{
+				cli:     goclient.NewClient(goclient.WithMiddlewares(client.RaiseErrorForNon2xxMiddleware)),
+				decoder: client.NewDecoder(client.DecodeMethodUTF8),
+			},
+			url:     serv.URL + "/not_found",
+			want:    "",
+			wantErr: "invalid status code: 404",
+		},
+		{
+			name: "unhappy flow - timeout",
+			cli: xbiqugeClient{
+				cli: goclient.NewClient(
+					goclient.WithRequester(func(r *http.Request) (*http.Response, error) {
+						cli := &http.Client{Timeout: time.Millisecond}
+						return cli.Do(r)
+					}),
+					goclient.WithMiddlewares(client.RaiseErrorForNon2xxMiddleware),
+				),
+				decoder: client.NewDecoder(client.DecodeMethodUTF8),
+			},
+			url:     serv.URL + "/timeout",
+			want:    "",
+			wantErr: "context deadline exceeded",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			got, err := tt.cli.get(ctx, tt.url)
+			if tt.wantErr != "" {
+				assert.ErrorContains(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
 }

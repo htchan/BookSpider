@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -222,7 +223,44 @@ func TestClientPool_socks5ProxyList(t *testing.T) {
 }
 
 func TestClientPool_BackgroundRefreshClients(t *testing.T) {
-	t.Skipf("not implemented")
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		conf config.ClientPoolConfig
+	}{
+		{
+			name: "happy flow",
+			conf: config.ClientPoolConfig{
+				RefreshInterval: time.Millisecond * 100,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*250)
+			defer cancel()
+
+			cp := NewClientPool(tt.conf)
+			assert.NotNil(t, cp)
+
+			// Mock clientAvailable function that always returns true
+			clientAvailable := func(*http.Client) bool {
+				return true
+			}
+
+			// Start background refresh
+			go cp.BackgroundRefreshClients(ctx, clientAvailable)
+
+			// Wait for context to be done
+			<-ctx.Done()
+
+			// Verify the pool was created
+			assert.NotNil(t, cp.clients)
+		})
+	}
 }
 
 func TestClientPool_RequestRecorder(t *testing.T) {

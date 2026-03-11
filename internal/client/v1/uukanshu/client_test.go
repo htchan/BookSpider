@@ -8,12 +8,51 @@ import (
 	"time"
 
 	"github.com/htchan/BookSpider/internal/client/v1"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	"github.com/htchan/goclient"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewClient(t *testing.T) {
-	t.Skipf("not implemented")
+	tests := []struct {
+		name             string
+		conf             config.ClientConfig
+		wantDecodeMethod client.DecodeMethod
+	}{
+		{
+			name: "happy flow",
+			conf: config.ClientConfig{
+				Pool: config.ClientPoolConfig{
+					RefreshInterval: time.Minute,
+				},
+				Retry: config.RetryConfig{
+					MaxRetryCount:       3,
+					LinearRetryInterval: time.Second,
+				},
+				DecodeMethod: "utf8",
+			},
+			wantDecodeMethod: client.DecodeMethodUTF8,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			cli := NewClient(ctx, tt.conf)
+			assert.NotNil(t, cli)
+			assert.Implements(t, (*client.Client)(nil), cli)
+
+			uukanshuCli, ok := cli.(*uukanshuClient)
+			assert.True(t, ok)
+			assert.NotNil(t, uukanshuCli.cli)
+			assert.NotNil(t, uukanshuCli.decoder)
+
+			testStr := "test string"
+			decoded, err := uukanshuCli.decoder.Decode(testStr)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, decoded)
+		})
+	}
 }
 
 func TestClient_GetBookInfo(t *testing.T) {
