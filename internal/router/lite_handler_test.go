@@ -10,7 +10,6 @@ import (
 	servicemock "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -20,16 +19,14 @@ func TestGeneralLiteHandler(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		services         map[string]service.Service
+		availableSites   []string
 		prepareRequest   func(*testing.T) *http.Request
 		expectStatusCode int
 		expectRes        string
 	}{
 		{
-			name: "happy flow",
-			services: map[string]service.Service{
-				"test": nil,
-			},
+			name:           "happy flow",
+			availableSites: []string{"test"},
 			prepareRequest: func(t *testing.T) *http.Request {
 				t.Helper()
 				req, err := http.NewRequest(http.MethodGet, "/", nil)
@@ -40,6 +37,7 @@ func TestGeneralLiteHandler(t *testing.T) {
 			},
 			expectStatusCode: 200,
 			expectRes: `<html>
+
 	<head>
 		<title>Novel</title>
 		<style>
@@ -51,6 +49,7 @@ func TestGeneralLiteHandler(t *testing.T) {
 			}
 		</style>
 	</head>
+
 	<body>
 		<h1>Novel</h1>
 
@@ -58,16 +57,13 @@ func TestGeneralLiteHandler(t *testing.T) {
 
 
 		
-	<div
-		class="site_button"
-		onclick="location.href='/lite/novel/sites/test'"
-	>
+	<div class="site_button" onclick="location.href='/lite/novel/sites/test'">
 		test
 	</div>
-	<br/>
+	<br />
 
 
-	<hr/>
+	<hr />
 	<h2>Search</h2>
 	<div class="search_panel">
 	<form action="/lite/novel/search">
@@ -82,8 +78,8 @@ func TestGeneralLiteHandler(t *testing.T) {
 	<button onclick="location.href='/lite/novel/random?per_page=10'">Random</button>
 	</div>
 	</body>
-</html>
-`,
+	
+</html>`,
 		},
 	}
 
@@ -95,7 +91,7 @@ func TestGeneralLiteHandler(t *testing.T) {
 			req := test.prepareRequest(t)
 			res := httptest.NewRecorder()
 
-			GeneralLiteHandler(test.services).ServeHTTP(res, req)
+			GeneralLiteHandler(test.availableSites).ServeHTTP(res, req)
 			assert.Equal(t, test.expectStatusCode, res.Result().StatusCode)
 			assert.Equal(t,
 				strings.ReplaceAll(strings.ReplaceAll(test.expectRes, "\t", ""), "  ", ""),

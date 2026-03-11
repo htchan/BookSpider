@@ -1,11 +1,8 @@
 {{ define "site-card" }}
-  {{ $uriPrefix := index . 0 }}
-  {{ $key := index . 1}}
-  <div
-    class="site_button"
-    onclick="location.href='{{ $uriPrefix }}/sites/{{ $key }}'"
-  >
-    {{ $key }}
-  </div>
-  <br/>
+{{ $uriPrefix := index . 0 }}
+{{ $siteName := index . 1}}
+<div class="site_button" onclick="location.href='{{ $uriPrefix }}/sites/{{ $siteName }}'">
+  {{ $siteName }}
+</div>
+<br />
 {{ end }}

@@ -2,6 +2,7 @@ package client
 
 import (
 	"flag"
+	"net/http"
 	"os"
 	"testing"
 
@@ -13,7 +14,10 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	if *leak {
-		goleak.VerifyTestMain(m)
+		goleak.VerifyTestMain(
+			m,
+			goleak.Cleanup(func(exitCode int) { http.DefaultClient.CloseIdleConnections() }),
+		)
 	} else {
 		os.Exit(m.Run())
 	}

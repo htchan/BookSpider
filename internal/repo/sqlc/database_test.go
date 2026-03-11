@@ -3,7 +3,7 @@ package repo
 import (
 	"testing"
 
-	"github.com/htchan/BookSpider/internal/config/v2"
+	"github.com/htchan/BookSpider/internal/config/v1"
 )
 
 func Test_OpenDatabase(t *testing.T) {

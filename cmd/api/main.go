@@ -19,10 +19,10 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
-	"github.com/htchan/BookSpider/internal/common"
-	"github.com/htchan/BookSpider/internal/config/v2"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/router"
+	"github.com/htchan/BookSpider/internal/service/v1"
 )
 
 func otelProvider(conf config.TraceConfig) (*tracesdk.TracerProvider, error) {
@@ -68,57 +68,35 @@ func main() {
 
 	zerolog.TimeFieldFormat = "2006-01-02T15:04:05.99999Z07:00"
 
-	conf, confErr := config.LoadAPIConfig()
+	conf, confErr := config.LoadBackendConfig()
 	if confErr != nil {
 		log.Error().Err(confErr).Msg("load backend config")
 		return
 	}
 
-	validErr := conf.Validate()
-	if validErr != nil {
-		log.Error().Err(validErr).Msg("validate config fail")
-		return
-	}
-
-	tp, err := otelProvider(conf.TraceConfig)
+	tp, err := otelProvider(conf.Trace)
 	if err != nil {
 		log.Error().Err(err).Msg("init tracer failed")
 	}
 
-	repo.Migrate(conf.DatabaseConfig, "/migrations")
+	repo.Migrate(conf.Database, "/migrations")
 
-	db, dbErr := repo.OpenDatabaseByConfig(conf.DatabaseConfig)
+	db, dbErr := repo.OpenDatabaseByConfig(conf.Database)
 	if dbErr != nil {
 		log.Error().Err(dbErr).Msg("load db fail")
 		return
 	}
 
-	defer db.Close()
-
-	// ctx := context.Background()
-	// publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
-	// services := make(map[string]service_new.Service)
-	// for _, siteName := range conf.APIConfig.AvailableSiteNames {
-	// 	serv, loadServErr := service_new.LoadService(
-	// 		siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
-	// 	)
-	// 	if loadServErr != nil {
-	// 		log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
-	// 		return
-	// 	}
-
-	// 	services[siteName] = serv
-	// }
-	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, 1)
-	readDataService := common.LoadReadDataService(db, conf.SiteConfigs)
+	rpo := repo.NewRepo(db)
+	readDataService := service.NewReadDataService(rpo, conf.Common.StoragePath)
 
 	shutdown.LogEnabled = true
 	shutdownHandler := shutdown.New(syscall.SIGINT, syscall.SIGTERM)
 
 	// load routes
 	r := chi.NewRouter()
-	router.AddAPIRoutes(r, conf, services, readDataService)
-	router.AddLiteRoutes(r, conf, services, readDataService)
+	router.AddAPIRoutes(r, conf, readDataService)
+	router.AddLiteRoutes(r, conf, readDataService)
 
 	server := http.Server{
 		Addr:         ":9427",

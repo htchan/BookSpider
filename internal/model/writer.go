@@ -8,8 +8,8 @@ import (
 )
 
 type Writer struct {
-	ID   int
-	Name string
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 func NewWriter(name string) Writer {

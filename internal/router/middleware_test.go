@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	mockservice "github.com/htchan/BookSpider/internal/mock/service/v1"
 	"github.com/htchan/BookSpider/internal/model"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,21 +10,44 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/siongui/gojianfan"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-type Book struct {
-	Site          string
-	ID            int
-	HashCode      int
-	Title         string
-	Type          string
-	UpdateDate    string
-	UpdateChapter string
-	Status        StatusCode
-	IsDownloaded  bool
+type Error struct {
+	Err error
+}
 
-	Writer Writer
-	Error  error
+func (e Error) MarshalJSON() ([]byte, error) {
+	if e.Err != nil {
+		return []byte(`"` + e.Err.Error() + `"`), nil
+	}
+
+	return []byte(`""`), nil
+}
+
+func (e *Error) UnmarshalJSON(data []byte) error {
+	str := strings.Trim(string(data), `"`)
+	if str == "" {
+		e.Err = nil
+	} else {
+		e.Err = errors.New(str)
+	}
+	return nil
+}
+
+type Book struct {
+	Site          string     `json:"site"`
+	ID            int        `json:"id"`
+	HashCode      int        `json:"hash_code"`
+	Title         string     `json:"title"`
+	Type          string     `json:"type"`
+	UpdateDate    string     `json:"update_date"`
+	UpdateChapter string     `json:"update_chapter"`
+	Status        StatusCode `json:"status"`
+	IsDownloaded  bool       `json:"is_downloaded"`
+
+	Writer Writer `json:"writer"`
+	Error  Error  `json:"error"`
 }
 
 type BookGroup []Book
@@ -44,32 +66,6 @@ func GenerateHash() int {
 
 func (bk *Book) HeaderInfo() string {
 	return bk.Title + "\n" + bk.Writer.Name + "\n" + CONTENT_SEP + "\n\n"
-}
-
-func (bk Book) MarshalJSON() ([]byte, error) {
-	errString := ""
-	if bk.Error != nil {
-		errString = bk.Error.Error()
-	}
-	return json.Marshal(&struct {
-		Site          string `json:"site"`
-		ID            int    `json:"id"`
-		HashCode      string `json:"hash_code"`
-		Title         string `json:"title"`
-		Writer        string `json:"writer"`
-		Type          string `json:"type"`
-		UpdateDate    string `json:"update_date"`
-		UpdateChapter string `json:"update_chapter"`
-		Status        string `json:"status"`
-		IsDownloaded  bool   `json:"is_downloaded"`
-		Error         string `json:"error"`
-	}{
-		Site: bk.Site, ID: bk.ID, HashCode: bk.FormatHashCode(),
-		Title: bk.Title, Writer: bk.Writer.Name, Type: bk.Type,
-		UpdateDate: bk.UpdateDate, UpdateChapter: bk.UpdateChapter,
-		Status: bk.Status.String(), IsDownloaded: bk.IsDownloaded,
-		Error: errString,
-	})
 }
 
 func (bk Book) String() string {
@@ -107,4 +103,34 @@ func (bk Book) Checksum() string {
 
 func (bk *Book) FormatHashCode() string {
 	return strconv.FormatInt(int64(bk.HashCode), 36)
+}
+
+func (bk *Book) IsEnd() bool {
+	//TODO: fetch all chapter
+	//hint: use book.generateEmptyChapters
+	//TODO: check last n chapter to see if they contains any end keywords
+	//hint: use len(chapters) and the n should come from book config
+	if bk.UpdateDate < strconv.Itoa(time.Now().Year()-1) {
+		return true
+	}
+
+	chapter := strings.ReplaceAll(bk.UpdateChapter, " ", "")
+	for _, keyword := range ChapterEndKeywords {
+		if strings.Contains(chapter, keyword) {
+			return true
+		}
+	}
+	return false
+}
+
+func (bk *Book) OtelAttributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("book_site", bk.Site),
+		attribute.String("book_id", bk.String()),
+		attribute.String("book_hash_code", bk.FormatHashCode()),
+		attribute.String("book_title", bk.Title),
+		attribute.String("book_writer", bk.Writer.Name),
+		attribute.String("book_status", bk.Status.String()),
+		attribute.Bool("book_is_downloaded", bk.IsDownloaded),
+	}
 }

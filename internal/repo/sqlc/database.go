@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/htchan/BookSpider/internal/config/v2"
+	"github.com/htchan/BookSpider/internal/config/v1"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )

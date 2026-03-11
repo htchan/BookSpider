@@ -1,0 +1,5 @@
+api_route_prefix: /api/
+lite_route_prefix: /lite/
+available_sites:
+  - site1
+  - site2

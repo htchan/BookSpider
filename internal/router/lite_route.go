@@ -2,11 +2,11 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/htchan/BookSpider/internal/config/v2"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/config/v1"
+	"github.com/htchan/BookSpider/internal/service/v1"
 )
 
-func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[string]service.Service, readDataServices service.ReadDataService) {
+func AddLiteRoutes(router chi.Router, conf *config.BackendConfig, readDataServices service.ReadDataService) {
 	router.Route(conf.LiteRoutePrefix, func(router chi.Router) {
 		router.Use(logRequest())
 		router.Use(TraceMiddleware)
@@ -30,7 +30,7 @@ func AddLiteRoutes(router chi.Router, conf *config.APIConfig, services map[strin
 			})
 		})
 
-		router.Get("/", GeneralLiteHandler(services))
+		router.Get("/", GeneralLiteHandler(conf.AvailableSites))
 		router.With(GetSearchParamsMiddleware).With(GetPageParamsMiddleware).Get("/search", SearchLiteHandler)
 		router.With(GetPageParamsMiddleware).Get("/random", RandomLiteHandler)
 

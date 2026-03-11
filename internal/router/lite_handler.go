@@ -10,7 +10,7 @@ import (
 	"github.com/htchan/BookSpider/internal/format/v1"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	"github.com/htchan/BookSpider/internal/service"
+	"github.com/htchan/BookSpider/internal/service/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -27,7 +27,7 @@ var customTemplateFunc = template.FuncMap{
 // @Produce		html
 // @Success		200	{string}	string
 // @Router			/lite/book-spider/ [get]
-func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
+func GeneralLiteHandler(availableSites []string) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		logger := zerolog.Ctx(req.Context())
 		uriPrefix := req.Context().Value(ContextKeyUriPrefix).(string)
@@ -47,9 +47,9 @@ func GeneralLiteHandler(services map[string]service.Service) http.HandlerFunc {
 			return
 		}
 		execErr := t.ExecuteTemplate(res, "sites.html", struct {
-			Services  map[string]service.Service
+			Sites     []string
 			UriPrefix string
-		}{Services: services, UriPrefix: uriPrefix})
+		}{Sites: availableSites, UriPrefix: uriPrefix})
 		if execErr != nil {
 			res.WriteHeader(http.StatusInternalServerError)
 			logger.Error().Err(execErr).Msg("compute response failed")

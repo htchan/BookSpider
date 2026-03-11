@@ -9,40 +9,38 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
-	serv "github.com/htchan/BookSpider/internal/service"
 	"github.com/rs/zerolog"
 )
 
-type ReadDataServiceImpl struct {
-	rpo   repo.Repository
-	confs map[string]config.SiteConfig
+type readDataServiceImpl struct {
+	rpo         repo.Repository
+	storagePath string
 }
 
-var _ serv.ReadDataService = (*ReadDataServiceImpl)(nil)
+var _ ReadDataService = (*readDataServiceImpl)(nil)
 
-func NewReadDataService(rpo repo.Repository, confs map[string]config.SiteConfig) *ReadDataServiceImpl {
-	return &ReadDataServiceImpl{
-		rpo:   rpo,
-		confs: confs,
+func NewReadDataService(rpo repo.Repository, storagePath string) ReadDataService {
+	return &readDataServiceImpl{
+		rpo:         rpo,
+		storagePath: storagePath,
 	}
 }
 
-func (s *ReadDataServiceImpl) bookFileLocation(bk *model.Book) string {
+func (s *readDataServiceImpl) bookFileLocation(bk *model.Book) string {
 	filename := fmt.Sprintf("%d.txt", bk.ID)
 	if bk.HashCode > 0 {
 		filename = fmt.Sprintf("%d-v%s.txt", bk.ID, bk.FormatHashCode())
 	}
 
-	return filepath.Join(s.confs[bk.Site].Storage, filename)
+	return filepath.Join(s.storagePath, bk.Site, filename)
 }
 
-func (s *ReadDataServiceImpl) Book(ctx context.Context, site, id, hash string) (*model.Book, error) {
+func (s *readDataServiceImpl) Book(ctx context.Context, site, id, hash string) (*model.Book, error) {
 	bkID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return nil, serv.ErrInvalidBookID
+		return nil, ErrInvalidBookID
 	}
 
 	if hash == "" {
@@ -51,20 +49,20 @@ func (s *ReadDataServiceImpl) Book(ctx context.Context, site, id, hash string) (
 
 	hashcode, err := strconv.ParseInt(hash, 36, 64)
 	if err != nil {
-		return nil, serv.ErrInvalidHashCode
+		return nil, ErrInvalidHashCode
 	}
 
 	return s.rpo.FindBookByIdHash(ctx, site, int(bkID), int(hashcode))
 }
 
-func (s *ReadDataServiceImpl) BookContent(ctx context.Context, bk *model.Book) (string, error) {
+func (s *readDataServiceImpl) BookContent(ctx context.Context, bk *model.Book) (string, error) {
 	if !bk.IsDownloaded {
-		return "", serv.ErrBookNotDownload
+		return "", ErrBookNotDownload
 	}
 
 	location := s.bookFileLocation(bk)
 	if _, err := os.Stat(location); err != nil {
-		return "", serv.ErrBookFileNotFound
+		return "", ErrBookFileNotFound
 	}
 
 	content, err := os.ReadFile(location)
@@ -75,7 +73,7 @@ func (s *ReadDataServiceImpl) BookContent(ctx context.Context, bk *model.Book) (
 	return string(content), nil
 }
 
-func (s *ReadDataServiceImpl) BookChapters(ctx context.Context, bk *model.Book) (model.Chapters, error) {
+func (s *readDataServiceImpl) BookChapters(ctx context.Context, bk *model.Book) (model.Chapters, error) {
 	content, err := s.BookContent(ctx, bk)
 	if err != nil {
 		return nil, fmt.Errorf("load content failed: %w", err)
@@ -90,7 +88,7 @@ func (s *ReadDataServiceImpl) BookChapters(ctx context.Context, bk *model.Book) 
 
 }
 
-func (s *ReadDataServiceImpl) BookGroup(ctx context.Context, site, id, hash string) (*model.Book, *model.BookGroup, error) {
+func (s *readDataServiceImpl) BookGroup(ctx context.Context, site, id, hash string) (*model.Book, *model.BookGroup, error) {
 	var (
 		bkIndex  = -1
 		group    model.BookGroup
@@ -100,7 +98,7 @@ func (s *ReadDataServiceImpl) BookGroup(ctx context.Context, site, id, hash stri
 
 	bkID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		return nil, nil, serv.ErrInvalidBookID
+		return nil, nil, ErrInvalidBookID
 	}
 
 	if hash == "" {
@@ -111,7 +109,7 @@ func (s *ReadDataServiceImpl) BookGroup(ctx context.Context, site, id, hash stri
 	} else {
 		hashcode, err = strconv.ParseInt(hash, 36, 64)
 		if err != nil {
-			return nil, nil, serv.ErrInvalidHashCode
+			return nil, nil, ErrInvalidHashCode
 		}
 
 		group, err = s.rpo.FindBookGroupByIDHash(ctx, site, int(bkID), int(hashcode))
@@ -154,18 +152,18 @@ func (s *ReadDataServiceImpl) BookGroup(ctx context.Context, site, id, hash stri
 	return &bk, &group, nil
 }
 
-func (s *ReadDataServiceImpl) SearchBooks(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error) {
+func (s *readDataServiceImpl) SearchBooks(ctx context.Context, title, writer string, limit, offset int) ([]model.Book, error) {
 	return s.rpo.FindBooksByTitleWriter(ctx, title, writer, limit, offset)
 }
 
-func (s *ReadDataServiceImpl) RandomBooks(ctx context.Context, limit int) ([]model.Book, error) {
+func (s *readDataServiceImpl) RandomBooks(ctx context.Context, limit int) ([]model.Book, error) {
 	return s.rpo.FindBooksByRandom(ctx, limit)
 }
 
-func (s *ReadDataServiceImpl) Stats(ctx context.Context, site string) repo.Summary {
+func (s *readDataServiceImpl) Stats(ctx context.Context, site string) repo.Summary {
 	return s.rpo.Stats(ctx, site)
 }
 
-func (s *ReadDataServiceImpl) DBStats(ctx context.Context) sql.DBStats {
+func (s *readDataServiceImpl) DBStats(ctx context.Context) sql.DBStats {
 	return s.rpo.DBStats(ctx)
 }
