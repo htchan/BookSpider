@@ -8,45 +8,13 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 	"github.com/htchan/BookSpider/internal/common"
 	"github.com/htchan/BookSpider/internal/config/v2"
+	intOtel "github.com/htchan/BookSpider/internal/otel"
 	repo "github.com/htchan/BookSpider/internal/repo/sqlc"
 	"github.com/htchan/BookSpider/internal/service"
 )
-
-func otelProvider(conf config.TraceConfig) (*tracesdk.TracerProvider, error) {
-	exp, err := otlptrace.New(
-		context.Background(),
-		otlptracehttp.NewClient(
-			otlptracehttp.WithEndpoint(conf.OtelURL),
-			otlptracehttp.WithInsecure(),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	tp := tracesdk.NewTracerProvider(
-		tracesdk.WithBatcher(exp),
-		tracesdk.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceNameKey.String(conf.OtelServiceName),
-		)),
-	)
-
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.TraceContext{})
-
-	return tp, nil
-}
 
 func CalculateNextRunTime(conf *config.ScheduleConfig) time.Time {
 	result := time.Now().UTC().Truncate(24 * time.Hour)
@@ -101,7 +69,7 @@ func main() {
 		return
 	}
 
-	tp, err := otelProvider(conf.TraceConfig)
+	tp, err := intOtel.NewProvider(conf.TraceConfig)
 	if err != nil {
 		log.Error().Err(err).Msg("init tracer failed")
 	}
