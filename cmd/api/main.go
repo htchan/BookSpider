@@ -63,6 +63,20 @@ func main() {
 
 	defer db.Close()
 
+	// ctx := context.Background()
+	// publicSema := semaphore.NewWeighted(int64(conf.BatchConfig.MaxWorkingThreads))
+	// services := make(map[string]service_new.Service)
+	// for _, siteName := range conf.APIConfig.AvailableSiteNames {
+	// 	serv, loadServErr := service_new.LoadService(
+	// 		siteName, conf.SiteConfigs[siteName], db, ctx, publicSema,
+	// 	)
+	// 	if loadServErr != nil {
+	// 		log.Error().Err(loadServErr).Str("site", siteName).Msg("load service fail")
+	// 		return
+	// 	}
+
+	// 	services[siteName] = serv
+	// }
 	services := common.LoadServices(conf.AvailableSiteNames, db, conf.SiteConfigs, 1)
 	readDataService := common.LoadReadDataService(db, conf.SiteConfigs)
 
