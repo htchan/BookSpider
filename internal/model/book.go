@@ -105,6 +105,6 @@ func (bk Book) Checksum() string {
 	return strToShortHex(simplified(title))
 }
 
-func (bk *Book) FormatHashCode() string {
+func (bk Book) FormatHashCode() string {
 	return strconv.FormatInt(int64(bk.HashCode), 36)
 }

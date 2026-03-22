@@ -259,7 +259,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			      
 			  
 			  
-			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-2s/'">
 				<p class="inline">title - writer</p>
 				<div class="tag">test</div>
 				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
@@ -359,7 +359,7 @@ func TestSearchLiteHandler(t *testing.T) {
 			      
 			  
 			  
-			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-2s/'">
 				<p class="inline">title - writer</p>
 				<div class="tag">test</div>
 				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
@@ -487,7 +487,7 @@ func TestRandomLiteHandler(t *testing.T) {
 			      
 			  
 			  
-			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-100/'">
+			  <div class="book-box" onclick="location.href='/lite/novel/sites/test/books/123-2s/'">
 				<p class="inline">title - writer</p>
 				<div class="tag">test</div>
 				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
@@ -586,8 +586,8 @@ func TestBookLiteHandler(t *testing.T) {
 						<p>date</p>
 						<p>chapter</p>
 						
-						<a href="/lite/novel/sites/test/books/123-100/download?format=txt">Download TXT</a>
-						<a href="/lite/novel/sites/test/books/123-100/download?format=epub">Download EPUB</a>
+						<a href="/lite/novel/sites/test/books/123-2s/download?format=txt">Download TXT</a>
+						<a href="/lite/novel/sites/test/books/123-2s/download?format=epub">Download EPUB</a>
 						
 				</div>
 				<h2>Book Group</h2>
@@ -657,8 +657,8 @@ func TestBookLiteHandler(t *testing.T) {
 						<p>date</p>
 						<p>chapter</p>
 						
-						<a href="/lite/novel/sites/test/books/123-100/download?format=txt">Download TXT</a>
-						<a href="/lite/novel/sites/test/books/123-100/download?format=epub">Download EPUB</a>
+						<a href="/lite/novel/sites/test/books/123-2s/download?format=txt">Download TXT</a>
+						<a href="/lite/novel/sites/test/books/123-2s/download?format=epub">Download EPUB</a>
 						
 				</div>
 				<h2>Book Group</h2>
@@ -667,7 +667,7 @@ func TestBookLiteHandler(t *testing.T) {
 
 
 
-				<div class="book-box" onclick="location.href='/lite/novel/sites/test-2/books/123-100/'">
+				<div class="book-box" onclick="location.href='/lite/novel/sites/test-2/books/123-2s/'">
 				<p class="inline">title - writer</p>
 				<div class="tag">test-2</div>
 				<div class="tag" style="background-color: #00ff00;">Downloaded</div>
