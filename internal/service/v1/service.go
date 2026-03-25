@@ -107,7 +107,6 @@ func (s *ServiceImpl) PatchDownloadStatus(ctx context.Context, stats *serv.Patch
 	zerolog.Ctx(ctx).Info().Str("site", s.name).Msg("update books is_downloaded by storage")
 
 	for bk := range bks {
-		bk := bk
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 
@@ -149,7 +148,6 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context, stats *serv.Updat
 
 	missingIDs := s.vendorService.FindMissingIds(allBkIDs)
 	for _, bookID := range missingIDs {
-		bookID := bookID
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 		stats.Total.Add(1)

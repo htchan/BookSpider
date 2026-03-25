@@ -12,7 +12,7 @@ func Test_newFailCheck(t *testing.T) {
 
 	statusCodeConf := CheckConfig{
 		Type:  CheckTypeStatusCodes,
-		Value: []interface{}{502},
+		Value: []any{502},
 	}
 
 	type args struct {
@@ -47,7 +47,6 @@ func Test_newFailCheck(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

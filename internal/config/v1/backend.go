@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"slices"
 
 	"gopkg.in/yaml.v2"
 )
@@ -32,10 +33,5 @@ func LoadBackendConfig(configDirectory string) (BackendConfig, error) {
 }
 
 func (conf BackendConfig) ContainsRoute(routeKey string) bool {
-	for _, key := range conf.EnabledRoutes {
-		if key == routeKey {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(conf.EnabledRoutes, routeKey)
 }

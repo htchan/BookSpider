@@ -3,6 +3,7 @@ package retry
 import (
 	"errors"
 	"regexp"
+	"slices"
 	"syscall"
 	"time"
 
@@ -28,7 +29,7 @@ func CalculatePauseDuration(i int, retryInterval time.Duration, intervalType Pau
 func NewRetryCheck(condition RetryCondition) RetryCheck {
 	switch condition.Type {
 	case RetryConditionTypeStatusCode:
-		values := condition.Value.([]interface{})
+		values := condition.Value.([]any)
 		statusCodes := make([]int, len(values))
 		for i := range values {
 			statusCodes[i] = values[i].(int)
@@ -63,10 +64,8 @@ func retryWhenStatusCodeRange(statusCodes []int, retryWeight int, retryDuration 
 	return func(i int, s string, err error) (bool, int, time.Duration) {
 		var statusCodeError client.StatusCodeError
 		if errors.As(err, &statusCodeError) {
-			for _, statusCode := range statusCodes {
-				if statusCodeError.StatusCode == statusCode {
-					return true, retryWeight, CalculatePauseDuration(i, retryDuration, intervalType)
-				}
+			if slices.Contains(statusCodes, statusCodeError.StatusCode) {
+				return true, retryWeight, CalculatePauseDuration(i, retryDuration, intervalType)
 			}
 		}
 

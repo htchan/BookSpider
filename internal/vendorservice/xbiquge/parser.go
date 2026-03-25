@@ -104,7 +104,7 @@ func (p *VendorService) ParseChapterList(bookID, body string) (vendor.ChapterLis
 		parseErr = errors.Join(parseErr, vendor.ErrFieldsNotFound)
 	}
 
-	for i := 0; i < 12; i++ {
+	for range 12 {
 		targetChapterTitle := chapterList[0].Title
 		found := false
 

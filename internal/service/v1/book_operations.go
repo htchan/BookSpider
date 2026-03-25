@@ -138,7 +138,6 @@ func (s *ServiceImpl) Update(ctx context.Context, stats *serv.UpdateStats) error
 	}
 
 	for bk := range bkChan {
-		bk := bk
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 		stats.Total.Add(1)
@@ -337,7 +336,6 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book, stats *s
 	failedChapterCount := 0
 
 	for i := range chapters {
-		i := i
 		chapters[i] = model.NewChapter(i, (chapterList)[i].URL, (chapterList)[i].Title)
 		wg.Add(1)
 		s.sema.Acquire(ctx, 1)
@@ -413,7 +411,6 @@ func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) e
 	}
 
 	for bk := range bkChan {
-		bk := bk
 		s.sema.Acquire(ctx, 1)
 		se.Acquire(ctx, 1)
 		wg.Add(1)

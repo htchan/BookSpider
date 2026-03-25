@@ -37,7 +37,6 @@ func Test_StatusFromString(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			result := StatusFromString(test.input)
@@ -78,7 +77,6 @@ func TestStatusCode_String(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			if test.status.String() != test.expect {

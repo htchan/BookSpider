@@ -24,7 +24,6 @@ func TestServiceImpl_BookInfo(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			got := new(ServiceImpl).BookInfo(context.Background(), test.bk)

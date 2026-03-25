@@ -166,7 +166,6 @@ func Test_validate_APIConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -397,7 +396,6 @@ func Test_validate_BatchConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -486,7 +484,6 @@ func Test_validate_DatabaseConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -541,7 +538,6 @@ func Test_validate_TraceConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			// t.Parallel()
 
@@ -1119,8 +1115,6 @@ xbiquge_client: &xbiquge_client
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			// populate env
 			for key, value := range test.envMap {
@@ -1742,8 +1736,6 @@ xbiquge_client: &xbiquge_client
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			// populate env
 			for key, value := range test.envMap {

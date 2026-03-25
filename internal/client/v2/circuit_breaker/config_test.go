@@ -35,7 +35,6 @@ func Test_validate_CheckConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			err := validator.New().Struct(test.conf)
@@ -190,7 +189,6 @@ func Test_validate_CircuitBreakerConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			err := validator.New().Struct(test.conf)

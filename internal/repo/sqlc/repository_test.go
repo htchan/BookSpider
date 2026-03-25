@@ -92,7 +92,6 @@ func Test_NewRepo(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			result := NewRepo(test.db)
@@ -150,7 +149,6 @@ func TestSqlcRepo_CreateBook(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.r.CreateBook(context.Background(), &test.bk)
 			t.Run("result", func(t *testing.T) {
@@ -232,7 +230,6 @@ func TestSqlcRepo_UpdateBook(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.r.UpdateBook(context.Background(), test.inputBook)
 			t.Run("result", func(t *testing.T) {
@@ -297,7 +294,6 @@ func TestSqlcRepo_FindBookByID(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBookById(context.Background(), site, test.id)
 			t.Run("result", func(t *testing.T) {
@@ -356,7 +352,6 @@ func TestSqlcRepo_FindBookByIDHash(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBookByIdHash(context.Background(), site, test.id, test.hashcode)
 			t.Run("result", func(t *testing.T) {
@@ -417,7 +412,6 @@ func TestSqlcRepo_FindAllBooks(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindAllBooks(context.Background(), test.site)
 			if (err != nil) != test.expectErr {
@@ -467,7 +461,6 @@ func TestSqlcRepo_FindBooksForUpdate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBooksForUpdate(context.Background(), site)
 			if (err != nil) != test.expectErr {
@@ -517,7 +510,6 @@ func TestSqlcRepo_FindBooksForDownload(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBooksForDownload(context.Background(), site)
 			if (err != nil) != test.expectErr {
@@ -616,7 +608,6 @@ func TestSqlcRepo_FindBooksByTitleWriter(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBooksByTitleWriter(context.Background(), test.title, test.writer, test.limit, test.offset)
 			if (err != nil) != test.expectErr {
@@ -670,7 +661,6 @@ func TestSqlcRepo_FindBooksByRandom(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			result, err := test.r.FindBooksByRandom(context.Background(), test.limit)
 			if (err != nil) != test.expectErr {
@@ -758,7 +748,6 @@ func TestSqlcRepo_UpdateBooksStatus(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			bksDB[2].Status = model.StatusInProgress
 			r.UpdateBook(context.Background(), &bksDB[2])
@@ -841,7 +830,6 @@ func TestSqlcRepo_FindAllBookIDs(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -890,7 +878,6 @@ func TestSqlcRepo_SaveWriter(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.r.SaveWriter(context.Background(), test.writer)
 			if (err != nil) != test.expectErr {
@@ -956,7 +943,6 @@ func TestSqlcRepo_SaveError(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.r.SaveError(context.Background(), test.bk, test.e)
 			t.Run("result", func(t *testing.T) {
@@ -1059,7 +1045,6 @@ func TestSqlcRepo_Stats(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

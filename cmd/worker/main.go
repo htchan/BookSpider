@@ -97,7 +97,6 @@ func main() {
 		log.Log().Msg("start regular batch process")
 
 		for _, serv := range services {
-			serv := serv
 			wg.Add(1)
 			go func(serv service.Service) {
 				defer wg.Done()

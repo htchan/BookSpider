@@ -31,7 +31,6 @@ func TestNewReadDataService(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -65,7 +64,6 @@ func TestReadDataReadDataServiceImpl_bookFileLocation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -159,7 +157,6 @@ func TestReadDataReadDataServiceImpl_Book(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -224,7 +221,6 @@ func TestReadDataReadDataServiceImpl_BookContent(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -287,7 +283,6 @@ func TestReadDataReadDataServiceImpl_BookChapters(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -394,7 +389,6 @@ func TestReadDataReadDataServiceImpl_BookGroup(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -442,7 +436,6 @@ func TestReadDataReadDataServiceImpl_SearchBook(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -485,7 +478,6 @@ func TestReadDataReadDataServiceImpl_RandomBook(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -522,7 +514,6 @@ func TestReadDataReadDataServiceImpl_Stats(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -560,7 +551,6 @@ func TestReadDataReadDataServiceImpl_DBStats(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

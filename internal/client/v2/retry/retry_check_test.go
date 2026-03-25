@@ -63,7 +63,6 @@ func TestCalculatePauseDuration(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			got := CalculatePauseDuration(test.args.attempt, test.args.interval, test.args.intervalType)
@@ -91,7 +90,7 @@ func TestNewRetryCheck(t *testing.T) {
 
 	retryCheckForStatusCode := NewRetryCheck(RetryCondition{
 		Type:              RetryConditionTypeStatusCode,
-		Value:             []interface{}{100, 300, 400},
+		Value:             []any{100, 300, 400},
 		Weight:            20,
 		PauseInterval:     2 * time.Second,
 		PauseIntervalType: PauseIntervalTypeConst,
@@ -252,7 +251,6 @@ func TestNewRetryCheck(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 

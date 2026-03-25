@@ -26,7 +26,6 @@ func Test_NewWriter(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			result := NewWriter(test.writerName)
@@ -66,7 +65,6 @@ func Test_Writer_Checksum(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			result := test.writer.Checksum()

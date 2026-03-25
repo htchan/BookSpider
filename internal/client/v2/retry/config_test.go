@@ -73,7 +73,6 @@ func Test_validate_RetryCondition(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -142,7 +141,6 @@ func Test_validate_RetryClientConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			err := validator.New().Struct(test.conf)

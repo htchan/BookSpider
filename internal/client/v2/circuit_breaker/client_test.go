@@ -46,7 +46,7 @@ func TestNewClient(t *testing.T) {
 					CheckConfigs: []CheckConfig{
 						{
 							Type:  CheckTypeStatusCodes,
-							Value: []interface{}{502},
+							Value: []any{502},
 						},
 					},
 				},
@@ -63,7 +63,7 @@ func TestNewClient(t *testing.T) {
 					CheckConfigs: []CheckConfig{
 						{
 							Type:  CheckTypeStatusCodes,
-							Value: []interface{}{502},
+							Value: []any{502},
 						},
 					},
 				},
@@ -78,8 +78,6 @@ func TestNewClient(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -156,8 +154,6 @@ func TestCircuitBreakerClient_requestWeights(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -238,7 +234,6 @@ func TestCircuitBreakerClient_acquire(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -303,7 +298,6 @@ func TestCircuitBreakerClient_recover(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -393,7 +387,6 @@ func TestCircuitBreakerClient_handleCircuitOpen(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -499,7 +492,6 @@ func TestCircuitBreakClient_reqchOpenThreshold(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -534,7 +526,7 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 				RecoverDuration:       100 * time.Millisecond,
 				OpenDuration:          200 * time.Millisecond,
 				CheckConfigs: []CheckConfig{
-					{Type: CheckTypeStatusCodes, Value: []interface{}{500}},
+					{Type: CheckTypeStatusCodes, Value: []any{500}},
 				},
 			},
 			simple.NewClient(&simple.SimpleClientConfig{
@@ -702,7 +694,6 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cli := test.prepareClient()
@@ -712,11 +703,9 @@ func TestCircuitBreakerClient_Get(t *testing.T) {
 			start := time.Now()
 			var wg sync.WaitGroup
 			for i := 0; i < test.sendNRequest; i++ {
-				wg.Add(1)
-				go func() {
+				wg.Go(func() {
 					cli.Get(context.Background(), srv.URL+test.url)
-					wg.Done()
-				}()
+				})
 			}
 			wg.Wait()
 			timeTaken := time.Since(start).Truncate(50 * time.Millisecond)

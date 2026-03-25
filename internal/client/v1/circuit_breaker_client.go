@@ -121,14 +121,12 @@ func (client *CircuitBreakerClient) SendRequestWithCircuitBreaker(url string) (s
 	if err != nil && err.Error() == "code 503" {
 		client.failCount.Add(1)
 		if client.failCount.Load() > int32(maxFailCount) {
-			client.waitGroup.Add(1)
-			go func() {
-				defer client.waitGroup.Done()
+			client.waitGroup.Go(func() {
 				time.Sleep(circuitBreakingSleep)
 				if client.failCount.Load() > int32(float64(maxFailCount)*maxFailMultiplier) {
 					client.failCount.Store(int32(maxFailCount) / 2)
 				}
-			}()
+			})
 		}
 	} else {
 		client.failCount.Store(0)

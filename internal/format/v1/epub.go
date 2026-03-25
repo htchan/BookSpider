@@ -51,18 +51,18 @@ func writeToc(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters) er
 		return fmt.Errorf("create toc file failed: %w", createErr)
 	}
 
-	chaptersContent := ""
+	var chaptersContent strings.Builder
 	for i, chapter := range chapters {
-		chaptersContent += fmt.Sprintf(
+		chaptersContent.WriteString(fmt.Sprintf(
 			`<navPoint id="num_%d" playOrder="%d">
 			<navLabel><text>%s</text></navLabel>
 			<content src="OEBPS/chapters/chapter-%d.xhtml"/>
 			</navPoint>`,
 			i+1, i+1, chapter.Title, i+1,
-		)
+		))
 	}
 
-	_, writeErr := tocFile.Write([]byte(fmt.Sprintf(
+	_, writeErr := tocFile.Write(fmt.Appendf(nil,
 		`<?xml version="1.0" encoding="UTF-8"?>
 		<ncx version="2005-1" xml:lang="zh" xmlns="http://www.daisy.org/z3986/2005/ncx/">
 			<head>
@@ -79,8 +79,8 @@ func writeToc(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters) er
 				%s
 			</navMap>
 		</ncx>`,
-		bk.Title, chaptersContent,
-	)))
+		bk.Title, chaptersContent.String(),
+	))
 	if writeErr != nil {
 		return fmt.Errorf("write toc file failed: %w", writeErr)
 	}
@@ -94,7 +94,7 @@ func writeCover(zipWriter *zip.Writer, bk *model.Book) error {
 		return fmt.Errorf("create cover file failed: %w", createErr)
 	}
 
-	_, writeErr := coverFile.Write([]byte(fmt.Sprintf(
+	_, writeErr := coverFile.Write(fmt.Appendf(nil,
 		`<?xml version='1.0' encoding='utf-8'?>
 		<html xmlns="http://www.w3.org/1999/xhtml">
 		<body>
@@ -106,7 +106,7 @@ func writeCover(zipWriter *zip.Writer, bk *model.Book) error {
 		</body>
 		</html>`,
 		bk.Title, bk.Writer.Name,
-	)))
+	))
 	if writeErr != nil {
 		return fmt.Errorf("write cover file failed: %w", writeErr)
 	}
@@ -119,18 +119,18 @@ func writeContent(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters
 	if createErr != nil {
 		return fmt.Errorf("create content file failed: %w", createErr)
 	}
-	manifestContent := ""
+	var manifestContent strings.Builder
 	spineContent := ""
 
 	for i := range chapters {
-		manifestContent += fmt.Sprintf(
+		manifestContent.WriteString(fmt.Sprintf(
 			`<item id="chapter-%d" href="chapters/chapter-%d.xhtml" media-type="application/xhtml+xml" />`,
 			i+1, i+1,
-		)
+		))
 		spineContent += fmt.Sprintf(`<itemref idref="chapter-%d" />`, i+1)
 	}
 
-	_, writeErr := contentFile.Write([]byte(fmt.Sprintf(
+	_, writeErr := contentFile.Write(fmt.Appendf(nil,
 		`<?xml version="1.0" encoding="UTF-8"?>
 		<package xmlns="http://www.idpf.org/2007/opf" version="3.0">
 				<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -148,8 +148,8 @@ func writeContent(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters
 				%s
 				</spine>
 		</package>`,
-		bk.Title, bk.Writer.Name, bk.Writer.Name, manifestContent, spineContent,
-	)))
+		bk.Title, bk.Writer.Name, bk.Writer.Name, manifestContent.String(), spineContent,
+	))
 	if writeErr != nil {
 		return fmt.Errorf("write content file failed: %w", writeErr)
 	}
@@ -180,7 +180,7 @@ func writeChapters(zipWriter *zip.Writer, chapters model.Chapters) error {
 		content := strings.Split(chapter.Content, "\n")
 		content = reformatChaptersForEpub(content)
 
-		_, writeErr := chapterFile.Write([]byte(fmt.Sprintf(
+		_, writeErr := chapterFile.Write(fmt.Appendf(nil,
 			`<?xml version="1.0" encoding="UTF-8"?>
 			<!DOCTYPE html>
 			<html xmlns="http://www.w3.org/1999/xhtml">
@@ -193,7 +193,7 @@ func writeChapters(zipWriter *zip.Writer, chapters model.Chapters) error {
 			</body>
 			</html>`,
 			chapter.Title, chapter.Title, strings.Join(content, "\n"),
-		)))
+		))
 		if writeErr != nil {
 			return fmt.Errorf("write chapter %d failed: %w", i+i, writeErr)
 		}

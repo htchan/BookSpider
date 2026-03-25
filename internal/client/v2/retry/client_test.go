@@ -28,7 +28,7 @@ func TestNewClient(t *testing.T) {
 				RetryConditions: []RetryCondition{
 					{
 						Type:              RetryConditionTypeStatusCode,
-						Value:             []interface{}{404},
+						Value:             []any{404},
 						Weight:            1,
 						PauseInterval:     time.Second,
 						PauseIntervalType: PauseIntervalTypeConst,
@@ -46,7 +46,7 @@ func TestNewClient(t *testing.T) {
 					RetryConditions: []RetryCondition{
 						{
 							Type:              RetryConditionTypeStatusCode,
-							Value:             []interface{}{404},
+							Value:             []any{404},
 							Weight:            1,
 							PauseInterval:     time.Second,
 							PauseIntervalType: PauseIntervalTypeConst,
@@ -58,7 +58,6 @@ func TestNewClient(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -177,7 +176,6 @@ func TestRetryClient_Get(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
