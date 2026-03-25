@@ -120,14 +120,14 @@ func writeContent(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters
 		return fmt.Errorf("create content file failed: %w", createErr)
 	}
 	var manifestContent strings.Builder
-	spineContent := ""
+	var spineContent strings.Builder
 
 	for i := range chapters {
 		manifestContent.WriteString(fmt.Sprintf(
 			`<item id="chapter-%d" href="chapters/chapter-%d.xhtml" media-type="application/xhtml+xml" />`,
 			i+1, i+1,
 		))
-		spineContent += fmt.Sprintf(`<itemref idref="chapter-%d" />`, i+1)
+		spineContent.WriteString(fmt.Sprintf(`<itemref idref="chapter-%d" />`, i+1))
 	}
 
 	_, writeErr := contentFile.Write(fmt.Appendf(nil,
@@ -148,7 +148,7 @@ func writeContent(zipWriter *zip.Writer, bk *model.Book, chapters model.Chapters
 				%s
 				</spine>
 		</package>`,
-		bk.Title, bk.Writer.Name, bk.Writer.Name, manifestContent.String(), spineContent,
+		bk.Title, bk.Writer.Name, bk.Writer.Name, manifestContent.String(), spineContent.String(),
 	))
 	if writeErr != nil {
 		return fmt.Errorf("write content file failed: %w", writeErr)
