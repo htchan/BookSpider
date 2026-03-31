@@ -3,18 +3,14 @@ package config
 import (
 	"time"
 
-	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client/v2/retry"
-	"github.com/htchan/BookSpider/internal/client/v2/simple"
+	client "github.com/htchan/BookSpider/internal/client/v2"
 )
 
 type SiteConfig struct {
-	DecodeMethod         string                     `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
-	MaxThreads           int                        `yaml:"max_threads" validate:"min=1"`
-	CircuitBreakerConfig CircuitBreakerClientConfig `yaml:"circuit_breaker"`
-	ClientConfig         ClientConfig               `yaml:"client" validate:"dive"`
-	RequestTimeout       time.Duration              `yaml:"request_timeout" validate:"min=1s"`
-	RetryConfig          map[string]int             `yaml:"retry_map" validate:"min=1,dive,min=1"`
+	DecodeMethod   client.DecodeMethod `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
+	MaxThreads     int                 `yaml:"max_threads" validate:"min=1"`
+	ClientConfig   ClientConfig        `yaml:"client" validate:"dive"`
+	RequestTimeout time.Duration       `yaml:"request_timeout" validate:"min=1s"`
 
 	Storage         string `yaml:"storage" validate:"dir"`
 	BackupDirectory string `yaml:"backup_directory" validate:"min=1"`
@@ -24,19 +20,29 @@ type SiteConfig struct {
 	MaxDownloadConcurrency int                    `yaml:"max_download_concurrency" validate:"min=1"`
 	GoquerySelectorsConfig GoquerySelectorsConfig `yaml:"goquery_selectors"`
 	AvailabilityConfig     AvailabilityConfig     `yaml:"availability"`
-	// UpdateDateLayour string    `yaml:"update_date_layout"`
 }
 
 type ClientConfig struct {
-	Simple         simple.SimpleClientConfig                 `yaml:"simple" validate:"dive"`
-	Retry          retry.RetryClientConfig                   `yaml:"retry" validate:"dive"`
-	CircuitBreaker circuitbreaker.CircuitBreakerClientConfig `yaml:"circuit_breaker" validate:"dive"`
+	RateLimit      RateLimitConfig      `yaml:"rate_limit" validate:"dive"`
+	CircuitBreaker CircuitBreakerConfig `yaml:"circuit_breaker" validate:"dive"`
+	Retry          RetryConfig          `yaml:"retry" validate:"dive"`
 }
 
-type CircuitBreakerClientConfig struct {
-	MaxFailCount      int           `yaml:"max_fail_count" validate:"min=1"`
-	MaxFailMultiplier float64       `yaml:"max_fail_multiplier" validate:"min=1"`
-	SleepInterval     time.Duration `yaml:"sleep_interval" validate:"min=1s"`
+type RateLimitConfig struct {
+	QueueSize int           `yaml:"queue_size" validate:"min=1"`
+	Interval  time.Duration `yaml:"interval" validate:"min=100ms"`
+}
+
+type CircuitBreakerConfig struct {
+	FailureThreshold int           `yaml:"failure_threshold" validate:"min=1"`
+	SuccessThreshold int           `yaml:"success_threshold" validate:"min=1"`
+	RecoverDuration  time.Duration `yaml:"recover_duration" validate:"min=1s"`
+}
+
+type RetryConfig struct {
+	MaxRetries    int           `yaml:"max_retries" validate:"min=0"`
+	BaseInterval  time.Duration `yaml:"base_interval" validate:"min=100ms"`
+	IntervalType  string        `yaml:"interval_type" validate:"oneof=static linear exponential"`
 }
 
 type URLConfig struct {
