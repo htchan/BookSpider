@@ -11,6 +11,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
+	github.com/htchan/goclient v0.1.0
 	github.com/htchan/goshutdown v0.0.1
 	github.com/lib/pq v1.10.9
 	github.com/ory/dockertest/v3 v3.10.0

@@ -2,15 +2,8 @@ sites:
   xbiquge:
     <<: *xbiquge_selector
     client: *xbiquge_client
-    max_threads: 1500
+    decode_method: gbk
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/xbiquge"
     backup_directory: /backup/book_spider
@@ -22,15 +15,8 @@ sites:
   xqishu:
     <<: *xqishu_selector
     client: *xqishu_client
-    max_threads: 500
+    decode_method: utf8
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 10
-      max_fail_multiplier: 2
-      sleep_interval: 5s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/xqishu"
     backup_directory: /backup/book_spider
@@ -42,15 +28,8 @@ sites:
   80txt:
     <<: *80txt_selector
     client: *80txt_client
-    max_threads: 1500
+    decode_method: utf8
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/80txt"
     backup_directory: /backup/book_spider
@@ -62,15 +41,8 @@ sites:
   bestory:
     <<: *bestory_selector
     client: *bestory_client
-    max_threads: 1500
+    decode_method: big5
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/bestory"
     backup_directory: /backup/book_spider
@@ -83,15 +55,7 @@ sites:
     <<: *ck101_selector
     client: *ck101_client
     decode_method: big5
-    max_threads: 1500
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/ck101"
     backup_directory: /backup/book_spider
@@ -103,15 +67,8 @@ sites:
   hjwzw:
     <<: *hjwzw_selector
     client: *hjwzw_client
-    max_threads: 1500
+    decode_method: utf8
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/hjwzw"
     backup_directory: /backup/book_spider
@@ -123,15 +80,8 @@ sites:
   uukanshu:
     <<: *uukanshu_selector
     client: *uukanshu_client
-    max_threads: 1500
+    decode_method: gbk
     request_timeout: 30s
-    circuit_breaker:
-      max_fail_count: 1000
-      max_fail_multiplier: 1.5
-      sleep_interval: 10s
-    retry_map:
-      default: 10
-      unavailable: 100
 
     storage: "/books/uukanshu"
     backup_directory: /backup/book_spider
