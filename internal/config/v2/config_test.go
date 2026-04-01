@@ -8,9 +8,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client/v2/retry"
-	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )
