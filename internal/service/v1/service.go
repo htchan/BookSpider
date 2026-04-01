@@ -79,9 +79,6 @@ func NewService(
 		circuitbreaker.WithOnStateChange(func(from, to circuitbreaker.State) {
 			if to == circuitbreaker.StateOpen {
 				newSize := int(float64(conf.ClientConfig.RateLimit.QueueSize) * conf.ClientConfig.CircuitBreaker.OpenQueueRatio)
-				if newSize < 1 {
-					newSize = 1
-				}
 				queue.Resize(newSize)
 			} else if to == circuitbreaker.StateClosed {
 				queue.Resize(conf.ClientConfig.RateLimit.QueueSize)

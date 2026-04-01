@@ -8,9 +8,7 @@ xbiquge_client: &xbiquge_client
   retry: *default_retry_config
 
 xqishu_client: &xqishu_client
-  rate_limit:
-    queue_size: 20
-    interval: 1s
+  rate_limit: *default_rate_limit_config
   circuit_breaker:
     <<: *default_circuit_breaker_config
     failure_threshold: 10
