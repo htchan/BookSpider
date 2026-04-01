@@ -53,7 +53,7 @@ func retryOnError(req *http.Request, resp *http.Response, err error) bool {
 	return false
 }
 
-func newRetryIntervalCalculator(intervalType string, baseInterval time.Duration) retry.IntervalCalculator {
+func newRetryIntervalCalculator(intervalType string, baseInterval time.Duration) retry.RetryIntervalCalculator {
 	switch intervalType {
 	case "linear":
 		return retry.LinearRetryInterval(baseInterval)
