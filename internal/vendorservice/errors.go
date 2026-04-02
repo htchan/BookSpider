@@ -1,8 +1,23 @@
 package vendor
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
+
+type StatusCodeError struct {
+	StatusCode int
+}
+
+var _ error = StatusCodeError{}
+
+func (err StatusCodeError) Error() string {
+	return fmt.Sprintf("status code is %d", err.StatusCode)
+}
 
 var (
+	ErrTimeout = errors.New("request timeout")
+
 	ErrFieldsNotFound = errors.New("book fields not found")
 	// book fields not found error
 	ErrBookTitleNotFound   = errors.New("title not found")

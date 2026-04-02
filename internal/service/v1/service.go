@@ -3,23 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
-	"sync/atomic"
-	"time"
 
-	client "github.com/htchan/BookSpider/internal/client/v2"
 	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
-	"github.com/htchan/goclient"
-	circuitbreaker "github.com/htchan/goclient/middlewares/circuit_breaker"
-	ratelimit "github.com/htchan/goclient/middlewares/rate_limit"
-	"github.com/htchan/goclient/middlewares/retry"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
@@ -27,7 +19,6 @@ import (
 
 type ServiceImpl struct {
 	name          string
-	cli           client.BookClient
 	rpo           repo.Repository
 	vendorService vendor.VendorService
 
@@ -38,134 +29,14 @@ type ServiceImpl struct {
 
 var _ serv.Service = (*ServiceImpl)(nil)
 
-func isServerError(req *http.Request, resp *http.Response, err error) bool {
-	if err != nil {
-		return true
-	}
-	return resp != nil && resp.StatusCode >= 500
-}
-
-func retryOnError(req *http.Request, resp *http.Response, err error) bool {
-	if err != nil {
-		return true
-	}
-	if resp != nil && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
-		return true
-	}
-	return false
-}
-
-func newRetryIntervalCalculator(intervalType string, baseInterval time.Duration) retry.RetryIntervalCalculator {
-	switch intervalType {
-	case "linear":
-		return retry.LinearRetryInterval(baseInterval)
-	case "exponential":
-		return retry.ExponentialRetryInterval(baseInterval)
-	default:
-		return retry.StaticRetryInterval(baseInterval)
-	}
-}
-
 func NewService(
 	name string, rpo repo.Repository,
 	vendorService vendor.VendorService,
 	sema *semaphore.Weighted, conf config.SiteConfig,
+	vendorSema *semaphore.Weighted,
 ) *ServiceImpl {
-	queueSize := int64(conf.ClientConfig.RateLimit.QueueSize)
-	queue := ratelimit.NewQueue(conf.ClientConfig.RateLimit.QueueSize)
-	vendorSema := semaphore.NewWeighted(queueSize)
-
-	// semaHeld tracks how many vendor semaphore slots are currently held by
-	// the circuit breaker.
-	var semaHeld atomic.Int64
-	// acquireCancel stops any in-progress background acquire loop.
-	var acquireCancel context.CancelFunc
-
-	breaker := circuitbreaker.NewCircuitBreaker(
-		conf.ClientConfig.CircuitBreaker.FailureThreshold,
-		conf.ClientConfig.CircuitBreaker.SuccessThreshold,
-		conf.ClientConfig.CircuitBreaker.RecoverDuration,
-		isServerError,
-		circuitbreaker.WithOnStateChange(func(from, to circuitbreaker.State) {
-			// Cancel any in-progress acquire loop from a previous open transition.
-			if acquireCancel != nil {
-				acquireCancel()
-				acquireCancel = nil
-			}
-
-			switch to {
-			case circuitbreaker.StateOpen:
-				// Acquire all vendor semaphore slots one at a time in a background
-				// goroutine. We cannot block inside the callback because it runs
-				// under the circuit breaker's mutex — in-flight requests need that
-				// mutex to call recordSuccess/recordFailure when they finish.
-				newSize := int(float64(conf.ClientConfig.RateLimit.QueueSize) * conf.ClientConfig.CircuitBreaker.OpenQueueRatio)
-				queue.Resize(newSize)
-
-				var acquireCtx context.Context
-				acquireCtx, acquireCancel = context.WithCancel(context.Background())
-
-				go func() {
-					for range queueSize {
-						if err := vendorSema.Acquire(acquireCtx, 1); err != nil {
-							// Context cancelled — state changed, stop acquiring.
-							return
-						}
-						semaHeld.Add(1)
-					}
-				}()
-			case circuitbreaker.StateHalfOpen:
-				// Release a portion of slots so probe requests can get through.
-				allowedSlots := max(int64(float64(queueSize)*conf.ClientConfig.CircuitBreaker.OpenQueueRatio), 1)
-
-				held := semaHeld.Load()
-				toRelease := held - (queueSize - allowedSlots)
-				if toRelease > 0 && toRelease <= held {
-					vendorSema.Release(toRelease)
-					semaHeld.Add(-toRelease)
-				}
-			case circuitbreaker.StateClosed:
-				// Release all held slots — full throughput.
-				held := semaHeld.Load()
-				if held > 0 {
-					vendorSema.Release(held)
-					semaHeld.Add(-held)
-				}
-				queue.Resize(conf.ClientConfig.RateLimit.QueueSize)
-			}
-
-			log.Info().
-				Str("vendor", name).
-				Str("from", from.String()).
-				Str("to", to.String()).
-				Int64("sema_held", semaHeld.Load()).
-				Int64("sema_size", queueSize).
-				Msg("circuit breaker state changed")
-		}),
-	)
-
-	cli := goclient.NewClient(
-		goclient.WithRequester((&http.Client{Timeout: conf.RequestTimeout}).Do),
-		goclient.WithMiddlewares(
-			retry.NewRetryMiddleware(
-				conf.ClientConfig.Retry.MaxRetries,
-				retryOnError,
-				newRetryIntervalCalculator(
-					conf.ClientConfig.Retry.IntervalType,
-					conf.ClientConfig.Retry.BaseInterval,
-				),
-			),
-			circuitbreaker.NewCircuitBreakerMiddleware(breaker),
-			ratelimit.NewRateLimitMiddleware(queue, conf.ClientConfig.RateLimit.Interval),
-		),
-	)
-
 	return &ServiceImpl{
-		name: name,
-		cli: client.NewClient(
-			cli,
-			conf.DecodeMethod,
-		),
+		name:          name,
 		rpo:           rpo,
 		vendorService: vendorService,
 
@@ -287,7 +158,7 @@ func (s *ServiceImpl) PatchMissingRecords(ctx context.Context, stats *serv.Updat
 }
 
 func (s *ServiceImpl) CheckAvailability(ctx context.Context) error {
-	body, err := s.cli.Get(ctx, s.vendorService.AvailabilityURL())
+	body, err := s.vendorService.Get(ctx, s.vendorService.AvailabilityURL())
 	if err != nil {
 		return fmt.Errorf("get availability page failed: %w", err)
 	}
@@ -298,3 +169,4 @@ func (s *ServiceImpl) CheckAvailability(ctx context.Context) error {
 
 	return nil
 }
+
