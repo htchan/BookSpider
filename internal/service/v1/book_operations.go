@@ -138,12 +138,14 @@ func (s *ServiceImpl) Update(ctx context.Context, stats *serv.UpdateStats) error
 	}
 
 	for bk := range bkChan {
+		s.vendorSema.Acquire(ctx, 1)
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 		stats.Total.Add(1)
 
 		go func(bk *model.Book) {
 			defer wg.Done()
+			defer s.vendorSema.Release(1)
 			defer s.sema.Release(1)
 
 			logger := zerolog.Ctx(ctx).With().
@@ -205,11 +207,13 @@ func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) erro
 	for i := summary.LatestSuccessID + 1; i <= summary.MaxBookID && int(errorCount.Load()) < s.conf.MaxExploreError; i++ {
 		i := i
 
+		s.vendorSema.Acquire(ctx, 1)
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 
 		go func(id int) {
 			defer wg.Done()
+			defer s.vendorSema.Release(1)
 			defer s.sema.Release(1)
 
 			bk, err := s.rpo.FindBookById(ctx, s.name, id)
@@ -242,11 +246,13 @@ func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) erro
 	for i := summary.MaxBookID + 1; int(errorCount.Load()) < s.conf.MaxExploreError; i++ {
 		i := i
 
+		s.vendorSema.Acquire(ctx, 1)
 		s.sema.Acquire(ctx, 1)
 		wg.Add(1)
 
 		go func(id int) {
 			defer wg.Done()
+			defer s.vendorSema.Release(1)
 			defer s.sema.Release(1)
 
 			bk := model.NewBook(s.name, i)
@@ -338,10 +344,12 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book, stats *s
 	for i := range chapters {
 		chapters[i] = model.NewChapter(i, (chapterList)[i].URL, (chapterList)[i].Title)
 		wg.Add(1)
+		s.vendorSema.Acquire(ctx, 1)
 		s.sema.Acquire(ctx, 1)
 
 		go func(ch *model.Chapter) {
 			defer wg.Done()
+			defer s.vendorSema.Release(1)
 			defer s.sema.Release(1)
 
 			chapterLogger := logger.With().
@@ -411,6 +419,7 @@ func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) e
 	}
 
 	for bk := range bkChan {
+		s.vendorSema.Acquire(ctx, 1)
 		s.sema.Acquire(ctx, 1)
 		se.Acquire(ctx, 1)
 		wg.Add(1)
@@ -420,6 +429,7 @@ func (s *ServiceImpl) Download(ctx context.Context, stats *serv.DownloadStats) e
 		go func(bk *model.Book) {
 			defer wg.Done()
 			defer se.Release(1)
+			defer s.vendorSema.Release(1)
 			defer s.sema.Release(1)
 
 			logger := zerolog.Ctx(ctx).With().

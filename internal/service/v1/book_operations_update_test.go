@@ -437,7 +437,7 @@ func TestServiceImpl_Update(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), &bkUpdated).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), &bkUpdated, nil).Return(nil)
 
-				return &ServiceImpl{name: "test", sema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{name: "test", sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
 			},
 			wantError: nil,
 		},
