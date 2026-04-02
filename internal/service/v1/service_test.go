@@ -254,7 +254,7 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 					name: "test",
 					conf: config.SiteConfig{Storage: "./patch-download-status"},
 					rpo:  rpo,
-					sema: semaphore.NewWeighted(1),
+					sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: nil,
@@ -270,7 +270,7 @@ func TestServiceImpl_PatchDownloadStatus(t *testing.T) {
 					name: "test",
 					conf: config.SiteConfig{Storage: "./patch-download-status"},
 					rpo:  rpo,
-					sema: semaphore.NewWeighted(1),
+					sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: service.ErrUnavailable,
@@ -333,7 +333,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 					rpo:           rpo,
 					cli:           cli,
 					vendorService: vendorService,
-					sema:          semaphore.NewWeighted(1),
+					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: nil,
@@ -354,7 +354,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				return &ServiceImpl{
 					name: "test",
 					rpo:  rpo,
-					sema: semaphore.NewWeighted(1),
+					sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: service.ErrUnavailable,
@@ -400,7 +400,7 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 					name:          "serv",
 					cli:           cli,
 					vendorService: vendorService,
-					sema:          semaphore.NewWeighted(1),
+					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: nil,
@@ -419,7 +419,7 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 					name:          "serv",
 					cli:           cli,
 					vendorService: vendorService,
-					sema:          semaphore.NewWeighted(1),
+					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			wantError: serv.ErrUnavailable,

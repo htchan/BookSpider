@@ -144,7 +144,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 				}).Return(nil)
 
 				return &ServiceImpl{
-					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1),
+					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					rpo: rpo, cli: cli, vendorService: vendorService,
 				}
 			},
@@ -212,7 +212,7 @@ content 2 content 2 content 2
 				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("", serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					cli: cli, vendorService: vendorService, sema: semaphore.NewWeighted(1),
+					cli: cli, vendorService: vendorService, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			book: &model.Book{
@@ -242,7 +242,7 @@ content 2 content 2 content 2
 				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1),
+					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					cli: cli, vendorService: vendorService,
 				}
 			},
@@ -281,7 +281,7 @@ content 2 content 2 content 2
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1),
+					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					rpo: rpo, cli: cli, vendorService: vendorService,
 				}
 			},
@@ -328,7 +328,7 @@ content 2 content 2 content 2
 				}).Return(serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1),
+					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					rpo: rpo, cli: cli, vendorService: vendorService,
 				}
 			},
@@ -419,8 +419,8 @@ func TestServiceImpl_Download(t *testing.T) {
 
 				return &ServiceImpl{
 					name: "test", conf: config.SiteConfig{Storage: "./download-book", MaxDownloadConcurrency: 1},
-					sema: semaphore.NewWeighted(2),
-					rpo:  rpo, cli: cli, vendorService: vendorService,
+					sema: semaphore.NewWeighted(2), vendorSema: semaphore.NewWeighted(2),
+					rpo: rpo, cli: cli, vendorService: vendorService,
 				}
 			},
 			wantError: nil,

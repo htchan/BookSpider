@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	client "github.com/htchan/BookSpider/internal/client/v2"
@@ -30,8 +31,9 @@ type ServiceImpl struct {
 	rpo           repo.Repository
 	vendorService vendor.VendorService
 
-	conf config.SiteConfig
-	sema *semaphore.Weighted
+	conf       config.SiteConfig
+	sema       *semaphore.Weighted // shared across all vendors
+	vendorSema *semaphore.Weighted // per-vendor; gated by circuit breaker state
 }
 
 var _ serv.Service = (*ServiceImpl)(nil)
@@ -69,7 +71,15 @@ func NewService(
 	vendorService vendor.VendorService,
 	sema *semaphore.Weighted, conf config.SiteConfig,
 ) *ServiceImpl {
+	queueSize := int64(conf.ClientConfig.RateLimit.QueueSize)
 	queue := ratelimit.NewQueue(conf.ClientConfig.RateLimit.QueueSize)
+	vendorSema := semaphore.NewWeighted(queueSize)
+
+	// semaHeld tracks how many vendor semaphore slots are currently held by
+	// the circuit breaker.
+	var semaHeld atomic.Int64
+	// acquireCancel stops any in-progress background acquire loop.
+	var acquireCancel context.CancelFunc
 
 	breaker := circuitbreaker.NewCircuitBreaker(
 		conf.ClientConfig.CircuitBreaker.FailureThreshold,
@@ -77,12 +87,60 @@ func NewService(
 		conf.ClientConfig.CircuitBreaker.RecoverDuration,
 		isServerError,
 		circuitbreaker.WithOnStateChange(func(from, to circuitbreaker.State) {
-			if to == circuitbreaker.StateOpen {
+			// Cancel any in-progress acquire loop from a previous open transition.
+			if acquireCancel != nil {
+				acquireCancel()
+				acquireCancel = nil
+			}
+
+			switch to {
+			case circuitbreaker.StateOpen:
+				// Acquire all vendor semaphore slots one at a time in a background
+				// goroutine. We cannot block inside the callback because it runs
+				// under the circuit breaker's mutex — in-flight requests need that
+				// mutex to call recordSuccess/recordFailure when they finish.
 				newSize := int(float64(conf.ClientConfig.RateLimit.QueueSize) * conf.ClientConfig.CircuitBreaker.OpenQueueRatio)
 				queue.Resize(newSize)
-			} else if to == circuitbreaker.StateClosed {
+
+				var acquireCtx context.Context
+				acquireCtx, acquireCancel = context.WithCancel(context.Background())
+
+				go func() {
+					for range queueSize {
+						if err := vendorSema.Acquire(acquireCtx, 1); err != nil {
+							// Context cancelled — state changed, stop acquiring.
+							return
+						}
+						semaHeld.Add(1)
+					}
+				}()
+			case circuitbreaker.StateHalfOpen:
+				// Release a portion of slots so probe requests can get through.
+				allowedSlots := max(int64(float64(queueSize)*conf.ClientConfig.CircuitBreaker.OpenQueueRatio), 1)
+
+				held := semaHeld.Load()
+				toRelease := held - (queueSize - allowedSlots)
+				if toRelease > 0 && toRelease <= held {
+					vendorSema.Release(toRelease)
+					semaHeld.Add(-toRelease)
+				}
+			case circuitbreaker.StateClosed:
+				// Release all held slots — full throughput.
+				held := semaHeld.Load()
+				if held > 0 {
+					vendorSema.Release(held)
+					semaHeld.Add(-held)
+				}
 				queue.Resize(conf.ClientConfig.RateLimit.QueueSize)
 			}
+
+			log.Info().
+				Str("vendor", name).
+				Str("from", from.String()).
+				Str("to", to.String()).
+				Int64("sema_held", semaHeld.Load()).
+				Int64("sema_size", queueSize).
+				Msg("circuit breaker state changed")
 		}),
 	)
 
@@ -111,8 +169,9 @@ func NewService(
 		rpo:           rpo,
 		vendorService: vendorService,
 
-		sema: sema,
-		conf: conf,
+		sema:       sema,
+		vendorSema: vendorSema,
+		conf:       conf,
 	}
 }
 

@@ -111,7 +111,7 @@ func TestServiceImpl_Explore(t *testing.T) {
 				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{ID: 1, Status: model.StatusError, Error: expectErr}, expectErr).Return(nil)
 
 				return &ServiceImpl{
-					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
+					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					conf: config.SiteConfig{MaxExploreError: 1},
 				}
 			},
@@ -133,7 +133,7 @@ func TestServiceImpl_Explore(t *testing.T) {
 				rpo.EXPECT().SaveError(gomock.Any(), &model.Book{Site: "test", ID: 6, HashCode: model.GenerateHash(), Status: model.StatusError, Error: expectErr}, expectErr).Return(nil)
 
 				return &ServiceImpl{
-					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1),
+					name: "test", rpo: rpo, vendorService: vendorService, cli: cli, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 					conf: config.SiteConfig{MaxExploreError: 1},
 				}
 			},
