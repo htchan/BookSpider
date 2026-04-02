@@ -1,72 +1,41 @@
+default_rate_limit_config: &default_rate_limit_config
+  queue_size: 20
+  interval: 1s
+
 xbiquge_client: &xbiquge_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: gbk
+  retry: *default_retry_config
 
 xqishu_client: &xqishu_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
-  circuit_breaker: 
+  rate_limit: *default_rate_limit_config
+  circuit_breaker:
     <<: *default_circuit_breaker_config
-    open_threshold: 10
-    max_concurrency_threads: 200
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: utf8
+    failure_threshold: 10
+    success_threshold: 5
+  retry: *default_retry_config
 
 80txt_client: &80txt_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: utf8
+  retry: *default_retry_config
 
 bestory_client: &bestory_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: big5
+  retry: *default_retry_config
 
 ck101_client: &ck101_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: big5
+  retry: *default_retry_config
 
 hjwzw_client: &hjwzw_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: utf8
+  retry: *default_retry_config
 
 uukanshu_client: &uukanshu_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
+  rate_limit: *default_rate_limit_config
   circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: gbk
+  retry: *default_retry_config

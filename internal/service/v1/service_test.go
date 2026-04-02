@@ -4,10 +4,8 @@ import (
 	"flag"
 	"os"
 	"testing"
+	"time"
 
-	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client/v2/retry"
-	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/htchan/BookSpider/internal/config/v2"
 	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
@@ -44,18 +42,27 @@ func TestNewService(t *testing.T) {
 		vendorService vendor.VendorService
 		sema          *semaphore.Weighted
 		conf          config.SiteConfig
-		want          *ServiceImpl
 	}{
 		{
-			name: "happy flow",
-			want: &ServiceImpl{
-				cli: retry.NewClient(
-					&retry.RetryClientConfig{},
-					circuitbreaker.NewClient(
-						&circuitbreaker.CircuitBreakerClientConfig{},
-						simple.NewClient(&simple.SimpleClientConfig{}),
-					),
-				),
+			name:     "happy flow",
+			siteName: "test",
+			conf: config.SiteConfig{
+				ClientConfig: config.ClientConfig{
+					RateLimit: config.RateLimitConfig{
+						QueueSize: 10,
+						Interval:  time.Second,
+					},
+					CircuitBreaker: config.CircuitBreakerConfig{
+						FailureThreshold: 3,
+						SuccessThreshold: 1,
+						RecoverDuration:  5 * time.Second,
+					},
+					Retry: config.RetryConfig{
+						MaxRetries:   3,
+						BaseInterval: time.Second,
+						IntervalType: "exponential",
+					},
+				},
 			},
 		},
 	}
@@ -65,7 +72,8 @@ func TestNewService(t *testing.T) {
 			t.Parallel()
 
 			got := NewService(test.siteName, test.rpo, test.vendorService, test.sema, test.conf)
-			assert.Equal(t, test.want, got)
+			assert.NotNil(t, got)
+			assert.Equal(t, test.siteName, got.Name())
 		})
 	}
 }

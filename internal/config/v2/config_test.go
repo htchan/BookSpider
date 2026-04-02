@@ -8,9 +8,6 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client/v2/retry"
-	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 )
@@ -628,55 +625,30 @@ func Test_LoadAPIConfig(t *testing.T) {
 		url: availability
 		check_string: check
 `
-	siteClientData1 := `default_circuit_breaker_config: &default_circuit_breaker_config
-  open_threshold: 1000
-  acquire_timeout: 500ms
-  max_concurrency_threads: 1000
-  recover_threads: [1, 2, 5, 10, 50, 100, 500]
-  open_duration: 30s
-  recover_duration: 10s
-  check_configs:
-  - type: status-codes
-    value: [502]
+	siteClientData1 := `default_rate_limit_config: &default_rate_limit_config
+	queue_size: 20
+	interval: 1s
+default_circuit_breaker_config: &default_circuit_breaker_config
+	failure_threshold: 1000
+	success_threshold: 500
+	recover_duration: 10m
+	open_queue_ratio: 0.1
 default_retry_config: &default_retry_config
-	max_retry_weight: 1000
-	retry_conditions:
-	- type: status-code
-		value: [500, 502]
-		weight: 10
-		pause_interval: 1s
-		pause_interval_type: exponential
-	- type: body-contains
-		value: []
-		weight: 100
-		pause_interval: 1s
-		pause_interval_type: linear
-	- type: error
-		weight: 100
-		pause_interval: 1s
-		pause_interval_type: linear
+	max_retries: 20
+	base_interval: 1s
+	interval_type: exponential
 xbiquge_client: &xbiquge_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
-  circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: gbk
+	rate_limit: *default_rate_limit_config
+	circuit_breaker: *default_circuit_breaker_config
+	retry: *default_retry_config
 `
 	siteClientData2 := `xqishu_client: &xqishu_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
-  circuit_breaker: 
-    <<: *default_circuit_breaker_config
-    open_threshold: 10
-    max_concurrency_threads: 200
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: utf8
+	rate_limit: *default_rate_limit_config
+	circuit_breaker:
+		<<: *default_circuit_breaker_config
+		failure_threshold: 10
+		success_threshold: 5
+	retry: *default_retry_config
 `
 
 	tests := []struct {
@@ -715,15 +687,7 @@ xbiquge_client: &xbiquge_client
 	xbiquge:
 		<<: *xbiquge_selector
 		client: *xbiquge_client
-		max_threads: 1000
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 1000
-			max_fail_multiplier: 1.5
-			sleep_interval: 10s
-		retry_map:
-			default: 10
-			unavailable: 100
 
 		storage: /storage
 		backup_directory: /backup
@@ -735,15 +699,7 @@ xbiquge_client: &xbiquge_client
 	xqishu:
 		<<: *xqishu_selector
 		client: *xqishu_client
-		max_threads: 200
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 10
-			max_fail_multiplier: 2
-			sleep_interval: 5s
-		retry_map:
-			default: 10
-			unavailable: 100
 
 		storage: /storage
 		backup_directory: /backup
@@ -770,59 +726,24 @@ xbiquge_client: &xbiquge_client
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
-						MaxThreads:   1000,
 						ClientConfig: ClientConfig{
-							Simple: simple.SimpleClientConfig{
-								RequestTimeout: 30 * time.Second,
-								DecodeMethod:   "gbk",
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
 							},
-							Retry: retry.RetryClientConfig{
-								RetryConditions: []retry.RetryCondition{
-									{
-										Type:              "status-code",
-										Value:             []any{500, 502},
-										Weight:            10,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "exponential",
-									},
-									{
-										Type:              "body-contains",
-										Value:             []any{},
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-									{
-										Type:              "error",
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-								},
-								MaxRetryWeight: 1000,
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 1000,
+								SuccessThreshold: 500,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
 							},
-							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
-								OpenThreshold:         1000,
-								AcquireTimeout:        500 * time.Millisecond,
-								MaxConcurrencyThreads: 1000,
-								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
-								OpenDuration:          30 * time.Second,
-								RecoverDuration:       10 * time.Second,
-								CheckConfigs: []circuitbreaker.CheckConfig{
-									{Type: "status-codes", Value: []any{502}},
-								},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
 							},
 						},
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      1000,
-							MaxFailMultiplier: 1.5,
-							SleepInterval:     10 * time.Second,
-						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{
@@ -850,59 +771,24 @@ xbiquge_client: &xbiquge_client
 					},
 					"xqishu": {
 						DecodeMethod: "utf8",
-						MaxThreads:   200,
 						ClientConfig: ClientConfig{
-							Simple: simple.SimpleClientConfig{
-								RequestTimeout: 30 * time.Second,
-								DecodeMethod:   "utf8",
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
 							},
-							Retry: retry.RetryClientConfig{
-								RetryConditions: []retry.RetryCondition{
-									{
-										Type:              "status-code",
-										Value:             []any{500, 502},
-										Weight:            10,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "exponential",
-									},
-									{
-										Type:              "body-contains",
-										Value:             []any{},
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-									{
-										Type:              "error",
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-								},
-								MaxRetryWeight: 1000,
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 10,
+								SuccessThreshold: 5,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
 							},
-							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
-								OpenThreshold:         10,
-								AcquireTimeout:        500 * time.Millisecond,
-								MaxConcurrencyThreads: 200,
-								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
-								OpenDuration:          30 * time.Second,
-								RecoverDuration:       10 * time.Second,
-								CheckConfigs: []circuitbreaker.CheckConfig{
-									{Type: "status-codes", Value: []any{502}},
-								},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
 							},
 						},
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      10,
-							MaxFailMultiplier: 2,
-							SleepInterval:     5 * time.Second,
-						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{
@@ -959,15 +845,20 @@ xbiquge_client: &xbiquge_client
 				confData := `sites:
 	xbiquge:
 		decode_method: gbk
-		max_threads: 1000
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 1000
-			max_fail_multiplier: 1.5
-			sleep_interval: 10s
-		retry_map:
-			default: 10
-			unavailable: 100
+		client:
+			rate_limit:
+				queue_size: 20
+				interval: 1s
+			circuit_breaker:
+				failure_threshold: 1000
+				success_threshold: 500
+				recover_duration: 10m
+				open_queue_ratio: 0.1
+			retry:
+				max_retries: 20
+				base_interval: 1s
+				interval_type: exponential
 
 		storage: /storage
 		backup_directory: /backup
@@ -1000,17 +891,24 @@ xbiquge_client: &xbiquge_client
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
-						MaxThreads:   1000,
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      1000,
-							MaxFailMultiplier: 1.5,
-							SleepInterval:     10 * time.Second,
+						ClientConfig: ClientConfig{
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
+							},
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 1000,
+								SuccessThreshold: 500,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
+							},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
+							},
 						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{
@@ -1216,55 +1114,30 @@ func Test_LoadBatchConfig(t *testing.T) {
 		url: availability
 		check_string: check
 `
-	siteClientData1 := `default_circuit_breaker_config: &default_circuit_breaker_config
-  open_threshold: 1000
-  acquire_timeout: 500ms
-  max_concurrency_threads: 1000
-  recover_threads: [1, 2, 5, 10, 50, 100, 500]
-  open_duration: 30s
-  recover_duration: 10s
-  check_configs:
-  - type: status-codes
-    value: [502]
+	siteClientData1 := `default_rate_limit_config: &default_rate_limit_config
+	queue_size: 20
+	interval: 1s
+default_circuit_breaker_config: &default_circuit_breaker_config
+	failure_threshold: 1000
+	success_threshold: 500
+	recover_duration: 10m
+	open_queue_ratio: 0.1
 default_retry_config: &default_retry_config
-	max_retry_weight: 1000
-	retry_conditions:
-	- type: status-code
-		value: [500, 502]
-		weight: 10
-		pause_interval: 1s
-		pause_interval_type: exponential
-	- type: body-contains
-		value: []
-		weight: 100
-		pause_interval: 1s
-		pause_interval_type: linear
-	- type: error
-		weight: 100
-		pause_interval: 1s
-		pause_interval_type: linear
+	max_retries: 20
+	base_interval: 1s
+	interval_type: exponential
 xbiquge_client: &xbiquge_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
-  circuit_breaker: *default_circuit_breaker_config
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: gbk
+	rate_limit: *default_rate_limit_config
+	circuit_breaker: *default_circuit_breaker_config
+	retry: *default_retry_config
 `
 	siteClientData2 := `xqishu_client: &xqishu_client
-  # retry client
-  retry: *default_retry_config
-  # circuit breaker client
-  circuit_breaker: 
-    <<: *default_circuit_breaker_config
-    open_threshold: 10
-    max_concurrency_threads: 200
-  # simple client
-  simple:
-    request_timeout: 30s
-    decode_method: utf8
+	rate_limit: *default_rate_limit_config
+	circuit_breaker:
+		<<: *default_circuit_breaker_config
+		failure_threshold: 10
+		success_threshold: 5
+	retry: *default_retry_config
 `
 
 	tests := []struct {
@@ -1306,15 +1179,7 @@ xbiquge_client: &xbiquge_client
 	xbiquge:
 		<<: *xbiquge_selector
 		client: *xbiquge_client
-		max_threads: 1000
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 1000
-			max_fail_multiplier: 1.5
-			sleep_interval: 10s
-		retry_map:
-			default: 10
-			unavailable: 100
 
 		storage: /storage
 		backup_directory: /backup
@@ -1326,15 +1191,7 @@ xbiquge_client: &xbiquge_client
 	xqishu:
 		<<: *xqishu_selector
 		client: *xqishu_client
-		max_threads: 200
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 10
-			max_fail_multiplier: 2
-			sleep_interval: 5s
-		retry_map:
-			default: 10
-			unavailable: 100
 
 		storage: /storage
 		backup_directory: /backup
@@ -1360,59 +1217,24 @@ xbiquge_client: &xbiquge_client
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
-						MaxThreads:   1000,
 						ClientConfig: ClientConfig{
-							Simple: simple.SimpleClientConfig{
-								RequestTimeout: 30 * time.Second,
-								DecodeMethod:   "gbk",
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
 							},
-							Retry: retry.RetryClientConfig{
-								RetryConditions: []retry.RetryCondition{
-									{
-										Type:              "status-code",
-										Value:             []any{500, 502},
-										Weight:            10,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "exponential",
-									},
-									{
-										Type:              "body-contains",
-										Value:             []any{},
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-									{
-										Type:              "error",
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-								},
-								MaxRetryWeight: 1000,
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 1000,
+								SuccessThreshold: 500,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
 							},
-							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
-								OpenThreshold:         1000,
-								AcquireTimeout:        500 * time.Millisecond,
-								MaxConcurrencyThreads: 1000,
-								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
-								OpenDuration:          30 * time.Second,
-								RecoverDuration:       10 * time.Second,
-								CheckConfigs: []circuitbreaker.CheckConfig{
-									{Type: "status-codes", Value: []any{502}},
-								},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
 							},
 						},
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      1000,
-							MaxFailMultiplier: 1.5,
-							SleepInterval:     10 * time.Second,
-						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{
@@ -1440,59 +1262,24 @@ xbiquge_client: &xbiquge_client
 					},
 					"xqishu": {
 						DecodeMethod: "utf8",
-						MaxThreads:   200,
 						ClientConfig: ClientConfig{
-							Simple: simple.SimpleClientConfig{
-								RequestTimeout: 30 * time.Second,
-								DecodeMethod:   "utf8",
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
 							},
-							Retry: retry.RetryClientConfig{
-								RetryConditions: []retry.RetryCondition{
-									{
-										Type:              "status-code",
-										Value:             []any{500, 502},
-										Weight:            10,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "exponential",
-									},
-									{
-										Type:              "body-contains",
-										Value:             []any{},
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-									{
-										Type:              "error",
-										Weight:            100,
-										PauseInterval:     time.Second,
-										PauseIntervalType: "linear",
-									},
-								},
-								MaxRetryWeight: 1000,
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 10,
+								SuccessThreshold: 5,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
 							},
-							CircuitBreaker: circuitbreaker.CircuitBreakerClientConfig{
-								OpenThreshold:         10,
-								AcquireTimeout:        500 * time.Millisecond,
-								MaxConcurrencyThreads: 200,
-								RecoverThreads:        []int64{1, 2, 5, 10, 50, 100, 500},
-								OpenDuration:          30 * time.Second,
-								RecoverDuration:       10 * time.Second,
-								CheckConfigs: []circuitbreaker.CheckConfig{
-									{Type: "status-codes", Value: []any{502}},
-								},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
 							},
 						},
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      10,
-							MaxFailMultiplier: 2,
-							SleepInterval:     5 * time.Second,
-						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{
@@ -1560,15 +1347,20 @@ xbiquge_client: &xbiquge_client
 				confData := `sites:
 	xbiquge:
 		decode_method: gbk
-		max_threads: 1000
 		request_timeout: 30s
-		circuit_breaker:
-			max_fail_count: 1000
-			max_fail_multiplier: 1.5
-			sleep_interval: 10s
-		retry_map:
-			default: 10
-			unavailable: 100
+		client:
+			rate_limit:
+				queue_size: 20
+				interval: 1s
+			circuit_breaker:
+				failure_threshold: 1000
+				success_threshold: 500
+				recover_duration: 10m
+				open_queue_ratio: 0.1
+			retry:
+				max_retries: 20
+				base_interval: 1s
+				interval_type: exponential
 
 		storage: /storage
 		backup_directory: /backup
@@ -1600,17 +1392,24 @@ xbiquge_client: &xbiquge_client
 				SiteConfigs: map[string]SiteConfig{
 					"xbiquge": {
 						DecodeMethod: "gbk",
-						MaxThreads:   1000,
-						CircuitBreakerConfig: CircuitBreakerClientConfig{
-							MaxFailCount:      1000,
-							MaxFailMultiplier: 1.5,
-							SleepInterval:     10 * time.Second,
+						ClientConfig: ClientConfig{
+							RateLimit: RateLimitConfig{
+								QueueSize: 20,
+								Interval:  time.Second,
+							},
+							CircuitBreaker: CircuitBreakerConfig{
+								FailureThreshold: 1000,
+								SuccessThreshold: 500,
+								RecoverDuration:  10 * time.Minute,
+								OpenQueueRatio:   0.1,
+							},
+							Retry: RetryConfig{
+								MaxRetries:   20,
+								BaseInterval: time.Second,
+								IntervalType: "exponential",
+							},
 						},
-						RequestTimeout: 30 * time.Second,
-						RetryConfig: map[string]int{
-							"unavailable": 100,
-							"default":     10,
-						},
+						RequestTimeout:  30 * time.Second,
 						Storage:         "/storage",
 						BackupDirectory: "/backup",
 						URL: URLConfig{

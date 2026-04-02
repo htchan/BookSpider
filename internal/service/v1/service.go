@@ -3,19 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	client "github.com/htchan/BookSpider/internal/client/v2"
-	circuitbreaker "github.com/htchan/BookSpider/internal/client/v2/circuit_breaker"
-	"github.com/htchan/BookSpider/internal/client/v2/retry"
-	"github.com/htchan/BookSpider/internal/client/v2/simple"
 	"github.com/htchan/BookSpider/internal/config/v2"
 	"github.com/htchan/BookSpider/internal/model"
 	"github.com/htchan/BookSpider/internal/repo"
 	serv "github.com/htchan/BookSpider/internal/service"
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
+	"github.com/htchan/goclient"
+	circuitbreaker "github.com/htchan/goclient/middlewares/circuit_breaker"
+	ratelimit "github.com/htchan/goclient/middlewares/rate_limit"
+	"github.com/htchan/goclient/middlewares/retry"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/semaphore"
@@ -33,19 +36,77 @@ type ServiceImpl struct {
 
 var _ serv.Service = (*ServiceImpl)(nil)
 
+func isServerError(req *http.Request, resp *http.Response, err error) bool {
+	if err != nil {
+		return true
+	}
+	return resp != nil && resp.StatusCode >= 500
+}
+
+func retryOnError(req *http.Request, resp *http.Response, err error) bool {
+	if err != nil {
+		return true
+	}
+	if resp != nil && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
+		return true
+	}
+	return false
+}
+
+func newRetryIntervalCalculator(intervalType string, baseInterval time.Duration) retry.RetryIntervalCalculator {
+	switch intervalType {
+	case "linear":
+		return retry.LinearRetryInterval(baseInterval)
+	case "exponential":
+		return retry.ExponentialRetryInterval(baseInterval)
+	default:
+		return retry.StaticRetryInterval(baseInterval)
+	}
+}
+
 func NewService(
 	name string, rpo repo.Repository,
 	vendorService vendor.VendorService,
 	sema *semaphore.Weighted, conf config.SiteConfig,
 ) *ServiceImpl {
+	queue := ratelimit.NewQueue(conf.ClientConfig.RateLimit.QueueSize)
+
+	breaker := circuitbreaker.NewCircuitBreaker(
+		conf.ClientConfig.CircuitBreaker.FailureThreshold,
+		conf.ClientConfig.CircuitBreaker.SuccessThreshold,
+		conf.ClientConfig.CircuitBreaker.RecoverDuration,
+		isServerError,
+		circuitbreaker.WithOnStateChange(func(from, to circuitbreaker.State) {
+			if to == circuitbreaker.StateOpen {
+				newSize := int(float64(conf.ClientConfig.RateLimit.QueueSize) * conf.ClientConfig.CircuitBreaker.OpenQueueRatio)
+				queue.Resize(newSize)
+			} else if to == circuitbreaker.StateClosed {
+				queue.Resize(conf.ClientConfig.RateLimit.QueueSize)
+			}
+		}),
+	)
+
+	cli := goclient.NewClient(
+		goclient.WithRequester((&http.Client{Timeout: conf.RequestTimeout}).Do),
+		goclient.WithMiddlewares(
+			retry.NewRetryMiddleware(
+				conf.ClientConfig.Retry.MaxRetries,
+				retryOnError,
+				newRetryIntervalCalculator(
+					conf.ClientConfig.Retry.IntervalType,
+					conf.ClientConfig.Retry.BaseInterval,
+				),
+			),
+			circuitbreaker.NewCircuitBreakerMiddleware(breaker),
+			ratelimit.NewRateLimitMiddleware(queue, conf.ClientConfig.RateLimit.Interval),
+		),
+	)
+
 	return &ServiceImpl{
 		name: name,
-		cli: retry.NewClient(
-			&conf.ClientConfig.Retry,
-			circuitbreaker.NewClient(
-				&conf.ClientConfig.CircuitBreaker,
-				simple.NewClient(&conf.ClientConfig.Simple),
-			),
+		cli: client.NewClient(
+			cli,
+			conf.DecodeMethod,
 		),
 		rpo:           rpo,
 		vendorService: vendorService,
