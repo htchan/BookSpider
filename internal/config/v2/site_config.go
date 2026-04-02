@@ -41,9 +41,9 @@ type CircuitBreakerConfig struct {
 }
 
 type RetryConfig struct {
-	MaxRetries    int           `yaml:"max_retries" validate:"min=0"`
-	BaseInterval  time.Duration `yaml:"base_interval" validate:"min=100ms"`
-	IntervalType  string        `yaml:"interval_type" validate:"oneof=static linear exponential"`
+	MaxRetries   int           `yaml:"max_retries" validate:"min=0"`
+	BaseInterval time.Duration `yaml:"base_interval" validate:"min=100ms"`
+	IntervalType string        `yaml:"interval_type" validate:"oneof=static linear exponential"`
 }
 
 type URLConfig struct {
