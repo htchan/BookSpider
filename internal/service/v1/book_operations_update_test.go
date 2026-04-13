@@ -2,8 +2,7 @@ package service
 
 import (
 	"testing"
-
-	clientmock "github.com/htchan/BookSpider/internal/mock/client/v2"
+	
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
 	vendormock "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
@@ -125,13 +124,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "no update for book with status error",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(nil, serv.ErrUnavailable)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
@@ -146,15 +145,15 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "no update for existing book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter", UpdateDate: "date",
 				}, nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
@@ -173,10 +172,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "update book with status error",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter", UpdateDate: "date",
 				}, nil)
@@ -188,7 +187,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Status: model.StatusError},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
@@ -206,10 +205,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "update existing book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter 2", UpdateDate: "date 2",
 				}, nil)
@@ -221,7 +220,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
@@ -241,10 +240,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "create new books",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title 2", Writer: "writer", Type: "type", UpdateChapter: "chapter", UpdateDate: "date",
 				}, nil)
@@ -256,7 +255,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				rpo.EXPECT().CreateBook(gomock.Any(), bk).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
 				UpdateDate: "date", UpdateChapter: "chapter", Status: model.StatusInProgress,
@@ -276,12 +275,12 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "getting error when sending request",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
@@ -296,13 +295,13 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "getting error when parsing book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(nil, serv.ErrUnavailable)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk:        &model.Book{ID: 1, Status: model.StatusError},
 			wantBk:    &model.Book{ID: 1, Status: model.StatusError},
@@ -317,10 +316,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "getting error when updating book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter", UpdateDate: "date",
 				}, nil)
@@ -332,7 +331,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), bk).Return(serv.ErrUnavailable)
 				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Status: model.StatusError},
 			wantBk: &model.Book{ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
@@ -350,10 +349,10 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 		{
 			name: "getting error when creating book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter", UpdateDate: "date",
 				}, nil)
@@ -365,7 +364,7 @@ func TestServiceImpl_UpdateBook(t *testing.T) {
 				rpo.EXPECT().CreateBook(gomock.Any(), bk).Return(serv.ErrUnavailable)
 				rpo.EXPECT().SaveError(gomock.Any(), bk, nil).Return(nil)
 
-				return &ServiceImpl{rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{rpo: rpo, vendorService: vendorService}
 			},
 			bk: &model.Book{ID: 1, Status: model.StatusInProgress},
 			wantBk: &model.Book{ID: 1, HashCode: model.GenerateHash(), Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
@@ -409,7 +408,7 @@ func TestServiceImpl_Update(t *testing.T) {
 		{
 			name: "update existing book",
 			getServ: func(ctrl *gomock.Controller) *ServiceImpl {
-				rpo, cli := repomock.NewMockRepository(ctrl), clientmock.NewMockBookClient(ctrl)
+				rpo := repomock.NewMockRepository(ctrl)
 				vendorService := vendormock.NewMockVendorService(ctrl)
 				bk := model.Book{
 					Site: "test", ID: 1, Title: "title", Writer: model.Writer{Name: "writer"}, Type: "type",
@@ -425,7 +424,7 @@ func TestServiceImpl_Update(t *testing.T) {
 
 				rpo.EXPECT().FindBooksForUpdate(gomock.Any(), "test").Return(ch, nil)
 				vendorService.EXPECT().BookURL("1").Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("response", nil)
 				vendorService.EXPECT().ParseBook("response").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateChapter: "chapter 2", UpdateDate: "date 2",
 				}, nil)
@@ -437,7 +436,7 @@ func TestServiceImpl_Update(t *testing.T) {
 				rpo.EXPECT().UpdateBook(gomock.Any(), &bkUpdated).Return(nil)
 				rpo.EXPECT().SaveError(gomock.Any(), &bkUpdated, nil).Return(nil)
 
-				return &ServiceImpl{name: "test", sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService, cli: cli}
+				return &ServiceImpl{name: "test", sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1), rpo: rpo, vendorService: vendorService}
 			},
 			wantError: nil,
 		},

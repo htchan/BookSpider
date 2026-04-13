@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/htchan/BookSpider/internal/config/v2"
-	mockclient "github.com/htchan/BookSpider/internal/mock/client/v2"
 	mockrepo "github.com/htchan/BookSpider/internal/mock/repo"
 	mockvendor "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
@@ -41,11 +40,13 @@ func TestNewService(t *testing.T) {
 		rpo           repo.Repository
 		vendorService vendor.VendorService
 		sema          *semaphore.Weighted
+		vendorSema    *semaphore.Weighted
 		conf          config.SiteConfig
 	}{
 		{
-			name:     "happy flow",
-			siteName: "test",
+			name:       "happy flow",
+			siteName:   "test",
+			vendorSema: semaphore.NewWeighted(10),
 			conf: config.SiteConfig{
 				ClientConfig: config.ClientConfig{
 					RateLimit: config.RateLimitConfig{
@@ -71,7 +72,7 @@ func TestNewService(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewService(test.siteName, test.rpo, test.vendorService, test.sema, test.conf)
+			got := NewService(test.siteName, test.rpo, test.vendorService, test.sema, test.conf, test.vendorSema)
 			assert.NotNil(t, got)
 			assert.Equal(t, test.siteName, got.Name())
 		})
@@ -304,7 +305,6 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := mockrepo.NewMockRepository(ctrl)
 				vendorService := mockvendor.NewMockVendorService(ctrl)
-				cli := mockclient.NewMockBookClient(ctrl)
 
 				hashcode := model.GenerateHash()
 
@@ -312,7 +312,7 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				vendorService.EXPECT().FindMissingIds([]int{1, 2, 4}).Return([]int{3})
 				rpo.EXPECT().CreateBook(gomock.Any(), &model.Book{Site: "test", ID: 3, HashCode: hashcode}).Return(nil)
 				vendorService.EXPECT().BookURL("3").Return("http://testing.com/1234")
-				cli.EXPECT().Get(gomock.Any(), "http://testing.com/1234").Return("result", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "http://testing.com/1234").Return("result", nil)
 				vendorService.EXPECT().ParseBook("result").Return(&vendor.BookInfo{
 					Title: "title", Writer: "writer", Type: "type", UpdateDate: "date", UpdateChapter: "chapter",
 				}, nil)
@@ -331,7 +331,6 @@ func TestServiceImpl_PatchMissingRecords(t *testing.T) {
 				return &ServiceImpl{
 					name:          "test",
 					rpo:           rpo,
-					cli:           cli,
 					vendorService: vendorService,
 					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
@@ -390,15 +389,13 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 			name: "site available",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				vendorService := mockvendor.NewMockVendorService(ctrl)
-				cli := mockclient.NewMockBookClient(ctrl)
 
 				vendorService.EXPECT().AvailabilityURL().Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
 				vendorService.EXPECT().IsAvailable("result").Return(true)
 
 				return &ServiceImpl{
 					name:          "serv",
-					cli:           cli,
 					vendorService: vendorService,
 					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
@@ -409,15 +406,13 @@ func TestServiceImpl_CheckAvailability(t *testing.T) {
 			name: "site unavailable",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				vendorService := mockvendor.NewMockVendorService(ctrl)
-				cli := mockclient.NewMockBookClient(ctrl)
 
 				vendorService.EXPECT().AvailabilityURL().Return("https://test.com")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("result", nil)
 				vendorService.EXPECT().IsAvailable("result").Return(false)
 
 				return &ServiceImpl{
 					name:          "serv",
-					cli:           cli,
 					vendorService: vendorService,
 					sema:          semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
