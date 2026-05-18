@@ -2,13 +2,9 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.5
--- Dumped by pg_dump version 17.5
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -82,7 +78,7 @@ CREATE SEQUENCE public.writers_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.writers_id_seq OWNER TO book_spider;
+ALTER TABLE public.writers_id_seq OWNER TO book_spider;
 
 --
 -- Name: writers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: book_spider
@@ -214,4 +210,6 @@ CREATE UNIQUE INDEX writers_name ON public.writers USING btree (name);
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict ILeVBWkVqqkuP2b4wScYQ8VEC2CB4GbtnzOS1hr2nld5PBzdjQ6MWRCqXFaN3NI
 
