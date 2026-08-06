@@ -1,4 +1,4 @@
-package client
+package vendor
 
 import (
 	"context"
@@ -10,21 +10,19 @@ import (
 	"github.com/htchan/goclient"
 )
 
-type Client struct {
+type BaseClient struct {
 	decoder Decoder
 	cli     *goclient.Client
 }
 
-var _ BookClient = (*Client)(nil)
-
-func NewClient(cli *goclient.Client, decodeMethod DecodeMethod) *Client {
-	return &Client{
+func NewBaseClient(cli *goclient.Client, decodeMethod DecodeMethod) *BaseClient {
+	return &BaseClient{
 		decoder: NewDecoder(decodeMethod),
 		cli:     cli,
 	}
 }
 
-func (c *Client) Get(ctx context.Context, url string) (string, error) {
+func (c *BaseClient) Get(ctx context.Context, url string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err

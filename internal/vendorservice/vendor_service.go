@@ -1,6 +1,7 @@
 package vendor
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -30,6 +31,9 @@ type ChapterInfo struct {
 
 //go:generate go tool mockgen -destination=../mock/vendorservice/vendor_service.go -package=mockvendorservice . VendorService
 type VendorService interface {
+	// http client
+	Get(ctx context.Context, url string) (string, error)
+
 	// url builder
 	BookURL(bookID string) string
 	ChapterListURL(bookID string) string

@@ -10,6 +10,7 @@
 package mockvendorservice
 
 import (
+	context "context"
 	reflect "reflect"
 
 	vendor "github.com/htchan/BookSpider/internal/vendorservice"
@@ -112,6 +113,21 @@ func (m *MockVendorService) FindMissingIds(ids []int) []int {
 func (mr *MockVendorServiceMockRecorder) FindMissingIds(ids any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMissingIds", reflect.TypeOf((*MockVendorService)(nil).FindMissingIds), ids)
+}
+
+// Get mocks base method.
+func (m *MockVendorService) Get(ctx context.Context, url string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, url)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockVendorServiceMockRecorder) Get(ctx, url any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockVendorService)(nil).Get), ctx, url)
 }
 
 // IsAvailable mocks base method.

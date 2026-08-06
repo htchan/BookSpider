@@ -10,6 +10,7 @@ import (
 )
 
 type VendorService struct {
+	*vendor.BaseClient
 }
 
 var _ vendor.VendorService = (*VendorService)(nil)

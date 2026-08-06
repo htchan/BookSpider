@@ -3,9 +3,7 @@ package service
 import (
 	"os"
 	"testing"
-
 	"github.com/htchan/BookSpider/internal/config/v2"
-	clientmock "github.com/htchan/BookSpider/internal/mock/client/v2"
 	repomock "github.com/htchan/BookSpider/internal/mock/repo"
 	vendormock "github.com/htchan/BookSpider/internal/mock/vendorservice"
 	"github.com/htchan/BookSpider/internal/model"
@@ -29,15 +27,15 @@ func TestServiceImpl_downloadChapter(t *testing.T) {
 		{
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("chapter response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("chapter response", nil)
 				vendorService.EXPECT().ParseChapter("chapter response").Return(&vendor.ChapterInfo{
 					Title: "title", Body: "content content content",
 				}, nil)
 
-				return &ServiceImpl{cli: cli, vendorService: vendorService}
+				return &ServiceImpl{vendorService: vendorService}
 			},
 			chapter: &model.Chapter{
 				Index: 1, URL: "https://test.com",
@@ -51,11 +49,11 @@ func TestServiceImpl_downloadChapter(t *testing.T) {
 		{
 			name: "fail to send request",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				cli := clientmock.NewMockBookClient(ctrl)
+				vendorService := vendormock.NewMockVendorService(ctrl)
 
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("", serv.ErrUnavailable)
 
-				return &ServiceImpl{cli: cli}
+				return &ServiceImpl{vendorService: vendorService}
 			},
 			chapter: &model.Chapter{
 				Index: 1, URL: "https://test.com",
@@ -68,13 +66,13 @@ func TestServiceImpl_downloadChapter(t *testing.T) {
 		{
 			name: "fail to parse chapter",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
-				cli.EXPECT().Get(gomock.Any(), "https://test.com").Return("chapter response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com").Return("chapter response", nil)
 				vendorService.EXPECT().ParseChapter("chapter response").Return(nil, serv.ErrUnavailable)
 
-				return &ServiceImpl{cli: cli, vendorService: vendorService}
+				return &ServiceImpl{vendorService: vendorService}
 			},
 			chapter: &model.Chapter{
 				Index: 1, URL: "https://test.com",
@@ -121,20 +119,20 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 			name: "happy flow",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
 				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 1 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 1", Body: "content 1 content 1 content 1",
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
@@ -145,7 +143,7 @@ func TestServiceImpl_DownloadBook(t *testing.T) {
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
-					rpo: rpo, cli: cli, vendorService: vendorService,
+					rpo: rpo, vendorService: vendorService,
 				}
 			},
 			book: &model.Book{
@@ -205,14 +203,14 @@ content 2 content 2 content 2
 		{
 			name: "fail to send request",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("", serv.ErrUnavailable)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("", serv.ErrUnavailable)
 
 				return &ServiceImpl{
-					cli: cli, vendorService: vendorService, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
+					vendorService: vendorService, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
 				}
 			},
 			book: &model.Book{
@@ -234,16 +232,16 @@ content 2 content 2 content 2
 		{
 			name: "fail to parse chapter list",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
 				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
-					cli: cli, vendorService: vendorService,
+					vendorService: vendorService,
 				}
 			},
 			book: &model.Book{
@@ -266,23 +264,23 @@ content 2 content 2 content 2
 			name: "download chapter fails reach threshold",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
 				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 1 response").Return(nil, serv.ErrUnavailable)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(nil, serv.ErrUnavailable)
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
-					rpo: rpo, cli: cli, vendorService: vendorService,
+					rpo: rpo, vendorService: vendorService,
 				}
 			},
 			book: &model.Book{
@@ -305,20 +303,20 @@ content 2 content 2 content 2
 			name: "fail to update book after download",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list").Return("chapter list response", nil)
 				vendorService.EXPECT().ParseChapterList("1", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 1 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 1", Body: "content 1 content 1 content 1",
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
@@ -329,7 +327,7 @@ content 2 content 2 content 2
 
 				return &ServiceImpl{
 					conf: config.SiteConfig{Storage: "./download-book"}, sema: semaphore.NewWeighted(1), vendorSema: semaphore.NewWeighted(1),
-					rpo: rpo, cli: cli, vendorService: vendorService,
+					rpo: rpo, vendorService: vendorService,
 				}
 			},
 			book: &model.Book{
@@ -385,7 +383,7 @@ func TestServiceImpl_Download(t *testing.T) {
 			name: "happy flow with download failed",
 			getService: func(ctrl *gomock.Controller) *ServiceImpl {
 				rpo := repomock.NewMockRepository(ctrl)
-				cli := clientmock.NewMockBookClient(ctrl)
+				
 				vendorService := vendormock.NewMockVendorService(ctrl)
 
 				ch := make(chan model.Book)
@@ -397,18 +395,18 @@ func TestServiceImpl_Download(t *testing.T) {
 
 				rpo.EXPECT().FindBooksForDownload(gomock.Any(), "test").Return(ch, nil)
 				vendorService.EXPECT().ChapterListURL("1").Return("https://test.com/chapter-list-1")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-1").Return("", serv.ErrUnavailable)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-1").Return("", serv.ErrUnavailable)
 				vendorService.EXPECT().ChapterListURL("2").Return("https://test.com/chapter-list-2")
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-2").Return("chapter list response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter-list-2").Return("chapter list response", nil)
 				vendorService.EXPECT().ParseChapterList("2", "chapter list response").Return(vendor.ChapterList{
 					{URL: "https://test.com/chapter/1", Title: "title 1"},
 					{URL: "https://test.com/chapter/2", Title: "title 2"},
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/1").Return("chapter 1 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 1 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 1", Body: "content 1 content 1 content 1",
 				}, nil)
-				cli.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
+				vendorService.EXPECT().Get(gomock.Any(), "https://test.com/chapter/2").Return("chapter 2 response", nil)
 				vendorService.EXPECT().ParseChapter("chapter 2 response").Return(&vendor.ChapterInfo{
 					Title: "chapter title 2", Body: "content 2 content 2 content 2",
 				}, nil)
@@ -420,7 +418,7 @@ func TestServiceImpl_Download(t *testing.T) {
 				return &ServiceImpl{
 					name: "test", conf: config.SiteConfig{Storage: "./download-book", MaxDownloadConcurrency: 1},
 					sema: semaphore.NewWeighted(2), vendorSema: semaphore.NewWeighted(2),
-					rpo: rpo, cli: cli, vendorService: vendorService,
+					rpo: rpo, vendorService: vendorService,
 				}
 			},
 			wantError: nil,
