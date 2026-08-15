@@ -14,7 +14,7 @@ jobs:
       - uses: snok/container-retention-policy@v3.1.0
         with:
           account: user
-          image-names: book-spider-*
+          image-names: "book-spider-api book-spider-worker"
           token: ${{ secrets.GITHUB_TOKEN }}
           cut-off: 6M
           keep-n-most-recent: 5
