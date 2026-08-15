@@ -2,8 +2,6 @@ name: Monthly GHCR Cleanup
 run-name: Monthly container registry cleanup
 
 on:
-  pull_request:
-    branches: [master]
   schedule:
     - cron: "0 0 1 * *" # Runs at 00:00 on the first day of every month
 
@@ -18,4 +16,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           cut-off: 6M
           keep-n-most-recent: 5
-          dry-run: true
+          dry-run: false
