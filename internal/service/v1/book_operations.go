@@ -32,7 +32,7 @@ func (s *ServiceImpl) UpdateBook(ctx context.Context, bk *model.Book, stats *ser
 		stats = new(serv.UpdateStats)
 	}
 
-	body, err := s.cli.Get(ctx, s.vendorService.BookURL(strconv.FormatInt(int64(bk.ID), 10)))
+	body, err := s.vendorService.Get(ctx, s.vendorService.BookURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
 		stats.Fail.Add(1)
 		return fmt.Errorf("get book page failed: %w", err)
@@ -282,7 +282,7 @@ func (s *ServiceImpl) Explore(ctx context.Context, stats *serv.UpdateStats) erro
 }
 
 func (s *ServiceImpl) downloadChapter(ctx context.Context, ch *model.Chapter) error {
-	body, err := s.cli.Get(ctx, ch.URL)
+	body, err := s.vendorService.Get(ctx, ch.URL)
 	if err != nil {
 		ch.Error = err
 
@@ -318,7 +318,7 @@ func (s *ServiceImpl) DownloadBook(ctx context.Context, bk *model.Book, stats *s
 
 	logger.Info().Msg("get chapter list")
 
-	body, err := s.cli.Get(ctx, s.vendorService.ChapterListURL(strconv.FormatInt(int64(bk.ID), 10)))
+	body, err := s.vendorService.Get(ctx, s.vendorService.ChapterListURL(strconv.FormatInt(int64(bk.ID), 10)))
 	if err != nil {
 		stats.RequestFail.Add(1)
 

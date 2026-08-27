@@ -1,4 +1,4 @@
-package client
+package vendor
 
 import (
 	"golang.org/x/text/encoding"

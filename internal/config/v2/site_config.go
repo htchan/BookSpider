@@ -3,11 +3,11 @@ package config
 import (
 	"time"
 
-	client "github.com/htchan/BookSpider/internal/client/v2"
+	vendor "github.com/htchan/BookSpider/internal/vendorservice"
 )
 
 type SiteConfig struct {
-	DecodeMethod   client.DecodeMethod `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
+	DecodeMethod   vendor.DecodeMethod `yaml:"decode_method" validate:"oneof=gbk big5 utf8"`
 	ClientConfig   ClientConfig        `yaml:"client" validate:"dive"`
 	RequestTimeout time.Duration       `yaml:"request_timeout" validate:"min=1s"`
 
