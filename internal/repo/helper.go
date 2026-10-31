@@ -36,7 +36,7 @@ func CreatePsqlContainer(
 		},
 		ExposedPorts: []string{"5432/tcp"},
 		PortBindings: map[docker.Port][]docker.PortBinding{
-			"5432/tcp": {{HostIP: "localhost", HostPort: conf.Port + "/tcp"}},
+			"5432/tcp": {{HostIP: "127.0.0.1", HostPort: conf.Port + "/tcp"}},
 		},
 	}, func(conf *docker.HostConfig) {
 		conf.AutoRemove = true
